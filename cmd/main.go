@@ -14,7 +14,7 @@ func main() {
 	}
 
 	var appLogger logger.AppLogger
-	if cfg.App.Environment == "Production" {
+	if cfg.App.Production {
 		appLogger, err = logger.NewZapProduction()
 	} else {
 		appLogger, err = logger.NewZapDevelopment()

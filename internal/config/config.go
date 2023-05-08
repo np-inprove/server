@@ -1,7 +1,7 @@
 package config
 
 import (
-	"errors"
+	"fmt"
 	"strings"
 
 	"github.com/spf13/viper"
@@ -9,16 +9,17 @@ import (
 
 type Config struct {
 	HTTP struct {
-		ListenAddr string
+		Host string
+		Port int
 	}
-	PostgreSQL struct {
+	Database struct {
+		Host     string
+		Name     string
 		Username string
 		Password string
-		Host     string
-		Database string
 	}
 	App struct {
-		Environment string
+		Production bool
 	}
 }
 
@@ -61,8 +62,8 @@ func NewTest() (*Config, error) {
 		return nil, err
 	}
 
-	if !strings.Contains(config.PostgreSQL.Database, "test") {
-		return nil, errors.New("postgresql database for tests must contain 'test' in name")
+	if !strings.Contains(config.Database.Name, "test") {
+		return nil, fmt.Errorf("database name used for testing did not contain 'test' substring: %s", config.Database.Name)
 	}
 
 	return config, nil

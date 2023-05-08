@@ -1,0 +1,12 @@
+http:
+  host: 0.0.0.0
+  port: 5000
+
+database:
+  host:
+  name:
+  username: 
+  password:
+
+app:
+  production: false
