@@ -63,7 +63,7 @@ func NewTest() (*Config, error) {
 	}
 
 	if !strings.Contains(config.Database.Name, "test") {
-		return nil, fmt.Errorf("database name used for testing did not contain 'test' substring: %s", config.Database.Name)
+		return nil, fmt.Errorf("database name used for testing should contain 'test' substring: %s", config.Database.Name)
 	}
 
 	return config, nil
