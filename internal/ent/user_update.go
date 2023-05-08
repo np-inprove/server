@@ -11,6 +11,7 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
+	"github.com/np-inprove/server/internal/ent/course"
 	"github.com/np-inprove/server/internal/ent/institution"
 	"github.com/np-inprove/server/internal/ent/predicate"
 	"github.com/np-inprove/server/internal/ent/user"
@@ -120,6 +121,25 @@ func (uu *UserUpdate) AddInstitution(i ...*Institution) *UserUpdate {
 	return uu.AddInstitutionIDs(ids...)
 }
 
+// SetCourseID sets the "course" edge to the Course entity by ID.
+func (uu *UserUpdate) SetCourseID(id int) *UserUpdate {
+	uu.mutation.SetCourseID(id)
+	return uu
+}
+
+// SetNillableCourseID sets the "course" edge to the Course entity by ID if the given value is not nil.
+func (uu *UserUpdate) SetNillableCourseID(id *int) *UserUpdate {
+	if id != nil {
+		uu = uu.SetCourseID(*id)
+	}
+	return uu
+}
+
+// SetCourse sets the "course" edge to the Course entity.
+func (uu *UserUpdate) SetCourse(c *Course) *UserUpdate {
+	return uu.SetCourseID(c.ID)
+}
+
 // Mutation returns the UserMutation object of the builder.
 func (uu *UserUpdate) Mutation() *UserMutation {
 	return uu.mutation
@@ -144,6 +164,12 @@ func (uu *UserUpdate) RemoveInstitution(i ...*Institution) *UserUpdate {
 		ids[j] = i[j].ID
 	}
 	return uu.RemoveInstitutionIDs(ids...)
+}
+
+// ClearCourse clears the "course" edge to the Course entity.
+func (uu *UserUpdate) ClearCourse() *UserUpdate {
+	uu.mutation.ClearCourse()
+	return uu
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -298,6 +324,35 @@ func (uu *UserUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
+	if uu.mutation.CourseCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   user.CourseTable,
+			Columns: []string{user.CourseColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(course.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uu.mutation.CourseIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   user.CourseTable,
+			Columns: []string{user.CourseColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(course.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
 	if n, err = sqlgraph.UpdateNodes(ctx, uu.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{user.Label}
@@ -409,6 +464,25 @@ func (uuo *UserUpdateOne) AddInstitution(i ...*Institution) *UserUpdateOne {
 	return uuo.AddInstitutionIDs(ids...)
 }
 
+// SetCourseID sets the "course" edge to the Course entity by ID.
+func (uuo *UserUpdateOne) SetCourseID(id int) *UserUpdateOne {
+	uuo.mutation.SetCourseID(id)
+	return uuo
+}
+
+// SetNillableCourseID sets the "course" edge to the Course entity by ID if the given value is not nil.
+func (uuo *UserUpdateOne) SetNillableCourseID(id *int) *UserUpdateOne {
+	if id != nil {
+		uuo = uuo.SetCourseID(*id)
+	}
+	return uuo
+}
+
+// SetCourse sets the "course" edge to the Course entity.
+func (uuo *UserUpdateOne) SetCourse(c *Course) *UserUpdateOne {
+	return uuo.SetCourseID(c.ID)
+}
+
 // Mutation returns the UserMutation object of the builder.
 func (uuo *UserUpdateOne) Mutation() *UserMutation {
 	return uuo.mutation
@@ -433,6 +507,12 @@ func (uuo *UserUpdateOne) RemoveInstitution(i ...*Institution) *UserUpdateOne {
 		ids[j] = i[j].ID
 	}
 	return uuo.RemoveInstitutionIDs(ids...)
+}
+
+// ClearCourse clears the "course" edge to the Course entity.
+func (uuo *UserUpdateOne) ClearCourse() *UserUpdateOne {
+	uuo.mutation.ClearCourse()
+	return uuo
 }
 
 // Where appends a list predicates to the UserUpdate builder.
@@ -610,6 +690,35 @@ func (uuo *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) 
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(institution.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if uuo.mutation.CourseCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   user.CourseTable,
+			Columns: []string{user.CourseColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(course.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uuo.mutation.CourseIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   user.CourseTable,
+			Columns: []string{user.CourseColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(course.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

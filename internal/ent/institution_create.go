@@ -9,6 +9,7 @@ import (
 
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
+	"github.com/np-inprove/server/internal/ent/academicschool"
 	"github.com/np-inprove/server/internal/ent/institution"
 	"github.com/np-inprove/server/internal/ent/user"
 )
@@ -39,6 +40,21 @@ func (ic *InstitutionCreate) AddAdmins(u ...*User) *InstitutionCreate {
 		ids[i] = u[i].ID
 	}
 	return ic.AddAdminIDs(ids...)
+}
+
+// AddAcademicSchoolIDs adds the "academic_schools" edge to the AcademicSchool entity by IDs.
+func (ic *InstitutionCreate) AddAcademicSchoolIDs(ids ...int) *InstitutionCreate {
+	ic.mutation.AddAcademicSchoolIDs(ids...)
+	return ic
+}
+
+// AddAcademicSchools adds the "academic_schools" edges to the AcademicSchool entity.
+func (ic *InstitutionCreate) AddAcademicSchools(a ...*AcademicSchool) *InstitutionCreate {
+	ids := make([]int, len(a))
+	for i := range a {
+		ids[i] = a[i].ID
+	}
+	return ic.AddAcademicSchoolIDs(ids...)
 }
 
 // Mutation returns the InstitutionMutation object of the builder.
@@ -122,6 +138,22 @@ func (ic *InstitutionCreate) createSpec() (*Institution, *sqlgraph.CreateSpec) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := ic.mutation.AcademicSchoolsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   institution.AcademicSchoolsTable,
+			Columns: []string{institution.AcademicSchoolsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(academicschool.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

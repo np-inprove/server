@@ -9,6 +9,30 @@ import (
 	"github.com/np-inprove/server/internal/ent"
 )
 
+// The AcademicSchoolFunc type is an adapter to allow the use of ordinary
+// function as AcademicSchool mutator.
+type AcademicSchoolFunc func(context.Context, *ent.AcademicSchoolMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f AcademicSchoolFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.AcademicSchoolMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.AcademicSchoolMutation", m)
+}
+
+// The CourseFunc type is an adapter to allow the use of ordinary
+// function as Course mutator.
+type CourseFunc func(context.Context, *ent.CourseMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f CourseFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.CourseMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.CourseMutation", m)
+}
+
 // The InstitutionFunc type is an adapter to allow the use of ordinary
 // function as Institution mutator.
 type InstitutionFunc func(context.Context, *ent.InstitutionMutation) (ent.Value, error)

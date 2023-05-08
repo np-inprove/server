@@ -28,9 +28,11 @@ type Institution struct {
 type InstitutionEdges struct {
 	// Admins of the institution
 	Admins []*User `json:"admins,omitempty"`
+	// Academic schools of the institution
+	AcademicSchools []*AcademicSchool `json:"academic_schools,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [1]bool
+	loadedTypes [2]bool
 }
 
 // AdminsOrErr returns the Admins value or an error if the edge
@@ -40,6 +42,15 @@ func (e InstitutionEdges) AdminsOrErr() ([]*User, error) {
 		return e.Admins, nil
 	}
 	return nil, &NotLoadedError{edge: "admins"}
+}
+
+// AcademicSchoolsOrErr returns the AcademicSchools value or an error if the edge
+// was not loaded in eager-loading.
+func (e InstitutionEdges) AcademicSchoolsOrErr() ([]*AcademicSchool, error) {
+	if e.loadedTypes[1] {
+		return e.AcademicSchools, nil
+	}
+	return nil, &NotLoadedError{edge: "academic_schools"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -94,6 +105,11 @@ func (i *Institution) Value(name string) (ent.Value, error) {
 // QueryAdmins queries the "admins" edge of the Institution entity.
 func (i *Institution) QueryAdmins() *UserQuery {
 	return NewInstitutionClient(i.config).QueryAdmins(i)
+}
+
+// QueryAcademicSchools queries the "academic_schools" edge of the Institution entity.
+func (i *Institution) QueryAcademicSchools() *AcademicSchoolQuery {
+	return NewInstitutionClient(i.config).QueryAcademicSchools(i)
 }
 
 // Update returns a builder for updating this Institution.

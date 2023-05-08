@@ -10,6 +10,7 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
+	"github.com/np-inprove/server/internal/ent/academicschool"
 	"github.com/np-inprove/server/internal/ent/institution"
 	"github.com/np-inprove/server/internal/ent/predicate"
 	"github.com/np-inprove/server/internal/ent/user"
@@ -49,6 +50,21 @@ func (iu *InstitutionUpdate) AddAdmins(u ...*User) *InstitutionUpdate {
 	return iu.AddAdminIDs(ids...)
 }
 
+// AddAcademicSchoolIDs adds the "academic_schools" edge to the AcademicSchool entity by IDs.
+func (iu *InstitutionUpdate) AddAcademicSchoolIDs(ids ...int) *InstitutionUpdate {
+	iu.mutation.AddAcademicSchoolIDs(ids...)
+	return iu
+}
+
+// AddAcademicSchools adds the "academic_schools" edges to the AcademicSchool entity.
+func (iu *InstitutionUpdate) AddAcademicSchools(a ...*AcademicSchool) *InstitutionUpdate {
+	ids := make([]int, len(a))
+	for i := range a {
+		ids[i] = a[i].ID
+	}
+	return iu.AddAcademicSchoolIDs(ids...)
+}
+
 // Mutation returns the InstitutionMutation object of the builder.
 func (iu *InstitutionUpdate) Mutation() *InstitutionMutation {
 	return iu.mutation
@@ -73,6 +89,27 @@ func (iu *InstitutionUpdate) RemoveAdmins(u ...*User) *InstitutionUpdate {
 		ids[i] = u[i].ID
 	}
 	return iu.RemoveAdminIDs(ids...)
+}
+
+// ClearAcademicSchools clears all "academic_schools" edges to the AcademicSchool entity.
+func (iu *InstitutionUpdate) ClearAcademicSchools() *InstitutionUpdate {
+	iu.mutation.ClearAcademicSchools()
+	return iu
+}
+
+// RemoveAcademicSchoolIDs removes the "academic_schools" edge to AcademicSchool entities by IDs.
+func (iu *InstitutionUpdate) RemoveAcademicSchoolIDs(ids ...int) *InstitutionUpdate {
+	iu.mutation.RemoveAcademicSchoolIDs(ids...)
+	return iu
+}
+
+// RemoveAcademicSchools removes "academic_schools" edges to AcademicSchool entities.
+func (iu *InstitutionUpdate) RemoveAcademicSchools(a ...*AcademicSchool) *InstitutionUpdate {
+	ids := make([]int, len(a))
+	for i := range a {
+		ids[i] = a[i].ID
+	}
+	return iu.RemoveAcademicSchoolIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -172,6 +209,51 @@ func (iu *InstitutionUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
+	if iu.mutation.AcademicSchoolsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   institution.AcademicSchoolsTable,
+			Columns: []string{institution.AcademicSchoolsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(academicschool.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := iu.mutation.RemovedAcademicSchoolsIDs(); len(nodes) > 0 && !iu.mutation.AcademicSchoolsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   institution.AcademicSchoolsTable,
+			Columns: []string{institution.AcademicSchoolsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(academicschool.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := iu.mutation.AcademicSchoolsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   institution.AcademicSchoolsTable,
+			Columns: []string{institution.AcademicSchoolsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(academicschool.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
 	if n, err = sqlgraph.UpdateNodes(ctx, iu.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{institution.Label}
@@ -213,6 +295,21 @@ func (iuo *InstitutionUpdateOne) AddAdmins(u ...*User) *InstitutionUpdateOne {
 	return iuo.AddAdminIDs(ids...)
 }
 
+// AddAcademicSchoolIDs adds the "academic_schools" edge to the AcademicSchool entity by IDs.
+func (iuo *InstitutionUpdateOne) AddAcademicSchoolIDs(ids ...int) *InstitutionUpdateOne {
+	iuo.mutation.AddAcademicSchoolIDs(ids...)
+	return iuo
+}
+
+// AddAcademicSchools adds the "academic_schools" edges to the AcademicSchool entity.
+func (iuo *InstitutionUpdateOne) AddAcademicSchools(a ...*AcademicSchool) *InstitutionUpdateOne {
+	ids := make([]int, len(a))
+	for i := range a {
+		ids[i] = a[i].ID
+	}
+	return iuo.AddAcademicSchoolIDs(ids...)
+}
+
 // Mutation returns the InstitutionMutation object of the builder.
 func (iuo *InstitutionUpdateOne) Mutation() *InstitutionMutation {
 	return iuo.mutation
@@ -237,6 +334,27 @@ func (iuo *InstitutionUpdateOne) RemoveAdmins(u ...*User) *InstitutionUpdateOne 
 		ids[i] = u[i].ID
 	}
 	return iuo.RemoveAdminIDs(ids...)
+}
+
+// ClearAcademicSchools clears all "academic_schools" edges to the AcademicSchool entity.
+func (iuo *InstitutionUpdateOne) ClearAcademicSchools() *InstitutionUpdateOne {
+	iuo.mutation.ClearAcademicSchools()
+	return iuo
+}
+
+// RemoveAcademicSchoolIDs removes the "academic_schools" edge to AcademicSchool entities by IDs.
+func (iuo *InstitutionUpdateOne) RemoveAcademicSchoolIDs(ids ...int) *InstitutionUpdateOne {
+	iuo.mutation.RemoveAcademicSchoolIDs(ids...)
+	return iuo
+}
+
+// RemoveAcademicSchools removes "academic_schools" edges to AcademicSchool entities.
+func (iuo *InstitutionUpdateOne) RemoveAcademicSchools(a ...*AcademicSchool) *InstitutionUpdateOne {
+	ids := make([]int, len(a))
+	for i := range a {
+		ids[i] = a[i].ID
+	}
+	return iuo.RemoveAcademicSchoolIDs(ids...)
 }
 
 // Where appends a list predicates to the InstitutionUpdate builder.
@@ -359,6 +477,51 @@ func (iuo *InstitutionUpdateOne) sqlSave(ctx context.Context) (_node *Institutio
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if iuo.mutation.AcademicSchoolsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   institution.AcademicSchoolsTable,
+			Columns: []string{institution.AcademicSchoolsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(academicschool.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := iuo.mutation.RemovedAcademicSchoolsIDs(); len(nodes) > 0 && !iuo.mutation.AcademicSchoolsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   institution.AcademicSchoolsTable,
+			Columns: []string{institution.AcademicSchoolsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(academicschool.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := iuo.mutation.AcademicSchoolsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   institution.AcademicSchoolsTable,
+			Columns: []string{institution.AcademicSchoolsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(academicschool.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

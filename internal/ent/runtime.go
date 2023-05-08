@@ -3,6 +3,8 @@
 package ent
 
 import (
+	"github.com/np-inprove/server/internal/ent/academicschool"
+	"github.com/np-inprove/server/internal/ent/course"
 	"github.com/np-inprove/server/internal/ent/institution"
 	"github.com/np-inprove/server/internal/ent/schema"
 	"github.com/np-inprove/server/internal/ent/user"
@@ -12,6 +14,26 @@ import (
 // (default values, validators, hooks and policies) and stitches it
 // to their package variables.
 func init() {
+	academicschoolFields := schema.AcademicSchool{}.Fields()
+	_ = academicschoolFields
+	// academicschoolDescName is the schema descriptor for name field.
+	academicschoolDescName := academicschoolFields[0].Descriptor()
+	// academicschool.NameValidator is a validator for the "name" field. It is called by the builders before save.
+	academicschool.NameValidator = academicschoolDescName.Validators[0].(func(string) error)
+	// academicschoolDescSchoolCode is the schema descriptor for school_code field.
+	academicschoolDescSchoolCode := academicschoolFields[1].Descriptor()
+	// academicschool.SchoolCodeValidator is a validator for the "school_code" field. It is called by the builders before save.
+	academicschool.SchoolCodeValidator = academicschoolDescSchoolCode.Validators[0].(func(string) error)
+	courseFields := schema.Course{}.Fields()
+	_ = courseFields
+	// courseDescName is the schema descriptor for name field.
+	courseDescName := courseFields[0].Descriptor()
+	// course.NameValidator is a validator for the "name" field. It is called by the builders before save.
+	course.NameValidator = courseDescName.Validators[0].(func(string) error)
+	// courseDescCourseID is the schema descriptor for course_id field.
+	courseDescCourseID := courseFields[1].Descriptor()
+	// course.CourseIDValidator is a validator for the "course_id" field. It is called by the builders before save.
+	course.CourseIDValidator = courseDescCourseID.Validators[0].(func(string) error)
 	institutionFields := schema.Institution{}.Fields()
 	_ = institutionFields
 	// institutionDescName is the schema descriptor for name field.

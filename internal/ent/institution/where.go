@@ -146,6 +146,29 @@ func HasAdminsWith(preds ...predicate.User) predicate.Institution {
 	})
 }
 
+// HasAcademicSchools applies the HasEdge predicate on the "academic_schools" edge.
+func HasAcademicSchools() predicate.Institution {
+	return predicate.Institution(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, AcademicSchoolsTable, AcademicSchoolsColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasAcademicSchoolsWith applies the HasEdge predicate on the "academic_schools" edge with a given conditions (other predicates).
+func HasAcademicSchoolsWith(preds ...predicate.AcademicSchool) predicate.Institution {
+	return predicate.Institution(func(s *sql.Selector) {
+		step := newAcademicSchoolsStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
 // And groups predicates with the AND operator between them.
 func And(predicates ...predicate.Institution) predicate.Institution {
 	return predicate.Institution(func(s *sql.Selector) {

@@ -10,6 +10,7 @@ import (
 
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
+	"github.com/np-inprove/server/internal/ent/course"
 	"github.com/np-inprove/server/internal/ent/institution"
 	"github.com/np-inprove/server/internal/ent/user"
 )
@@ -90,6 +91,25 @@ func (uc *UserCreate) AddInstitution(i ...*Institution) *UserCreate {
 		ids[j] = i[j].ID
 	}
 	return uc.AddInstitutionIDs(ids...)
+}
+
+// SetCourseID sets the "course" edge to the Course entity by ID.
+func (uc *UserCreate) SetCourseID(id int) *UserCreate {
+	uc.mutation.SetCourseID(id)
+	return uc
+}
+
+// SetNillableCourseID sets the "course" edge to the Course entity by ID if the given value is not nil.
+func (uc *UserCreate) SetNillableCourseID(id *int) *UserCreate {
+	if id != nil {
+		uc = uc.SetCourseID(*id)
+	}
+	return uc
+}
+
+// SetCourse sets the "course" edge to the Course entity.
+func (uc *UserCreate) SetCourse(c *Course) *UserCreate {
+	return uc.SetCourseID(c.ID)
 }
 
 // Mutation returns the UserMutation object of the builder.
@@ -249,6 +269,23 @@ func (uc *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := uc.mutation.CourseIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   user.CourseTable,
+			Columns: []string{user.CourseColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(course.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_node.course_students = &nodes[0]
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec

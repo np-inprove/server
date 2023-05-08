@@ -30,6 +30,8 @@ const (
 	FieldSuperuser = "superuser"
 	// EdgeInstitution holds the string denoting the institution edge name in mutations.
 	EdgeInstitution = "institution"
+	// EdgeCourse holds the string denoting the course edge name in mutations.
+	EdgeCourse = "course"
 	// Table holds the table name of the user in the database.
 	Table = "users"
 	// InstitutionTable is the table that holds the institution relation/edge. The primary key declared below.
@@ -37,6 +39,13 @@ const (
 	// InstitutionInverseTable is the table name for the Institution entity.
 	// It exists in this package in order to avoid circular dependency with the "institution" package.
 	InstitutionInverseTable = "institutions"
+	// CourseTable is the table that holds the course relation/edge.
+	CourseTable = "users"
+	// CourseInverseTable is the table name for the Course entity.
+	// It exists in this package in order to avoid circular dependency with the "course" package.
+	CourseInverseTable = "courses"
+	// CourseColumn is the table column denoting the course relation/edge.
+	CourseColumn = "course_students"
 )
 
 // Columns holds all SQL columns for user fields.
@@ -52,6 +61,12 @@ var Columns = []string{
 	FieldSuperuser,
 }
 
+// ForeignKeys holds the SQL foreign-keys that are owned by the "users"
+// table and are not defined as standalone fields in the schema.
+var ForeignKeys = []string{
+	"course_students",
+}
+
 var (
 	// InstitutionPrimaryKey and InstitutionColumn2 are the table columns denoting the
 	// primary key for the institution relation (M2M).
@@ -62,6 +77,11 @@ var (
 func ValidColumn(column string) bool {
 	for i := range Columns {
 		if column == Columns[i] {
+			return true
+		}
+	}
+	for i := range ForeignKeys {
+		if column == ForeignKeys[i] {
 			return true
 		}
 	}
@@ -144,10 +164,24 @@ func ByInstitution(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 		sqlgraph.OrderByNeighborTerms(s, newInstitutionStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
+
+// ByCourseField orders the results by course field.
+func ByCourseField(field string, opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newCourseStep(), sql.OrderByField(field, opts...))
+	}
+}
 func newInstitutionStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(InstitutionInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.M2M, true, InstitutionTable, InstitutionPrimaryKey...),
+	)
+}
+func newCourseStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(CourseInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.M2O, true, CourseTable, CourseColumn),
 	)
 }

@@ -16,6 +16,8 @@ const (
 	FieldName = "name"
 	// EdgeAdmins holds the string denoting the admins edge name in mutations.
 	EdgeAdmins = "admins"
+	// EdgeAcademicSchools holds the string denoting the academic_schools edge name in mutations.
+	EdgeAcademicSchools = "academic_schools"
 	// Table holds the table name of the institution in the database.
 	Table = "institutions"
 	// AdminsTable is the table that holds the admins relation/edge. The primary key declared below.
@@ -23,6 +25,13 @@ const (
 	// AdminsInverseTable is the table name for the User entity.
 	// It exists in this package in order to avoid circular dependency with the "user" package.
 	AdminsInverseTable = "users"
+	// AcademicSchoolsTable is the table that holds the academic_schools relation/edge.
+	AcademicSchoolsTable = "academic_schools"
+	// AcademicSchoolsInverseTable is the table name for the AcademicSchool entity.
+	// It exists in this package in order to avoid circular dependency with the "academicschool" package.
+	AcademicSchoolsInverseTable = "academic_schools"
+	// AcademicSchoolsColumn is the table column denoting the academic_schools relation/edge.
+	AcademicSchoolsColumn = "institution_academic_schools"
 )
 
 // Columns holds all SQL columns for institution fields.
@@ -78,10 +87,31 @@ func ByAdmins(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 		sqlgraph.OrderByNeighborTerms(s, newAdminsStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
+
+// ByAcademicSchoolsCount orders the results by academic_schools count.
+func ByAcademicSchoolsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newAcademicSchoolsStep(), opts...)
+	}
+}
+
+// ByAcademicSchools orders the results by academic_schools terms.
+func ByAcademicSchools(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newAcademicSchoolsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
 func newAdminsStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(AdminsInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.M2M, false, AdminsTable, AdminsPrimaryKey...),
+	)
+}
+func newAcademicSchoolsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(AcademicSchoolsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, AcademicSchoolsTable, AcademicSchoolsColumn),
 	)
 }

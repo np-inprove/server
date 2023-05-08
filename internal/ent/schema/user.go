@@ -46,5 +46,8 @@ func (User) Edges() []ent.Edge {
 	return []ent.Edge{
 		edge.From("institution", Institution.Type).
 			Ref("admins"),
+		edge.From("course", Course.Type).
+			Ref("students").
+			Unique(),
 	}
 }

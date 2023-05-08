@@ -11,6 +11,7 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
+	"github.com/np-inprove/server/internal/ent/course"
 	"github.com/np-inprove/server/internal/ent/institution"
 	"github.com/np-inprove/server/internal/ent/predicate"
 	"github.com/np-inprove/server/internal/ent/user"
@@ -24,6 +25,8 @@ type UserQuery struct {
 	inters          []Interceptor
 	predicates      []predicate.User
 	withInstitution *InstitutionQuery
+	withCourse      *CourseQuery
+	withFKs         bool
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -75,6 +78,28 @@ func (uq *UserQuery) QueryInstitution() *InstitutionQuery {
 			sqlgraph.From(user.Table, user.FieldID, selector),
 			sqlgraph.To(institution.Table, institution.FieldID),
 			sqlgraph.Edge(sqlgraph.M2M, true, user.InstitutionTable, user.InstitutionPrimaryKey...),
+		)
+		fromU = sqlgraph.SetNeighbors(uq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryCourse chains the current query on the "course" edge.
+func (uq *UserQuery) QueryCourse() *CourseQuery {
+	query := (&CourseClient{config: uq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := uq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := uq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, selector),
+			sqlgraph.To(course.Table, course.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, user.CourseTable, user.CourseColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(uq.driver.Dialect(), step)
 		return fromU, nil
@@ -275,6 +300,7 @@ func (uq *UserQuery) Clone() *UserQuery {
 		inters:          append([]Interceptor{}, uq.inters...),
 		predicates:      append([]predicate.User{}, uq.predicates...),
 		withInstitution: uq.withInstitution.Clone(),
+		withCourse:      uq.withCourse.Clone(),
 		// clone intermediate query.
 		sql:  uq.sql.Clone(),
 		path: uq.path,
@@ -289,6 +315,17 @@ func (uq *UserQuery) WithInstitution(opts ...func(*InstitutionQuery)) *UserQuery
 		opt(query)
 	}
 	uq.withInstitution = query
+	return uq
+}
+
+// WithCourse tells the query-builder to eager-load the nodes that are connected to
+// the "course" edge. The optional arguments are used to configure the query builder of the edge.
+func (uq *UserQuery) WithCourse(opts ...func(*CourseQuery)) *UserQuery {
+	query := (&CourseClient{config: uq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	uq.withCourse = query
 	return uq
 }
 
@@ -369,11 +406,19 @@ func (uq *UserQuery) prepareQuery(ctx context.Context) error {
 func (uq *UserQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*User, error) {
 	var (
 		nodes       = []*User{}
+		withFKs     = uq.withFKs
 		_spec       = uq.querySpec()
-		loadedTypes = [1]bool{
+		loadedTypes = [2]bool{
 			uq.withInstitution != nil,
+			uq.withCourse != nil,
 		}
 	)
+	if uq.withCourse != nil {
+		withFKs = true
+	}
+	if withFKs {
+		_spec.Node.Columns = append(_spec.Node.Columns, user.ForeignKeys...)
+	}
 	_spec.ScanValues = func(columns []string) ([]any, error) {
 		return (*User).scanValues(nil, columns)
 	}
@@ -396,6 +441,12 @@ func (uq *UserQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*User, e
 		if err := uq.loadInstitution(ctx, query, nodes,
 			func(n *User) { n.Edges.Institution = []*Institution{} },
 			func(n *User, e *Institution) { n.Edges.Institution = append(n.Edges.Institution, e) }); err != nil {
+			return nil, err
+		}
+	}
+	if query := uq.withCourse; query != nil {
+		if err := uq.loadCourse(ctx, query, nodes, nil,
+			func(n *User, e *Course) { n.Edges.Course = e }); err != nil {
 			return nil, err
 		}
 	}
@@ -459,6 +510,38 @@ func (uq *UserQuery) loadInstitution(ctx context.Context, query *InstitutionQuer
 		}
 		for kn := range nodes {
 			assign(kn, n)
+		}
+	}
+	return nil
+}
+func (uq *UserQuery) loadCourse(ctx context.Context, query *CourseQuery, nodes []*User, init func(*User), assign func(*User, *Course)) error {
+	ids := make([]int, 0, len(nodes))
+	nodeids := make(map[int][]*User)
+	for i := range nodes {
+		if nodes[i].course_students == nil {
+			continue
+		}
+		fk := *nodes[i].course_students
+		if _, ok := nodeids[fk]; !ok {
+			ids = append(ids, fk)
+		}
+		nodeids[fk] = append(nodeids[fk], nodes[i])
+	}
+	if len(ids) == 0 {
+		return nil
+	}
+	query.Where(course.IDIn(ids...))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		nodes, ok := nodeids[n.ID]
+		if !ok {
+			return fmt.Errorf(`unexpected foreign-key "course_students" returned %v`, n.ID)
+		}
+		for i := range nodes {
+			assign(nodes[i], n)
 		}
 	}
 	return nil
