@@ -11,6 +11,7 @@ import (
 	"entgo.io/ent/schema/field"
 	"github.com/np-inprove/server/internal/ent/academicschool"
 	"github.com/np-inprove/server/internal/ent/institution"
+	"github.com/np-inprove/server/internal/ent/prize"
 	"github.com/np-inprove/server/internal/ent/user"
 )
 
@@ -40,6 +41,21 @@ func (ic *InstitutionCreate) AddAdmins(u ...*User) *InstitutionCreate {
 		ids[i] = u[i].ID
 	}
 	return ic.AddAdminIDs(ids...)
+}
+
+// AddPrizeIDs adds the "prizes" edge to the Prize entity by IDs.
+func (ic *InstitutionCreate) AddPrizeIDs(ids ...int) *InstitutionCreate {
+	ic.mutation.AddPrizeIDs(ids...)
+	return ic
+}
+
+// AddPrizes adds the "prizes" edges to the Prize entity.
+func (ic *InstitutionCreate) AddPrizes(p ...*Prize) *InstitutionCreate {
+	ids := make([]int, len(p))
+	for i := range p {
+		ids[i] = p[i].ID
+	}
+	return ic.AddPrizeIDs(ids...)
 }
 
 // AddAcademicSchoolIDs adds the "academic_schools" edge to the AcademicSchool entity by IDs.
@@ -138,6 +154,22 @@ func (ic *InstitutionCreate) createSpec() (*Institution, *sqlgraph.CreateSpec) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := ic.mutation.PrizesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   institution.PrizesTable,
+			Columns: []string{institution.PrizesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(prize.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

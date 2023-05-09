@@ -49,9 +49,17 @@ type UserEdges struct {
 	Institution []*Institution `json:"institution,omitempty"`
 	// Course holds the value of the course edge.
 	Course *Course `json:"course,omitempty"`
+	// Prize holds the value of the prize edge.
+	Prize []*Prize `json:"prize,omitempty"`
+	// Pet holds the value of the pet edge.
+	Pet []*Pet `json:"pet,omitempty"`
+	// PrizeRedemptions holds the value of the prize_redemptions edge.
+	PrizeRedemptions []*PrizeRedemptions `json:"prize_redemptions,omitempty"`
+	// UserPet holds the value of the user_pet edge.
+	UserPet []*UserPet `json:"user_pet,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [2]bool
+	loadedTypes [6]bool
 }
 
 // InstitutionOrErr returns the Institution value or an error if the edge
@@ -74,6 +82,42 @@ func (e UserEdges) CourseOrErr() (*Course, error) {
 		return e.Course, nil
 	}
 	return nil, &NotLoadedError{edge: "course"}
+}
+
+// PrizeOrErr returns the Prize value or an error if the edge
+// was not loaded in eager-loading.
+func (e UserEdges) PrizeOrErr() ([]*Prize, error) {
+	if e.loadedTypes[2] {
+		return e.Prize, nil
+	}
+	return nil, &NotLoadedError{edge: "prize"}
+}
+
+// PetOrErr returns the Pet value or an error if the edge
+// was not loaded in eager-loading.
+func (e UserEdges) PetOrErr() ([]*Pet, error) {
+	if e.loadedTypes[3] {
+		return e.Pet, nil
+	}
+	return nil, &NotLoadedError{edge: "pet"}
+}
+
+// PrizeRedemptionsOrErr returns the PrizeRedemptions value or an error if the edge
+// was not loaded in eager-loading.
+func (e UserEdges) PrizeRedemptionsOrErr() ([]*PrizeRedemptions, error) {
+	if e.loadedTypes[4] {
+		return e.PrizeRedemptions, nil
+	}
+	return nil, &NotLoadedError{edge: "prize_redemptions"}
+}
+
+// UserPetOrErr returns the UserPet value or an error if the edge
+// was not loaded in eager-loading.
+func (e UserEdges) UserPetOrErr() ([]*UserPet, error) {
+	if e.loadedTypes[5] {
+		return e.UserPet, nil
+	}
+	return nil, &NotLoadedError{edge: "user_pet"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -188,6 +232,26 @@ func (u *User) QueryInstitution() *InstitutionQuery {
 // QueryCourse queries the "course" edge of the User entity.
 func (u *User) QueryCourse() *CourseQuery {
 	return NewUserClient(u.config).QueryCourse(u)
+}
+
+// QueryPrize queries the "prize" edge of the User entity.
+func (u *User) QueryPrize() *PrizeQuery {
+	return NewUserClient(u.config).QueryPrize(u)
+}
+
+// QueryPet queries the "pet" edge of the User entity.
+func (u *User) QueryPet() *PetQuery {
+	return NewUserClient(u.config).QueryPet(u)
+}
+
+// QueryPrizeRedemptions queries the "prize_redemptions" edge of the User entity.
+func (u *User) QueryPrizeRedemptions() *PrizeRedemptionsQuery {
+	return NewUserClient(u.config).QueryPrizeRedemptions(u)
+}
+
+// QueryUserPet queries the "user_pet" edge of the User entity.
+func (u *User) QueryUserPet() *UserPetQuery {
+	return NewUserClient(u.config).QueryUserPet(u)
 }
 
 // Update returns a builder for updating this User.

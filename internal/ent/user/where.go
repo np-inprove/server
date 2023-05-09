@@ -541,6 +541,98 @@ func HasCourseWith(preds ...predicate.Course) predicate.User {
 	})
 }
 
+// HasPrize applies the HasEdge predicate on the "prize" edge.
+func HasPrize() predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, true, PrizeTable, PrizePrimaryKey...),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasPrizeWith applies the HasEdge predicate on the "prize" edge with a given conditions (other predicates).
+func HasPrizeWith(preds ...predicate.Prize) predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		step := newPrizeStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasPet applies the HasEdge predicate on the "pet" edge.
+func HasPet() predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, true, PetTable, PetPrimaryKey...),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasPetWith applies the HasEdge predicate on the "pet" edge with a given conditions (other predicates).
+func HasPetWith(preds ...predicate.Pet) predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		step := newPetStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasPrizeRedemptions applies the HasEdge predicate on the "prize_redemptions" edge.
+func HasPrizeRedemptions() predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, true, PrizeRedemptionsTable, PrizeRedemptionsColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasPrizeRedemptionsWith applies the HasEdge predicate on the "prize_redemptions" edge with a given conditions (other predicates).
+func HasPrizeRedemptionsWith(preds ...predicate.PrizeRedemptions) predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		step := newPrizeRedemptionsStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasUserPet applies the HasEdge predicate on the "user_pet" edge.
+func HasUserPet() predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, true, UserPetTable, UserPetColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasUserPetWith applies the HasEdge predicate on the "user_pet" edge with a given conditions (other predicates).
+func HasUserPetWith(preds ...predicate.UserPet) predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		step := newUserPetStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
 // And groups predicates with the AND operator between them.
 func And(predicates ...predicate.User) predicate.User {
 	return predicate.User(func(s *sql.Selector) {

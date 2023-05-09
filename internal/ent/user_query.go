@@ -13,20 +13,28 @@ import (
 	"entgo.io/ent/schema/field"
 	"github.com/np-inprove/server/internal/ent/course"
 	"github.com/np-inprove/server/internal/ent/institution"
+	"github.com/np-inprove/server/internal/ent/pet"
 	"github.com/np-inprove/server/internal/ent/predicate"
+	"github.com/np-inprove/server/internal/ent/prize"
+	"github.com/np-inprove/server/internal/ent/prizeredemptions"
 	"github.com/np-inprove/server/internal/ent/user"
+	"github.com/np-inprove/server/internal/ent/userpet"
 )
 
 // UserQuery is the builder for querying User entities.
 type UserQuery struct {
 	config
-	ctx             *QueryContext
-	order           []user.OrderOption
-	inters          []Interceptor
-	predicates      []predicate.User
-	withInstitution *InstitutionQuery
-	withCourse      *CourseQuery
-	withFKs         bool
+	ctx                  *QueryContext
+	order                []user.OrderOption
+	inters               []Interceptor
+	predicates           []predicate.User
+	withInstitution      *InstitutionQuery
+	withCourse           *CourseQuery
+	withPrize            *PrizeQuery
+	withPet              *PetQuery
+	withPrizeRedemptions *PrizeRedemptionsQuery
+	withUserPet          *UserPetQuery
+	withFKs              bool
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -100,6 +108,94 @@ func (uq *UserQuery) QueryCourse() *CourseQuery {
 			sqlgraph.From(user.Table, user.FieldID, selector),
 			sqlgraph.To(course.Table, course.FieldID),
 			sqlgraph.Edge(sqlgraph.M2O, true, user.CourseTable, user.CourseColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(uq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryPrize chains the current query on the "prize" edge.
+func (uq *UserQuery) QueryPrize() *PrizeQuery {
+	query := (&PrizeClient{config: uq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := uq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := uq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, selector),
+			sqlgraph.To(prize.Table, prize.FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, true, user.PrizeTable, user.PrizePrimaryKey...),
+		)
+		fromU = sqlgraph.SetNeighbors(uq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryPet chains the current query on the "pet" edge.
+func (uq *UserQuery) QueryPet() *PetQuery {
+	query := (&PetClient{config: uq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := uq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := uq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, selector),
+			sqlgraph.To(pet.Table, pet.FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, true, user.PetTable, user.PetPrimaryKey...),
+		)
+		fromU = sqlgraph.SetNeighbors(uq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryPrizeRedemptions chains the current query on the "prize_redemptions" edge.
+func (uq *UserQuery) QueryPrizeRedemptions() *PrizeRedemptionsQuery {
+	query := (&PrizeRedemptionsClient{config: uq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := uq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := uq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, selector),
+			sqlgraph.To(prizeredemptions.Table, prizeredemptions.UserColumn),
+			sqlgraph.Edge(sqlgraph.O2M, true, user.PrizeRedemptionsTable, user.PrizeRedemptionsColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(uq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryUserPet chains the current query on the "user_pet" edge.
+func (uq *UserQuery) QueryUserPet() *UserPetQuery {
+	query := (&UserPetClient{config: uq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := uq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := uq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, selector),
+			sqlgraph.To(userpet.Table, userpet.UserColumn),
+			sqlgraph.Edge(sqlgraph.O2M, true, user.UserPetTable, user.UserPetColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(uq.driver.Dialect(), step)
 		return fromU, nil
@@ -294,13 +390,17 @@ func (uq *UserQuery) Clone() *UserQuery {
 		return nil
 	}
 	return &UserQuery{
-		config:          uq.config,
-		ctx:             uq.ctx.Clone(),
-		order:           append([]user.OrderOption{}, uq.order...),
-		inters:          append([]Interceptor{}, uq.inters...),
-		predicates:      append([]predicate.User{}, uq.predicates...),
-		withInstitution: uq.withInstitution.Clone(),
-		withCourse:      uq.withCourse.Clone(),
+		config:               uq.config,
+		ctx:                  uq.ctx.Clone(),
+		order:                append([]user.OrderOption{}, uq.order...),
+		inters:               append([]Interceptor{}, uq.inters...),
+		predicates:           append([]predicate.User{}, uq.predicates...),
+		withInstitution:      uq.withInstitution.Clone(),
+		withCourse:           uq.withCourse.Clone(),
+		withPrize:            uq.withPrize.Clone(),
+		withPet:              uq.withPet.Clone(),
+		withPrizeRedemptions: uq.withPrizeRedemptions.Clone(),
+		withUserPet:          uq.withUserPet.Clone(),
 		// clone intermediate query.
 		sql:  uq.sql.Clone(),
 		path: uq.path,
@@ -326,6 +426,50 @@ func (uq *UserQuery) WithCourse(opts ...func(*CourseQuery)) *UserQuery {
 		opt(query)
 	}
 	uq.withCourse = query
+	return uq
+}
+
+// WithPrize tells the query-builder to eager-load the nodes that are connected to
+// the "prize" edge. The optional arguments are used to configure the query builder of the edge.
+func (uq *UserQuery) WithPrize(opts ...func(*PrizeQuery)) *UserQuery {
+	query := (&PrizeClient{config: uq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	uq.withPrize = query
+	return uq
+}
+
+// WithPet tells the query-builder to eager-load the nodes that are connected to
+// the "pet" edge. The optional arguments are used to configure the query builder of the edge.
+func (uq *UserQuery) WithPet(opts ...func(*PetQuery)) *UserQuery {
+	query := (&PetClient{config: uq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	uq.withPet = query
+	return uq
+}
+
+// WithPrizeRedemptions tells the query-builder to eager-load the nodes that are connected to
+// the "prize_redemptions" edge. The optional arguments are used to configure the query builder of the edge.
+func (uq *UserQuery) WithPrizeRedemptions(opts ...func(*PrizeRedemptionsQuery)) *UserQuery {
+	query := (&PrizeRedemptionsClient{config: uq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	uq.withPrizeRedemptions = query
+	return uq
+}
+
+// WithUserPet tells the query-builder to eager-load the nodes that are connected to
+// the "user_pet" edge. The optional arguments are used to configure the query builder of the edge.
+func (uq *UserQuery) WithUserPet(opts ...func(*UserPetQuery)) *UserQuery {
+	query := (&UserPetClient{config: uq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	uq.withUserPet = query
 	return uq
 }
 
@@ -408,9 +552,13 @@ func (uq *UserQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*User, e
 		nodes       = []*User{}
 		withFKs     = uq.withFKs
 		_spec       = uq.querySpec()
-		loadedTypes = [2]bool{
+		loadedTypes = [6]bool{
 			uq.withInstitution != nil,
 			uq.withCourse != nil,
+			uq.withPrize != nil,
+			uq.withPet != nil,
+			uq.withPrizeRedemptions != nil,
+			uq.withUserPet != nil,
 		}
 	)
 	if uq.withCourse != nil {
@@ -447,6 +595,34 @@ func (uq *UserQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*User, e
 	if query := uq.withCourse; query != nil {
 		if err := uq.loadCourse(ctx, query, nodes, nil,
 			func(n *User, e *Course) { n.Edges.Course = e }); err != nil {
+			return nil, err
+		}
+	}
+	if query := uq.withPrize; query != nil {
+		if err := uq.loadPrize(ctx, query, nodes,
+			func(n *User) { n.Edges.Prize = []*Prize{} },
+			func(n *User, e *Prize) { n.Edges.Prize = append(n.Edges.Prize, e) }); err != nil {
+			return nil, err
+		}
+	}
+	if query := uq.withPet; query != nil {
+		if err := uq.loadPet(ctx, query, nodes,
+			func(n *User) { n.Edges.Pet = []*Pet{} },
+			func(n *User, e *Pet) { n.Edges.Pet = append(n.Edges.Pet, e) }); err != nil {
+			return nil, err
+		}
+	}
+	if query := uq.withPrizeRedemptions; query != nil {
+		if err := uq.loadPrizeRedemptions(ctx, query, nodes,
+			func(n *User) { n.Edges.PrizeRedemptions = []*PrizeRedemptions{} },
+			func(n *User, e *PrizeRedemptions) { n.Edges.PrizeRedemptions = append(n.Edges.PrizeRedemptions, e) }); err != nil {
+			return nil, err
+		}
+	}
+	if query := uq.withUserPet; query != nil {
+		if err := uq.loadUserPet(ctx, query, nodes,
+			func(n *User) { n.Edges.UserPet = []*UserPet{} },
+			func(n *User, e *UserPet) { n.Edges.UserPet = append(n.Edges.UserPet, e) }); err != nil {
 			return nil, err
 		}
 	}
@@ -543,6 +719,188 @@ func (uq *UserQuery) loadCourse(ctx context.Context, query *CourseQuery, nodes [
 		for i := range nodes {
 			assign(nodes[i], n)
 		}
+	}
+	return nil
+}
+func (uq *UserQuery) loadPrize(ctx context.Context, query *PrizeQuery, nodes []*User, init func(*User), assign func(*User, *Prize)) error {
+	edgeIDs := make([]driver.Value, len(nodes))
+	byID := make(map[int]*User)
+	nids := make(map[int]map[*User]struct{})
+	for i, node := range nodes {
+		edgeIDs[i] = node.ID
+		byID[node.ID] = node
+		if init != nil {
+			init(node)
+		}
+	}
+	query.Where(func(s *sql.Selector) {
+		joinT := sql.Table(user.PrizeTable)
+		s.Join(joinT).On(s.C(prize.FieldID), joinT.C(user.PrizePrimaryKey[0]))
+		s.Where(sql.InValues(joinT.C(user.PrizePrimaryKey[1]), edgeIDs...))
+		columns := s.SelectedColumns()
+		s.Select(joinT.C(user.PrizePrimaryKey[1]))
+		s.AppendSelect(columns...)
+		s.SetDistinct(false)
+	})
+	if err := query.prepareQuery(ctx); err != nil {
+		return err
+	}
+	qr := QuerierFunc(func(ctx context.Context, q Query) (Value, error) {
+		return query.sqlAll(ctx, func(_ context.Context, spec *sqlgraph.QuerySpec) {
+			assign := spec.Assign
+			values := spec.ScanValues
+			spec.ScanValues = func(columns []string) ([]any, error) {
+				values, err := values(columns[1:])
+				if err != nil {
+					return nil, err
+				}
+				return append([]any{new(sql.NullInt64)}, values...), nil
+			}
+			spec.Assign = func(columns []string, values []any) error {
+				outValue := int(values[0].(*sql.NullInt64).Int64)
+				inValue := int(values[1].(*sql.NullInt64).Int64)
+				if nids[inValue] == nil {
+					nids[inValue] = map[*User]struct{}{byID[outValue]: {}}
+					return assign(columns[1:], values[1:])
+				}
+				nids[inValue][byID[outValue]] = struct{}{}
+				return nil
+			}
+		})
+	})
+	neighbors, err := withInterceptors[[]*Prize](ctx, query, qr, query.inters)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		nodes, ok := nids[n.ID]
+		if !ok {
+			return fmt.Errorf(`unexpected "prize" node returned %v`, n.ID)
+		}
+		for kn := range nodes {
+			assign(kn, n)
+		}
+	}
+	return nil
+}
+func (uq *UserQuery) loadPet(ctx context.Context, query *PetQuery, nodes []*User, init func(*User), assign func(*User, *Pet)) error {
+	edgeIDs := make([]driver.Value, len(nodes))
+	byID := make(map[int]*User)
+	nids := make(map[int]map[*User]struct{})
+	for i, node := range nodes {
+		edgeIDs[i] = node.ID
+		byID[node.ID] = node
+		if init != nil {
+			init(node)
+		}
+	}
+	query.Where(func(s *sql.Selector) {
+		joinT := sql.Table(user.PetTable)
+		s.Join(joinT).On(s.C(pet.FieldID), joinT.C(user.PetPrimaryKey[0]))
+		s.Where(sql.InValues(joinT.C(user.PetPrimaryKey[1]), edgeIDs...))
+		columns := s.SelectedColumns()
+		s.Select(joinT.C(user.PetPrimaryKey[1]))
+		s.AppendSelect(columns...)
+		s.SetDistinct(false)
+	})
+	if err := query.prepareQuery(ctx); err != nil {
+		return err
+	}
+	qr := QuerierFunc(func(ctx context.Context, q Query) (Value, error) {
+		return query.sqlAll(ctx, func(_ context.Context, spec *sqlgraph.QuerySpec) {
+			assign := spec.Assign
+			values := spec.ScanValues
+			spec.ScanValues = func(columns []string) ([]any, error) {
+				values, err := values(columns[1:])
+				if err != nil {
+					return nil, err
+				}
+				return append([]any{new(sql.NullInt64)}, values...), nil
+			}
+			spec.Assign = func(columns []string, values []any) error {
+				outValue := int(values[0].(*sql.NullInt64).Int64)
+				inValue := int(values[1].(*sql.NullInt64).Int64)
+				if nids[inValue] == nil {
+					nids[inValue] = map[*User]struct{}{byID[outValue]: {}}
+					return assign(columns[1:], values[1:])
+				}
+				nids[inValue][byID[outValue]] = struct{}{}
+				return nil
+			}
+		})
+	})
+	neighbors, err := withInterceptors[[]*Pet](ctx, query, qr, query.inters)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		nodes, ok := nids[n.ID]
+		if !ok {
+			return fmt.Errorf(`unexpected "pet" node returned %v`, n.ID)
+		}
+		for kn := range nodes {
+			assign(kn, n)
+		}
+	}
+	return nil
+}
+func (uq *UserQuery) loadPrizeRedemptions(ctx context.Context, query *PrizeRedemptionsQuery, nodes []*User, init func(*User), assign func(*User, *PrizeRedemptions)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int]*User)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(prizeredemptions.FieldUserID)
+	}
+	query.Where(predicate.PrizeRedemptions(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(user.PrizeRedemptionsColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.UserID
+		node, ok := nodeids[fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "user_id" returned %v for node %v`, fk, n)
+		}
+		assign(node, n)
+	}
+	return nil
+}
+func (uq *UserQuery) loadUserPet(ctx context.Context, query *UserPetQuery, nodes []*User, init func(*User), assign func(*User, *UserPet)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int]*User)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(userpet.FieldUserID)
+	}
+	query.Where(predicate.UserPet(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(user.UserPetColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.UserID
+		node, ok := nodeids[fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "user_id" returned %v for node %v`, fk, n)
+		}
+		assign(node, n)
 	}
 	return nil
 }

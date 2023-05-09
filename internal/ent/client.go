@@ -17,7 +17,11 @@ import (
 	"github.com/np-inprove/server/internal/ent/academicschool"
 	"github.com/np-inprove/server/internal/ent/course"
 	"github.com/np-inprove/server/internal/ent/institution"
+	"github.com/np-inprove/server/internal/ent/pet"
+	"github.com/np-inprove/server/internal/ent/prize"
+	"github.com/np-inprove/server/internal/ent/prizeredemptions"
 	"github.com/np-inprove/server/internal/ent/user"
+	"github.com/np-inprove/server/internal/ent/userpet"
 )
 
 // Client is the client that holds all ent builders.
@@ -31,8 +35,16 @@ type Client struct {
 	Course *CourseClient
 	// Institution is the client for interacting with the Institution builders.
 	Institution *InstitutionClient
+	// Pet is the client for interacting with the Pet builders.
+	Pet *PetClient
+	// Prize is the client for interacting with the Prize builders.
+	Prize *PrizeClient
+	// PrizeRedemptions is the client for interacting with the PrizeRedemptions builders.
+	PrizeRedemptions *PrizeRedemptionsClient
 	// User is the client for interacting with the User builders.
 	User *UserClient
+	// UserPet is the client for interacting with the UserPet builders.
+	UserPet *UserPetClient
 }
 
 // NewClient creates a new client configured with the given options.
@@ -49,7 +61,11 @@ func (c *Client) init() {
 	c.AcademicSchool = NewAcademicSchoolClient(c.config)
 	c.Course = NewCourseClient(c.config)
 	c.Institution = NewInstitutionClient(c.config)
+	c.Pet = NewPetClient(c.config)
+	c.Prize = NewPrizeClient(c.config)
+	c.PrizeRedemptions = NewPrizeRedemptionsClient(c.config)
 	c.User = NewUserClient(c.config)
+	c.UserPet = NewUserPetClient(c.config)
 }
 
 type (
@@ -130,12 +146,16 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 	cfg := c.config
 	cfg.driver = tx
 	return &Tx{
-		ctx:            ctx,
-		config:         cfg,
-		AcademicSchool: NewAcademicSchoolClient(cfg),
-		Course:         NewCourseClient(cfg),
-		Institution:    NewInstitutionClient(cfg),
-		User:           NewUserClient(cfg),
+		ctx:              ctx,
+		config:           cfg,
+		AcademicSchool:   NewAcademicSchoolClient(cfg),
+		Course:           NewCourseClient(cfg),
+		Institution:      NewInstitutionClient(cfg),
+		Pet:              NewPetClient(cfg),
+		Prize:            NewPrizeClient(cfg),
+		PrizeRedemptions: NewPrizeRedemptionsClient(cfg),
+		User:             NewUserClient(cfg),
+		UserPet:          NewUserPetClient(cfg),
 	}, nil
 }
 
@@ -153,12 +173,16 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 	cfg := c.config
 	cfg.driver = &txDriver{tx: tx, drv: c.driver}
 	return &Tx{
-		ctx:            ctx,
-		config:         cfg,
-		AcademicSchool: NewAcademicSchoolClient(cfg),
-		Course:         NewCourseClient(cfg),
-		Institution:    NewInstitutionClient(cfg),
-		User:           NewUserClient(cfg),
+		ctx:              ctx,
+		config:           cfg,
+		AcademicSchool:   NewAcademicSchoolClient(cfg),
+		Course:           NewCourseClient(cfg),
+		Institution:      NewInstitutionClient(cfg),
+		Pet:              NewPetClient(cfg),
+		Prize:            NewPrizeClient(cfg),
+		PrizeRedemptions: NewPrizeRedemptionsClient(cfg),
+		User:             NewUserClient(cfg),
+		UserPet:          NewUserPetClient(cfg),
 	}, nil
 }
 
@@ -187,19 +211,23 @@ func (c *Client) Close() error {
 // Use adds the mutation hooks to all the entity clients.
 // In order to add hooks to a specific client, call: `client.Node.Use(...)`.
 func (c *Client) Use(hooks ...Hook) {
-	c.AcademicSchool.Use(hooks...)
-	c.Course.Use(hooks...)
-	c.Institution.Use(hooks...)
-	c.User.Use(hooks...)
+	for _, n := range []interface{ Use(...Hook) }{
+		c.AcademicSchool, c.Course, c.Institution, c.Pet, c.Prize, c.PrizeRedemptions,
+		c.User, c.UserPet,
+	} {
+		n.Use(hooks...)
+	}
 }
 
 // Intercept adds the query interceptors to all the entity clients.
 // In order to add interceptors to a specific client, call: `client.Node.Intercept(...)`.
 func (c *Client) Intercept(interceptors ...Interceptor) {
-	c.AcademicSchool.Intercept(interceptors...)
-	c.Course.Intercept(interceptors...)
-	c.Institution.Intercept(interceptors...)
-	c.User.Intercept(interceptors...)
+	for _, n := range []interface{ Intercept(...Interceptor) }{
+		c.AcademicSchool, c.Course, c.Institution, c.Pet, c.Prize, c.PrizeRedemptions,
+		c.User, c.UserPet,
+	} {
+		n.Intercept(interceptors...)
+	}
 }
 
 // Mutate implements the ent.Mutator interface.
@@ -211,8 +239,16 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.Course.mutate(ctx, m)
 	case *InstitutionMutation:
 		return c.Institution.mutate(ctx, m)
+	case *PetMutation:
+		return c.Pet.mutate(ctx, m)
+	case *PrizeMutation:
+		return c.Prize.mutate(ctx, m)
+	case *PrizeRedemptionsMutation:
+		return c.PrizeRedemptions.mutate(ctx, m)
 	case *UserMutation:
 		return c.User.mutate(ctx, m)
+	case *UserPetMutation:
+		return c.UserPet.mutate(ctx, m)
 	default:
 		return nil, fmt.Errorf("ent: unknown mutation type %T", m)
 	}
@@ -627,6 +663,22 @@ func (c *InstitutionClient) QueryAdmins(i *Institution) *UserQuery {
 	return query
 }
 
+// QueryPrizes queries the prizes edge of a Institution.
+func (c *InstitutionClient) QueryPrizes(i *Institution) *PrizeQuery {
+	query := (&PrizeClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := i.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(institution.Table, institution.FieldID, id),
+			sqlgraph.To(prize.Table, prize.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, institution.PrizesTable, institution.PrizesColumn),
+		)
+		fromV = sqlgraph.Neighbors(i.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
 // QueryAcademicSchools queries the academic_schools edge of a Institution.
 func (c *InstitutionClient) QueryAcademicSchools(i *Institution) *AcademicSchoolQuery {
 	query := (&AcademicSchoolClient{config: c.config}).Query()
@@ -665,6 +717,423 @@ func (c *InstitutionClient) mutate(ctx context.Context, m *InstitutionMutation) 
 		return (&InstitutionDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
 	default:
 		return nil, fmt.Errorf("ent: unknown Institution mutation op: %q", m.Op())
+	}
+}
+
+// PetClient is a client for the Pet schema.
+type PetClient struct {
+	config
+}
+
+// NewPetClient returns a client for the Pet from the given config.
+func NewPetClient(c config) *PetClient {
+	return &PetClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `pet.Hooks(f(g(h())))`.
+func (c *PetClient) Use(hooks ...Hook) {
+	c.hooks.Pet = append(c.hooks.Pet, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `pet.Intercept(f(g(h())))`.
+func (c *PetClient) Intercept(interceptors ...Interceptor) {
+	c.inters.Pet = append(c.inters.Pet, interceptors...)
+}
+
+// Create returns a builder for creating a Pet entity.
+func (c *PetClient) Create() *PetCreate {
+	mutation := newPetMutation(c.config, OpCreate)
+	return &PetCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of Pet entities.
+func (c *PetClient) CreateBulk(builders ...*PetCreate) *PetCreateBulk {
+	return &PetCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for Pet.
+func (c *PetClient) Update() *PetUpdate {
+	mutation := newPetMutation(c.config, OpUpdate)
+	return &PetUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *PetClient) UpdateOne(pe *Pet) *PetUpdateOne {
+	mutation := newPetMutation(c.config, OpUpdateOne, withPet(pe))
+	return &PetUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *PetClient) UpdateOneID(id int) *PetUpdateOne {
+	mutation := newPetMutation(c.config, OpUpdateOne, withPetID(id))
+	return &PetUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for Pet.
+func (c *PetClient) Delete() *PetDelete {
+	mutation := newPetMutation(c.config, OpDelete)
+	return &PetDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *PetClient) DeleteOne(pe *Pet) *PetDeleteOne {
+	return c.DeleteOneID(pe.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *PetClient) DeleteOneID(id int) *PetDeleteOne {
+	builder := c.Delete().Where(pet.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &PetDeleteOne{builder}
+}
+
+// Query returns a query builder for Pet.
+func (c *PetClient) Query() *PetQuery {
+	return &PetQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypePet},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a Pet entity by its id.
+func (c *PetClient) Get(ctx context.Context, id int) (*Pet, error) {
+	return c.Query().Where(pet.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *PetClient) GetX(ctx context.Context, id int) *Pet {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryOwner queries the owner edge of a Pet.
+func (c *PetClient) QueryOwner(pe *Pet) *UserQuery {
+	query := (&UserClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := pe.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(pet.Table, pet.FieldID, id),
+			sqlgraph.To(user.Table, user.FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, false, pet.OwnerTable, pet.OwnerPrimaryKey...),
+		)
+		fromV = sqlgraph.Neighbors(pe.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryUserPet queries the user_pet edge of a Pet.
+func (c *PetClient) QueryUserPet(pe *Pet) *UserPetQuery {
+	query := (&UserPetClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := pe.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(pet.Table, pet.FieldID, id),
+			sqlgraph.To(userpet.Table, userpet.PetColumn),
+			sqlgraph.Edge(sqlgraph.O2M, true, pet.UserPetTable, pet.UserPetColumn),
+		)
+		fromV = sqlgraph.Neighbors(pe.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *PetClient) Hooks() []Hook {
+	return c.hooks.Pet
+}
+
+// Interceptors returns the client interceptors.
+func (c *PetClient) Interceptors() []Interceptor {
+	return c.inters.Pet
+}
+
+func (c *PetClient) mutate(ctx context.Context, m *PetMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&PetCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&PetUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&PetUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&PetDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown Pet mutation op: %q", m.Op())
+	}
+}
+
+// PrizeClient is a client for the Prize schema.
+type PrizeClient struct {
+	config
+}
+
+// NewPrizeClient returns a client for the Prize from the given config.
+func NewPrizeClient(c config) *PrizeClient {
+	return &PrizeClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `prize.Hooks(f(g(h())))`.
+func (c *PrizeClient) Use(hooks ...Hook) {
+	c.hooks.Prize = append(c.hooks.Prize, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `prize.Intercept(f(g(h())))`.
+func (c *PrizeClient) Intercept(interceptors ...Interceptor) {
+	c.inters.Prize = append(c.inters.Prize, interceptors...)
+}
+
+// Create returns a builder for creating a Prize entity.
+func (c *PrizeClient) Create() *PrizeCreate {
+	mutation := newPrizeMutation(c.config, OpCreate)
+	return &PrizeCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of Prize entities.
+func (c *PrizeClient) CreateBulk(builders ...*PrizeCreate) *PrizeCreateBulk {
+	return &PrizeCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for Prize.
+func (c *PrizeClient) Update() *PrizeUpdate {
+	mutation := newPrizeMutation(c.config, OpUpdate)
+	return &PrizeUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *PrizeClient) UpdateOne(pr *Prize) *PrizeUpdateOne {
+	mutation := newPrizeMutation(c.config, OpUpdateOne, withPrize(pr))
+	return &PrizeUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *PrizeClient) UpdateOneID(id int) *PrizeUpdateOne {
+	mutation := newPrizeMutation(c.config, OpUpdateOne, withPrizeID(id))
+	return &PrizeUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for Prize.
+func (c *PrizeClient) Delete() *PrizeDelete {
+	mutation := newPrizeMutation(c.config, OpDelete)
+	return &PrizeDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *PrizeClient) DeleteOne(pr *Prize) *PrizeDeleteOne {
+	return c.DeleteOneID(pr.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *PrizeClient) DeleteOneID(id int) *PrizeDeleteOne {
+	builder := c.Delete().Where(prize.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &PrizeDeleteOne{builder}
+}
+
+// Query returns a query builder for Prize.
+func (c *PrizeClient) Query() *PrizeQuery {
+	return &PrizeQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypePrize},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a Prize entity by its id.
+func (c *PrizeClient) Get(ctx context.Context, id int) (*Prize, error) {
+	return c.Query().Where(prize.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *PrizeClient) GetX(ctx context.Context, id int) *Prize {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryInstitution queries the institution edge of a Prize.
+func (c *PrizeClient) QueryInstitution(pr *Prize) *InstitutionQuery {
+	query := (&InstitutionClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := pr.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(prize.Table, prize.FieldID, id),
+			sqlgraph.To(institution.Table, institution.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, prize.InstitutionTable, prize.InstitutionColumn),
+		)
+		fromV = sqlgraph.Neighbors(pr.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryRedemptionUsers queries the redemption_users edge of a Prize.
+func (c *PrizeClient) QueryRedemptionUsers(pr *Prize) *UserQuery {
+	query := (&UserClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := pr.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(prize.Table, prize.FieldID, id),
+			sqlgraph.To(user.Table, user.FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, false, prize.RedemptionUsersTable, prize.RedemptionUsersPrimaryKey...),
+		)
+		fromV = sqlgraph.Neighbors(pr.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryPrizeRedemptions queries the prize_redemptions edge of a Prize.
+func (c *PrizeClient) QueryPrizeRedemptions(pr *Prize) *PrizeRedemptionsQuery {
+	query := (&PrizeRedemptionsClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := pr.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(prize.Table, prize.FieldID, id),
+			sqlgraph.To(prizeredemptions.Table, prizeredemptions.PrizeColumn),
+			sqlgraph.Edge(sqlgraph.O2M, true, prize.PrizeRedemptionsTable, prize.PrizeRedemptionsColumn),
+		)
+		fromV = sqlgraph.Neighbors(pr.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *PrizeClient) Hooks() []Hook {
+	return c.hooks.Prize
+}
+
+// Interceptors returns the client interceptors.
+func (c *PrizeClient) Interceptors() []Interceptor {
+	return c.inters.Prize
+}
+
+func (c *PrizeClient) mutate(ctx context.Context, m *PrizeMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&PrizeCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&PrizeUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&PrizeUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&PrizeDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown Prize mutation op: %q", m.Op())
+	}
+}
+
+// PrizeRedemptionsClient is a client for the PrizeRedemptions schema.
+type PrizeRedemptionsClient struct {
+	config
+}
+
+// NewPrizeRedemptionsClient returns a client for the PrizeRedemptions from the given config.
+func NewPrizeRedemptionsClient(c config) *PrizeRedemptionsClient {
+	return &PrizeRedemptionsClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `prizeredemptions.Hooks(f(g(h())))`.
+func (c *PrizeRedemptionsClient) Use(hooks ...Hook) {
+	c.hooks.PrizeRedemptions = append(c.hooks.PrizeRedemptions, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `prizeredemptions.Intercept(f(g(h())))`.
+func (c *PrizeRedemptionsClient) Intercept(interceptors ...Interceptor) {
+	c.inters.PrizeRedemptions = append(c.inters.PrizeRedemptions, interceptors...)
+}
+
+// Create returns a builder for creating a PrizeRedemptions entity.
+func (c *PrizeRedemptionsClient) Create() *PrizeRedemptionsCreate {
+	mutation := newPrizeRedemptionsMutation(c.config, OpCreate)
+	return &PrizeRedemptionsCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of PrizeRedemptions entities.
+func (c *PrizeRedemptionsClient) CreateBulk(builders ...*PrizeRedemptionsCreate) *PrizeRedemptionsCreateBulk {
+	return &PrizeRedemptionsCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for PrizeRedemptions.
+func (c *PrizeRedemptionsClient) Update() *PrizeRedemptionsUpdate {
+	mutation := newPrizeRedemptionsMutation(c.config, OpUpdate)
+	return &PrizeRedemptionsUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *PrizeRedemptionsClient) UpdateOne(pr *PrizeRedemptions) *PrizeRedemptionsUpdateOne {
+	mutation := newPrizeRedemptionsMutation(c.config, OpUpdateOne)
+	mutation.prize = &pr.PrizeID
+	mutation.user = &pr.UserID
+	return &PrizeRedemptionsUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for PrizeRedemptions.
+func (c *PrizeRedemptionsClient) Delete() *PrizeRedemptionsDelete {
+	mutation := newPrizeRedemptionsMutation(c.config, OpDelete)
+	return &PrizeRedemptionsDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Query returns a query builder for PrizeRedemptions.
+func (c *PrizeRedemptionsClient) Query() *PrizeRedemptionsQuery {
+	return &PrizeRedemptionsQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypePrizeRedemptions},
+		inters: c.Interceptors(),
+	}
+}
+
+// QueryPrize queries the prize edge of a PrizeRedemptions.
+func (c *PrizeRedemptionsClient) QueryPrize(pr *PrizeRedemptions) *PrizeQuery {
+	return c.Query().
+		Where(prizeredemptions.PrizeID(pr.PrizeID), prizeredemptions.UserID(pr.UserID)).
+		QueryPrize()
+}
+
+// QueryUser queries the user edge of a PrizeRedemptions.
+func (c *PrizeRedemptionsClient) QueryUser(pr *PrizeRedemptions) *UserQuery {
+	return c.Query().
+		Where(prizeredemptions.PrizeID(pr.PrizeID), prizeredemptions.UserID(pr.UserID)).
+		QueryUser()
+}
+
+// Hooks returns the client hooks.
+func (c *PrizeRedemptionsClient) Hooks() []Hook {
+	return c.hooks.PrizeRedemptions
+}
+
+// Interceptors returns the client interceptors.
+func (c *PrizeRedemptionsClient) Interceptors() []Interceptor {
+	return c.inters.PrizeRedemptions
+}
+
+func (c *PrizeRedemptionsClient) mutate(ctx context.Context, m *PrizeRedemptionsMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&PrizeRedemptionsCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&PrizeRedemptionsUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&PrizeRedemptionsUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&PrizeRedemptionsDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown PrizeRedemptions mutation op: %q", m.Op())
 	}
 }
 
@@ -793,6 +1262,70 @@ func (c *UserClient) QueryCourse(u *User) *CourseQuery {
 	return query
 }
 
+// QueryPrize queries the prize edge of a User.
+func (c *UserClient) QueryPrize(u *User) *PrizeQuery {
+	query := (&PrizeClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := u.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, id),
+			sqlgraph.To(prize.Table, prize.FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, true, user.PrizeTable, user.PrizePrimaryKey...),
+		)
+		fromV = sqlgraph.Neighbors(u.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryPet queries the pet edge of a User.
+func (c *UserClient) QueryPet(u *User) *PetQuery {
+	query := (&PetClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := u.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, id),
+			sqlgraph.To(pet.Table, pet.FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, true, user.PetTable, user.PetPrimaryKey...),
+		)
+		fromV = sqlgraph.Neighbors(u.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryPrizeRedemptions queries the prize_redemptions edge of a User.
+func (c *UserClient) QueryPrizeRedemptions(u *User) *PrizeRedemptionsQuery {
+	query := (&PrizeRedemptionsClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := u.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, id),
+			sqlgraph.To(prizeredemptions.Table, prizeredemptions.UserColumn),
+			sqlgraph.Edge(sqlgraph.O2M, true, user.PrizeRedemptionsTable, user.PrizeRedemptionsColumn),
+		)
+		fromV = sqlgraph.Neighbors(u.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryUserPet queries the user_pet edge of a User.
+func (c *UserClient) QueryUserPet(u *User) *UserPetQuery {
+	query := (&UserPetClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := u.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, id),
+			sqlgraph.To(userpet.Table, userpet.UserColumn),
+			sqlgraph.Edge(sqlgraph.O2M, true, user.UserPetTable, user.UserPetColumn),
+		)
+		fromV = sqlgraph.Neighbors(u.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
 // Hooks returns the client hooks.
 func (c *UserClient) Hooks() []Hook {
 	return c.hooks.User
@@ -818,12 +1351,115 @@ func (c *UserClient) mutate(ctx context.Context, m *UserMutation) (Value, error)
 	}
 }
 
+// UserPetClient is a client for the UserPet schema.
+type UserPetClient struct {
+	config
+}
+
+// NewUserPetClient returns a client for the UserPet from the given config.
+func NewUserPetClient(c config) *UserPetClient {
+	return &UserPetClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `userpet.Hooks(f(g(h())))`.
+func (c *UserPetClient) Use(hooks ...Hook) {
+	c.hooks.UserPet = append(c.hooks.UserPet, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `userpet.Intercept(f(g(h())))`.
+func (c *UserPetClient) Intercept(interceptors ...Interceptor) {
+	c.inters.UserPet = append(c.inters.UserPet, interceptors...)
+}
+
+// Create returns a builder for creating a UserPet entity.
+func (c *UserPetClient) Create() *UserPetCreate {
+	mutation := newUserPetMutation(c.config, OpCreate)
+	return &UserPetCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of UserPet entities.
+func (c *UserPetClient) CreateBulk(builders ...*UserPetCreate) *UserPetCreateBulk {
+	return &UserPetCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for UserPet.
+func (c *UserPetClient) Update() *UserPetUpdate {
+	mutation := newUserPetMutation(c.config, OpUpdate)
+	return &UserPetUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *UserPetClient) UpdateOne(up *UserPet) *UserPetUpdateOne {
+	mutation := newUserPetMutation(c.config, OpUpdateOne)
+	mutation.pet = &up.PetID
+	mutation.user = &up.UserID
+	return &UserPetUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for UserPet.
+func (c *UserPetClient) Delete() *UserPetDelete {
+	mutation := newUserPetMutation(c.config, OpDelete)
+	return &UserPetDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Query returns a query builder for UserPet.
+func (c *UserPetClient) Query() *UserPetQuery {
+	return &UserPetQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeUserPet},
+		inters: c.Interceptors(),
+	}
+}
+
+// QueryPet queries the pet edge of a UserPet.
+func (c *UserPetClient) QueryPet(up *UserPet) *PetQuery {
+	return c.Query().
+		Where(userpet.PetID(up.PetID), userpet.UserID(up.UserID)).
+		QueryPet()
+}
+
+// QueryUser queries the user edge of a UserPet.
+func (c *UserPetClient) QueryUser(up *UserPet) *UserQuery {
+	return c.Query().
+		Where(userpet.PetID(up.PetID), userpet.UserID(up.UserID)).
+		QueryUser()
+}
+
+// Hooks returns the client hooks.
+func (c *UserPetClient) Hooks() []Hook {
+	return c.hooks.UserPet
+}
+
+// Interceptors returns the client interceptors.
+func (c *UserPetClient) Interceptors() []Interceptor {
+	return c.inters.UserPet
+}
+
+func (c *UserPetClient) mutate(ctx context.Context, m *UserPetMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&UserPetCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&UserPetUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&UserPetUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&UserPetDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown UserPet mutation op: %q", m.Op())
+	}
+}
+
 // hooks and interceptors per client, for fast access.
 type (
 	hooks struct {
-		AcademicSchool, Course, Institution, User []ent.Hook
+		AcademicSchool, Course, Institution, Pet, Prize, PrizeRedemptions, User,
+		UserPet []ent.Hook
 	}
 	inters struct {
-		AcademicSchool, Course, Institution, User []ent.Interceptor
+		AcademicSchool, Course, Institution, Pet, Prize, PrizeRedemptions, User,
+		UserPet []ent.Interceptor
 	}
 )

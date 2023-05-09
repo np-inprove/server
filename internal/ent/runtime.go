@@ -6,8 +6,10 @@ import (
 	"github.com/np-inprove/server/internal/ent/academicschool"
 	"github.com/np-inprove/server/internal/ent/course"
 	"github.com/np-inprove/server/internal/ent/institution"
+	"github.com/np-inprove/server/internal/ent/prize"
 	"github.com/np-inprove/server/internal/ent/schema"
 	"github.com/np-inprove/server/internal/ent/user"
+	"github.com/np-inprove/server/internal/ent/userpet"
 )
 
 // The init function reads all schema descriptors with runtime code
@@ -40,6 +42,16 @@ func init() {
 	institutionDescName := institutionFields[0].Descriptor()
 	// institution.NameValidator is a validator for the "name" field. It is called by the builders before save.
 	institution.NameValidator = institutionDescName.Validators[0].(func(string) error)
+	prizeFields := schema.Prize{}.Fields()
+	_ = prizeFields
+	// prizeDescName is the schema descriptor for name field.
+	prizeDescName := prizeFields[0].Descriptor()
+	// prize.NameValidator is a validator for the "name" field. It is called by the builders before save.
+	prize.NameValidator = prizeDescName.Validators[0].(func(string) error)
+	// prizeDescPointsRequired is the schema descriptor for points_required field.
+	prizeDescPointsRequired := prizeFields[2].Descriptor()
+	// prize.PointsRequiredValidator is a validator for the "points_required" field. It is called by the builders before save.
+	prize.PointsRequiredValidator = prizeDescPointsRequired.Validators[0].(func(int) error)
 	userFields := schema.User{}.Fields()
 	_ = userFields
 	// userDescFirstName is the schema descriptor for first_name field.
@@ -66,4 +78,28 @@ func init() {
 	userDescPointsAwardedCount := userFields[5].Descriptor()
 	// user.PointsAwardedCountValidator is a validator for the "points_awarded_count" field. It is called by the builders before save.
 	user.PointsAwardedCountValidator = userDescPointsAwardedCount.Validators[0].(func(int) error)
+	userpetFields := schema.UserPet{}.Fields()
+	_ = userpetFields
+	// userpetDescHungerPercentage is the schema descriptor for hunger_percentage field.
+	userpetDescHungerPercentage := userpetFields[0].Descriptor()
+	// userpet.HungerPercentageValidator is a validator for the "hunger_percentage" field. It is called by the builders before save.
+	userpet.HungerPercentageValidator = func() func(float64) error {
+		validators := userpetDescHungerPercentage.Validators
+		fns := [...]func(float64) error{
+			validators[0].(func(float64) error),
+			validators[1].(func(float64) error),
+		}
+		return func(hunger_percentage float64) error {
+			for _, fn := range fns {
+				if err := fn(hunger_percentage); err != nil {
+					return err
+				}
+			}
+			return nil
+		}
+	}()
+	// userpetDescEnabledSvgGroupElementIds is the schema descriptor for enabled_svg_group_element_ids field.
+	userpetDescEnabledSvgGroupElementIds := userpetFields[1].Descriptor()
+	// userpet.DefaultEnabledSvgGroupElementIds holds the default value on creation for the enabled_svg_group_element_ids field.
+	userpet.DefaultEnabledSvgGroupElementIds = userpetDescEnabledSvgGroupElementIds.Default.(map[string]bool)
 }

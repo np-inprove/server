@@ -15,7 +15,11 @@ import (
 	"github.com/np-inprove/server/internal/ent/academicschool"
 	"github.com/np-inprove/server/internal/ent/course"
 	"github.com/np-inprove/server/internal/ent/institution"
+	"github.com/np-inprove/server/internal/ent/pet"
+	"github.com/np-inprove/server/internal/ent/prize"
+	"github.com/np-inprove/server/internal/ent/prizeredemptions"
 	"github.com/np-inprove/server/internal/ent/user"
+	"github.com/np-inprove/server/internal/ent/userpet"
 )
 
 // ent aliases to avoid import conflicts in user's code.
@@ -76,10 +80,14 @@ var (
 func checkColumn(table, column string) error {
 	initCheck.Do(func() {
 		columnCheck = sql.NewColumnCheck(map[string]func(string) bool{
-			academicschool.Table: academicschool.ValidColumn,
-			course.Table:         course.ValidColumn,
-			institution.Table:    institution.ValidColumn,
-			user.Table:           user.ValidColumn,
+			academicschool.Table:   academicschool.ValidColumn,
+			course.Table:           course.ValidColumn,
+			institution.Table:      institution.ValidColumn,
+			pet.Table:              pet.ValidColumn,
+			prize.Table:            prize.ValidColumn,
+			prizeredemptions.Table: prizeredemptions.ValidColumn,
+			user.Table:             user.ValidColumn,
+			userpet.Table:          userpet.ValidColumn,
 		})
 	})
 	return columnCheck(table, column)

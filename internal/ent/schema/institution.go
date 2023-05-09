@@ -25,6 +25,8 @@ func (Institution) Edges() []ent.Edge {
 	return []ent.Edge{
 		edge.To("admins", User.Type).
 			Comment("Admins of the institution"),
+		edge.To("prizes", Prize.Type).
+			Comment("Prizes available to be redeemed by users of the institution"),
 		edge.To("academic_schools", AcademicSchool.Type).
 			Comment("Academic schools of the institution"),
 	}

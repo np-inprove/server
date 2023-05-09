@@ -16,6 +16,8 @@ const (
 	FieldName = "name"
 	// EdgeAdmins holds the string denoting the admins edge name in mutations.
 	EdgeAdmins = "admins"
+	// EdgePrizes holds the string denoting the prizes edge name in mutations.
+	EdgePrizes = "prizes"
 	// EdgeAcademicSchools holds the string denoting the academic_schools edge name in mutations.
 	EdgeAcademicSchools = "academic_schools"
 	// Table holds the table name of the institution in the database.
@@ -25,6 +27,13 @@ const (
 	// AdminsInverseTable is the table name for the User entity.
 	// It exists in this package in order to avoid circular dependency with the "user" package.
 	AdminsInverseTable = "users"
+	// PrizesTable is the table that holds the prizes relation/edge.
+	PrizesTable = "prizes"
+	// PrizesInverseTable is the table name for the Prize entity.
+	// It exists in this package in order to avoid circular dependency with the "prize" package.
+	PrizesInverseTable = "prizes"
+	// PrizesColumn is the table column denoting the prizes relation/edge.
+	PrizesColumn = "institution_prizes"
 	// AcademicSchoolsTable is the table that holds the academic_schools relation/edge.
 	AcademicSchoolsTable = "academic_schools"
 	// AcademicSchoolsInverseTable is the table name for the AcademicSchool entity.
@@ -88,6 +97,20 @@ func ByAdmins(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 	}
 }
 
+// ByPrizesCount orders the results by prizes count.
+func ByPrizesCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newPrizesStep(), opts...)
+	}
+}
+
+// ByPrizes orders the results by prizes terms.
+func ByPrizes(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newPrizesStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
 // ByAcademicSchoolsCount orders the results by academic_schools count.
 func ByAcademicSchoolsCount(opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
@@ -106,6 +129,13 @@ func newAdminsStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(AdminsInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.M2M, false, AdminsTable, AdminsPrimaryKey...),
+	)
+}
+func newPrizesStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(PrizesInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, PrizesTable, PrizesColumn),
 	)
 }
 func newAcademicSchoolsStep() *sqlgraph.Step {

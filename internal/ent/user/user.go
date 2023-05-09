@@ -32,6 +32,14 @@ const (
 	EdgeInstitution = "institution"
 	// EdgeCourse holds the string denoting the course edge name in mutations.
 	EdgeCourse = "course"
+	// EdgePrize holds the string denoting the prize edge name in mutations.
+	EdgePrize = "prize"
+	// EdgePet holds the string denoting the pet edge name in mutations.
+	EdgePet = "pet"
+	// EdgePrizeRedemptions holds the string denoting the prize_redemptions edge name in mutations.
+	EdgePrizeRedemptions = "prize_redemptions"
+	// EdgeUserPet holds the string denoting the user_pet edge name in mutations.
+	EdgeUserPet = "user_pet"
 	// Table holds the table name of the user in the database.
 	Table = "users"
 	// InstitutionTable is the table that holds the institution relation/edge. The primary key declared below.
@@ -46,6 +54,30 @@ const (
 	CourseInverseTable = "courses"
 	// CourseColumn is the table column denoting the course relation/edge.
 	CourseColumn = "course_students"
+	// PrizeTable is the table that holds the prize relation/edge. The primary key declared below.
+	PrizeTable = "prize_redemptions"
+	// PrizeInverseTable is the table name for the Prize entity.
+	// It exists in this package in order to avoid circular dependency with the "prize" package.
+	PrizeInverseTable = "prizes"
+	// PetTable is the table that holds the pet relation/edge. The primary key declared below.
+	PetTable = "user_pets"
+	// PetInverseTable is the table name for the Pet entity.
+	// It exists in this package in order to avoid circular dependency with the "pet" package.
+	PetInverseTable = "pets"
+	// PrizeRedemptionsTable is the table that holds the prize_redemptions relation/edge.
+	PrizeRedemptionsTable = "prize_redemptions"
+	// PrizeRedemptionsInverseTable is the table name for the PrizeRedemptions entity.
+	// It exists in this package in order to avoid circular dependency with the "prizeredemptions" package.
+	PrizeRedemptionsInverseTable = "prize_redemptions"
+	// PrizeRedemptionsColumn is the table column denoting the prize_redemptions relation/edge.
+	PrizeRedemptionsColumn = "user_id"
+	// UserPetTable is the table that holds the user_pet relation/edge.
+	UserPetTable = "user_pets"
+	// UserPetInverseTable is the table name for the UserPet entity.
+	// It exists in this package in order to avoid circular dependency with the "userpet" package.
+	UserPetInverseTable = "user_pets"
+	// UserPetColumn is the table column denoting the user_pet relation/edge.
+	UserPetColumn = "user_id"
 )
 
 // Columns holds all SQL columns for user fields.
@@ -71,6 +103,12 @@ var (
 	// InstitutionPrimaryKey and InstitutionColumn2 are the table columns denoting the
 	// primary key for the institution relation (M2M).
 	InstitutionPrimaryKey = []string{"institution_id", "user_id"}
+	// PrizePrimaryKey and PrizeColumn2 are the table columns denoting the
+	// primary key for the prize relation (M2M).
+	PrizePrimaryKey = []string{"prize_id", "user_id"}
+	// PetPrimaryKey and PetColumn2 are the table columns denoting the
+	// primary key for the pet relation (M2M).
+	PetPrimaryKey = []string{"pet_id", "user_id"}
 )
 
 // ValidColumn reports if the column name is valid (part of the table columns).
@@ -171,6 +209,62 @@ func ByCourseField(field string, opts ...sql.OrderTermOption) OrderOption {
 		sqlgraph.OrderByNeighborTerms(s, newCourseStep(), sql.OrderByField(field, opts...))
 	}
 }
+
+// ByPrizeCount orders the results by prize count.
+func ByPrizeCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newPrizeStep(), opts...)
+	}
+}
+
+// ByPrize orders the results by prize terms.
+func ByPrize(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newPrizeStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
+// ByPetCount orders the results by pet count.
+func ByPetCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newPetStep(), opts...)
+	}
+}
+
+// ByPet orders the results by pet terms.
+func ByPet(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newPetStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
+// ByPrizeRedemptionsCount orders the results by prize_redemptions count.
+func ByPrizeRedemptionsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newPrizeRedemptionsStep(), opts...)
+	}
+}
+
+// ByPrizeRedemptions orders the results by prize_redemptions terms.
+func ByPrizeRedemptions(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newPrizeRedemptionsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
+// ByUserPetCount orders the results by user_pet count.
+func ByUserPetCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newUserPetStep(), opts...)
+	}
+}
+
+// ByUserPet orders the results by user_pet terms.
+func ByUserPet(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newUserPetStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
 func newInstitutionStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
@@ -183,5 +277,33 @@ func newCourseStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(CourseInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.M2O, true, CourseTable, CourseColumn),
+	)
+}
+func newPrizeStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(PrizeInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.M2M, true, PrizeTable, PrizePrimaryKey...),
+	)
+}
+func newPetStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(PetInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.M2M, true, PetTable, PetPrimaryKey...),
+	)
+}
+func newPrizeRedemptionsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(PrizeRedemptionsInverseTable, PrizeRedemptionsColumn),
+		sqlgraph.Edge(sqlgraph.O2M, true, PrizeRedemptionsTable, PrizeRedemptionsColumn),
+	)
+}
+func newUserPetStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(UserPetInverseTable, UserPetColumn),
+		sqlgraph.Edge(sqlgraph.O2M, true, UserPetTable, UserPetColumn),
 	)
 }

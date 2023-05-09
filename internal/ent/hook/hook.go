@@ -45,6 +45,42 @@ func (f InstitutionFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value,
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.InstitutionMutation", m)
 }
 
+// The PetFunc type is an adapter to allow the use of ordinary
+// function as Pet mutator.
+type PetFunc func(context.Context, *ent.PetMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f PetFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.PetMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.PetMutation", m)
+}
+
+// The PrizeFunc type is an adapter to allow the use of ordinary
+// function as Prize mutator.
+type PrizeFunc func(context.Context, *ent.PrizeMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f PrizeFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.PrizeMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.PrizeMutation", m)
+}
+
+// The PrizeRedemptionsFunc type is an adapter to allow the use of ordinary
+// function as PrizeRedemptions mutator.
+type PrizeRedemptionsFunc func(context.Context, *ent.PrizeRedemptionsMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f PrizeRedemptionsFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.PrizeRedemptionsMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.PrizeRedemptionsMutation", m)
+}
+
 // The UserFunc type is an adapter to allow the use of ordinary
 // function as User mutator.
 type UserFunc func(context.Context, *ent.UserMutation) (ent.Value, error)
@@ -55,6 +91,18 @@ func (f UserFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error)
 		return f(ctx, mv)
 	}
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.UserMutation", m)
+}
+
+// The UserPetFunc type is an adapter to allow the use of ordinary
+// function as UserPet mutator.
+type UserPetFunc func(context.Context, *ent.UserPetMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f UserPetFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.UserPetMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.UserPetMutation", m)
 }
 
 // Condition is a hook condition function.

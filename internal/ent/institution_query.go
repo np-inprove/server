@@ -14,6 +14,7 @@ import (
 	"github.com/np-inprove/server/internal/ent/academicschool"
 	"github.com/np-inprove/server/internal/ent/institution"
 	"github.com/np-inprove/server/internal/ent/predicate"
+	"github.com/np-inprove/server/internal/ent/prize"
 	"github.com/np-inprove/server/internal/ent/user"
 )
 
@@ -25,6 +26,7 @@ type InstitutionQuery struct {
 	inters              []Interceptor
 	predicates          []predicate.Institution
 	withAdmins          *UserQuery
+	withPrizes          *PrizeQuery
 	withAcademicSchools *AcademicSchoolQuery
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
@@ -77,6 +79,28 @@ func (iq *InstitutionQuery) QueryAdmins() *UserQuery {
 			sqlgraph.From(institution.Table, institution.FieldID, selector),
 			sqlgraph.To(user.Table, user.FieldID),
 			sqlgraph.Edge(sqlgraph.M2M, false, institution.AdminsTable, institution.AdminsPrimaryKey...),
+		)
+		fromU = sqlgraph.SetNeighbors(iq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryPrizes chains the current query on the "prizes" edge.
+func (iq *InstitutionQuery) QueryPrizes() *PrizeQuery {
+	query := (&PrizeClient{config: iq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := iq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := iq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(institution.Table, institution.FieldID, selector),
+			sqlgraph.To(prize.Table, prize.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, institution.PrizesTable, institution.PrizesColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(iq.driver.Dialect(), step)
 		return fromU, nil
@@ -299,6 +323,7 @@ func (iq *InstitutionQuery) Clone() *InstitutionQuery {
 		inters:              append([]Interceptor{}, iq.inters...),
 		predicates:          append([]predicate.Institution{}, iq.predicates...),
 		withAdmins:          iq.withAdmins.Clone(),
+		withPrizes:          iq.withPrizes.Clone(),
 		withAcademicSchools: iq.withAcademicSchools.Clone(),
 		// clone intermediate query.
 		sql:  iq.sql.Clone(),
@@ -314,6 +339,17 @@ func (iq *InstitutionQuery) WithAdmins(opts ...func(*UserQuery)) *InstitutionQue
 		opt(query)
 	}
 	iq.withAdmins = query
+	return iq
+}
+
+// WithPrizes tells the query-builder to eager-load the nodes that are connected to
+// the "prizes" edge. The optional arguments are used to configure the query builder of the edge.
+func (iq *InstitutionQuery) WithPrizes(opts ...func(*PrizeQuery)) *InstitutionQuery {
+	query := (&PrizeClient{config: iq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	iq.withPrizes = query
 	return iq
 }
 
@@ -406,8 +442,9 @@ func (iq *InstitutionQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*
 	var (
 		nodes       = []*Institution{}
 		_spec       = iq.querySpec()
-		loadedTypes = [2]bool{
+		loadedTypes = [3]bool{
 			iq.withAdmins != nil,
+			iq.withPrizes != nil,
 			iq.withAcademicSchools != nil,
 		}
 	)
@@ -433,6 +470,13 @@ func (iq *InstitutionQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*
 		if err := iq.loadAdmins(ctx, query, nodes,
 			func(n *Institution) { n.Edges.Admins = []*User{} },
 			func(n *Institution, e *User) { n.Edges.Admins = append(n.Edges.Admins, e) }); err != nil {
+			return nil, err
+		}
+	}
+	if query := iq.withPrizes; query != nil {
+		if err := iq.loadPrizes(ctx, query, nodes,
+			func(n *Institution) { n.Edges.Prizes = []*Prize{} },
+			func(n *Institution, e *Prize) { n.Edges.Prizes = append(n.Edges.Prizes, e) }); err != nil {
 			return nil, err
 		}
 	}
@@ -504,6 +548,37 @@ func (iq *InstitutionQuery) loadAdmins(ctx context.Context, query *UserQuery, no
 		for kn := range nodes {
 			assign(kn, n)
 		}
+	}
+	return nil
+}
+func (iq *InstitutionQuery) loadPrizes(ctx context.Context, query *PrizeQuery, nodes []*Institution, init func(*Institution), assign func(*Institution, *Prize)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int]*Institution)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	query.withFKs = true
+	query.Where(predicate.Prize(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(institution.PrizesColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.institution_prizes
+		if fk == nil {
+			return fmt.Errorf(`foreign-key "institution_prizes" is nil for node %v`, n.ID)
+		}
+		node, ok := nodeids[*fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "institution_prizes" returned %v for node %v`, *fk, n.ID)
+		}
+		assign(node, n)
 	}
 	return nil
 }

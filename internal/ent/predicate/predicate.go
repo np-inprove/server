@@ -15,5 +15,17 @@ type Course func(*sql.Selector)
 // Institution is the predicate function for institution builders.
 type Institution func(*sql.Selector)
 
+// Pet is the predicate function for pet builders.
+type Pet func(*sql.Selector)
+
+// Prize is the predicate function for prize builders.
+type Prize func(*sql.Selector)
+
+// PrizeRedemptions is the predicate function for prizeredemptions builders.
+type PrizeRedemptions func(*sql.Selector)
+
 // User is the predicate function for user builders.
 type User func(*sql.Selector)
+
+// UserPet is the predicate function for userpet builders.
+type UserPet func(*sql.Selector)

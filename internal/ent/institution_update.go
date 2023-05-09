@@ -13,6 +13,7 @@ import (
 	"github.com/np-inprove/server/internal/ent/academicschool"
 	"github.com/np-inprove/server/internal/ent/institution"
 	"github.com/np-inprove/server/internal/ent/predicate"
+	"github.com/np-inprove/server/internal/ent/prize"
 	"github.com/np-inprove/server/internal/ent/user"
 )
 
@@ -48,6 +49,21 @@ func (iu *InstitutionUpdate) AddAdmins(u ...*User) *InstitutionUpdate {
 		ids[i] = u[i].ID
 	}
 	return iu.AddAdminIDs(ids...)
+}
+
+// AddPrizeIDs adds the "prizes" edge to the Prize entity by IDs.
+func (iu *InstitutionUpdate) AddPrizeIDs(ids ...int) *InstitutionUpdate {
+	iu.mutation.AddPrizeIDs(ids...)
+	return iu
+}
+
+// AddPrizes adds the "prizes" edges to the Prize entity.
+func (iu *InstitutionUpdate) AddPrizes(p ...*Prize) *InstitutionUpdate {
+	ids := make([]int, len(p))
+	for i := range p {
+		ids[i] = p[i].ID
+	}
+	return iu.AddPrizeIDs(ids...)
 }
 
 // AddAcademicSchoolIDs adds the "academic_schools" edge to the AcademicSchool entity by IDs.
@@ -89,6 +105,27 @@ func (iu *InstitutionUpdate) RemoveAdmins(u ...*User) *InstitutionUpdate {
 		ids[i] = u[i].ID
 	}
 	return iu.RemoveAdminIDs(ids...)
+}
+
+// ClearPrizes clears all "prizes" edges to the Prize entity.
+func (iu *InstitutionUpdate) ClearPrizes() *InstitutionUpdate {
+	iu.mutation.ClearPrizes()
+	return iu
+}
+
+// RemovePrizeIDs removes the "prizes" edge to Prize entities by IDs.
+func (iu *InstitutionUpdate) RemovePrizeIDs(ids ...int) *InstitutionUpdate {
+	iu.mutation.RemovePrizeIDs(ids...)
+	return iu
+}
+
+// RemovePrizes removes "prizes" edges to Prize entities.
+func (iu *InstitutionUpdate) RemovePrizes(p ...*Prize) *InstitutionUpdate {
+	ids := make([]int, len(p))
+	for i := range p {
+		ids[i] = p[i].ID
+	}
+	return iu.RemovePrizeIDs(ids...)
 }
 
 // ClearAcademicSchools clears all "academic_schools" edges to the AcademicSchool entity.
@@ -209,6 +246,51 @@ func (iu *InstitutionUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
+	if iu.mutation.PrizesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   institution.PrizesTable,
+			Columns: []string{institution.PrizesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(prize.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := iu.mutation.RemovedPrizesIDs(); len(nodes) > 0 && !iu.mutation.PrizesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   institution.PrizesTable,
+			Columns: []string{institution.PrizesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(prize.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := iu.mutation.PrizesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   institution.PrizesTable,
+			Columns: []string{institution.PrizesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(prize.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
 	if iu.mutation.AcademicSchoolsCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
@@ -295,6 +377,21 @@ func (iuo *InstitutionUpdateOne) AddAdmins(u ...*User) *InstitutionUpdateOne {
 	return iuo.AddAdminIDs(ids...)
 }
 
+// AddPrizeIDs adds the "prizes" edge to the Prize entity by IDs.
+func (iuo *InstitutionUpdateOne) AddPrizeIDs(ids ...int) *InstitutionUpdateOne {
+	iuo.mutation.AddPrizeIDs(ids...)
+	return iuo
+}
+
+// AddPrizes adds the "prizes" edges to the Prize entity.
+func (iuo *InstitutionUpdateOne) AddPrizes(p ...*Prize) *InstitutionUpdateOne {
+	ids := make([]int, len(p))
+	for i := range p {
+		ids[i] = p[i].ID
+	}
+	return iuo.AddPrizeIDs(ids...)
+}
+
 // AddAcademicSchoolIDs adds the "academic_schools" edge to the AcademicSchool entity by IDs.
 func (iuo *InstitutionUpdateOne) AddAcademicSchoolIDs(ids ...int) *InstitutionUpdateOne {
 	iuo.mutation.AddAcademicSchoolIDs(ids...)
@@ -334,6 +431,27 @@ func (iuo *InstitutionUpdateOne) RemoveAdmins(u ...*User) *InstitutionUpdateOne 
 		ids[i] = u[i].ID
 	}
 	return iuo.RemoveAdminIDs(ids...)
+}
+
+// ClearPrizes clears all "prizes" edges to the Prize entity.
+func (iuo *InstitutionUpdateOne) ClearPrizes() *InstitutionUpdateOne {
+	iuo.mutation.ClearPrizes()
+	return iuo
+}
+
+// RemovePrizeIDs removes the "prizes" edge to Prize entities by IDs.
+func (iuo *InstitutionUpdateOne) RemovePrizeIDs(ids ...int) *InstitutionUpdateOne {
+	iuo.mutation.RemovePrizeIDs(ids...)
+	return iuo
+}
+
+// RemovePrizes removes "prizes" edges to Prize entities.
+func (iuo *InstitutionUpdateOne) RemovePrizes(p ...*Prize) *InstitutionUpdateOne {
+	ids := make([]int, len(p))
+	for i := range p {
+		ids[i] = p[i].ID
+	}
+	return iuo.RemovePrizeIDs(ids...)
 }
 
 // ClearAcademicSchools clears all "academic_schools" edges to the AcademicSchool entity.
@@ -477,6 +595,51 @@ func (iuo *InstitutionUpdateOne) sqlSave(ctx context.Context) (_node *Institutio
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if iuo.mutation.PrizesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   institution.PrizesTable,
+			Columns: []string{institution.PrizesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(prize.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := iuo.mutation.RemovedPrizesIDs(); len(nodes) > 0 && !iuo.mutation.PrizesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   institution.PrizesTable,
+			Columns: []string{institution.PrizesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(prize.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := iuo.mutation.PrizesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   institution.PrizesTable,
+			Columns: []string{institution.PrizesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(prize.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

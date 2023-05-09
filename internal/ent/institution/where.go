@@ -146,6 +146,29 @@ func HasAdminsWith(preds ...predicate.User) predicate.Institution {
 	})
 }
 
+// HasPrizes applies the HasEdge predicate on the "prizes" edge.
+func HasPrizes() predicate.Institution {
+	return predicate.Institution(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, PrizesTable, PrizesColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasPrizesWith applies the HasEdge predicate on the "prizes" edge with a given conditions (other predicates).
+func HasPrizesWith(preds ...predicate.Prize) predicate.Institution {
+	return predicate.Institution(func(s *sql.Selector) {
+		step := newPrizesStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
 // HasAcademicSchools applies the HasEdge predicate on the "academic_schools" edge.
 func HasAcademicSchools() predicate.Institution {
 	return predicate.Institution(func(s *sql.Selector) {

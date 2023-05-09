@@ -49,5 +49,11 @@ func (User) Edges() []ent.Edge {
 		edge.From("course", Course.Type).
 			Ref("students").
 			Unique(),
+		edge.From("prize", Prize.Type).
+			Ref("redemption_users").
+			Through("prize_redemptions", PrizeRedemptions.Type),
+		edge.From("pet", Pet.Type).
+			Ref("owner").
+			Through("user_pet", UserPet.Type),
 	}
 }

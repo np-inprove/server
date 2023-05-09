@@ -18,8 +18,16 @@ type Tx struct {
 	Course *CourseClient
 	// Institution is the client for interacting with the Institution builders.
 	Institution *InstitutionClient
+	// Pet is the client for interacting with the Pet builders.
+	Pet *PetClient
+	// Prize is the client for interacting with the Prize builders.
+	Prize *PrizeClient
+	// PrizeRedemptions is the client for interacting with the PrizeRedemptions builders.
+	PrizeRedemptions *PrizeRedemptionsClient
 	// User is the client for interacting with the User builders.
 	User *UserClient
+	// UserPet is the client for interacting with the UserPet builders.
+	UserPet *UserPetClient
 
 	// lazily loaded.
 	client     *Client
@@ -154,7 +162,11 @@ func (tx *Tx) init() {
 	tx.AcademicSchool = NewAcademicSchoolClient(tx.config)
 	tx.Course = NewCourseClient(tx.config)
 	tx.Institution = NewInstitutionClient(tx.config)
+	tx.Pet = NewPetClient(tx.config)
+	tx.Prize = NewPrizeClient(tx.config)
+	tx.PrizeRedemptions = NewPrizeRedemptionsClient(tx.config)
 	tx.User = NewUserClient(tx.config)
+	tx.UserPet = NewUserPetClient(tx.config)
 }
 
 // txDriver wraps the given dialect.Tx with a nop dialect.Driver implementation.

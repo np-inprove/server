@@ -13,7 +13,9 @@ import (
 	"entgo.io/ent/schema/field"
 	"github.com/np-inprove/server/internal/ent/course"
 	"github.com/np-inprove/server/internal/ent/institution"
+	"github.com/np-inprove/server/internal/ent/pet"
 	"github.com/np-inprove/server/internal/ent/predicate"
+	"github.com/np-inprove/server/internal/ent/prize"
 	"github.com/np-inprove/server/internal/ent/user"
 )
 
@@ -140,6 +142,36 @@ func (uu *UserUpdate) SetCourse(c *Course) *UserUpdate {
 	return uu.SetCourseID(c.ID)
 }
 
+// AddPrizeIDs adds the "prize" edge to the Prize entity by IDs.
+func (uu *UserUpdate) AddPrizeIDs(ids ...int) *UserUpdate {
+	uu.mutation.AddPrizeIDs(ids...)
+	return uu
+}
+
+// AddPrize adds the "prize" edges to the Prize entity.
+func (uu *UserUpdate) AddPrize(p ...*Prize) *UserUpdate {
+	ids := make([]int, len(p))
+	for i := range p {
+		ids[i] = p[i].ID
+	}
+	return uu.AddPrizeIDs(ids...)
+}
+
+// AddPetIDs adds the "pet" edge to the Pet entity by IDs.
+func (uu *UserUpdate) AddPetIDs(ids ...int) *UserUpdate {
+	uu.mutation.AddPetIDs(ids...)
+	return uu
+}
+
+// AddPet adds the "pet" edges to the Pet entity.
+func (uu *UserUpdate) AddPet(p ...*Pet) *UserUpdate {
+	ids := make([]int, len(p))
+	for i := range p {
+		ids[i] = p[i].ID
+	}
+	return uu.AddPetIDs(ids...)
+}
+
 // Mutation returns the UserMutation object of the builder.
 func (uu *UserUpdate) Mutation() *UserMutation {
 	return uu.mutation
@@ -170,6 +202,48 @@ func (uu *UserUpdate) RemoveInstitution(i ...*Institution) *UserUpdate {
 func (uu *UserUpdate) ClearCourse() *UserUpdate {
 	uu.mutation.ClearCourse()
 	return uu
+}
+
+// ClearPrize clears all "prize" edges to the Prize entity.
+func (uu *UserUpdate) ClearPrize() *UserUpdate {
+	uu.mutation.ClearPrize()
+	return uu
+}
+
+// RemovePrizeIDs removes the "prize" edge to Prize entities by IDs.
+func (uu *UserUpdate) RemovePrizeIDs(ids ...int) *UserUpdate {
+	uu.mutation.RemovePrizeIDs(ids...)
+	return uu
+}
+
+// RemovePrize removes "prize" edges to Prize entities.
+func (uu *UserUpdate) RemovePrize(p ...*Prize) *UserUpdate {
+	ids := make([]int, len(p))
+	for i := range p {
+		ids[i] = p[i].ID
+	}
+	return uu.RemovePrizeIDs(ids...)
+}
+
+// ClearPet clears all "pet" edges to the Pet entity.
+func (uu *UserUpdate) ClearPet() *UserUpdate {
+	uu.mutation.ClearPet()
+	return uu
+}
+
+// RemovePetIDs removes the "pet" edge to Pet entities by IDs.
+func (uu *UserUpdate) RemovePetIDs(ids ...int) *UserUpdate {
+	uu.mutation.RemovePetIDs(ids...)
+	return uu
+}
+
+// RemovePet removes "pet" edges to Pet entities.
+func (uu *UserUpdate) RemovePet(p ...*Pet) *UserUpdate {
+	ids := make([]int, len(p))
+	for i := range p {
+		ids[i] = p[i].ID
+	}
+	return uu.RemovePetIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -353,6 +427,108 @@ func (uu *UserUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
+	if uu.mutation.PrizeCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   user.PrizeTable,
+			Columns: user.PrizePrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(prize.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uu.mutation.RemovedPrizeIDs(); len(nodes) > 0 && !uu.mutation.PrizeCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   user.PrizeTable,
+			Columns: user.PrizePrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(prize.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uu.mutation.PrizeIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   user.PrizeTable,
+			Columns: user.PrizePrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(prize.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if uu.mutation.PetCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   user.PetTable,
+			Columns: user.PetPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(pet.FieldID, field.TypeInt),
+			},
+		}
+		createE := &UserPetCreate{config: uu.config, mutation: newUserPetMutation(uu.config, OpCreate)}
+		createE.defaults()
+		_, specE := createE.createSpec()
+		edge.Target.Fields = specE.Fields
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uu.mutation.RemovedPetIDs(); len(nodes) > 0 && !uu.mutation.PetCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   user.PetTable,
+			Columns: user.PetPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(pet.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		createE := &UserPetCreate{config: uu.config, mutation: newUserPetMutation(uu.config, OpCreate)}
+		createE.defaults()
+		_, specE := createE.createSpec()
+		edge.Target.Fields = specE.Fields
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uu.mutation.PetIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   user.PetTable,
+			Columns: user.PetPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(pet.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		createE := &UserPetCreate{config: uu.config, mutation: newUserPetMutation(uu.config, OpCreate)}
+		createE.defaults()
+		_, specE := createE.createSpec()
+		edge.Target.Fields = specE.Fields
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
 	if n, err = sqlgraph.UpdateNodes(ctx, uu.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{user.Label}
@@ -483,6 +659,36 @@ func (uuo *UserUpdateOne) SetCourse(c *Course) *UserUpdateOne {
 	return uuo.SetCourseID(c.ID)
 }
 
+// AddPrizeIDs adds the "prize" edge to the Prize entity by IDs.
+func (uuo *UserUpdateOne) AddPrizeIDs(ids ...int) *UserUpdateOne {
+	uuo.mutation.AddPrizeIDs(ids...)
+	return uuo
+}
+
+// AddPrize adds the "prize" edges to the Prize entity.
+func (uuo *UserUpdateOne) AddPrize(p ...*Prize) *UserUpdateOne {
+	ids := make([]int, len(p))
+	for i := range p {
+		ids[i] = p[i].ID
+	}
+	return uuo.AddPrizeIDs(ids...)
+}
+
+// AddPetIDs adds the "pet" edge to the Pet entity by IDs.
+func (uuo *UserUpdateOne) AddPetIDs(ids ...int) *UserUpdateOne {
+	uuo.mutation.AddPetIDs(ids...)
+	return uuo
+}
+
+// AddPet adds the "pet" edges to the Pet entity.
+func (uuo *UserUpdateOne) AddPet(p ...*Pet) *UserUpdateOne {
+	ids := make([]int, len(p))
+	for i := range p {
+		ids[i] = p[i].ID
+	}
+	return uuo.AddPetIDs(ids...)
+}
+
 // Mutation returns the UserMutation object of the builder.
 func (uuo *UserUpdateOne) Mutation() *UserMutation {
 	return uuo.mutation
@@ -513,6 +719,48 @@ func (uuo *UserUpdateOne) RemoveInstitution(i ...*Institution) *UserUpdateOne {
 func (uuo *UserUpdateOne) ClearCourse() *UserUpdateOne {
 	uuo.mutation.ClearCourse()
 	return uuo
+}
+
+// ClearPrize clears all "prize" edges to the Prize entity.
+func (uuo *UserUpdateOne) ClearPrize() *UserUpdateOne {
+	uuo.mutation.ClearPrize()
+	return uuo
+}
+
+// RemovePrizeIDs removes the "prize" edge to Prize entities by IDs.
+func (uuo *UserUpdateOne) RemovePrizeIDs(ids ...int) *UserUpdateOne {
+	uuo.mutation.RemovePrizeIDs(ids...)
+	return uuo
+}
+
+// RemovePrize removes "prize" edges to Prize entities.
+func (uuo *UserUpdateOne) RemovePrize(p ...*Prize) *UserUpdateOne {
+	ids := make([]int, len(p))
+	for i := range p {
+		ids[i] = p[i].ID
+	}
+	return uuo.RemovePrizeIDs(ids...)
+}
+
+// ClearPet clears all "pet" edges to the Pet entity.
+func (uuo *UserUpdateOne) ClearPet() *UserUpdateOne {
+	uuo.mutation.ClearPet()
+	return uuo
+}
+
+// RemovePetIDs removes the "pet" edge to Pet entities by IDs.
+func (uuo *UserUpdateOne) RemovePetIDs(ids ...int) *UserUpdateOne {
+	uuo.mutation.RemovePetIDs(ids...)
+	return uuo
+}
+
+// RemovePet removes "pet" edges to Pet entities.
+func (uuo *UserUpdateOne) RemovePet(p ...*Pet) *UserUpdateOne {
+	ids := make([]int, len(p))
+	for i := range p {
+		ids[i] = p[i].ID
+	}
+	return uuo.RemovePetIDs(ids...)
 }
 
 // Where appends a list predicates to the UserUpdate builder.
@@ -724,6 +972,108 @@ func (uuo *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) 
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if uuo.mutation.PrizeCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   user.PrizeTable,
+			Columns: user.PrizePrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(prize.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uuo.mutation.RemovedPrizeIDs(); len(nodes) > 0 && !uuo.mutation.PrizeCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   user.PrizeTable,
+			Columns: user.PrizePrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(prize.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uuo.mutation.PrizeIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   user.PrizeTable,
+			Columns: user.PrizePrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(prize.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if uuo.mutation.PetCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   user.PetTable,
+			Columns: user.PetPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(pet.FieldID, field.TypeInt),
+			},
+		}
+		createE := &UserPetCreate{config: uuo.config, mutation: newUserPetMutation(uuo.config, OpCreate)}
+		createE.defaults()
+		_, specE := createE.createSpec()
+		edge.Target.Fields = specE.Fields
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uuo.mutation.RemovedPetIDs(); len(nodes) > 0 && !uuo.mutation.PetCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   user.PetTable,
+			Columns: user.PetPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(pet.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		createE := &UserPetCreate{config: uuo.config, mutation: newUserPetMutation(uuo.config, OpCreate)}
+		createE.defaults()
+		_, specE := createE.createSpec()
+		edge.Target.Fields = specE.Fields
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uuo.mutation.PetIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   user.PetTable,
+			Columns: user.PetPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(pet.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		createE := &UserPetCreate{config: uuo.config, mutation: newUserPetMutation(uuo.config, OpCreate)}
+		createE.defaults()
+		_, specE := createE.createSpec()
+		edge.Target.Fields = specE.Fields
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
 	_node = &User{config: uuo.config}
