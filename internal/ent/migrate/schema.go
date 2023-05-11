@@ -72,6 +72,30 @@ var (
 			},
 		},
 	}
+	// EventsColumns holds the columns for the "events" table.
+	EventsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "name", Type: field.TypeString},
+		{Name: "start_time", Type: field.TypeTime},
+		{Name: "end_time", Type: field.TypeTime, Nullable: true},
+		{Name: "location", Type: field.TypeString, Nullable: true},
+		{Name: "repeat_pattern", Type: field.TypeString, Nullable: true},
+		{Name: "group_events", Type: field.TypeInt},
+	}
+	// EventsTable holds the schema information for the "events" table.
+	EventsTable = &schema.Table{
+		Name:       "events",
+		Columns:    EventsColumns,
+		PrimaryKey: []*schema.Column{EventsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "events_groups_events",
+				Columns:    []*schema.Column{EventsColumns[6]},
+				RefColumns: []*schema.Column{GroupsColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+	}
 	// GroupsColumns holds the columns for the "groups" table.
 	GroupsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
@@ -275,6 +299,7 @@ var (
 		AcademicSchoolsTable,
 		AccessoriesTable,
 		CoursesTable,
+		EventsTable,
 		GroupsTable,
 		GroupUsersTable,
 		InstitutionsTable,
@@ -291,6 +316,7 @@ func init() {
 	AcademicSchoolsTable.ForeignKeys[0].RefTable = InstitutionsTable
 	AccessoriesTable.ForeignKeys[0].RefTable = InstitutionsTable
 	CoursesTable.ForeignKeys[0].RefTable = AcademicSchoolsTable
+	EventsTable.ForeignKeys[0].RefTable = GroupsTable
 	GroupUsersTable.ForeignKeys[0].RefTable = GroupsTable
 	GroupUsersTable.ForeignKeys[1].RefTable = UsersTable
 	RedemptionsTable.ForeignKeys[0].RefTable = AccessoriesTable

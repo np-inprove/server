@@ -17,6 +17,7 @@ import (
 	"github.com/np-inprove/server/internal/ent/academicschool"
 	"github.com/np-inprove/server/internal/ent/accessory"
 	"github.com/np-inprove/server/internal/ent/course"
+	"github.com/np-inprove/server/internal/ent/event"
 	"github.com/np-inprove/server/internal/ent/group"
 	"github.com/np-inprove/server/internal/ent/groupuser"
 	"github.com/np-inprove/server/internal/ent/institution"
@@ -38,6 +39,8 @@ type Client struct {
 	Accessory *AccessoryClient
 	// Course is the client for interacting with the Course builders.
 	Course *CourseClient
+	// Event is the client for interacting with the Event builders.
+	Event *EventClient
 	// Group is the client for interacting with the Group builders.
 	Group *GroupClient
 	// GroupUser is the client for interacting with the GroupUser builders.
@@ -70,6 +73,7 @@ func (c *Client) init() {
 	c.AcademicSchool = NewAcademicSchoolClient(c.config)
 	c.Accessory = NewAccessoryClient(c.config)
 	c.Course = NewCourseClient(c.config)
+	c.Event = NewEventClient(c.config)
 	c.Group = NewGroupClient(c.config)
 	c.GroupUser = NewGroupUserClient(c.config)
 	c.Institution = NewInstitutionClient(c.config)
@@ -163,6 +167,7 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 		AcademicSchool: NewAcademicSchoolClient(cfg),
 		Accessory:      NewAccessoryClient(cfg),
 		Course:         NewCourseClient(cfg),
+		Event:          NewEventClient(cfg),
 		Group:          NewGroupClient(cfg),
 		GroupUser:      NewGroupUserClient(cfg),
 		Institution:    NewInstitutionClient(cfg),
@@ -193,6 +198,7 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 		AcademicSchool: NewAcademicSchoolClient(cfg),
 		Accessory:      NewAccessoryClient(cfg),
 		Course:         NewCourseClient(cfg),
+		Event:          NewEventClient(cfg),
 		Group:          NewGroupClient(cfg),
 		GroupUser:      NewGroupUserClient(cfg),
 		Institution:    NewInstitutionClient(cfg),
@@ -230,8 +236,8 @@ func (c *Client) Close() error {
 // In order to add hooks to a specific client, call: `client.Node.Use(...)`.
 func (c *Client) Use(hooks ...Hook) {
 	for _, n := range []interface{ Use(...Hook) }{
-		c.AcademicSchool, c.Accessory, c.Course, c.Group, c.GroupUser, c.Institution,
-		c.Pet, c.Redemption, c.User, c.UserPet, c.Voucher,
+		c.AcademicSchool, c.Accessory, c.Course, c.Event, c.Group, c.GroupUser,
+		c.Institution, c.Pet, c.Redemption, c.User, c.UserPet, c.Voucher,
 	} {
 		n.Use(hooks...)
 	}
@@ -241,8 +247,8 @@ func (c *Client) Use(hooks ...Hook) {
 // In order to add interceptors to a specific client, call: `client.Node.Intercept(...)`.
 func (c *Client) Intercept(interceptors ...Interceptor) {
 	for _, n := range []interface{ Intercept(...Interceptor) }{
-		c.AcademicSchool, c.Accessory, c.Course, c.Group, c.GroupUser, c.Institution,
-		c.Pet, c.Redemption, c.User, c.UserPet, c.Voucher,
+		c.AcademicSchool, c.Accessory, c.Course, c.Event, c.Group, c.GroupUser,
+		c.Institution, c.Pet, c.Redemption, c.User, c.UserPet, c.Voucher,
 	} {
 		n.Intercept(interceptors...)
 	}
@@ -257,6 +263,8 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.Accessory.mutate(ctx, m)
 	case *CourseMutation:
 		return c.Course.mutate(ctx, m)
+	case *EventMutation:
+		return c.Event.mutate(ctx, m)
 	case *GroupMutation:
 		return c.Group.mutate(ctx, m)
 	case *GroupUserMutation:
@@ -728,6 +736,140 @@ func (c *CourseClient) mutate(ctx context.Context, m *CourseMutation) (Value, er
 	}
 }
 
+// EventClient is a client for the Event schema.
+type EventClient struct {
+	config
+}
+
+// NewEventClient returns a client for the Event from the given config.
+func NewEventClient(c config) *EventClient {
+	return &EventClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `event.Hooks(f(g(h())))`.
+func (c *EventClient) Use(hooks ...Hook) {
+	c.hooks.Event = append(c.hooks.Event, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `event.Intercept(f(g(h())))`.
+func (c *EventClient) Intercept(interceptors ...Interceptor) {
+	c.inters.Event = append(c.inters.Event, interceptors...)
+}
+
+// Create returns a builder for creating a Event entity.
+func (c *EventClient) Create() *EventCreate {
+	mutation := newEventMutation(c.config, OpCreate)
+	return &EventCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of Event entities.
+func (c *EventClient) CreateBulk(builders ...*EventCreate) *EventCreateBulk {
+	return &EventCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for Event.
+func (c *EventClient) Update() *EventUpdate {
+	mutation := newEventMutation(c.config, OpUpdate)
+	return &EventUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *EventClient) UpdateOne(e *Event) *EventUpdateOne {
+	mutation := newEventMutation(c.config, OpUpdateOne, withEvent(e))
+	return &EventUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *EventClient) UpdateOneID(id int) *EventUpdateOne {
+	mutation := newEventMutation(c.config, OpUpdateOne, withEventID(id))
+	return &EventUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for Event.
+func (c *EventClient) Delete() *EventDelete {
+	mutation := newEventMutation(c.config, OpDelete)
+	return &EventDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *EventClient) DeleteOne(e *Event) *EventDeleteOne {
+	return c.DeleteOneID(e.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *EventClient) DeleteOneID(id int) *EventDeleteOne {
+	builder := c.Delete().Where(event.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &EventDeleteOne{builder}
+}
+
+// Query returns a query builder for Event.
+func (c *EventClient) Query() *EventQuery {
+	return &EventQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeEvent},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a Event entity by its id.
+func (c *EventClient) Get(ctx context.Context, id int) (*Event, error) {
+	return c.Query().Where(event.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *EventClient) GetX(ctx context.Context, id int) *Event {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryGroup queries the group edge of a Event.
+func (c *EventClient) QueryGroup(e *Event) *GroupQuery {
+	query := (&GroupClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := e.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(event.Table, event.FieldID, id),
+			sqlgraph.To(group.Table, group.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, event.GroupTable, event.GroupColumn),
+		)
+		fromV = sqlgraph.Neighbors(e.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *EventClient) Hooks() []Hook {
+	return c.hooks.Event
+}
+
+// Interceptors returns the client interceptors.
+func (c *EventClient) Interceptors() []Interceptor {
+	return c.inters.Event
+}
+
+func (c *EventClient) mutate(ctx context.Context, m *EventMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&EventCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&EventUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&EventUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&EventDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown Event mutation op: %q", m.Op())
+	}
+}
+
 // GroupClient is a client for the Group schema.
 type GroupClient struct {
 	config
@@ -830,6 +972,22 @@ func (c *GroupClient) QueryUsers(gr *Group) *UserQuery {
 			sqlgraph.From(group.Table, group.FieldID, id),
 			sqlgraph.To(user.Table, user.FieldID),
 			sqlgraph.Edge(sqlgraph.M2M, false, group.UsersTable, group.UsersPrimaryKey...),
+		)
+		fromV = sqlgraph.Neighbors(gr.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryEvents queries the events edge of a Group.
+func (c *GroupClient) QueryEvents(gr *Group) *EventQuery {
+	query := (&EventClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := gr.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(group.Table, group.FieldID, id),
+			sqlgraph.To(event.Table, event.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, group.EventsTable, group.EventsColumn),
 		)
 		fromV = sqlgraph.Neighbors(gr.driver.Dialect(), step)
 		return fromV, nil
@@ -1961,11 +2119,11 @@ func (c *VoucherClient) mutate(ctx context.Context, m *VoucherMutation) (Value, 
 // hooks and interceptors per client, for fast access.
 type (
 	hooks struct {
-		AcademicSchool, Accessory, Course, Group, GroupUser, Institution, Pet,
+		AcademicSchool, Accessory, Course, Event, Group, GroupUser, Institution, Pet,
 		Redemption, User, UserPet, Voucher []ent.Hook
 	}
 	inters struct {
-		AcademicSchool, Accessory, Course, Group, GroupUser, Institution, Pet,
+		AcademicSchool, Accessory, Course, Event, Group, GroupUser, Institution, Pet,
 		Redemption, User, UserPet, Voucher []ent.Interceptor
 	}
 )

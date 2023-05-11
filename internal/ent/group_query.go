@@ -11,6 +11,7 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
+	"github.com/np-inprove/server/internal/ent/event"
 	"github.com/np-inprove/server/internal/ent/group"
 	"github.com/np-inprove/server/internal/ent/groupuser"
 	"github.com/np-inprove/server/internal/ent/predicate"
@@ -25,6 +26,7 @@ type GroupQuery struct {
 	inters         []Interceptor
 	predicates     []predicate.Group
 	withUsers      *UserQuery
+	withEvents     *EventQuery
 	withGroupUsers *GroupUserQuery
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
@@ -77,6 +79,28 @@ func (gq *GroupQuery) QueryUsers() *UserQuery {
 			sqlgraph.From(group.Table, group.FieldID, selector),
 			sqlgraph.To(user.Table, user.FieldID),
 			sqlgraph.Edge(sqlgraph.M2M, false, group.UsersTable, group.UsersPrimaryKey...),
+		)
+		fromU = sqlgraph.SetNeighbors(gq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryEvents chains the current query on the "events" edge.
+func (gq *GroupQuery) QueryEvents() *EventQuery {
+	query := (&EventClient{config: gq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := gq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := gq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(group.Table, group.FieldID, selector),
+			sqlgraph.To(event.Table, event.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, group.EventsTable, group.EventsColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(gq.driver.Dialect(), step)
 		return fromU, nil
@@ -299,6 +323,7 @@ func (gq *GroupQuery) Clone() *GroupQuery {
 		inters:         append([]Interceptor{}, gq.inters...),
 		predicates:     append([]predicate.Group{}, gq.predicates...),
 		withUsers:      gq.withUsers.Clone(),
+		withEvents:     gq.withEvents.Clone(),
 		withGroupUsers: gq.withGroupUsers.Clone(),
 		// clone intermediate query.
 		sql:  gq.sql.Clone(),
@@ -314,6 +339,17 @@ func (gq *GroupQuery) WithUsers(opts ...func(*UserQuery)) *GroupQuery {
 		opt(query)
 	}
 	gq.withUsers = query
+	return gq
+}
+
+// WithEvents tells the query-builder to eager-load the nodes that are connected to
+// the "events" edge. The optional arguments are used to configure the query builder of the edge.
+func (gq *GroupQuery) WithEvents(opts ...func(*EventQuery)) *GroupQuery {
+	query := (&EventClient{config: gq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	gq.withEvents = query
 	return gq
 }
 
@@ -406,8 +442,9 @@ func (gq *GroupQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Group,
 	var (
 		nodes       = []*Group{}
 		_spec       = gq.querySpec()
-		loadedTypes = [2]bool{
+		loadedTypes = [3]bool{
 			gq.withUsers != nil,
+			gq.withEvents != nil,
 			gq.withGroupUsers != nil,
 		}
 	)
@@ -433,6 +470,13 @@ func (gq *GroupQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Group,
 		if err := gq.loadUsers(ctx, query, nodes,
 			func(n *Group) { n.Edges.Users = []*User{} },
 			func(n *Group, e *User) { n.Edges.Users = append(n.Edges.Users, e) }); err != nil {
+			return nil, err
+		}
+	}
+	if query := gq.withEvents; query != nil {
+		if err := gq.loadEvents(ctx, query, nodes,
+			func(n *Group) { n.Edges.Events = []*Event{} },
+			func(n *Group, e *Event) { n.Edges.Events = append(n.Edges.Events, e) }); err != nil {
 			return nil, err
 		}
 	}
@@ -504,6 +548,37 @@ func (gq *GroupQuery) loadUsers(ctx context.Context, query *UserQuery, nodes []*
 		for kn := range nodes {
 			assign(kn, n)
 		}
+	}
+	return nil
+}
+func (gq *GroupQuery) loadEvents(ctx context.Context, query *EventQuery, nodes []*Group, init func(*Group), assign func(*Group, *Event)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int]*Group)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	query.withFKs = true
+	query.Where(predicate.Event(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(group.EventsColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.group_events
+		if fk == nil {
+			return fmt.Errorf(`foreign-key "group_events" is nil for node %v`, n.ID)
+		}
+		node, ok := nodeids[*fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "group_events" returned %v for node %v`, *fk, n.ID)
+		}
+		assign(node, n)
 	}
 	return nil
 }

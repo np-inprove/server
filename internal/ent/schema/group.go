@@ -33,5 +33,6 @@ func (Group) Edges() []ent.Edge {
 	return []ent.Edge{
 		edge.To("users", User.Type).
 			Through("group_users", GroupUser.Type),
+		edge.To("events", Event.Type),
 	}
 }

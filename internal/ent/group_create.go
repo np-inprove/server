@@ -9,6 +9,7 @@ import (
 
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
+	"github.com/np-inprove/server/internal/ent/event"
 	"github.com/np-inprove/server/internal/ent/group"
 	"github.com/np-inprove/server/internal/ent/user"
 )
@@ -57,6 +58,21 @@ func (gc *GroupCreate) AddUsers(u ...*User) *GroupCreate {
 		ids[i] = u[i].ID
 	}
 	return gc.AddUserIDs(ids...)
+}
+
+// AddEventIDs adds the "events" edge to the Event entity by IDs.
+func (gc *GroupCreate) AddEventIDs(ids ...int) *GroupCreate {
+	gc.mutation.AddEventIDs(ids...)
+	return gc
+}
+
+// AddEvents adds the "events" edges to the Event entity.
+func (gc *GroupCreate) AddEvents(e ...*Event) *GroupCreate {
+	ids := make([]int, len(e))
+	for i := range e {
+		ids[i] = e[i].ID
+	}
+	return gc.AddEventIDs(ids...)
 }
 
 // Mutation returns the GroupMutation object of the builder.
@@ -171,6 +187,22 @@ func (gc *GroupCreate) createSpec() (*Group, *sqlgraph.CreateSpec) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := gc.mutation.EventsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   group.EventsTable,
+			Columns: []string{group.EventsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(event.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

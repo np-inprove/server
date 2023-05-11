@@ -10,6 +10,7 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
+	"github.com/np-inprove/server/internal/ent/event"
 	"github.com/np-inprove/server/internal/ent/group"
 	"github.com/np-inprove/server/internal/ent/predicate"
 	"github.com/np-inprove/server/internal/ent/user"
@@ -67,6 +68,21 @@ func (gu *GroupUpdate) AddUsers(u ...*User) *GroupUpdate {
 	return gu.AddUserIDs(ids...)
 }
 
+// AddEventIDs adds the "events" edge to the Event entity by IDs.
+func (gu *GroupUpdate) AddEventIDs(ids ...int) *GroupUpdate {
+	gu.mutation.AddEventIDs(ids...)
+	return gu
+}
+
+// AddEvents adds the "events" edges to the Event entity.
+func (gu *GroupUpdate) AddEvents(e ...*Event) *GroupUpdate {
+	ids := make([]int, len(e))
+	for i := range e {
+		ids[i] = e[i].ID
+	}
+	return gu.AddEventIDs(ids...)
+}
+
 // Mutation returns the GroupMutation object of the builder.
 func (gu *GroupUpdate) Mutation() *GroupMutation {
 	return gu.mutation
@@ -91,6 +107,27 @@ func (gu *GroupUpdate) RemoveUsers(u ...*User) *GroupUpdate {
 		ids[i] = u[i].ID
 	}
 	return gu.RemoveUserIDs(ids...)
+}
+
+// ClearEvents clears all "events" edges to the Event entity.
+func (gu *GroupUpdate) ClearEvents() *GroupUpdate {
+	gu.mutation.ClearEvents()
+	return gu
+}
+
+// RemoveEventIDs removes the "events" edge to Event entities by IDs.
+func (gu *GroupUpdate) RemoveEventIDs(ids ...int) *GroupUpdate {
+	gu.mutation.RemoveEventIDs(ids...)
+	return gu
+}
+
+// RemoveEvents removes "events" edges to Event entities.
+func (gu *GroupUpdate) RemoveEvents(e ...*Event) *GroupUpdate {
+	ids := make([]int, len(e))
+	for i := range e {
+		ids[i] = e[i].ID
+	}
+	return gu.RemoveEventIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -209,6 +246,51 @@ func (gu *GroupUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
+	if gu.mutation.EventsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   group.EventsTable,
+			Columns: []string{group.EventsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(event.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := gu.mutation.RemovedEventsIDs(); len(nodes) > 0 && !gu.mutation.EventsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   group.EventsTable,
+			Columns: []string{group.EventsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(event.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := gu.mutation.EventsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   group.EventsTable,
+			Columns: []string{group.EventsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(event.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
 	if n, err = sqlgraph.UpdateNodes(ctx, gu.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{group.Label}
@@ -268,6 +350,21 @@ func (guo *GroupUpdateOne) AddUsers(u ...*User) *GroupUpdateOne {
 	return guo.AddUserIDs(ids...)
 }
 
+// AddEventIDs adds the "events" edge to the Event entity by IDs.
+func (guo *GroupUpdateOne) AddEventIDs(ids ...int) *GroupUpdateOne {
+	guo.mutation.AddEventIDs(ids...)
+	return guo
+}
+
+// AddEvents adds the "events" edges to the Event entity.
+func (guo *GroupUpdateOne) AddEvents(e ...*Event) *GroupUpdateOne {
+	ids := make([]int, len(e))
+	for i := range e {
+		ids[i] = e[i].ID
+	}
+	return guo.AddEventIDs(ids...)
+}
+
 // Mutation returns the GroupMutation object of the builder.
 func (guo *GroupUpdateOne) Mutation() *GroupMutation {
 	return guo.mutation
@@ -292,6 +389,27 @@ func (guo *GroupUpdateOne) RemoveUsers(u ...*User) *GroupUpdateOne {
 		ids[i] = u[i].ID
 	}
 	return guo.RemoveUserIDs(ids...)
+}
+
+// ClearEvents clears all "events" edges to the Event entity.
+func (guo *GroupUpdateOne) ClearEvents() *GroupUpdateOne {
+	guo.mutation.ClearEvents()
+	return guo
+}
+
+// RemoveEventIDs removes the "events" edge to Event entities by IDs.
+func (guo *GroupUpdateOne) RemoveEventIDs(ids ...int) *GroupUpdateOne {
+	guo.mutation.RemoveEventIDs(ids...)
+	return guo
+}
+
+// RemoveEvents removes "events" edges to Event entities.
+func (guo *GroupUpdateOne) RemoveEvents(e ...*Event) *GroupUpdateOne {
+	ids := make([]int, len(e))
+	for i := range e {
+		ids[i] = e[i].ID
+	}
+	return guo.RemoveEventIDs(ids...)
 }
 
 // Where appends a list predicates to the GroupUpdate builder.
@@ -433,6 +551,51 @@ func (guo *GroupUpdateOne) sqlSave(ctx context.Context) (_node *Group, err error
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if guo.mutation.EventsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   group.EventsTable,
+			Columns: []string{group.EventsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(event.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := guo.mutation.RemovedEventsIDs(); len(nodes) > 0 && !guo.mutation.EventsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   group.EventsTable,
+			Columns: []string{group.EventsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(event.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := guo.mutation.EventsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   group.EventsTable,
+			Columns: []string{group.EventsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(event.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

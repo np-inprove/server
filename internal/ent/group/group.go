@@ -24,6 +24,8 @@ const (
 	FieldGroupType = "group_type"
 	// EdgeUsers holds the string denoting the users edge name in mutations.
 	EdgeUsers = "users"
+	// EdgeEvents holds the string denoting the events edge name in mutations.
+	EdgeEvents = "events"
 	// EdgeGroupUsers holds the string denoting the group_users edge name in mutations.
 	EdgeGroupUsers = "group_users"
 	// Table holds the table name of the group in the database.
@@ -33,6 +35,13 @@ const (
 	// UsersInverseTable is the table name for the User entity.
 	// It exists in this package in order to avoid circular dependency with the "user" package.
 	UsersInverseTable = "users"
+	// EventsTable is the table that holds the events relation/edge.
+	EventsTable = "events"
+	// EventsInverseTable is the table name for the Event entity.
+	// It exists in this package in order to avoid circular dependency with the "event" package.
+	EventsInverseTable = "events"
+	// EventsColumn is the table column denoting the events relation/edge.
+	EventsColumn = "group_events"
 	// GroupUsersTable is the table that holds the group_users relation/edge.
 	GroupUsersTable = "group_users"
 	// GroupUsersInverseTable is the table name for the GroupUser entity.
@@ -141,6 +150,20 @@ func ByUsers(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 	}
 }
 
+// ByEventsCount orders the results by events count.
+func ByEventsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newEventsStep(), opts...)
+	}
+}
+
+// ByEvents orders the results by events terms.
+func ByEvents(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newEventsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
 // ByGroupUsersCount orders the results by group_users count.
 func ByGroupUsersCount(opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
@@ -159,6 +182,13 @@ func newUsersStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(UsersInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.M2M, false, UsersTable, UsersPrimaryKey...),
+	)
+}
+func newEventsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(EventsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, EventsTable, EventsColumn),
 	)
 }
 func newGroupUsersStep() *sqlgraph.Step {
