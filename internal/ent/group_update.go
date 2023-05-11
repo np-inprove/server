@@ -11,6 +11,7 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/np-inprove/server/internal/ent/event"
+	"github.com/np-inprove/server/internal/ent/forumpost"
 	"github.com/np-inprove/server/internal/ent/group"
 	"github.com/np-inprove/server/internal/ent/predicate"
 	"github.com/np-inprove/server/internal/ent/user"
@@ -83,6 +84,21 @@ func (gu *GroupUpdate) AddEvents(e ...*Event) *GroupUpdate {
 	return gu.AddEventIDs(ids...)
 }
 
+// AddForumPostIDs adds the "forum_posts" edge to the ForumPost entity by IDs.
+func (gu *GroupUpdate) AddForumPostIDs(ids ...int) *GroupUpdate {
+	gu.mutation.AddForumPostIDs(ids...)
+	return gu
+}
+
+// AddForumPosts adds the "forum_posts" edges to the ForumPost entity.
+func (gu *GroupUpdate) AddForumPosts(f ...*ForumPost) *GroupUpdate {
+	ids := make([]int, len(f))
+	for i := range f {
+		ids[i] = f[i].ID
+	}
+	return gu.AddForumPostIDs(ids...)
+}
+
 // Mutation returns the GroupMutation object of the builder.
 func (gu *GroupUpdate) Mutation() *GroupMutation {
 	return gu.mutation
@@ -128,6 +144,27 @@ func (gu *GroupUpdate) RemoveEvents(e ...*Event) *GroupUpdate {
 		ids[i] = e[i].ID
 	}
 	return gu.RemoveEventIDs(ids...)
+}
+
+// ClearForumPosts clears all "forum_posts" edges to the ForumPost entity.
+func (gu *GroupUpdate) ClearForumPosts() *GroupUpdate {
+	gu.mutation.ClearForumPosts()
+	return gu
+}
+
+// RemoveForumPostIDs removes the "forum_posts" edge to ForumPost entities by IDs.
+func (gu *GroupUpdate) RemoveForumPostIDs(ids ...int) *GroupUpdate {
+	gu.mutation.RemoveForumPostIDs(ids...)
+	return gu
+}
+
+// RemoveForumPosts removes "forum_posts" edges to ForumPost entities.
+func (gu *GroupUpdate) RemoveForumPosts(f ...*ForumPost) *GroupUpdate {
+	ids := make([]int, len(f))
+	for i := range f {
+		ids[i] = f[i].ID
+	}
+	return gu.RemoveForumPostIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -291,6 +328,51 @@ func (gu *GroupUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
+	if gu.mutation.ForumPostsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   group.ForumPostsTable,
+			Columns: []string{group.ForumPostsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(forumpost.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := gu.mutation.RemovedForumPostsIDs(); len(nodes) > 0 && !gu.mutation.ForumPostsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   group.ForumPostsTable,
+			Columns: []string{group.ForumPostsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(forumpost.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := gu.mutation.ForumPostsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   group.ForumPostsTable,
+			Columns: []string{group.ForumPostsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(forumpost.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
 	if n, err = sqlgraph.UpdateNodes(ctx, gu.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{group.Label}
@@ -365,6 +447,21 @@ func (guo *GroupUpdateOne) AddEvents(e ...*Event) *GroupUpdateOne {
 	return guo.AddEventIDs(ids...)
 }
 
+// AddForumPostIDs adds the "forum_posts" edge to the ForumPost entity by IDs.
+func (guo *GroupUpdateOne) AddForumPostIDs(ids ...int) *GroupUpdateOne {
+	guo.mutation.AddForumPostIDs(ids...)
+	return guo
+}
+
+// AddForumPosts adds the "forum_posts" edges to the ForumPost entity.
+func (guo *GroupUpdateOne) AddForumPosts(f ...*ForumPost) *GroupUpdateOne {
+	ids := make([]int, len(f))
+	for i := range f {
+		ids[i] = f[i].ID
+	}
+	return guo.AddForumPostIDs(ids...)
+}
+
 // Mutation returns the GroupMutation object of the builder.
 func (guo *GroupUpdateOne) Mutation() *GroupMutation {
 	return guo.mutation
@@ -410,6 +507,27 @@ func (guo *GroupUpdateOne) RemoveEvents(e ...*Event) *GroupUpdateOne {
 		ids[i] = e[i].ID
 	}
 	return guo.RemoveEventIDs(ids...)
+}
+
+// ClearForumPosts clears all "forum_posts" edges to the ForumPost entity.
+func (guo *GroupUpdateOne) ClearForumPosts() *GroupUpdateOne {
+	guo.mutation.ClearForumPosts()
+	return guo
+}
+
+// RemoveForumPostIDs removes the "forum_posts" edge to ForumPost entities by IDs.
+func (guo *GroupUpdateOne) RemoveForumPostIDs(ids ...int) *GroupUpdateOne {
+	guo.mutation.RemoveForumPostIDs(ids...)
+	return guo
+}
+
+// RemoveForumPosts removes "forum_posts" edges to ForumPost entities.
+func (guo *GroupUpdateOne) RemoveForumPosts(f ...*ForumPost) *GroupUpdateOne {
+	ids := make([]int, len(f))
+	for i := range f {
+		ids[i] = f[i].ID
+	}
+	return guo.RemoveForumPostIDs(ids...)
 }
 
 // Where appends a list predicates to the GroupUpdate builder.
@@ -596,6 +714,51 @@ func (guo *GroupUpdateOne) sqlSave(ctx context.Context) (_node *Group, err error
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(event.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if guo.mutation.ForumPostsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   group.ForumPostsTable,
+			Columns: []string{group.ForumPostsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(forumpost.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := guo.mutation.RemovedForumPostsIDs(); len(nodes) > 0 && !guo.mutation.ForumPostsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   group.ForumPostsTable,
+			Columns: []string{group.ForumPostsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(forumpost.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := guo.mutation.ForumPostsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   group.ForumPostsTable,
+			Columns: []string{group.ForumPostsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(forumpost.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

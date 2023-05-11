@@ -44,18 +44,23 @@ func (User) Fields() []ent.Field {
 // Edges of the User.
 func (User) Edges() []ent.Edge {
 	return []ent.Edge{
-		edge.From("institution", Institution.Type).
-			Ref("admins"),
 		edge.From("course", Course.Type).
 			Ref("students").
 			Unique(),
+		edge.From("institution", Institution.Type).
+			Ref("admins"),
 		edge.From("redemptions", Redemption.Type).
 			Ref("user"),
+		edge.From("forum_posts", ForumPost.Type).
+			Ref("author"),
 		edge.From("pet", Pet.Type).
 			Ref("owner").
 			Through("user_pets", UserPet.Type),
 		edge.From("groups", Group.Type).
 			Ref("users").
 			Through("group_users", GroupUser.Type),
+		edge.From("reacted_posts", ForumPost.Type).
+			Ref("reacted_users").
+			Through("reactions", Reaction.Type),
 	}
 }

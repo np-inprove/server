@@ -11,6 +11,7 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/np-inprove/server/internal/ent/course"
+	"github.com/np-inprove/server/internal/ent/forumpost"
 	"github.com/np-inprove/server/internal/ent/group"
 	"github.com/np-inprove/server/internal/ent/institution"
 	"github.com/np-inprove/server/internal/ent/pet"
@@ -81,21 +82,6 @@ func (uc *UserCreate) SetGodMode(b bool) *UserCreate {
 	return uc
 }
 
-// AddInstitutionIDs adds the "institution" edge to the Institution entity by IDs.
-func (uc *UserCreate) AddInstitutionIDs(ids ...int) *UserCreate {
-	uc.mutation.AddInstitutionIDs(ids...)
-	return uc
-}
-
-// AddInstitution adds the "institution" edges to the Institution entity.
-func (uc *UserCreate) AddInstitution(i ...*Institution) *UserCreate {
-	ids := make([]int, len(i))
-	for j := range i {
-		ids[j] = i[j].ID
-	}
-	return uc.AddInstitutionIDs(ids...)
-}
-
 // SetCourseID sets the "course" edge to the Course entity by ID.
 func (uc *UserCreate) SetCourseID(id int) *UserCreate {
 	uc.mutation.SetCourseID(id)
@@ -115,6 +101,21 @@ func (uc *UserCreate) SetCourse(c *Course) *UserCreate {
 	return uc.SetCourseID(c.ID)
 }
 
+// AddInstitutionIDs adds the "institution" edge to the Institution entity by IDs.
+func (uc *UserCreate) AddInstitutionIDs(ids ...int) *UserCreate {
+	uc.mutation.AddInstitutionIDs(ids...)
+	return uc
+}
+
+// AddInstitution adds the "institution" edges to the Institution entity.
+func (uc *UserCreate) AddInstitution(i ...*Institution) *UserCreate {
+	ids := make([]int, len(i))
+	for j := range i {
+		ids[j] = i[j].ID
+	}
+	return uc.AddInstitutionIDs(ids...)
+}
+
 // AddRedemptionIDs adds the "redemptions" edge to the Redemption entity by IDs.
 func (uc *UserCreate) AddRedemptionIDs(ids ...int) *UserCreate {
 	uc.mutation.AddRedemptionIDs(ids...)
@@ -128,6 +129,21 @@ func (uc *UserCreate) AddRedemptions(r ...*Redemption) *UserCreate {
 		ids[i] = r[i].ID
 	}
 	return uc.AddRedemptionIDs(ids...)
+}
+
+// AddForumPostIDs adds the "forum_posts" edge to the ForumPost entity by IDs.
+func (uc *UserCreate) AddForumPostIDs(ids ...int) *UserCreate {
+	uc.mutation.AddForumPostIDs(ids...)
+	return uc
+}
+
+// AddForumPosts adds the "forum_posts" edges to the ForumPost entity.
+func (uc *UserCreate) AddForumPosts(f ...*ForumPost) *UserCreate {
+	ids := make([]int, len(f))
+	for i := range f {
+		ids[i] = f[i].ID
+	}
+	return uc.AddForumPostIDs(ids...)
 }
 
 // AddPetIDs adds the "pet" edge to the Pet entity by IDs.
@@ -158,6 +174,21 @@ func (uc *UserCreate) AddGroups(g ...*Group) *UserCreate {
 		ids[i] = g[i].ID
 	}
 	return uc.AddGroupIDs(ids...)
+}
+
+// AddReactedPostIDs adds the "reacted_posts" edge to the ForumPost entity by IDs.
+func (uc *UserCreate) AddReactedPostIDs(ids ...int) *UserCreate {
+	uc.mutation.AddReactedPostIDs(ids...)
+	return uc
+}
+
+// AddReactedPosts adds the "reacted_posts" edges to the ForumPost entity.
+func (uc *UserCreate) AddReactedPosts(f ...*ForumPost) *UserCreate {
+	ids := make([]int, len(f))
+	for i := range f {
+		ids[i] = f[i].ID
+	}
+	return uc.AddReactedPostIDs(ids...)
 }
 
 // Mutation returns the UserMutation object of the builder.
@@ -303,22 +334,6 @@ func (uc *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 		_spec.SetField(user.FieldGodMode, field.TypeBool, value)
 		_node.GodMode = value
 	}
-	if nodes := uc.mutation.InstitutionIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
-			Inverse: true,
-			Table:   user.InstitutionTable,
-			Columns: user.InstitutionPrimaryKey,
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(institution.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges = append(_spec.Edges, edge)
-	}
 	if nodes := uc.mutation.CourseIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
@@ -336,6 +351,22 @@ func (uc *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 		_node.course_students = &nodes[0]
 		_spec.Edges = append(_spec.Edges, edge)
 	}
+	if nodes := uc.mutation.InstitutionIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   user.InstitutionTable,
+			Columns: user.InstitutionPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(institution.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
 	if nodes := uc.mutation.RedemptionsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
@@ -345,6 +376,22 @@ func (uc *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(redemption.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := uc.mutation.ForumPostsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: true,
+			Table:   user.ForumPostsTable,
+			Columns: []string{user.ForumPostsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(forumpost.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -381,6 +428,22 @@ func (uc *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(group.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := uc.mutation.ReactedPostsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   user.ReactedPostsTable,
+			Columns: user.ReactedPostsPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(forumpost.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

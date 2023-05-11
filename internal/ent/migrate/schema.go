@@ -96,6 +96,42 @@ var (
 			},
 		},
 	}
+	// ForumPostsColumns holds the columns for the "forum_posts" table.
+	ForumPostsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "title", Type: field.TypeString},
+		{Name: "content", Type: field.TypeString},
+		{Name: "mentioned_users_json", Type: field.TypeJSON},
+		{Name: "forum_post_author", Type: field.TypeInt},
+		{Name: "forum_post_children", Type: field.TypeInt, Nullable: true},
+		{Name: "group_forum_posts", Type: field.TypeInt},
+	}
+	// ForumPostsTable holds the schema information for the "forum_posts" table.
+	ForumPostsTable = &schema.Table{
+		Name:       "forum_posts",
+		Columns:    ForumPostsColumns,
+		PrimaryKey: []*schema.Column{ForumPostsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "forum_posts_users_author",
+				Columns:    []*schema.Column{ForumPostsColumns[4]},
+				RefColumns: []*schema.Column{UsersColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+			{
+				Symbol:     "forum_posts_forum_posts_children",
+				Columns:    []*schema.Column{ForumPostsColumns[5]},
+				RefColumns: []*schema.Column{ForumPostsColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+			{
+				Symbol:     "forum_posts_groups_forum_posts",
+				Columns:    []*schema.Column{ForumPostsColumns[6]},
+				RefColumns: []*schema.Column{GroupsColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+	}
 	// GroupsColumns holds the columns for the "groups" table.
 	GroupsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
@@ -158,6 +194,32 @@ var (
 		Name:       "pets",
 		Columns:    PetsColumns,
 		PrimaryKey: []*schema.Column{PetsColumns[0]},
+	}
+	// ReactionsColumns holds the columns for the "reactions" table.
+	ReactionsColumns = []*schema.Column{
+		{Name: "emoji", Type: field.TypeString},
+		{Name: "user_id", Type: field.TypeInt},
+		{Name: "forum_post_id", Type: field.TypeInt},
+	}
+	// ReactionsTable holds the schema information for the "reactions" table.
+	ReactionsTable = &schema.Table{
+		Name:       "reactions",
+		Columns:    ReactionsColumns,
+		PrimaryKey: []*schema.Column{ReactionsColumns[2], ReactionsColumns[1]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "reactions_users_user",
+				Columns:    []*schema.Column{ReactionsColumns[1]},
+				RefColumns: []*schema.Column{UsersColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+			{
+				Symbol:     "reactions_forum_posts_forum_post",
+				Columns:    []*schema.Column{ReactionsColumns[2]},
+				RefColumns: []*schema.Column{ForumPostsColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
 	}
 	// RedemptionsColumns holds the columns for the "redemptions" table.
 	RedemptionsColumns = []*schema.Column{
@@ -300,10 +362,12 @@ var (
 		AccessoriesTable,
 		CoursesTable,
 		EventsTable,
+		ForumPostsTable,
 		GroupsTable,
 		GroupUsersTable,
 		InstitutionsTable,
 		PetsTable,
+		ReactionsTable,
 		RedemptionsTable,
 		UsersTable,
 		UserPetsTable,
@@ -317,8 +381,13 @@ func init() {
 	AccessoriesTable.ForeignKeys[0].RefTable = InstitutionsTable
 	CoursesTable.ForeignKeys[0].RefTable = AcademicSchoolsTable
 	EventsTable.ForeignKeys[0].RefTable = GroupsTable
+	ForumPostsTable.ForeignKeys[0].RefTable = UsersTable
+	ForumPostsTable.ForeignKeys[1].RefTable = ForumPostsTable
+	ForumPostsTable.ForeignKeys[2].RefTable = GroupsTable
 	GroupUsersTable.ForeignKeys[0].RefTable = GroupsTable
 	GroupUsersTable.ForeignKeys[1].RefTable = UsersTable
+	ReactionsTable.ForeignKeys[0].RefTable = UsersTable
+	ReactionsTable.ForeignKeys[1].RefTable = ForumPostsTable
 	RedemptionsTable.ForeignKeys[0].RefTable = AccessoriesTable
 	RedemptionsTable.ForeignKeys[1].RefTable = UsersTable
 	RedemptionsTable.ForeignKeys[2].RefTable = VouchersTable

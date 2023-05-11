@@ -12,6 +12,7 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/np-inprove/server/internal/ent/course"
+	"github.com/np-inprove/server/internal/ent/forumpost"
 	"github.com/np-inprove/server/internal/ent/group"
 	"github.com/np-inprove/server/internal/ent/institution"
 	"github.com/np-inprove/server/internal/ent/pet"
@@ -109,21 +110,6 @@ func (uu *UserUpdate) SetGodMode(b bool) *UserUpdate {
 	return uu
 }
 
-// AddInstitutionIDs adds the "institution" edge to the Institution entity by IDs.
-func (uu *UserUpdate) AddInstitutionIDs(ids ...int) *UserUpdate {
-	uu.mutation.AddInstitutionIDs(ids...)
-	return uu
-}
-
-// AddInstitution adds the "institution" edges to the Institution entity.
-func (uu *UserUpdate) AddInstitution(i ...*Institution) *UserUpdate {
-	ids := make([]int, len(i))
-	for j := range i {
-		ids[j] = i[j].ID
-	}
-	return uu.AddInstitutionIDs(ids...)
-}
-
 // SetCourseID sets the "course" edge to the Course entity by ID.
 func (uu *UserUpdate) SetCourseID(id int) *UserUpdate {
 	uu.mutation.SetCourseID(id)
@@ -143,6 +129,21 @@ func (uu *UserUpdate) SetCourse(c *Course) *UserUpdate {
 	return uu.SetCourseID(c.ID)
 }
 
+// AddInstitutionIDs adds the "institution" edge to the Institution entity by IDs.
+func (uu *UserUpdate) AddInstitutionIDs(ids ...int) *UserUpdate {
+	uu.mutation.AddInstitutionIDs(ids...)
+	return uu
+}
+
+// AddInstitution adds the "institution" edges to the Institution entity.
+func (uu *UserUpdate) AddInstitution(i ...*Institution) *UserUpdate {
+	ids := make([]int, len(i))
+	for j := range i {
+		ids[j] = i[j].ID
+	}
+	return uu.AddInstitutionIDs(ids...)
+}
+
 // AddRedemptionIDs adds the "redemptions" edge to the Redemption entity by IDs.
 func (uu *UserUpdate) AddRedemptionIDs(ids ...int) *UserUpdate {
 	uu.mutation.AddRedemptionIDs(ids...)
@@ -156,6 +157,21 @@ func (uu *UserUpdate) AddRedemptions(r ...*Redemption) *UserUpdate {
 		ids[i] = r[i].ID
 	}
 	return uu.AddRedemptionIDs(ids...)
+}
+
+// AddForumPostIDs adds the "forum_posts" edge to the ForumPost entity by IDs.
+func (uu *UserUpdate) AddForumPostIDs(ids ...int) *UserUpdate {
+	uu.mutation.AddForumPostIDs(ids...)
+	return uu
+}
+
+// AddForumPosts adds the "forum_posts" edges to the ForumPost entity.
+func (uu *UserUpdate) AddForumPosts(f ...*ForumPost) *UserUpdate {
+	ids := make([]int, len(f))
+	for i := range f {
+		ids[i] = f[i].ID
+	}
+	return uu.AddForumPostIDs(ids...)
 }
 
 // AddPetIDs adds the "pet" edge to the Pet entity by IDs.
@@ -188,9 +204,30 @@ func (uu *UserUpdate) AddGroups(g ...*Group) *UserUpdate {
 	return uu.AddGroupIDs(ids...)
 }
 
+// AddReactedPostIDs adds the "reacted_posts" edge to the ForumPost entity by IDs.
+func (uu *UserUpdate) AddReactedPostIDs(ids ...int) *UserUpdate {
+	uu.mutation.AddReactedPostIDs(ids...)
+	return uu
+}
+
+// AddReactedPosts adds the "reacted_posts" edges to the ForumPost entity.
+func (uu *UserUpdate) AddReactedPosts(f ...*ForumPost) *UserUpdate {
+	ids := make([]int, len(f))
+	for i := range f {
+		ids[i] = f[i].ID
+	}
+	return uu.AddReactedPostIDs(ids...)
+}
+
 // Mutation returns the UserMutation object of the builder.
 func (uu *UserUpdate) Mutation() *UserMutation {
 	return uu.mutation
+}
+
+// ClearCourse clears the "course" edge to the Course entity.
+func (uu *UserUpdate) ClearCourse() *UserUpdate {
+	uu.mutation.ClearCourse()
+	return uu
 }
 
 // ClearInstitution clears all "institution" edges to the Institution entity.
@@ -214,12 +251,6 @@ func (uu *UserUpdate) RemoveInstitution(i ...*Institution) *UserUpdate {
 	return uu.RemoveInstitutionIDs(ids...)
 }
 
-// ClearCourse clears the "course" edge to the Course entity.
-func (uu *UserUpdate) ClearCourse() *UserUpdate {
-	uu.mutation.ClearCourse()
-	return uu
-}
-
 // ClearRedemptions clears all "redemptions" edges to the Redemption entity.
 func (uu *UserUpdate) ClearRedemptions() *UserUpdate {
 	uu.mutation.ClearRedemptions()
@@ -239,6 +270,27 @@ func (uu *UserUpdate) RemoveRedemptions(r ...*Redemption) *UserUpdate {
 		ids[i] = r[i].ID
 	}
 	return uu.RemoveRedemptionIDs(ids...)
+}
+
+// ClearForumPosts clears all "forum_posts" edges to the ForumPost entity.
+func (uu *UserUpdate) ClearForumPosts() *UserUpdate {
+	uu.mutation.ClearForumPosts()
+	return uu
+}
+
+// RemoveForumPostIDs removes the "forum_posts" edge to ForumPost entities by IDs.
+func (uu *UserUpdate) RemoveForumPostIDs(ids ...int) *UserUpdate {
+	uu.mutation.RemoveForumPostIDs(ids...)
+	return uu
+}
+
+// RemoveForumPosts removes "forum_posts" edges to ForumPost entities.
+func (uu *UserUpdate) RemoveForumPosts(f ...*ForumPost) *UserUpdate {
+	ids := make([]int, len(f))
+	for i := range f {
+		ids[i] = f[i].ID
+	}
+	return uu.RemoveForumPostIDs(ids...)
 }
 
 // ClearPet clears all "pet" edges to the Pet entity.
@@ -281,6 +333,27 @@ func (uu *UserUpdate) RemoveGroups(g ...*Group) *UserUpdate {
 		ids[i] = g[i].ID
 	}
 	return uu.RemoveGroupIDs(ids...)
+}
+
+// ClearReactedPosts clears all "reacted_posts" edges to the ForumPost entity.
+func (uu *UserUpdate) ClearReactedPosts() *UserUpdate {
+	uu.mutation.ClearReactedPosts()
+	return uu
+}
+
+// RemoveReactedPostIDs removes the "reacted_posts" edge to ForumPost entities by IDs.
+func (uu *UserUpdate) RemoveReactedPostIDs(ids ...int) *UserUpdate {
+	uu.mutation.RemoveReactedPostIDs(ids...)
+	return uu
+}
+
+// RemoveReactedPosts removes "reacted_posts" edges to ForumPost entities.
+func (uu *UserUpdate) RemoveReactedPosts(f ...*ForumPost) *UserUpdate {
+	ids := make([]int, len(f))
+	for i := range f {
+		ids[i] = f[i].ID
+	}
+	return uu.RemoveReactedPostIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -390,6 +463,35 @@ func (uu *UserUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if value, ok := uu.mutation.GodMode(); ok {
 		_spec.SetField(user.FieldGodMode, field.TypeBool, value)
 	}
+	if uu.mutation.CourseCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   user.CourseTable,
+			Columns: []string{user.CourseColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(course.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uu.mutation.CourseIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   user.CourseTable,
+			Columns: []string{user.CourseColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(course.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
 	if uu.mutation.InstitutionCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2M,
@@ -435,35 +537,6 @@ func (uu *UserUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if uu.mutation.CourseCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: true,
-			Table:   user.CourseTable,
-			Columns: []string{user.CourseColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(course.FieldID, field.TypeInt),
-			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := uu.mutation.CourseIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: true,
-			Table:   user.CourseTable,
-			Columns: []string{user.CourseColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(course.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
-	}
 	if uu.mutation.RedemptionsCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
@@ -502,6 +575,51 @@ func (uu *UserUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(redemption.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if uu.mutation.ForumPostsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: true,
+			Table:   user.ForumPostsTable,
+			Columns: []string{user.ForumPostsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(forumpost.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uu.mutation.RemovedForumPostsIDs(); len(nodes) > 0 && !uu.mutation.ForumPostsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: true,
+			Table:   user.ForumPostsTable,
+			Columns: []string{user.ForumPostsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(forumpost.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uu.mutation.ForumPostsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: true,
+			Table:   user.ForumPostsTable,
+			Columns: []string{user.ForumPostsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(forumpost.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -611,6 +729,51 @@ func (uu *UserUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
+	if uu.mutation.ReactedPostsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   user.ReactedPostsTable,
+			Columns: user.ReactedPostsPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(forumpost.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uu.mutation.RemovedReactedPostsIDs(); len(nodes) > 0 && !uu.mutation.ReactedPostsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   user.ReactedPostsTable,
+			Columns: user.ReactedPostsPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(forumpost.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uu.mutation.ReactedPostsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   user.ReactedPostsTable,
+			Columns: user.ReactedPostsPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(forumpost.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
 	if n, err = sqlgraph.UpdateNodes(ctx, uu.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{user.Label}
@@ -707,21 +870,6 @@ func (uuo *UserUpdateOne) SetGodMode(b bool) *UserUpdateOne {
 	return uuo
 }
 
-// AddInstitutionIDs adds the "institution" edge to the Institution entity by IDs.
-func (uuo *UserUpdateOne) AddInstitutionIDs(ids ...int) *UserUpdateOne {
-	uuo.mutation.AddInstitutionIDs(ids...)
-	return uuo
-}
-
-// AddInstitution adds the "institution" edges to the Institution entity.
-func (uuo *UserUpdateOne) AddInstitution(i ...*Institution) *UserUpdateOne {
-	ids := make([]int, len(i))
-	for j := range i {
-		ids[j] = i[j].ID
-	}
-	return uuo.AddInstitutionIDs(ids...)
-}
-
 // SetCourseID sets the "course" edge to the Course entity by ID.
 func (uuo *UserUpdateOne) SetCourseID(id int) *UserUpdateOne {
 	uuo.mutation.SetCourseID(id)
@@ -741,6 +889,21 @@ func (uuo *UserUpdateOne) SetCourse(c *Course) *UserUpdateOne {
 	return uuo.SetCourseID(c.ID)
 }
 
+// AddInstitutionIDs adds the "institution" edge to the Institution entity by IDs.
+func (uuo *UserUpdateOne) AddInstitutionIDs(ids ...int) *UserUpdateOne {
+	uuo.mutation.AddInstitutionIDs(ids...)
+	return uuo
+}
+
+// AddInstitution adds the "institution" edges to the Institution entity.
+func (uuo *UserUpdateOne) AddInstitution(i ...*Institution) *UserUpdateOne {
+	ids := make([]int, len(i))
+	for j := range i {
+		ids[j] = i[j].ID
+	}
+	return uuo.AddInstitutionIDs(ids...)
+}
+
 // AddRedemptionIDs adds the "redemptions" edge to the Redemption entity by IDs.
 func (uuo *UserUpdateOne) AddRedemptionIDs(ids ...int) *UserUpdateOne {
 	uuo.mutation.AddRedemptionIDs(ids...)
@@ -754,6 +917,21 @@ func (uuo *UserUpdateOne) AddRedemptions(r ...*Redemption) *UserUpdateOne {
 		ids[i] = r[i].ID
 	}
 	return uuo.AddRedemptionIDs(ids...)
+}
+
+// AddForumPostIDs adds the "forum_posts" edge to the ForumPost entity by IDs.
+func (uuo *UserUpdateOne) AddForumPostIDs(ids ...int) *UserUpdateOne {
+	uuo.mutation.AddForumPostIDs(ids...)
+	return uuo
+}
+
+// AddForumPosts adds the "forum_posts" edges to the ForumPost entity.
+func (uuo *UserUpdateOne) AddForumPosts(f ...*ForumPost) *UserUpdateOne {
+	ids := make([]int, len(f))
+	for i := range f {
+		ids[i] = f[i].ID
+	}
+	return uuo.AddForumPostIDs(ids...)
 }
 
 // AddPetIDs adds the "pet" edge to the Pet entity by IDs.
@@ -786,9 +964,30 @@ func (uuo *UserUpdateOne) AddGroups(g ...*Group) *UserUpdateOne {
 	return uuo.AddGroupIDs(ids...)
 }
 
+// AddReactedPostIDs adds the "reacted_posts" edge to the ForumPost entity by IDs.
+func (uuo *UserUpdateOne) AddReactedPostIDs(ids ...int) *UserUpdateOne {
+	uuo.mutation.AddReactedPostIDs(ids...)
+	return uuo
+}
+
+// AddReactedPosts adds the "reacted_posts" edges to the ForumPost entity.
+func (uuo *UserUpdateOne) AddReactedPosts(f ...*ForumPost) *UserUpdateOne {
+	ids := make([]int, len(f))
+	for i := range f {
+		ids[i] = f[i].ID
+	}
+	return uuo.AddReactedPostIDs(ids...)
+}
+
 // Mutation returns the UserMutation object of the builder.
 func (uuo *UserUpdateOne) Mutation() *UserMutation {
 	return uuo.mutation
+}
+
+// ClearCourse clears the "course" edge to the Course entity.
+func (uuo *UserUpdateOne) ClearCourse() *UserUpdateOne {
+	uuo.mutation.ClearCourse()
+	return uuo
 }
 
 // ClearInstitution clears all "institution" edges to the Institution entity.
@@ -812,12 +1011,6 @@ func (uuo *UserUpdateOne) RemoveInstitution(i ...*Institution) *UserUpdateOne {
 	return uuo.RemoveInstitutionIDs(ids...)
 }
 
-// ClearCourse clears the "course" edge to the Course entity.
-func (uuo *UserUpdateOne) ClearCourse() *UserUpdateOne {
-	uuo.mutation.ClearCourse()
-	return uuo
-}
-
 // ClearRedemptions clears all "redemptions" edges to the Redemption entity.
 func (uuo *UserUpdateOne) ClearRedemptions() *UserUpdateOne {
 	uuo.mutation.ClearRedemptions()
@@ -837,6 +1030,27 @@ func (uuo *UserUpdateOne) RemoveRedemptions(r ...*Redemption) *UserUpdateOne {
 		ids[i] = r[i].ID
 	}
 	return uuo.RemoveRedemptionIDs(ids...)
+}
+
+// ClearForumPosts clears all "forum_posts" edges to the ForumPost entity.
+func (uuo *UserUpdateOne) ClearForumPosts() *UserUpdateOne {
+	uuo.mutation.ClearForumPosts()
+	return uuo
+}
+
+// RemoveForumPostIDs removes the "forum_posts" edge to ForumPost entities by IDs.
+func (uuo *UserUpdateOne) RemoveForumPostIDs(ids ...int) *UserUpdateOne {
+	uuo.mutation.RemoveForumPostIDs(ids...)
+	return uuo
+}
+
+// RemoveForumPosts removes "forum_posts" edges to ForumPost entities.
+func (uuo *UserUpdateOne) RemoveForumPosts(f ...*ForumPost) *UserUpdateOne {
+	ids := make([]int, len(f))
+	for i := range f {
+		ids[i] = f[i].ID
+	}
+	return uuo.RemoveForumPostIDs(ids...)
 }
 
 // ClearPet clears all "pet" edges to the Pet entity.
@@ -879,6 +1093,27 @@ func (uuo *UserUpdateOne) RemoveGroups(g ...*Group) *UserUpdateOne {
 		ids[i] = g[i].ID
 	}
 	return uuo.RemoveGroupIDs(ids...)
+}
+
+// ClearReactedPosts clears all "reacted_posts" edges to the ForumPost entity.
+func (uuo *UserUpdateOne) ClearReactedPosts() *UserUpdateOne {
+	uuo.mutation.ClearReactedPosts()
+	return uuo
+}
+
+// RemoveReactedPostIDs removes the "reacted_posts" edge to ForumPost entities by IDs.
+func (uuo *UserUpdateOne) RemoveReactedPostIDs(ids ...int) *UserUpdateOne {
+	uuo.mutation.RemoveReactedPostIDs(ids...)
+	return uuo
+}
+
+// RemoveReactedPosts removes "reacted_posts" edges to ForumPost entities.
+func (uuo *UserUpdateOne) RemoveReactedPosts(f ...*ForumPost) *UserUpdateOne {
+	ids := make([]int, len(f))
+	for i := range f {
+		ids[i] = f[i].ID
+	}
+	return uuo.RemoveReactedPostIDs(ids...)
 }
 
 // Where appends a list predicates to the UserUpdate builder.
@@ -1018,6 +1253,35 @@ func (uuo *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) 
 	if value, ok := uuo.mutation.GodMode(); ok {
 		_spec.SetField(user.FieldGodMode, field.TypeBool, value)
 	}
+	if uuo.mutation.CourseCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   user.CourseTable,
+			Columns: []string{user.CourseColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(course.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uuo.mutation.CourseIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   user.CourseTable,
+			Columns: []string{user.CourseColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(course.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
 	if uuo.mutation.InstitutionCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2M,
@@ -1063,35 +1327,6 @@ func (uuo *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) 
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if uuo.mutation.CourseCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: true,
-			Table:   user.CourseTable,
-			Columns: []string{user.CourseColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(course.FieldID, field.TypeInt),
-			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := uuo.mutation.CourseIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: true,
-			Table:   user.CourseTable,
-			Columns: []string{user.CourseColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(course.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
-	}
 	if uuo.mutation.RedemptionsCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
@@ -1130,6 +1365,51 @@ func (uuo *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) 
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(redemption.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if uuo.mutation.ForumPostsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: true,
+			Table:   user.ForumPostsTable,
+			Columns: []string{user.ForumPostsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(forumpost.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uuo.mutation.RemovedForumPostsIDs(); len(nodes) > 0 && !uuo.mutation.ForumPostsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: true,
+			Table:   user.ForumPostsTable,
+			Columns: []string{user.ForumPostsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(forumpost.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uuo.mutation.ForumPostsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: true,
+			Table:   user.ForumPostsTable,
+			Columns: []string{user.ForumPostsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(forumpost.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -1232,6 +1512,51 @@ func (uuo *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) 
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(group.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if uuo.mutation.ReactedPostsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   user.ReactedPostsTable,
+			Columns: user.ReactedPostsPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(forumpost.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uuo.mutation.RemovedReactedPostsIDs(); len(nodes) > 0 && !uuo.mutation.ReactedPostsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   user.ReactedPostsTable,
+			Columns: user.ReactedPostsPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(forumpost.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uuo.mutation.ReactedPostsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   user.ReactedPostsTable,
+			Columns: user.ReactedPostsPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(forumpost.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

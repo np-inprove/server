@@ -12,6 +12,7 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/np-inprove/server/internal/ent/event"
+	"github.com/np-inprove/server/internal/ent/forumpost"
 	"github.com/np-inprove/server/internal/ent/group"
 	"github.com/np-inprove/server/internal/ent/groupuser"
 	"github.com/np-inprove/server/internal/ent/predicate"
@@ -27,6 +28,7 @@ type GroupQuery struct {
 	predicates     []predicate.Group
 	withUsers      *UserQuery
 	withEvents     *EventQuery
+	withForumPosts *ForumPostQuery
 	withGroupUsers *GroupUserQuery
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
@@ -101,6 +103,28 @@ func (gq *GroupQuery) QueryEvents() *EventQuery {
 			sqlgraph.From(group.Table, group.FieldID, selector),
 			sqlgraph.To(event.Table, event.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, group.EventsTable, group.EventsColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(gq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryForumPosts chains the current query on the "forum_posts" edge.
+func (gq *GroupQuery) QueryForumPosts() *ForumPostQuery {
+	query := (&ForumPostClient{config: gq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := gq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := gq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(group.Table, group.FieldID, selector),
+			sqlgraph.To(forumpost.Table, forumpost.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, group.ForumPostsTable, group.ForumPostsColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(gq.driver.Dialect(), step)
 		return fromU, nil
@@ -324,6 +348,7 @@ func (gq *GroupQuery) Clone() *GroupQuery {
 		predicates:     append([]predicate.Group{}, gq.predicates...),
 		withUsers:      gq.withUsers.Clone(),
 		withEvents:     gq.withEvents.Clone(),
+		withForumPosts: gq.withForumPosts.Clone(),
 		withGroupUsers: gq.withGroupUsers.Clone(),
 		// clone intermediate query.
 		sql:  gq.sql.Clone(),
@@ -350,6 +375,17 @@ func (gq *GroupQuery) WithEvents(opts ...func(*EventQuery)) *GroupQuery {
 		opt(query)
 	}
 	gq.withEvents = query
+	return gq
+}
+
+// WithForumPosts tells the query-builder to eager-load the nodes that are connected to
+// the "forum_posts" edge. The optional arguments are used to configure the query builder of the edge.
+func (gq *GroupQuery) WithForumPosts(opts ...func(*ForumPostQuery)) *GroupQuery {
+	query := (&ForumPostClient{config: gq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	gq.withForumPosts = query
 	return gq
 }
 
@@ -442,9 +478,10 @@ func (gq *GroupQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Group,
 	var (
 		nodes       = []*Group{}
 		_spec       = gq.querySpec()
-		loadedTypes = [3]bool{
+		loadedTypes = [4]bool{
 			gq.withUsers != nil,
 			gq.withEvents != nil,
+			gq.withForumPosts != nil,
 			gq.withGroupUsers != nil,
 		}
 	)
@@ -477,6 +514,13 @@ func (gq *GroupQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Group,
 		if err := gq.loadEvents(ctx, query, nodes,
 			func(n *Group) { n.Edges.Events = []*Event{} },
 			func(n *Group, e *Event) { n.Edges.Events = append(n.Edges.Events, e) }); err != nil {
+			return nil, err
+		}
+	}
+	if query := gq.withForumPosts; query != nil {
+		if err := gq.loadForumPosts(ctx, query, nodes,
+			func(n *Group) { n.Edges.ForumPosts = []*ForumPost{} },
+			func(n *Group, e *ForumPost) { n.Edges.ForumPosts = append(n.Edges.ForumPosts, e) }); err != nil {
 			return nil, err
 		}
 	}
@@ -577,6 +621,37 @@ func (gq *GroupQuery) loadEvents(ctx context.Context, query *EventQuery, nodes [
 		node, ok := nodeids[*fk]
 		if !ok {
 			return fmt.Errorf(`unexpected referenced foreign-key "group_events" returned %v for node %v`, *fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
+func (gq *GroupQuery) loadForumPosts(ctx context.Context, query *ForumPostQuery, nodes []*Group, init func(*Group), assign func(*Group, *ForumPost)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int]*Group)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	query.withFKs = true
+	query.Where(predicate.ForumPost(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(group.ForumPostsColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.group_forum_posts
+		if fk == nil {
+			return fmt.Errorf(`foreign-key "group_forum_posts" is nil for node %v`, n.ID)
+		}
+		node, ok := nodeids[*fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "group_forum_posts" returned %v for node %v`, *fk, n.ID)
 		}
 		assign(node, n)
 	}

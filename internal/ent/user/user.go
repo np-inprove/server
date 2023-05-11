@@ -28,27 +28,28 @@ const (
 	FieldPointsAwardedResetTime = "points_awarded_reset_time"
 	// FieldGodMode holds the string denoting the god_mode field in the database.
 	FieldGodMode = "god_mode"
-	// EdgeInstitution holds the string denoting the institution edge name in mutations.
-	EdgeInstitution = "institution"
 	// EdgeCourse holds the string denoting the course edge name in mutations.
 	EdgeCourse = "course"
+	// EdgeInstitution holds the string denoting the institution edge name in mutations.
+	EdgeInstitution = "institution"
 	// EdgeRedemptions holds the string denoting the redemptions edge name in mutations.
 	EdgeRedemptions = "redemptions"
+	// EdgeForumPosts holds the string denoting the forum_posts edge name in mutations.
+	EdgeForumPosts = "forum_posts"
 	// EdgePet holds the string denoting the pet edge name in mutations.
 	EdgePet = "pet"
 	// EdgeGroups holds the string denoting the groups edge name in mutations.
 	EdgeGroups = "groups"
+	// EdgeReactedPosts holds the string denoting the reacted_posts edge name in mutations.
+	EdgeReactedPosts = "reacted_posts"
 	// EdgeUserPets holds the string denoting the user_pets edge name in mutations.
 	EdgeUserPets = "user_pets"
 	// EdgeGroupUsers holds the string denoting the group_users edge name in mutations.
 	EdgeGroupUsers = "group_users"
+	// EdgeReactions holds the string denoting the reactions edge name in mutations.
+	EdgeReactions = "reactions"
 	// Table holds the table name of the user in the database.
 	Table = "users"
-	// InstitutionTable is the table that holds the institution relation/edge. The primary key declared below.
-	InstitutionTable = "institution_admins"
-	// InstitutionInverseTable is the table name for the Institution entity.
-	// It exists in this package in order to avoid circular dependency with the "institution" package.
-	InstitutionInverseTable = "institutions"
 	// CourseTable is the table that holds the course relation/edge.
 	CourseTable = "users"
 	// CourseInverseTable is the table name for the Course entity.
@@ -56,6 +57,11 @@ const (
 	CourseInverseTable = "courses"
 	// CourseColumn is the table column denoting the course relation/edge.
 	CourseColumn = "course_students"
+	// InstitutionTable is the table that holds the institution relation/edge. The primary key declared below.
+	InstitutionTable = "institution_admins"
+	// InstitutionInverseTable is the table name for the Institution entity.
+	// It exists in this package in order to avoid circular dependency with the "institution" package.
+	InstitutionInverseTable = "institutions"
 	// RedemptionsTable is the table that holds the redemptions relation/edge.
 	RedemptionsTable = "redemptions"
 	// RedemptionsInverseTable is the table name for the Redemption entity.
@@ -63,6 +69,13 @@ const (
 	RedemptionsInverseTable = "redemptions"
 	// RedemptionsColumn is the table column denoting the redemptions relation/edge.
 	RedemptionsColumn = "redemption_user"
+	// ForumPostsTable is the table that holds the forum_posts relation/edge.
+	ForumPostsTable = "forum_posts"
+	// ForumPostsInverseTable is the table name for the ForumPost entity.
+	// It exists in this package in order to avoid circular dependency with the "forumpost" package.
+	ForumPostsInverseTable = "forum_posts"
+	// ForumPostsColumn is the table column denoting the forum_posts relation/edge.
+	ForumPostsColumn = "forum_post_author"
 	// PetTable is the table that holds the pet relation/edge. The primary key declared below.
 	PetTable = "user_pets"
 	// PetInverseTable is the table name for the Pet entity.
@@ -73,6 +86,11 @@ const (
 	// GroupsInverseTable is the table name for the Group entity.
 	// It exists in this package in order to avoid circular dependency with the "group" package.
 	GroupsInverseTable = "groups"
+	// ReactedPostsTable is the table that holds the reacted_posts relation/edge. The primary key declared below.
+	ReactedPostsTable = "reactions"
+	// ReactedPostsInverseTable is the table name for the ForumPost entity.
+	// It exists in this package in order to avoid circular dependency with the "forumpost" package.
+	ReactedPostsInverseTable = "forum_posts"
 	// UserPetsTable is the table that holds the user_pets relation/edge.
 	UserPetsTable = "user_pets"
 	// UserPetsInverseTable is the table name for the UserPet entity.
@@ -87,6 +105,13 @@ const (
 	GroupUsersInverseTable = "group_users"
 	// GroupUsersColumn is the table column denoting the group_users relation/edge.
 	GroupUsersColumn = "user_id"
+	// ReactionsTable is the table that holds the reactions relation/edge.
+	ReactionsTable = "reactions"
+	// ReactionsInverseTable is the table name for the Reaction entity.
+	// It exists in this package in order to avoid circular dependency with the "reaction" package.
+	ReactionsInverseTable = "reactions"
+	// ReactionsColumn is the table column denoting the reactions relation/edge.
+	ReactionsColumn = "user_id"
 )
 
 // Columns holds all SQL columns for user fields.
@@ -118,6 +143,9 @@ var (
 	// GroupsPrimaryKey and GroupsColumn2 are the table columns denoting the
 	// primary key for the groups relation (M2M).
 	GroupsPrimaryKey = []string{"group_id", "user_id"}
+	// ReactedPostsPrimaryKey and ReactedPostsColumn2 are the table columns denoting the
+	// primary key for the reacted_posts relation (M2M).
+	ReactedPostsPrimaryKey = []string{"forum_post_id", "user_id"}
 )
 
 // ValidColumn reports if the column name is valid (part of the table columns).
@@ -198,6 +226,13 @@ func ByGodMode(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldGodMode, opts...).ToFunc()
 }
 
+// ByCourseField orders the results by course field.
+func ByCourseField(field string, opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newCourseStep(), sql.OrderByField(field, opts...))
+	}
+}
+
 // ByInstitutionCount orders the results by institution count.
 func ByInstitutionCount(opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
@@ -212,13 +247,6 @@ func ByInstitution(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 	}
 }
 
-// ByCourseField orders the results by course field.
-func ByCourseField(field string, opts ...sql.OrderTermOption) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newCourseStep(), sql.OrderByField(field, opts...))
-	}
-}
-
 // ByRedemptionsCount orders the results by redemptions count.
 func ByRedemptionsCount(opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
@@ -230,6 +258,20 @@ func ByRedemptionsCount(opts ...sql.OrderTermOption) OrderOption {
 func ByRedemptions(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 	return func(s *sql.Selector) {
 		sqlgraph.OrderByNeighborTerms(s, newRedemptionsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
+// ByForumPostsCount orders the results by forum_posts count.
+func ByForumPostsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newForumPostsStep(), opts...)
+	}
+}
+
+// ByForumPosts orders the results by forum_posts terms.
+func ByForumPosts(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newForumPostsStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
 
@@ -261,6 +303,20 @@ func ByGroups(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 	}
 }
 
+// ByReactedPostsCount orders the results by reacted_posts count.
+func ByReactedPostsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newReactedPostsStep(), opts...)
+	}
+}
+
+// ByReactedPosts orders the results by reacted_posts terms.
+func ByReactedPosts(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newReactedPostsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
 // ByUserPetsCount orders the results by user_pets count.
 func ByUserPetsCount(opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
@@ -288,12 +344,19 @@ func ByGroupUsers(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 		sqlgraph.OrderByNeighborTerms(s, newGroupUsersStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
-func newInstitutionStep() *sqlgraph.Step {
-	return sqlgraph.NewStep(
-		sqlgraph.From(Table, FieldID),
-		sqlgraph.To(InstitutionInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.M2M, true, InstitutionTable, InstitutionPrimaryKey...),
-	)
+
+// ByReactionsCount orders the results by reactions count.
+func ByReactionsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newReactionsStep(), opts...)
+	}
+}
+
+// ByReactions orders the results by reactions terms.
+func ByReactions(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newReactionsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
 }
 func newCourseStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
@@ -302,11 +365,25 @@ func newCourseStep() *sqlgraph.Step {
 		sqlgraph.Edge(sqlgraph.M2O, true, CourseTable, CourseColumn),
 	)
 }
+func newInstitutionStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(InstitutionInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.M2M, true, InstitutionTable, InstitutionPrimaryKey...),
+	)
+}
 func newRedemptionsStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(RedemptionsInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.O2M, true, RedemptionsTable, RedemptionsColumn),
+	)
+}
+func newForumPostsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(ForumPostsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, true, ForumPostsTable, ForumPostsColumn),
 	)
 }
 func newPetStep() *sqlgraph.Step {
@@ -323,6 +400,13 @@ func newGroupsStep() *sqlgraph.Step {
 		sqlgraph.Edge(sqlgraph.M2M, true, GroupsTable, GroupsPrimaryKey...),
 	)
 }
+func newReactedPostsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(ReactedPostsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.M2M, true, ReactedPostsTable, ReactedPostsPrimaryKey...),
+	)
+}
 func newUserPetsStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
@@ -335,5 +419,12 @@ func newGroupUsersStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(GroupUsersInverseTable, GroupUsersColumn),
 		sqlgraph.Edge(sqlgraph.O2M, true, GroupUsersTable, GroupUsersColumn),
+	)
+}
+func newReactionsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(ReactionsInverseTable, ReactionsColumn),
+		sqlgraph.Edge(sqlgraph.O2M, true, ReactionsTable, ReactionsColumn),
 	)
 }

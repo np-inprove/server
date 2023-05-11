@@ -7,8 +7,10 @@ import (
 	"github.com/np-inprove/server/internal/ent/accessory"
 	"github.com/np-inprove/server/internal/ent/course"
 	"github.com/np-inprove/server/internal/ent/event"
+	"github.com/np-inprove/server/internal/ent/forumpost"
 	"github.com/np-inprove/server/internal/ent/group"
 	"github.com/np-inprove/server/internal/ent/institution"
+	"github.com/np-inprove/server/internal/ent/reaction"
 	"github.com/np-inprove/server/internal/ent/schema"
 	"github.com/np-inprove/server/internal/ent/user"
 	"github.com/np-inprove/server/internal/ent/userpet"
@@ -58,6 +60,16 @@ func init() {
 	eventDescName := eventFields[0].Descriptor()
 	// event.NameValidator is a validator for the "name" field. It is called by the builders before save.
 	event.NameValidator = eventDescName.Validators[0].(func(string) error)
+	forumpostFields := schema.ForumPost{}.Fields()
+	_ = forumpostFields
+	// forumpostDescTitle is the schema descriptor for title field.
+	forumpostDescTitle := forumpostFields[0].Descriptor()
+	// forumpost.TitleValidator is a validator for the "title" field. It is called by the builders before save.
+	forumpost.TitleValidator = forumpostDescTitle.Validators[0].(func(string) error)
+	// forumpostDescContent is the schema descriptor for content field.
+	forumpostDescContent := forumpostFields[1].Descriptor()
+	// forumpost.ContentValidator is a validator for the "content" field. It is called by the builders before save.
+	forumpost.ContentValidator = forumpostDescContent.Validators[0].(func(string) error)
 	groupFields := schema.Group{}.Fields()
 	_ = groupFields
 	// groupDescPath is the schema descriptor for path field.
@@ -74,6 +86,12 @@ func init() {
 	institutionDescName := institutionFields[0].Descriptor()
 	// institution.NameValidator is a validator for the "name" field. It is called by the builders before save.
 	institution.NameValidator = institutionDescName.Validators[0].(func(string) error)
+	reactionFields := schema.Reaction{}.Fields()
+	_ = reactionFields
+	// reactionDescEmoji is the schema descriptor for emoji field.
+	reactionDescEmoji := reactionFields[2].Descriptor()
+	// reaction.EmojiValidator is a validator for the "emoji" field. It is called by the builders before save.
+	reaction.EmojiValidator = reactionDescEmoji.Validators[0].(func(string) error)
 	userFields := schema.User{}.Fields()
 	_ = userFields
 	// userDescFirstName is the schema descriptor for first_name field.

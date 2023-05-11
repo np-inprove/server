@@ -12,6 +12,7 @@ type GroupUser struct {
 	ent.Schema
 }
 
+// Annotations of the GroupUser.
 func (GroupUser) Annotations() []schema.Annotation {
 	return []schema.Annotation{
 		field.ID("group_id", "user_id"),

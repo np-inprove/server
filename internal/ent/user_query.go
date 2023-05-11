@@ -12,11 +12,13 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/np-inprove/server/internal/ent/course"
+	"github.com/np-inprove/server/internal/ent/forumpost"
 	"github.com/np-inprove/server/internal/ent/group"
 	"github.com/np-inprove/server/internal/ent/groupuser"
 	"github.com/np-inprove/server/internal/ent/institution"
 	"github.com/np-inprove/server/internal/ent/pet"
 	"github.com/np-inprove/server/internal/ent/predicate"
+	"github.com/np-inprove/server/internal/ent/reaction"
 	"github.com/np-inprove/server/internal/ent/redemption"
 	"github.com/np-inprove/server/internal/ent/user"
 	"github.com/np-inprove/server/internal/ent/userpet"
@@ -25,18 +27,21 @@ import (
 // UserQuery is the builder for querying User entities.
 type UserQuery struct {
 	config
-	ctx             *QueryContext
-	order           []user.OrderOption
-	inters          []Interceptor
-	predicates      []predicate.User
-	withInstitution *InstitutionQuery
-	withCourse      *CourseQuery
-	withRedemptions *RedemptionQuery
-	withPet         *PetQuery
-	withGroups      *GroupQuery
-	withUserPets    *UserPetQuery
-	withGroupUsers  *GroupUserQuery
-	withFKs         bool
+	ctx              *QueryContext
+	order            []user.OrderOption
+	inters           []Interceptor
+	predicates       []predicate.User
+	withCourse       *CourseQuery
+	withInstitution  *InstitutionQuery
+	withRedemptions  *RedemptionQuery
+	withForumPosts   *ForumPostQuery
+	withPet          *PetQuery
+	withGroups       *GroupQuery
+	withReactedPosts *ForumPostQuery
+	withUserPets     *UserPetQuery
+	withGroupUsers   *GroupUserQuery
+	withReactions    *ReactionQuery
+	withFKs          bool
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -73,28 +78,6 @@ func (uq *UserQuery) Order(o ...user.OrderOption) *UserQuery {
 	return uq
 }
 
-// QueryInstitution chains the current query on the "institution" edge.
-func (uq *UserQuery) QueryInstitution() *InstitutionQuery {
-	query := (&InstitutionClient{config: uq.config}).Query()
-	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
-		if err := uq.prepareQuery(ctx); err != nil {
-			return nil, err
-		}
-		selector := uq.sqlQuery(ctx)
-		if err := selector.Err(); err != nil {
-			return nil, err
-		}
-		step := sqlgraph.NewStep(
-			sqlgraph.From(user.Table, user.FieldID, selector),
-			sqlgraph.To(institution.Table, institution.FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, true, user.InstitutionTable, user.InstitutionPrimaryKey...),
-		)
-		fromU = sqlgraph.SetNeighbors(uq.driver.Dialect(), step)
-		return fromU, nil
-	}
-	return query
-}
-
 // QueryCourse chains the current query on the "course" edge.
 func (uq *UserQuery) QueryCourse() *CourseQuery {
 	query := (&CourseClient{config: uq.config}).Query()
@@ -117,6 +100,28 @@ func (uq *UserQuery) QueryCourse() *CourseQuery {
 	return query
 }
 
+// QueryInstitution chains the current query on the "institution" edge.
+func (uq *UserQuery) QueryInstitution() *InstitutionQuery {
+	query := (&InstitutionClient{config: uq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := uq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := uq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, selector),
+			sqlgraph.To(institution.Table, institution.FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, true, user.InstitutionTable, user.InstitutionPrimaryKey...),
+		)
+		fromU = sqlgraph.SetNeighbors(uq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
 // QueryRedemptions chains the current query on the "redemptions" edge.
 func (uq *UserQuery) QueryRedemptions() *RedemptionQuery {
 	query := (&RedemptionClient{config: uq.config}).Query()
@@ -132,6 +137,28 @@ func (uq *UserQuery) QueryRedemptions() *RedemptionQuery {
 			sqlgraph.From(user.Table, user.FieldID, selector),
 			sqlgraph.To(redemption.Table, redemption.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, true, user.RedemptionsTable, user.RedemptionsColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(uq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryForumPosts chains the current query on the "forum_posts" edge.
+func (uq *UserQuery) QueryForumPosts() *ForumPostQuery {
+	query := (&ForumPostClient{config: uq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := uq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := uq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, selector),
+			sqlgraph.To(forumpost.Table, forumpost.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, true, user.ForumPostsTable, user.ForumPostsColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(uq.driver.Dialect(), step)
 		return fromU, nil
@@ -183,6 +210,28 @@ func (uq *UserQuery) QueryGroups() *GroupQuery {
 	return query
 }
 
+// QueryReactedPosts chains the current query on the "reacted_posts" edge.
+func (uq *UserQuery) QueryReactedPosts() *ForumPostQuery {
+	query := (&ForumPostClient{config: uq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := uq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := uq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, selector),
+			sqlgraph.To(forumpost.Table, forumpost.FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, true, user.ReactedPostsTable, user.ReactedPostsPrimaryKey...),
+		)
+		fromU = sqlgraph.SetNeighbors(uq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
 // QueryUserPets chains the current query on the "user_pets" edge.
 func (uq *UserQuery) QueryUserPets() *UserPetQuery {
 	query := (&UserPetClient{config: uq.config}).Query()
@@ -220,6 +269,28 @@ func (uq *UserQuery) QueryGroupUsers() *GroupUserQuery {
 			sqlgraph.From(user.Table, user.FieldID, selector),
 			sqlgraph.To(groupuser.Table, groupuser.UserColumn),
 			sqlgraph.Edge(sqlgraph.O2M, true, user.GroupUsersTable, user.GroupUsersColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(uq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryReactions chains the current query on the "reactions" edge.
+func (uq *UserQuery) QueryReactions() *ReactionQuery {
+	query := (&ReactionClient{config: uq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := uq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := uq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, selector),
+			sqlgraph.To(reaction.Table, reaction.UserColumn),
+			sqlgraph.Edge(sqlgraph.O2M, true, user.ReactionsTable, user.ReactionsColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(uq.driver.Dialect(), step)
 		return fromU, nil
@@ -414,33 +485,25 @@ func (uq *UserQuery) Clone() *UserQuery {
 		return nil
 	}
 	return &UserQuery{
-		config:          uq.config,
-		ctx:             uq.ctx.Clone(),
-		order:           append([]user.OrderOption{}, uq.order...),
-		inters:          append([]Interceptor{}, uq.inters...),
-		predicates:      append([]predicate.User{}, uq.predicates...),
-		withInstitution: uq.withInstitution.Clone(),
-		withCourse:      uq.withCourse.Clone(),
-		withRedemptions: uq.withRedemptions.Clone(),
-		withPet:         uq.withPet.Clone(),
-		withGroups:      uq.withGroups.Clone(),
-		withUserPets:    uq.withUserPets.Clone(),
-		withGroupUsers:  uq.withGroupUsers.Clone(),
+		config:           uq.config,
+		ctx:              uq.ctx.Clone(),
+		order:            append([]user.OrderOption{}, uq.order...),
+		inters:           append([]Interceptor{}, uq.inters...),
+		predicates:       append([]predicate.User{}, uq.predicates...),
+		withCourse:       uq.withCourse.Clone(),
+		withInstitution:  uq.withInstitution.Clone(),
+		withRedemptions:  uq.withRedemptions.Clone(),
+		withForumPosts:   uq.withForumPosts.Clone(),
+		withPet:          uq.withPet.Clone(),
+		withGroups:       uq.withGroups.Clone(),
+		withReactedPosts: uq.withReactedPosts.Clone(),
+		withUserPets:     uq.withUserPets.Clone(),
+		withGroupUsers:   uq.withGroupUsers.Clone(),
+		withReactions:    uq.withReactions.Clone(),
 		// clone intermediate query.
 		sql:  uq.sql.Clone(),
 		path: uq.path,
 	}
-}
-
-// WithInstitution tells the query-builder to eager-load the nodes that are connected to
-// the "institution" edge. The optional arguments are used to configure the query builder of the edge.
-func (uq *UserQuery) WithInstitution(opts ...func(*InstitutionQuery)) *UserQuery {
-	query := (&InstitutionClient{config: uq.config}).Query()
-	for _, opt := range opts {
-		opt(query)
-	}
-	uq.withInstitution = query
-	return uq
 }
 
 // WithCourse tells the query-builder to eager-load the nodes that are connected to
@@ -454,6 +517,17 @@ func (uq *UserQuery) WithCourse(opts ...func(*CourseQuery)) *UserQuery {
 	return uq
 }
 
+// WithInstitution tells the query-builder to eager-load the nodes that are connected to
+// the "institution" edge. The optional arguments are used to configure the query builder of the edge.
+func (uq *UserQuery) WithInstitution(opts ...func(*InstitutionQuery)) *UserQuery {
+	query := (&InstitutionClient{config: uq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	uq.withInstitution = query
+	return uq
+}
+
 // WithRedemptions tells the query-builder to eager-load the nodes that are connected to
 // the "redemptions" edge. The optional arguments are used to configure the query builder of the edge.
 func (uq *UserQuery) WithRedemptions(opts ...func(*RedemptionQuery)) *UserQuery {
@@ -462,6 +536,17 @@ func (uq *UserQuery) WithRedemptions(opts ...func(*RedemptionQuery)) *UserQuery 
 		opt(query)
 	}
 	uq.withRedemptions = query
+	return uq
+}
+
+// WithForumPosts tells the query-builder to eager-load the nodes that are connected to
+// the "forum_posts" edge. The optional arguments are used to configure the query builder of the edge.
+func (uq *UserQuery) WithForumPosts(opts ...func(*ForumPostQuery)) *UserQuery {
+	query := (&ForumPostClient{config: uq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	uq.withForumPosts = query
 	return uq
 }
 
@@ -487,6 +572,17 @@ func (uq *UserQuery) WithGroups(opts ...func(*GroupQuery)) *UserQuery {
 	return uq
 }
 
+// WithReactedPosts tells the query-builder to eager-load the nodes that are connected to
+// the "reacted_posts" edge. The optional arguments are used to configure the query builder of the edge.
+func (uq *UserQuery) WithReactedPosts(opts ...func(*ForumPostQuery)) *UserQuery {
+	query := (&ForumPostClient{config: uq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	uq.withReactedPosts = query
+	return uq
+}
+
 // WithUserPets tells the query-builder to eager-load the nodes that are connected to
 // the "user_pets" edge. The optional arguments are used to configure the query builder of the edge.
 func (uq *UserQuery) WithUserPets(opts ...func(*UserPetQuery)) *UserQuery {
@@ -506,6 +602,17 @@ func (uq *UserQuery) WithGroupUsers(opts ...func(*GroupUserQuery)) *UserQuery {
 		opt(query)
 	}
 	uq.withGroupUsers = query
+	return uq
+}
+
+// WithReactions tells the query-builder to eager-load the nodes that are connected to
+// the "reactions" edge. The optional arguments are used to configure the query builder of the edge.
+func (uq *UserQuery) WithReactions(opts ...func(*ReactionQuery)) *UserQuery {
+	query := (&ReactionClient{config: uq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	uq.withReactions = query
 	return uq
 }
 
@@ -588,14 +695,17 @@ func (uq *UserQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*User, e
 		nodes       = []*User{}
 		withFKs     = uq.withFKs
 		_spec       = uq.querySpec()
-		loadedTypes = [7]bool{
-			uq.withInstitution != nil,
+		loadedTypes = [10]bool{
 			uq.withCourse != nil,
+			uq.withInstitution != nil,
 			uq.withRedemptions != nil,
+			uq.withForumPosts != nil,
 			uq.withPet != nil,
 			uq.withGroups != nil,
+			uq.withReactedPosts != nil,
 			uq.withUserPets != nil,
 			uq.withGroupUsers != nil,
+			uq.withReactions != nil,
 		}
 	)
 	if uq.withCourse != nil {
@@ -622,6 +732,12 @@ func (uq *UserQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*User, e
 	if len(nodes) == 0 {
 		return nodes, nil
 	}
+	if query := uq.withCourse; query != nil {
+		if err := uq.loadCourse(ctx, query, nodes, nil,
+			func(n *User, e *Course) { n.Edges.Course = e }); err != nil {
+			return nil, err
+		}
+	}
 	if query := uq.withInstitution; query != nil {
 		if err := uq.loadInstitution(ctx, query, nodes,
 			func(n *User) { n.Edges.Institution = []*Institution{} },
@@ -629,16 +745,17 @@ func (uq *UserQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*User, e
 			return nil, err
 		}
 	}
-	if query := uq.withCourse; query != nil {
-		if err := uq.loadCourse(ctx, query, nodes, nil,
-			func(n *User, e *Course) { n.Edges.Course = e }); err != nil {
-			return nil, err
-		}
-	}
 	if query := uq.withRedemptions; query != nil {
 		if err := uq.loadRedemptions(ctx, query, nodes,
 			func(n *User) { n.Edges.Redemptions = []*Redemption{} },
 			func(n *User, e *Redemption) { n.Edges.Redemptions = append(n.Edges.Redemptions, e) }); err != nil {
+			return nil, err
+		}
+	}
+	if query := uq.withForumPosts; query != nil {
+		if err := uq.loadForumPosts(ctx, query, nodes,
+			func(n *User) { n.Edges.ForumPosts = []*ForumPost{} },
+			func(n *User, e *ForumPost) { n.Edges.ForumPosts = append(n.Edges.ForumPosts, e) }); err != nil {
 			return nil, err
 		}
 	}
@@ -656,6 +773,13 @@ func (uq *UserQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*User, e
 			return nil, err
 		}
 	}
+	if query := uq.withReactedPosts; query != nil {
+		if err := uq.loadReactedPosts(ctx, query, nodes,
+			func(n *User) { n.Edges.ReactedPosts = []*ForumPost{} },
+			func(n *User, e *ForumPost) { n.Edges.ReactedPosts = append(n.Edges.ReactedPosts, e) }); err != nil {
+			return nil, err
+		}
+	}
 	if query := uq.withUserPets; query != nil {
 		if err := uq.loadUserPets(ctx, query, nodes,
 			func(n *User) { n.Edges.UserPets = []*UserPet{} },
@@ -670,9 +794,48 @@ func (uq *UserQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*User, e
 			return nil, err
 		}
 	}
+	if query := uq.withReactions; query != nil {
+		if err := uq.loadReactions(ctx, query, nodes,
+			func(n *User) { n.Edges.Reactions = []*Reaction{} },
+			func(n *User, e *Reaction) { n.Edges.Reactions = append(n.Edges.Reactions, e) }); err != nil {
+			return nil, err
+		}
+	}
 	return nodes, nil
 }
 
+func (uq *UserQuery) loadCourse(ctx context.Context, query *CourseQuery, nodes []*User, init func(*User), assign func(*User, *Course)) error {
+	ids := make([]int, 0, len(nodes))
+	nodeids := make(map[int][]*User)
+	for i := range nodes {
+		if nodes[i].course_students == nil {
+			continue
+		}
+		fk := *nodes[i].course_students
+		if _, ok := nodeids[fk]; !ok {
+			ids = append(ids, fk)
+		}
+		nodeids[fk] = append(nodeids[fk], nodes[i])
+	}
+	if len(ids) == 0 {
+		return nil
+	}
+	query.Where(course.IDIn(ids...))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		nodes, ok := nodeids[n.ID]
+		if !ok {
+			return fmt.Errorf(`unexpected foreign-key "course_students" returned %v`, n.ID)
+		}
+		for i := range nodes {
+			assign(nodes[i], n)
+		}
+	}
+	return nil
+}
 func (uq *UserQuery) loadInstitution(ctx context.Context, query *InstitutionQuery, nodes []*User, init func(*User), assign func(*User, *Institution)) error {
 	edgeIDs := make([]driver.Value, len(nodes))
 	byID := make(map[int]*User)
@@ -734,38 +897,6 @@ func (uq *UserQuery) loadInstitution(ctx context.Context, query *InstitutionQuer
 	}
 	return nil
 }
-func (uq *UserQuery) loadCourse(ctx context.Context, query *CourseQuery, nodes []*User, init func(*User), assign func(*User, *Course)) error {
-	ids := make([]int, 0, len(nodes))
-	nodeids := make(map[int][]*User)
-	for i := range nodes {
-		if nodes[i].course_students == nil {
-			continue
-		}
-		fk := *nodes[i].course_students
-		if _, ok := nodeids[fk]; !ok {
-			ids = append(ids, fk)
-		}
-		nodeids[fk] = append(nodeids[fk], nodes[i])
-	}
-	if len(ids) == 0 {
-		return nil
-	}
-	query.Where(course.IDIn(ids...))
-	neighbors, err := query.All(ctx)
-	if err != nil {
-		return err
-	}
-	for _, n := range neighbors {
-		nodes, ok := nodeids[n.ID]
-		if !ok {
-			return fmt.Errorf(`unexpected foreign-key "course_students" returned %v`, n.ID)
-		}
-		for i := range nodes {
-			assign(nodes[i], n)
-		}
-	}
-	return nil
-}
 func (uq *UserQuery) loadRedemptions(ctx context.Context, query *RedemptionQuery, nodes []*User, init func(*User), assign func(*User, *Redemption)) error {
 	fks := make([]driver.Value, 0, len(nodes))
 	nodeids := make(map[int]*User)
@@ -792,6 +923,37 @@ func (uq *UserQuery) loadRedemptions(ctx context.Context, query *RedemptionQuery
 		node, ok := nodeids[*fk]
 		if !ok {
 			return fmt.Errorf(`unexpected referenced foreign-key "redemption_user" returned %v for node %v`, *fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
+func (uq *UserQuery) loadForumPosts(ctx context.Context, query *ForumPostQuery, nodes []*User, init func(*User), assign func(*User, *ForumPost)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int]*User)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	query.withFKs = true
+	query.Where(predicate.ForumPost(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(user.ForumPostsColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.forum_post_author
+		if fk == nil {
+			return fmt.Errorf(`foreign-key "forum_post_author" is nil for node %v`, n.ID)
+		}
+		node, ok := nodeids[*fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "forum_post_author" returned %v for node %v`, *fk, n.ID)
 		}
 		assign(node, n)
 	}
@@ -919,6 +1081,67 @@ func (uq *UserQuery) loadGroups(ctx context.Context, query *GroupQuery, nodes []
 	}
 	return nil
 }
+func (uq *UserQuery) loadReactedPosts(ctx context.Context, query *ForumPostQuery, nodes []*User, init func(*User), assign func(*User, *ForumPost)) error {
+	edgeIDs := make([]driver.Value, len(nodes))
+	byID := make(map[int]*User)
+	nids := make(map[int]map[*User]struct{})
+	for i, node := range nodes {
+		edgeIDs[i] = node.ID
+		byID[node.ID] = node
+		if init != nil {
+			init(node)
+		}
+	}
+	query.Where(func(s *sql.Selector) {
+		joinT := sql.Table(user.ReactedPostsTable)
+		s.Join(joinT).On(s.C(forumpost.FieldID), joinT.C(user.ReactedPostsPrimaryKey[0]))
+		s.Where(sql.InValues(joinT.C(user.ReactedPostsPrimaryKey[1]), edgeIDs...))
+		columns := s.SelectedColumns()
+		s.Select(joinT.C(user.ReactedPostsPrimaryKey[1]))
+		s.AppendSelect(columns...)
+		s.SetDistinct(false)
+	})
+	if err := query.prepareQuery(ctx); err != nil {
+		return err
+	}
+	qr := QuerierFunc(func(ctx context.Context, q Query) (Value, error) {
+		return query.sqlAll(ctx, func(_ context.Context, spec *sqlgraph.QuerySpec) {
+			assign := spec.Assign
+			values := spec.ScanValues
+			spec.ScanValues = func(columns []string) ([]any, error) {
+				values, err := values(columns[1:])
+				if err != nil {
+					return nil, err
+				}
+				return append([]any{new(sql.NullInt64)}, values...), nil
+			}
+			spec.Assign = func(columns []string, values []any) error {
+				outValue := int(values[0].(*sql.NullInt64).Int64)
+				inValue := int(values[1].(*sql.NullInt64).Int64)
+				if nids[inValue] == nil {
+					nids[inValue] = map[*User]struct{}{byID[outValue]: {}}
+					return assign(columns[1:], values[1:])
+				}
+				nids[inValue][byID[outValue]] = struct{}{}
+				return nil
+			}
+		})
+	})
+	neighbors, err := withInterceptors[[]*ForumPost](ctx, query, qr, query.inters)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		nodes, ok := nids[n.ID]
+		if !ok {
+			return fmt.Errorf(`unexpected "reacted_posts" node returned %v`, n.ID)
+		}
+		for kn := range nodes {
+			assign(kn, n)
+		}
+	}
+	return nil
+}
 func (uq *UserQuery) loadUserPets(ctx context.Context, query *UserPetQuery, nodes []*User, init func(*User), assign func(*User, *UserPet)) error {
 	fks := make([]driver.Value, 0, len(nodes))
 	nodeids := make(map[int]*User)
@@ -964,6 +1187,36 @@ func (uq *UserQuery) loadGroupUsers(ctx context.Context, query *GroupUserQuery, 
 	}
 	query.Where(predicate.GroupUser(func(s *sql.Selector) {
 		s.Where(sql.InValues(s.C(user.GroupUsersColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.UserID
+		node, ok := nodeids[fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "user_id" returned %v for node %v`, fk, n)
+		}
+		assign(node, n)
+	}
+	return nil
+}
+func (uq *UserQuery) loadReactions(ctx context.Context, query *ReactionQuery, nodes []*User, init func(*User), assign func(*User, *Reaction)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int]*User)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(reaction.FieldUserID)
+	}
+	query.Where(predicate.Reaction(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(user.ReactionsColumn), fks...))
 	}))
 	neighbors, err := query.All(ctx)
 	if err != nil {

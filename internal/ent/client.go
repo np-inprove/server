@@ -18,10 +18,12 @@ import (
 	"github.com/np-inprove/server/internal/ent/accessory"
 	"github.com/np-inprove/server/internal/ent/course"
 	"github.com/np-inprove/server/internal/ent/event"
+	"github.com/np-inprove/server/internal/ent/forumpost"
 	"github.com/np-inprove/server/internal/ent/group"
 	"github.com/np-inprove/server/internal/ent/groupuser"
 	"github.com/np-inprove/server/internal/ent/institution"
 	"github.com/np-inprove/server/internal/ent/pet"
+	"github.com/np-inprove/server/internal/ent/reaction"
 	"github.com/np-inprove/server/internal/ent/redemption"
 	"github.com/np-inprove/server/internal/ent/user"
 	"github.com/np-inprove/server/internal/ent/userpet"
@@ -41,6 +43,8 @@ type Client struct {
 	Course *CourseClient
 	// Event is the client for interacting with the Event builders.
 	Event *EventClient
+	// ForumPost is the client for interacting with the ForumPost builders.
+	ForumPost *ForumPostClient
 	// Group is the client for interacting with the Group builders.
 	Group *GroupClient
 	// GroupUser is the client for interacting with the GroupUser builders.
@@ -49,6 +53,8 @@ type Client struct {
 	Institution *InstitutionClient
 	// Pet is the client for interacting with the Pet builders.
 	Pet *PetClient
+	// Reaction is the client for interacting with the Reaction builders.
+	Reaction *ReactionClient
 	// Redemption is the client for interacting with the Redemption builders.
 	Redemption *RedemptionClient
 	// User is the client for interacting with the User builders.
@@ -74,10 +80,12 @@ func (c *Client) init() {
 	c.Accessory = NewAccessoryClient(c.config)
 	c.Course = NewCourseClient(c.config)
 	c.Event = NewEventClient(c.config)
+	c.ForumPost = NewForumPostClient(c.config)
 	c.Group = NewGroupClient(c.config)
 	c.GroupUser = NewGroupUserClient(c.config)
 	c.Institution = NewInstitutionClient(c.config)
 	c.Pet = NewPetClient(c.config)
+	c.Reaction = NewReactionClient(c.config)
 	c.Redemption = NewRedemptionClient(c.config)
 	c.User = NewUserClient(c.config)
 	c.UserPet = NewUserPetClient(c.config)
@@ -168,10 +176,12 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 		Accessory:      NewAccessoryClient(cfg),
 		Course:         NewCourseClient(cfg),
 		Event:          NewEventClient(cfg),
+		ForumPost:      NewForumPostClient(cfg),
 		Group:          NewGroupClient(cfg),
 		GroupUser:      NewGroupUserClient(cfg),
 		Institution:    NewInstitutionClient(cfg),
 		Pet:            NewPetClient(cfg),
+		Reaction:       NewReactionClient(cfg),
 		Redemption:     NewRedemptionClient(cfg),
 		User:           NewUserClient(cfg),
 		UserPet:        NewUserPetClient(cfg),
@@ -199,10 +209,12 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 		Accessory:      NewAccessoryClient(cfg),
 		Course:         NewCourseClient(cfg),
 		Event:          NewEventClient(cfg),
+		ForumPost:      NewForumPostClient(cfg),
 		Group:          NewGroupClient(cfg),
 		GroupUser:      NewGroupUserClient(cfg),
 		Institution:    NewInstitutionClient(cfg),
 		Pet:            NewPetClient(cfg),
+		Reaction:       NewReactionClient(cfg),
 		Redemption:     NewRedemptionClient(cfg),
 		User:           NewUserClient(cfg),
 		UserPet:        NewUserPetClient(cfg),
@@ -236,8 +248,9 @@ func (c *Client) Close() error {
 // In order to add hooks to a specific client, call: `client.Node.Use(...)`.
 func (c *Client) Use(hooks ...Hook) {
 	for _, n := range []interface{ Use(...Hook) }{
-		c.AcademicSchool, c.Accessory, c.Course, c.Event, c.Group, c.GroupUser,
-		c.Institution, c.Pet, c.Redemption, c.User, c.UserPet, c.Voucher,
+		c.AcademicSchool, c.Accessory, c.Course, c.Event, c.ForumPost, c.Group,
+		c.GroupUser, c.Institution, c.Pet, c.Reaction, c.Redemption, c.User, c.UserPet,
+		c.Voucher,
 	} {
 		n.Use(hooks...)
 	}
@@ -247,8 +260,9 @@ func (c *Client) Use(hooks ...Hook) {
 // In order to add interceptors to a specific client, call: `client.Node.Intercept(...)`.
 func (c *Client) Intercept(interceptors ...Interceptor) {
 	for _, n := range []interface{ Intercept(...Interceptor) }{
-		c.AcademicSchool, c.Accessory, c.Course, c.Event, c.Group, c.GroupUser,
-		c.Institution, c.Pet, c.Redemption, c.User, c.UserPet, c.Voucher,
+		c.AcademicSchool, c.Accessory, c.Course, c.Event, c.ForumPost, c.Group,
+		c.GroupUser, c.Institution, c.Pet, c.Reaction, c.Redemption, c.User, c.UserPet,
+		c.Voucher,
 	} {
 		n.Intercept(interceptors...)
 	}
@@ -265,6 +279,8 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.Course.mutate(ctx, m)
 	case *EventMutation:
 		return c.Event.mutate(ctx, m)
+	case *ForumPostMutation:
+		return c.ForumPost.mutate(ctx, m)
 	case *GroupMutation:
 		return c.Group.mutate(ctx, m)
 	case *GroupUserMutation:
@@ -273,6 +289,8 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.Institution.mutate(ctx, m)
 	case *PetMutation:
 		return c.Pet.mutate(ctx, m)
+	case *ReactionMutation:
+		return c.Reaction.mutate(ctx, m)
 	case *RedemptionMutation:
 		return c.Redemption.mutate(ctx, m)
 	case *UserMutation:
@@ -870,6 +888,220 @@ func (c *EventClient) mutate(ctx context.Context, m *EventMutation) (Value, erro
 	}
 }
 
+// ForumPostClient is a client for the ForumPost schema.
+type ForumPostClient struct {
+	config
+}
+
+// NewForumPostClient returns a client for the ForumPost from the given config.
+func NewForumPostClient(c config) *ForumPostClient {
+	return &ForumPostClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `forumpost.Hooks(f(g(h())))`.
+func (c *ForumPostClient) Use(hooks ...Hook) {
+	c.hooks.ForumPost = append(c.hooks.ForumPost, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `forumpost.Intercept(f(g(h())))`.
+func (c *ForumPostClient) Intercept(interceptors ...Interceptor) {
+	c.inters.ForumPost = append(c.inters.ForumPost, interceptors...)
+}
+
+// Create returns a builder for creating a ForumPost entity.
+func (c *ForumPostClient) Create() *ForumPostCreate {
+	mutation := newForumPostMutation(c.config, OpCreate)
+	return &ForumPostCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of ForumPost entities.
+func (c *ForumPostClient) CreateBulk(builders ...*ForumPostCreate) *ForumPostCreateBulk {
+	return &ForumPostCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for ForumPost.
+func (c *ForumPostClient) Update() *ForumPostUpdate {
+	mutation := newForumPostMutation(c.config, OpUpdate)
+	return &ForumPostUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *ForumPostClient) UpdateOne(fp *ForumPost) *ForumPostUpdateOne {
+	mutation := newForumPostMutation(c.config, OpUpdateOne, withForumPost(fp))
+	return &ForumPostUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *ForumPostClient) UpdateOneID(id int) *ForumPostUpdateOne {
+	mutation := newForumPostMutation(c.config, OpUpdateOne, withForumPostID(id))
+	return &ForumPostUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for ForumPost.
+func (c *ForumPostClient) Delete() *ForumPostDelete {
+	mutation := newForumPostMutation(c.config, OpDelete)
+	return &ForumPostDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *ForumPostClient) DeleteOne(fp *ForumPost) *ForumPostDeleteOne {
+	return c.DeleteOneID(fp.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *ForumPostClient) DeleteOneID(id int) *ForumPostDeleteOne {
+	builder := c.Delete().Where(forumpost.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &ForumPostDeleteOne{builder}
+}
+
+// Query returns a query builder for ForumPost.
+func (c *ForumPostClient) Query() *ForumPostQuery {
+	return &ForumPostQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeForumPost},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a ForumPost entity by its id.
+func (c *ForumPostClient) Get(ctx context.Context, id int) (*ForumPost, error) {
+	return c.Query().Where(forumpost.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *ForumPostClient) GetX(ctx context.Context, id int) *ForumPost {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryAuthor queries the author edge of a ForumPost.
+func (c *ForumPostClient) QueryAuthor(fp *ForumPost) *UserQuery {
+	query := (&UserClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := fp.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(forumpost.Table, forumpost.FieldID, id),
+			sqlgraph.To(user.Table, user.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, false, forumpost.AuthorTable, forumpost.AuthorColumn),
+		)
+		fromV = sqlgraph.Neighbors(fp.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryGroup queries the group edge of a ForumPost.
+func (c *ForumPostClient) QueryGroup(fp *ForumPost) *GroupQuery {
+	query := (&GroupClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := fp.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(forumpost.Table, forumpost.FieldID, id),
+			sqlgraph.To(group.Table, group.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, forumpost.GroupTable, forumpost.GroupColumn),
+		)
+		fromV = sqlgraph.Neighbors(fp.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryParent queries the parent edge of a ForumPost.
+func (c *ForumPostClient) QueryParent(fp *ForumPost) *ForumPostQuery {
+	query := (&ForumPostClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := fp.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(forumpost.Table, forumpost.FieldID, id),
+			sqlgraph.To(forumpost.Table, forumpost.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, forumpost.ParentTable, forumpost.ParentColumn),
+		)
+		fromV = sqlgraph.Neighbors(fp.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryChildren queries the children edge of a ForumPost.
+func (c *ForumPostClient) QueryChildren(fp *ForumPost) *ForumPostQuery {
+	query := (&ForumPostClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := fp.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(forumpost.Table, forumpost.FieldID, id),
+			sqlgraph.To(forumpost.Table, forumpost.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, forumpost.ChildrenTable, forumpost.ChildrenColumn),
+		)
+		fromV = sqlgraph.Neighbors(fp.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryReactedUsers queries the reacted_users edge of a ForumPost.
+func (c *ForumPostClient) QueryReactedUsers(fp *ForumPost) *UserQuery {
+	query := (&UserClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := fp.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(forumpost.Table, forumpost.FieldID, id),
+			sqlgraph.To(user.Table, user.FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, false, forumpost.ReactedUsersTable, forumpost.ReactedUsersPrimaryKey...),
+		)
+		fromV = sqlgraph.Neighbors(fp.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryReactions queries the reactions edge of a ForumPost.
+func (c *ForumPostClient) QueryReactions(fp *ForumPost) *ReactionQuery {
+	query := (&ReactionClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := fp.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(forumpost.Table, forumpost.FieldID, id),
+			sqlgraph.To(reaction.Table, reaction.ForumPostColumn),
+			sqlgraph.Edge(sqlgraph.O2M, true, forumpost.ReactionsTable, forumpost.ReactionsColumn),
+		)
+		fromV = sqlgraph.Neighbors(fp.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *ForumPostClient) Hooks() []Hook {
+	return c.hooks.ForumPost
+}
+
+// Interceptors returns the client interceptors.
+func (c *ForumPostClient) Interceptors() []Interceptor {
+	return c.inters.ForumPost
+}
+
+func (c *ForumPostClient) mutate(ctx context.Context, m *ForumPostMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&ForumPostCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&ForumPostUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&ForumPostUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&ForumPostDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown ForumPost mutation op: %q", m.Op())
+	}
+}
+
 // GroupClient is a client for the Group schema.
 type GroupClient struct {
 	config
@@ -988,6 +1220,22 @@ func (c *GroupClient) QueryEvents(gr *Group) *EventQuery {
 			sqlgraph.From(group.Table, group.FieldID, id),
 			sqlgraph.To(event.Table, event.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, group.EventsTable, group.EventsColumn),
+		)
+		fromV = sqlgraph.Neighbors(gr.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryForumPosts queries the forum_posts edge of a Group.
+func (c *GroupClient) QueryForumPosts(gr *Group) *ForumPostQuery {
+	query := (&ForumPostClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := gr.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(group.Table, group.FieldID, id),
+			sqlgraph.To(forumpost.Table, forumpost.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, group.ForumPostsTable, group.ForumPostsColumn),
 		)
 		fromV = sqlgraph.Neighbors(gr.driver.Dialect(), step)
 		return fromV, nil
@@ -1469,6 +1717,107 @@ func (c *PetClient) mutate(ctx context.Context, m *PetMutation) (Value, error) {
 	}
 }
 
+// ReactionClient is a client for the Reaction schema.
+type ReactionClient struct {
+	config
+}
+
+// NewReactionClient returns a client for the Reaction from the given config.
+func NewReactionClient(c config) *ReactionClient {
+	return &ReactionClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `reaction.Hooks(f(g(h())))`.
+func (c *ReactionClient) Use(hooks ...Hook) {
+	c.hooks.Reaction = append(c.hooks.Reaction, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `reaction.Intercept(f(g(h())))`.
+func (c *ReactionClient) Intercept(interceptors ...Interceptor) {
+	c.inters.Reaction = append(c.inters.Reaction, interceptors...)
+}
+
+// Create returns a builder for creating a Reaction entity.
+func (c *ReactionClient) Create() *ReactionCreate {
+	mutation := newReactionMutation(c.config, OpCreate)
+	return &ReactionCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of Reaction entities.
+func (c *ReactionClient) CreateBulk(builders ...*ReactionCreate) *ReactionCreateBulk {
+	return &ReactionCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for Reaction.
+func (c *ReactionClient) Update() *ReactionUpdate {
+	mutation := newReactionMutation(c.config, OpUpdate)
+	return &ReactionUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *ReactionClient) UpdateOne(r *Reaction) *ReactionUpdateOne {
+	mutation := newReactionMutation(c.config, OpUpdateOne)
+	mutation.forum_post = &r.ForumPostID
+	mutation.user = &r.UserID
+	return &ReactionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for Reaction.
+func (c *ReactionClient) Delete() *ReactionDelete {
+	mutation := newReactionMutation(c.config, OpDelete)
+	return &ReactionDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Query returns a query builder for Reaction.
+func (c *ReactionClient) Query() *ReactionQuery {
+	return &ReactionQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeReaction},
+		inters: c.Interceptors(),
+	}
+}
+
+// QueryUser queries the user edge of a Reaction.
+func (c *ReactionClient) QueryUser(r *Reaction) *UserQuery {
+	return c.Query().
+		Where(reaction.ForumPostID(r.ForumPostID), reaction.UserID(r.UserID)).
+		QueryUser()
+}
+
+// QueryForumPost queries the forum_post edge of a Reaction.
+func (c *ReactionClient) QueryForumPost(r *Reaction) *ForumPostQuery {
+	return c.Query().
+		Where(reaction.ForumPostID(r.ForumPostID), reaction.UserID(r.UserID)).
+		QueryForumPost()
+}
+
+// Hooks returns the client hooks.
+func (c *ReactionClient) Hooks() []Hook {
+	return c.hooks.Reaction
+}
+
+// Interceptors returns the client interceptors.
+func (c *ReactionClient) Interceptors() []Interceptor {
+	return c.inters.Reaction
+}
+
+func (c *ReactionClient) mutate(ctx context.Context, m *ReactionMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&ReactionCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&ReactionUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&ReactionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&ReactionDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown Reaction mutation op: %q", m.Op())
+	}
+}
+
 // RedemptionClient is a client for the Redemption schema.
 type RedemptionClient struct {
 	config
@@ -1728,22 +2077,6 @@ func (c *UserClient) GetX(ctx context.Context, id int) *User {
 	return obj
 }
 
-// QueryInstitution queries the institution edge of a User.
-func (c *UserClient) QueryInstitution(u *User) *InstitutionQuery {
-	query := (&InstitutionClient{config: c.config}).Query()
-	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := u.ID
-		step := sqlgraph.NewStep(
-			sqlgraph.From(user.Table, user.FieldID, id),
-			sqlgraph.To(institution.Table, institution.FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, true, user.InstitutionTable, user.InstitutionPrimaryKey...),
-		)
-		fromV = sqlgraph.Neighbors(u.driver.Dialect(), step)
-		return fromV, nil
-	}
-	return query
-}
-
 // QueryCourse queries the course edge of a User.
 func (c *UserClient) QueryCourse(u *User) *CourseQuery {
 	query := (&CourseClient{config: c.config}).Query()
@@ -1760,6 +2093,22 @@ func (c *UserClient) QueryCourse(u *User) *CourseQuery {
 	return query
 }
 
+// QueryInstitution queries the institution edge of a User.
+func (c *UserClient) QueryInstitution(u *User) *InstitutionQuery {
+	query := (&InstitutionClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := u.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, id),
+			sqlgraph.To(institution.Table, institution.FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, true, user.InstitutionTable, user.InstitutionPrimaryKey...),
+		)
+		fromV = sqlgraph.Neighbors(u.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
 // QueryRedemptions queries the redemptions edge of a User.
 func (c *UserClient) QueryRedemptions(u *User) *RedemptionQuery {
 	query := (&RedemptionClient{config: c.config}).Query()
@@ -1769,6 +2118,22 @@ func (c *UserClient) QueryRedemptions(u *User) *RedemptionQuery {
 			sqlgraph.From(user.Table, user.FieldID, id),
 			sqlgraph.To(redemption.Table, redemption.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, true, user.RedemptionsTable, user.RedemptionsColumn),
+		)
+		fromV = sqlgraph.Neighbors(u.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryForumPosts queries the forum_posts edge of a User.
+func (c *UserClient) QueryForumPosts(u *User) *ForumPostQuery {
+	query := (&ForumPostClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := u.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, id),
+			sqlgraph.To(forumpost.Table, forumpost.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, true, user.ForumPostsTable, user.ForumPostsColumn),
 		)
 		fromV = sqlgraph.Neighbors(u.driver.Dialect(), step)
 		return fromV, nil
@@ -1808,6 +2173,22 @@ func (c *UserClient) QueryGroups(u *User) *GroupQuery {
 	return query
 }
 
+// QueryReactedPosts queries the reacted_posts edge of a User.
+func (c *UserClient) QueryReactedPosts(u *User) *ForumPostQuery {
+	query := (&ForumPostClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := u.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, id),
+			sqlgraph.To(forumpost.Table, forumpost.FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, true, user.ReactedPostsTable, user.ReactedPostsPrimaryKey...),
+		)
+		fromV = sqlgraph.Neighbors(u.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
 // QueryUserPets queries the user_pets edge of a User.
 func (c *UserClient) QueryUserPets(u *User) *UserPetQuery {
 	query := (&UserPetClient{config: c.config}).Query()
@@ -1833,6 +2214,22 @@ func (c *UserClient) QueryGroupUsers(u *User) *GroupUserQuery {
 			sqlgraph.From(user.Table, user.FieldID, id),
 			sqlgraph.To(groupuser.Table, groupuser.UserColumn),
 			sqlgraph.Edge(sqlgraph.O2M, true, user.GroupUsersTable, user.GroupUsersColumn),
+		)
+		fromV = sqlgraph.Neighbors(u.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryReactions queries the reactions edge of a User.
+func (c *UserClient) QueryReactions(u *User) *ReactionQuery {
+	query := (&ReactionClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := u.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, id),
+			sqlgraph.To(reaction.Table, reaction.UserColumn),
+			sqlgraph.Edge(sqlgraph.O2M, true, user.ReactionsTable, user.ReactionsColumn),
 		)
 		fromV = sqlgraph.Neighbors(u.driver.Dialect(), step)
 		return fromV, nil
@@ -2119,11 +2516,12 @@ func (c *VoucherClient) mutate(ctx context.Context, m *VoucherMutation) (Value, 
 // hooks and interceptors per client, for fast access.
 type (
 	hooks struct {
-		AcademicSchool, Accessory, Course, Event, Group, GroupUser, Institution, Pet,
-		Redemption, User, UserPet, Voucher []ent.Hook
+		AcademicSchool, Accessory, Course, Event, ForumPost, Group, GroupUser,
+		Institution, Pet, Reaction, Redemption, User, UserPet, Voucher []ent.Hook
 	}
 	inters struct {
-		AcademicSchool, Accessory, Course, Event, Group, GroupUser, Institution, Pet,
-		Redemption, User, UserPet, Voucher []ent.Interceptor
+		AcademicSchool, Accessory, Course, Event, ForumPost, Group, GroupUser,
+		Institution, Pet, Reaction, Redemption, User, UserPet,
+		Voucher []ent.Interceptor
 	}
 )

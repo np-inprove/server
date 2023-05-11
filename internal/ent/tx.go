@@ -20,6 +20,8 @@ type Tx struct {
 	Course *CourseClient
 	// Event is the client for interacting with the Event builders.
 	Event *EventClient
+	// ForumPost is the client for interacting with the ForumPost builders.
+	ForumPost *ForumPostClient
 	// Group is the client for interacting with the Group builders.
 	Group *GroupClient
 	// GroupUser is the client for interacting with the GroupUser builders.
@@ -28,6 +30,8 @@ type Tx struct {
 	Institution *InstitutionClient
 	// Pet is the client for interacting with the Pet builders.
 	Pet *PetClient
+	// Reaction is the client for interacting with the Reaction builders.
+	Reaction *ReactionClient
 	// Redemption is the client for interacting with the Redemption builders.
 	Redemption *RedemptionClient
 	// User is the client for interacting with the User builders.
@@ -171,10 +175,12 @@ func (tx *Tx) init() {
 	tx.Accessory = NewAccessoryClient(tx.config)
 	tx.Course = NewCourseClient(tx.config)
 	tx.Event = NewEventClient(tx.config)
+	tx.ForumPost = NewForumPostClient(tx.config)
 	tx.Group = NewGroupClient(tx.config)
 	tx.GroupUser = NewGroupUserClient(tx.config)
 	tx.Institution = NewInstitutionClient(tx.config)
 	tx.Pet = NewPetClient(tx.config)
+	tx.Reaction = NewReactionClient(tx.config)
 	tx.Redemption = NewRedemptionClient(tx.config)
 	tx.User = NewUserClient(tx.config)
 	tx.UserPet = NewUserPetClient(tx.config)

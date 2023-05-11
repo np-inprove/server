@@ -36,8 +36,8 @@ func (Event) Fields() []ent.Field {
 func (Event) Edges() []ent.Edge {
 	return []ent.Edge{
 		edge.From("group", Group.Type).
-			Unique().
 			Ref("events").
+			Unique().
 			Required(),
 	}
 }

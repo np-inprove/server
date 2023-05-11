@@ -57,6 +57,18 @@ func (f EventFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.EventMutation", m)
 }
 
+// The ForumPostFunc type is an adapter to allow the use of ordinary
+// function as ForumPost mutator.
+type ForumPostFunc func(context.Context, *ent.ForumPostMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f ForumPostFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.ForumPostMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.ForumPostMutation", m)
+}
+
 // The GroupFunc type is an adapter to allow the use of ordinary
 // function as Group mutator.
 type GroupFunc func(context.Context, *ent.GroupMutation) (ent.Value, error)
@@ -103,6 +115,18 @@ func (f PetFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) 
 		return f(ctx, mv)
 	}
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.PetMutation", m)
+}
+
+// The ReactionFunc type is an adapter to allow the use of ordinary
+// function as Reaction mutator.
+type ReactionFunc func(context.Context, *ent.ReactionMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f ReactionFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.ReactionMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.ReactionMutation", m)
 }
 
 // The RedemptionFunc type is an adapter to allow the use of ordinary

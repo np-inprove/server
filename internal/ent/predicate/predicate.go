@@ -18,6 +18,9 @@ type Course func(*sql.Selector)
 // Event is the predicate function for event builders.
 type Event func(*sql.Selector)
 
+// ForumPost is the predicate function for forumpost builders.
+type ForumPost func(*sql.Selector)
+
 // Group is the predicate function for group builders.
 type Group func(*sql.Selector)
 
@@ -29,6 +32,9 @@ type Institution func(*sql.Selector)
 
 // Pet is the predicate function for pet builders.
 type Pet func(*sql.Selector)
+
+// Reaction is the predicate function for reaction builders.
+type Reaction func(*sql.Selector)
 
 // Redemption is the predicate function for redemption builders.
 type Redemption func(*sql.Selector)

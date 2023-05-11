@@ -32,7 +32,11 @@ func (Group) Fields() []ent.Field {
 func (Group) Edges() []ent.Edge {
 	return []ent.Edge{
 		edge.To("users", User.Type).
-			Through("group_users", GroupUser.Type),
-		edge.To("events", Event.Type),
+			Through("group_users", GroupUser.Type).
+			Comment("Users that are in the group"),
+		edge.To("events", Event.Type).
+			Comment("Events from the group"),
+		edge.To("forum_posts", ForumPost.Type).
+			Comment("Forum posts from the group"),
 	}
 }

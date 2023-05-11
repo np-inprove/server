@@ -45,38 +45,35 @@ type User struct {
 
 // UserEdges holds the relations/edges for other nodes in the graph.
 type UserEdges struct {
-	// Institution holds the value of the institution edge.
-	Institution []*Institution `json:"institution,omitempty"`
 	// Course holds the value of the course edge.
 	Course *Course `json:"course,omitempty"`
+	// Institution holds the value of the institution edge.
+	Institution []*Institution `json:"institution,omitempty"`
 	// Redemptions holds the value of the redemptions edge.
 	Redemptions []*Redemption `json:"redemptions,omitempty"`
+	// ForumPosts holds the value of the forum_posts edge.
+	ForumPosts []*ForumPost `json:"forum_posts,omitempty"`
 	// Pet holds the value of the pet edge.
 	Pet []*Pet `json:"pet,omitempty"`
 	// Groups holds the value of the groups edge.
 	Groups []*Group `json:"groups,omitempty"`
+	// ReactedPosts holds the value of the reacted_posts edge.
+	ReactedPosts []*ForumPost `json:"reacted_posts,omitempty"`
 	// UserPets holds the value of the user_pets edge.
 	UserPets []*UserPet `json:"user_pets,omitempty"`
 	// GroupUsers holds the value of the group_users edge.
 	GroupUsers []*GroupUser `json:"group_users,omitempty"`
+	// Reactions holds the value of the reactions edge.
+	Reactions []*Reaction `json:"reactions,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [7]bool
-}
-
-// InstitutionOrErr returns the Institution value or an error if the edge
-// was not loaded in eager-loading.
-func (e UserEdges) InstitutionOrErr() ([]*Institution, error) {
-	if e.loadedTypes[0] {
-		return e.Institution, nil
-	}
-	return nil, &NotLoadedError{edge: "institution"}
+	loadedTypes [10]bool
 }
 
 // CourseOrErr returns the Course value or an error if the edge
 // was not loaded in eager-loading, or loaded but was not found.
 func (e UserEdges) CourseOrErr() (*Course, error) {
-	if e.loadedTypes[1] {
+	if e.loadedTypes[0] {
 		if e.Course == nil {
 			// Edge was loaded but was not found.
 			return nil, &NotFoundError{label: course.Label}
@@ -84,6 +81,15 @@ func (e UserEdges) CourseOrErr() (*Course, error) {
 		return e.Course, nil
 	}
 	return nil, &NotLoadedError{edge: "course"}
+}
+
+// InstitutionOrErr returns the Institution value or an error if the edge
+// was not loaded in eager-loading.
+func (e UserEdges) InstitutionOrErr() ([]*Institution, error) {
+	if e.loadedTypes[1] {
+		return e.Institution, nil
+	}
+	return nil, &NotLoadedError{edge: "institution"}
 }
 
 // RedemptionsOrErr returns the Redemptions value or an error if the edge
@@ -95,10 +101,19 @@ func (e UserEdges) RedemptionsOrErr() ([]*Redemption, error) {
 	return nil, &NotLoadedError{edge: "redemptions"}
 }
 
+// ForumPostsOrErr returns the ForumPosts value or an error if the edge
+// was not loaded in eager-loading.
+func (e UserEdges) ForumPostsOrErr() ([]*ForumPost, error) {
+	if e.loadedTypes[3] {
+		return e.ForumPosts, nil
+	}
+	return nil, &NotLoadedError{edge: "forum_posts"}
+}
+
 // PetOrErr returns the Pet value or an error if the edge
 // was not loaded in eager-loading.
 func (e UserEdges) PetOrErr() ([]*Pet, error) {
-	if e.loadedTypes[3] {
+	if e.loadedTypes[4] {
 		return e.Pet, nil
 	}
 	return nil, &NotLoadedError{edge: "pet"}
@@ -107,16 +122,25 @@ func (e UserEdges) PetOrErr() ([]*Pet, error) {
 // GroupsOrErr returns the Groups value or an error if the edge
 // was not loaded in eager-loading.
 func (e UserEdges) GroupsOrErr() ([]*Group, error) {
-	if e.loadedTypes[4] {
+	if e.loadedTypes[5] {
 		return e.Groups, nil
 	}
 	return nil, &NotLoadedError{edge: "groups"}
 }
 
+// ReactedPostsOrErr returns the ReactedPosts value or an error if the edge
+// was not loaded in eager-loading.
+func (e UserEdges) ReactedPostsOrErr() ([]*ForumPost, error) {
+	if e.loadedTypes[6] {
+		return e.ReactedPosts, nil
+	}
+	return nil, &NotLoadedError{edge: "reacted_posts"}
+}
+
 // UserPetsOrErr returns the UserPets value or an error if the edge
 // was not loaded in eager-loading.
 func (e UserEdges) UserPetsOrErr() ([]*UserPet, error) {
-	if e.loadedTypes[5] {
+	if e.loadedTypes[7] {
 		return e.UserPets, nil
 	}
 	return nil, &NotLoadedError{edge: "user_pets"}
@@ -125,10 +149,19 @@ func (e UserEdges) UserPetsOrErr() ([]*UserPet, error) {
 // GroupUsersOrErr returns the GroupUsers value or an error if the edge
 // was not loaded in eager-loading.
 func (e UserEdges) GroupUsersOrErr() ([]*GroupUser, error) {
-	if e.loadedTypes[6] {
+	if e.loadedTypes[8] {
 		return e.GroupUsers, nil
 	}
 	return nil, &NotLoadedError{edge: "group_users"}
+}
+
+// ReactionsOrErr returns the Reactions value or an error if the edge
+// was not loaded in eager-loading.
+func (e UserEdges) ReactionsOrErr() ([]*Reaction, error) {
+	if e.loadedTypes[9] {
+		return e.Reactions, nil
+	}
+	return nil, &NotLoadedError{edge: "reactions"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -235,19 +268,24 @@ func (u *User) Value(name string) (ent.Value, error) {
 	return u.selectValues.Get(name)
 }
 
-// QueryInstitution queries the "institution" edge of the User entity.
-func (u *User) QueryInstitution() *InstitutionQuery {
-	return NewUserClient(u.config).QueryInstitution(u)
-}
-
 // QueryCourse queries the "course" edge of the User entity.
 func (u *User) QueryCourse() *CourseQuery {
 	return NewUserClient(u.config).QueryCourse(u)
 }
 
+// QueryInstitution queries the "institution" edge of the User entity.
+func (u *User) QueryInstitution() *InstitutionQuery {
+	return NewUserClient(u.config).QueryInstitution(u)
+}
+
 // QueryRedemptions queries the "redemptions" edge of the User entity.
 func (u *User) QueryRedemptions() *RedemptionQuery {
 	return NewUserClient(u.config).QueryRedemptions(u)
+}
+
+// QueryForumPosts queries the "forum_posts" edge of the User entity.
+func (u *User) QueryForumPosts() *ForumPostQuery {
+	return NewUserClient(u.config).QueryForumPosts(u)
 }
 
 // QueryPet queries the "pet" edge of the User entity.
@@ -260,6 +298,11 @@ func (u *User) QueryGroups() *GroupQuery {
 	return NewUserClient(u.config).QueryGroups(u)
 }
 
+// QueryReactedPosts queries the "reacted_posts" edge of the User entity.
+func (u *User) QueryReactedPosts() *ForumPostQuery {
+	return NewUserClient(u.config).QueryReactedPosts(u)
+}
+
 // QueryUserPets queries the "user_pets" edge of the User entity.
 func (u *User) QueryUserPets() *UserPetQuery {
 	return NewUserClient(u.config).QueryUserPets(u)
@@ -268,6 +311,11 @@ func (u *User) QueryUserPets() *UserPetQuery {
 // QueryGroupUsers queries the "group_users" edge of the User entity.
 func (u *User) QueryGroupUsers() *GroupUserQuery {
 	return NewUserClient(u.config).QueryGroupUsers(u)
+}
+
+// QueryReactions queries the "reactions" edge of the User entity.
+func (u *User) QueryReactions() *ReactionQuery {
+	return NewUserClient(u.config).QueryReactions(u)
 }
 
 // Update returns a builder for updating this User.

@@ -32,15 +32,17 @@ type Group struct {
 
 // GroupEdges holds the relations/edges for other nodes in the graph.
 type GroupEdges struct {
-	// Users holds the value of the users edge.
+	// Users that are in the group
 	Users []*User `json:"users,omitempty"`
-	// Events holds the value of the events edge.
+	// Events from the group
 	Events []*Event `json:"events,omitempty"`
+	// Forum posts from the group
+	ForumPosts []*ForumPost `json:"forum_posts,omitempty"`
 	// GroupUsers holds the value of the group_users edge.
 	GroupUsers []*GroupUser `json:"group_users,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [3]bool
+	loadedTypes [4]bool
 }
 
 // UsersOrErr returns the Users value or an error if the edge
@@ -61,10 +63,19 @@ func (e GroupEdges) EventsOrErr() ([]*Event, error) {
 	return nil, &NotLoadedError{edge: "events"}
 }
 
+// ForumPostsOrErr returns the ForumPosts value or an error if the edge
+// was not loaded in eager-loading.
+func (e GroupEdges) ForumPostsOrErr() ([]*ForumPost, error) {
+	if e.loadedTypes[2] {
+		return e.ForumPosts, nil
+	}
+	return nil, &NotLoadedError{edge: "forum_posts"}
+}
+
 // GroupUsersOrErr returns the GroupUsers value or an error if the edge
 // was not loaded in eager-loading.
 func (e GroupEdges) GroupUsersOrErr() ([]*GroupUser, error) {
-	if e.loadedTypes[2] {
+	if e.loadedTypes[3] {
 		return e.GroupUsers, nil
 	}
 	return nil, &NotLoadedError{edge: "group_users"}
@@ -145,6 +156,11 @@ func (gr *Group) QueryUsers() *UserQuery {
 // QueryEvents queries the "events" edge of the Group entity.
 func (gr *Group) QueryEvents() *EventQuery {
 	return NewGroupClient(gr.config).QueryEvents(gr)
+}
+
+// QueryForumPosts queries the "forum_posts" edge of the Group entity.
+func (gr *Group) QueryForumPosts() *ForumPostQuery {
+	return NewGroupClient(gr.config).QueryForumPosts(gr)
 }
 
 // QueryGroupUsers queries the "group_users" edge of the Group entity.

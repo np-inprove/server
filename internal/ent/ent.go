@@ -16,10 +16,12 @@ import (
 	"github.com/np-inprove/server/internal/ent/accessory"
 	"github.com/np-inprove/server/internal/ent/course"
 	"github.com/np-inprove/server/internal/ent/event"
+	"github.com/np-inprove/server/internal/ent/forumpost"
 	"github.com/np-inprove/server/internal/ent/group"
 	"github.com/np-inprove/server/internal/ent/groupuser"
 	"github.com/np-inprove/server/internal/ent/institution"
 	"github.com/np-inprove/server/internal/ent/pet"
+	"github.com/np-inprove/server/internal/ent/reaction"
 	"github.com/np-inprove/server/internal/ent/redemption"
 	"github.com/np-inprove/server/internal/ent/user"
 	"github.com/np-inprove/server/internal/ent/userpet"
@@ -88,10 +90,12 @@ func checkColumn(table, column string) error {
 			accessory.Table:      accessory.ValidColumn,
 			course.Table:         course.ValidColumn,
 			event.Table:          event.ValidColumn,
+			forumpost.Table:      forumpost.ValidColumn,
 			group.Table:          group.ValidColumn,
 			groupuser.Table:      groupuser.ValidColumn,
 			institution.Table:    institution.ValidColumn,
 			pet.Table:            pet.ValidColumn,
+			reaction.Table:       reaction.ValidColumn,
 			redemption.Table:     redemption.ValidColumn,
 			user.Table:           user.ValidColumn,
 			userpet.Table:        userpet.ValidColumn,
