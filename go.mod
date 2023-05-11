@@ -35,6 +35,7 @@ require (
 )
 
 require (
+	github.com/mattn/go-sqlite3 v1.14.16
 	github.com/spf13/viper v1.15.0
 	go.uber.org/atomic v1.9.0 // indirect
 	go.uber.org/multierr v1.8.0 // indirect

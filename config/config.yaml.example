@@ -3,10 +3,8 @@ http:
   port: 5000
 
 database:
-  host:
-  name:
-  username: 
-  password:
+  drivername: sqlite3
+  datasourcename: file:test.db?_fk=1&cache=shared&mode=memory
 
 app:
   production: false

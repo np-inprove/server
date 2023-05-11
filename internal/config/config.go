@@ -13,10 +13,8 @@ type Config struct {
 		Port int
 	}
 	Database struct {
-		Host     string
-		Name     string
-		Username string
-		Password string
+		DriverName     string
+		DataSourceName string
 	}
 	App struct {
 		Production bool
@@ -62,8 +60,8 @@ func NewTest() (*Config, error) {
 		return nil, err
 	}
 
-	if !strings.Contains(config.Database.Name, "test") {
-		return nil, fmt.Errorf("database name used for testing should contain 'test' substring: %s", config.Database.Name)
+	if !strings.Contains(config.Database.DataSourceName, "test") {
+		return nil, fmt.Errorf("database source name used for test cases should contain 'test' substring: %s", config.Database.DataSourceName)
 	}
 
 	return config, nil
