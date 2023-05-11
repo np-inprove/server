@@ -18,6 +18,10 @@ type Tx struct {
 	Accessory *AccessoryClient
 	// Course is the client for interacting with the Course builders.
 	Course *CourseClient
+	// Group is the client for interacting with the Group builders.
+	Group *GroupClient
+	// GroupUser is the client for interacting with the GroupUser builders.
+	GroupUser *GroupUserClient
 	// Institution is the client for interacting with the Institution builders.
 	Institution *InstitutionClient
 	// Pet is the client for interacting with the Pet builders.
@@ -164,6 +168,8 @@ func (tx *Tx) init() {
 	tx.AcademicSchool = NewAcademicSchoolClient(tx.config)
 	tx.Accessory = NewAccessoryClient(tx.config)
 	tx.Course = NewCourseClient(tx.config)
+	tx.Group = NewGroupClient(tx.config)
+	tx.GroupUser = NewGroupUserClient(tx.config)
 	tx.Institution = NewInstitutionClient(tx.config)
 	tx.Pet = NewPetClient(tx.config)
 	tx.Redemption = NewRedemptionClient(tx.config)

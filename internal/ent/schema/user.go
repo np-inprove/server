@@ -53,6 +53,9 @@ func (User) Edges() []ent.Edge {
 			Ref("user"),
 		edge.From("pet", Pet.Type).
 			Ref("owner").
-			Through("user_pet", UserPet.Type),
+			Through("user_pets", UserPet.Type),
+		edge.From("groups", Group.Type).
+			Ref("users").
+			Through("group_users", GroupUser.Type),
 	}
 }

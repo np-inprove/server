@@ -25,6 +25,6 @@ func (Pet) Fields() []ent.Field {
 func (Pet) Edges() []ent.Edge {
 	return []ent.Edge{
 		edge.To("owner", User.Type).
-			Through("user_pet", UserPet.Type),
+			Through("user_pets", UserPet.Type),
 	}
 }

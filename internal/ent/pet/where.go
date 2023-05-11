@@ -216,21 +216,21 @@ func HasOwnerWith(preds ...predicate.User) predicate.Pet {
 	})
 }
 
-// HasUserPet applies the HasEdge predicate on the "user_pet" edge.
-func HasUserPet() predicate.Pet {
+// HasUserPets applies the HasEdge predicate on the "user_pets" edge.
+func HasUserPets() predicate.Pet {
 	return predicate.Pet(func(s *sql.Selector) {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, true, UserPetTable, UserPetColumn),
+			sqlgraph.Edge(sqlgraph.O2M, true, UserPetsTable, UserPetsColumn),
 		)
 		sqlgraph.HasNeighbors(s, step)
 	})
 }
 
-// HasUserPetWith applies the HasEdge predicate on the "user_pet" edge with a given conditions (other predicates).
-func HasUserPetWith(preds ...predicate.UserPet) predicate.Pet {
+// HasUserPetsWith applies the HasEdge predicate on the "user_pets" edge with a given conditions (other predicates).
+func HasUserPetsWith(preds ...predicate.UserPet) predicate.Pet {
 	return predicate.Pet(func(s *sql.Selector) {
-		step := newUserPetStep()
+		step := newUserPetsStep()
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)

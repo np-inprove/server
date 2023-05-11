@@ -30,8 +30,8 @@ type Pet struct {
 type PetEdges struct {
 	// Owner holds the value of the owner edge.
 	Owner []*User `json:"owner,omitempty"`
-	// UserPet holds the value of the user_pet edge.
-	UserPet []*UserPet `json:"user_pet,omitempty"`
+	// UserPets holds the value of the user_pets edge.
+	UserPets []*UserPet `json:"user_pets,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
 	loadedTypes [2]bool
@@ -46,13 +46,13 @@ func (e PetEdges) OwnerOrErr() ([]*User, error) {
 	return nil, &NotLoadedError{edge: "owner"}
 }
 
-// UserPetOrErr returns the UserPet value or an error if the edge
+// UserPetsOrErr returns the UserPets value or an error if the edge
 // was not loaded in eager-loading.
-func (e PetEdges) UserPetOrErr() ([]*UserPet, error) {
+func (e PetEdges) UserPetsOrErr() ([]*UserPet, error) {
 	if e.loadedTypes[1] {
-		return e.UserPet, nil
+		return e.UserPets, nil
 	}
-	return nil, &NotLoadedError{edge: "user_pet"}
+	return nil, &NotLoadedError{edge: "user_pets"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -115,9 +115,9 @@ func (pe *Pet) QueryOwner() *UserQuery {
 	return NewPetClient(pe.config).QueryOwner(pe)
 }
 
-// QueryUserPet queries the "user_pet" edge of the Pet entity.
-func (pe *Pet) QueryUserPet() *UserPetQuery {
-	return NewPetClient(pe.config).QueryUserPet(pe)
+// QueryUserPets queries the "user_pets" edge of the Pet entity.
+func (pe *Pet) QueryUserPets() *UserPetQuery {
+	return NewPetClient(pe.config).QueryUserPets(pe)
 }
 
 // Update returns a builder for updating this Pet.

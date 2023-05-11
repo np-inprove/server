@@ -72,6 +72,46 @@ var (
 			},
 		},
 	}
+	// GroupsColumns holds the columns for the "groups" table.
+	GroupsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "path", Type: field.TypeString, Unique: true},
+		{Name: "name", Type: field.TypeString},
+		{Name: "description", Type: field.TypeString},
+		{Name: "group_type", Type: field.TypeEnum, Enums: []string{"special_interest_group", "module_group", "cca", "mentor_class"}},
+	}
+	// GroupsTable holds the schema information for the "groups" table.
+	GroupsTable = &schema.Table{
+		Name:       "groups",
+		Columns:    GroupsColumns,
+		PrimaryKey: []*schema.Column{GroupsColumns[0]},
+	}
+	// GroupUsersColumns holds the columns for the "group_users" table.
+	GroupUsersColumns = []*schema.Column{
+		{Name: "role", Type: field.TypeEnum, Enums: []string{"student", "lecturer"}},
+		{Name: "group_id", Type: field.TypeInt},
+		{Name: "user_id", Type: field.TypeInt},
+	}
+	// GroupUsersTable holds the schema information for the "group_users" table.
+	GroupUsersTable = &schema.Table{
+		Name:       "group_users",
+		Columns:    GroupUsersColumns,
+		PrimaryKey: []*schema.Column{GroupUsersColumns[1], GroupUsersColumns[2]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "group_users_groups_group",
+				Columns:    []*schema.Column{GroupUsersColumns[1]},
+				RefColumns: []*schema.Column{GroupsColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+			{
+				Symbol:     "group_users_users_user",
+				Columns:    []*schema.Column{GroupUsersColumns[2]},
+				RefColumns: []*schema.Column{UsersColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+	}
 	// InstitutionsColumns holds the columns for the "institutions" table.
 	InstitutionsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
@@ -235,6 +275,8 @@ var (
 		AcademicSchoolsTable,
 		AccessoriesTable,
 		CoursesTable,
+		GroupsTable,
+		GroupUsersTable,
 		InstitutionsTable,
 		PetsTable,
 		RedemptionsTable,
@@ -249,6 +291,8 @@ func init() {
 	AcademicSchoolsTable.ForeignKeys[0].RefTable = InstitutionsTable
 	AccessoriesTable.ForeignKeys[0].RefTable = InstitutionsTable
 	CoursesTable.ForeignKeys[0].RefTable = AcademicSchoolsTable
+	GroupUsersTable.ForeignKeys[0].RefTable = GroupsTable
+	GroupUsersTable.ForeignKeys[1].RefTable = UsersTable
 	RedemptionsTable.ForeignKeys[0].RefTable = AccessoriesTable
 	RedemptionsTable.ForeignKeys[1].RefTable = UsersTable
 	RedemptionsTable.ForeignKeys[2].RefTable = VouchersTable

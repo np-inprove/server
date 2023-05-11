@@ -15,6 +15,12 @@ type Accessory func(*sql.Selector)
 // Course is the predicate function for course builders.
 type Course func(*sql.Selector)
 
+// Group is the predicate function for group builders.
+type Group func(*sql.Selector)
+
+// GroupUser is the predicate function for groupuser builders.
+type GroupUser func(*sql.Selector)
+
 // Institution is the predicate function for institution builders.
 type Institution func(*sql.Selector)
 

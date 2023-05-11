@@ -20,12 +20,12 @@ import (
 // PetQuery is the builder for querying Pet entities.
 type PetQuery struct {
 	config
-	ctx         *QueryContext
-	order       []pet.OrderOption
-	inters      []Interceptor
-	predicates  []predicate.Pet
-	withOwner   *UserQuery
-	withUserPet *UserPetQuery
+	ctx          *QueryContext
+	order        []pet.OrderOption
+	inters       []Interceptor
+	predicates   []predicate.Pet
+	withOwner    *UserQuery
+	withUserPets *UserPetQuery
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -84,8 +84,8 @@ func (pq *PetQuery) QueryOwner() *UserQuery {
 	return query
 }
 
-// QueryUserPet chains the current query on the "user_pet" edge.
-func (pq *PetQuery) QueryUserPet() *UserPetQuery {
+// QueryUserPets chains the current query on the "user_pets" edge.
+func (pq *PetQuery) QueryUserPets() *UserPetQuery {
 	query := (&UserPetClient{config: pq.config}).Query()
 	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
 		if err := pq.prepareQuery(ctx); err != nil {
@@ -98,7 +98,7 @@ func (pq *PetQuery) QueryUserPet() *UserPetQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(pet.Table, pet.FieldID, selector),
 			sqlgraph.To(userpet.Table, userpet.PetColumn),
-			sqlgraph.Edge(sqlgraph.O2M, true, pet.UserPetTable, pet.UserPetColumn),
+			sqlgraph.Edge(sqlgraph.O2M, true, pet.UserPetsTable, pet.UserPetsColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(pq.driver.Dialect(), step)
 		return fromU, nil
@@ -293,13 +293,13 @@ func (pq *PetQuery) Clone() *PetQuery {
 		return nil
 	}
 	return &PetQuery{
-		config:      pq.config,
-		ctx:         pq.ctx.Clone(),
-		order:       append([]pet.OrderOption{}, pq.order...),
-		inters:      append([]Interceptor{}, pq.inters...),
-		predicates:  append([]predicate.Pet{}, pq.predicates...),
-		withOwner:   pq.withOwner.Clone(),
-		withUserPet: pq.withUserPet.Clone(),
+		config:       pq.config,
+		ctx:          pq.ctx.Clone(),
+		order:        append([]pet.OrderOption{}, pq.order...),
+		inters:       append([]Interceptor{}, pq.inters...),
+		predicates:   append([]predicate.Pet{}, pq.predicates...),
+		withOwner:    pq.withOwner.Clone(),
+		withUserPets: pq.withUserPets.Clone(),
 		// clone intermediate query.
 		sql:  pq.sql.Clone(),
 		path: pq.path,
@@ -317,14 +317,14 @@ func (pq *PetQuery) WithOwner(opts ...func(*UserQuery)) *PetQuery {
 	return pq
 }
 
-// WithUserPet tells the query-builder to eager-load the nodes that are connected to
-// the "user_pet" edge. The optional arguments are used to configure the query builder of the edge.
-func (pq *PetQuery) WithUserPet(opts ...func(*UserPetQuery)) *PetQuery {
+// WithUserPets tells the query-builder to eager-load the nodes that are connected to
+// the "user_pets" edge. The optional arguments are used to configure the query builder of the edge.
+func (pq *PetQuery) WithUserPets(opts ...func(*UserPetQuery)) *PetQuery {
 	query := (&UserPetClient{config: pq.config}).Query()
 	for _, opt := range opts {
 		opt(query)
 	}
-	pq.withUserPet = query
+	pq.withUserPets = query
 	return pq
 }
 
@@ -408,7 +408,7 @@ func (pq *PetQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Pet, err
 		_spec       = pq.querySpec()
 		loadedTypes = [2]bool{
 			pq.withOwner != nil,
-			pq.withUserPet != nil,
+			pq.withUserPets != nil,
 		}
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
@@ -436,10 +436,10 @@ func (pq *PetQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Pet, err
 			return nil, err
 		}
 	}
-	if query := pq.withUserPet; query != nil {
-		if err := pq.loadUserPet(ctx, query, nodes,
-			func(n *Pet) { n.Edges.UserPet = []*UserPet{} },
-			func(n *Pet, e *UserPet) { n.Edges.UserPet = append(n.Edges.UserPet, e) }); err != nil {
+	if query := pq.withUserPets; query != nil {
+		if err := pq.loadUserPets(ctx, query, nodes,
+			func(n *Pet) { n.Edges.UserPets = []*UserPet{} },
+			func(n *Pet, e *UserPet) { n.Edges.UserPets = append(n.Edges.UserPets, e) }); err != nil {
 			return nil, err
 		}
 	}
@@ -507,7 +507,7 @@ func (pq *PetQuery) loadOwner(ctx context.Context, query *UserQuery, nodes []*Pe
 	}
 	return nil
 }
-func (pq *PetQuery) loadUserPet(ctx context.Context, query *UserPetQuery, nodes []*Pet, init func(*Pet), assign func(*Pet, *UserPet)) error {
+func (pq *PetQuery) loadUserPets(ctx context.Context, query *UserPetQuery, nodes []*Pet, init func(*Pet), assign func(*Pet, *UserPet)) error {
 	fks := make([]driver.Value, 0, len(nodes))
 	nodeids := make(map[int]*Pet)
 	for i := range nodes {
@@ -521,7 +521,7 @@ func (pq *PetQuery) loadUserPet(ctx context.Context, query *UserPetQuery, nodes 
 		query.ctx.AppendFieldOnce(userpet.FieldPetID)
 	}
 	query.Where(predicate.UserPet(func(s *sql.Selector) {
-		s.Where(sql.InValues(s.C(pet.UserPetColumn), fks...))
+		s.Where(sql.InValues(s.C(pet.UserPetsColumn), fks...))
 	}))
 	neighbors, err := query.All(ctx)
 	if err != nil {

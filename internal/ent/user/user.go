@@ -36,8 +36,12 @@ const (
 	EdgeRedemptions = "redemptions"
 	// EdgePet holds the string denoting the pet edge name in mutations.
 	EdgePet = "pet"
-	// EdgeUserPet holds the string denoting the user_pet edge name in mutations.
-	EdgeUserPet = "user_pet"
+	// EdgeGroups holds the string denoting the groups edge name in mutations.
+	EdgeGroups = "groups"
+	// EdgeUserPets holds the string denoting the user_pets edge name in mutations.
+	EdgeUserPets = "user_pets"
+	// EdgeGroupUsers holds the string denoting the group_users edge name in mutations.
+	EdgeGroupUsers = "group_users"
 	// Table holds the table name of the user in the database.
 	Table = "users"
 	// InstitutionTable is the table that holds the institution relation/edge. The primary key declared below.
@@ -64,13 +68,25 @@ const (
 	// PetInverseTable is the table name for the Pet entity.
 	// It exists in this package in order to avoid circular dependency with the "pet" package.
 	PetInverseTable = "pets"
-	// UserPetTable is the table that holds the user_pet relation/edge.
-	UserPetTable = "user_pets"
-	// UserPetInverseTable is the table name for the UserPet entity.
+	// GroupsTable is the table that holds the groups relation/edge. The primary key declared below.
+	GroupsTable = "group_users"
+	// GroupsInverseTable is the table name for the Group entity.
+	// It exists in this package in order to avoid circular dependency with the "group" package.
+	GroupsInverseTable = "groups"
+	// UserPetsTable is the table that holds the user_pets relation/edge.
+	UserPetsTable = "user_pets"
+	// UserPetsInverseTable is the table name for the UserPet entity.
 	// It exists in this package in order to avoid circular dependency with the "userpet" package.
-	UserPetInverseTable = "user_pets"
-	// UserPetColumn is the table column denoting the user_pet relation/edge.
-	UserPetColumn = "user_id"
+	UserPetsInverseTable = "user_pets"
+	// UserPetsColumn is the table column denoting the user_pets relation/edge.
+	UserPetsColumn = "user_id"
+	// GroupUsersTable is the table that holds the group_users relation/edge.
+	GroupUsersTable = "group_users"
+	// GroupUsersInverseTable is the table name for the GroupUser entity.
+	// It exists in this package in order to avoid circular dependency with the "groupuser" package.
+	GroupUsersInverseTable = "group_users"
+	// GroupUsersColumn is the table column denoting the group_users relation/edge.
+	GroupUsersColumn = "user_id"
 )
 
 // Columns holds all SQL columns for user fields.
@@ -99,6 +115,9 @@ var (
 	// PetPrimaryKey and PetColumn2 are the table columns denoting the
 	// primary key for the pet relation (M2M).
 	PetPrimaryKey = []string{"pet_id", "user_id"}
+	// GroupsPrimaryKey and GroupsColumn2 are the table columns denoting the
+	// primary key for the groups relation (M2M).
+	GroupsPrimaryKey = []string{"group_id", "user_id"}
 )
 
 // ValidColumn reports if the column name is valid (part of the table columns).
@@ -228,17 +247,45 @@ func ByPet(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 	}
 }
 
-// ByUserPetCount orders the results by user_pet count.
-func ByUserPetCount(opts ...sql.OrderTermOption) OrderOption {
+// ByGroupsCount orders the results by groups count.
+func ByGroupsCount(opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborsCount(s, newUserPetStep(), opts...)
+		sqlgraph.OrderByNeighborsCount(s, newGroupsStep(), opts...)
 	}
 }
 
-// ByUserPet orders the results by user_pet terms.
-func ByUserPet(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+// ByGroups orders the results by groups terms.
+func ByGroups(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newUserPetStep(), append([]sql.OrderTerm{term}, terms...)...)
+		sqlgraph.OrderByNeighborTerms(s, newGroupsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
+// ByUserPetsCount orders the results by user_pets count.
+func ByUserPetsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newUserPetsStep(), opts...)
+	}
+}
+
+// ByUserPets orders the results by user_pets terms.
+func ByUserPets(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newUserPetsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
+// ByGroupUsersCount orders the results by group_users count.
+func ByGroupUsersCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newGroupUsersStep(), opts...)
+	}
+}
+
+// ByGroupUsers orders the results by group_users terms.
+func ByGroupUsers(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newGroupUsersStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
 func newInstitutionStep() *sqlgraph.Step {
@@ -269,10 +316,24 @@ func newPetStep() *sqlgraph.Step {
 		sqlgraph.Edge(sqlgraph.M2M, true, PetTable, PetPrimaryKey...),
 	)
 }
-func newUserPetStep() *sqlgraph.Step {
+func newGroupsStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
-		sqlgraph.To(UserPetInverseTable, UserPetColumn),
-		sqlgraph.Edge(sqlgraph.O2M, true, UserPetTable, UserPetColumn),
+		sqlgraph.To(GroupsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.M2M, true, GroupsTable, GroupsPrimaryKey...),
+	)
+}
+func newUserPetsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(UserPetsInverseTable, UserPetsColumn),
+		sqlgraph.Edge(sqlgraph.O2M, true, UserPetsTable, UserPetsColumn),
+	)
+}
+func newGroupUsersStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(GroupUsersInverseTable, GroupUsersColumn),
+		sqlgraph.Edge(sqlgraph.O2M, true, GroupUsersTable, GroupUsersColumn),
 	)
 }

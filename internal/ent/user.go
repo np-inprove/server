@@ -53,11 +53,15 @@ type UserEdges struct {
 	Redemptions []*Redemption `json:"redemptions,omitempty"`
 	// Pet holds the value of the pet edge.
 	Pet []*Pet `json:"pet,omitempty"`
-	// UserPet holds the value of the user_pet edge.
-	UserPet []*UserPet `json:"user_pet,omitempty"`
+	// Groups holds the value of the groups edge.
+	Groups []*Group `json:"groups,omitempty"`
+	// UserPets holds the value of the user_pets edge.
+	UserPets []*UserPet `json:"user_pets,omitempty"`
+	// GroupUsers holds the value of the group_users edge.
+	GroupUsers []*GroupUser `json:"group_users,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [5]bool
+	loadedTypes [7]bool
 }
 
 // InstitutionOrErr returns the Institution value or an error if the edge
@@ -100,13 +104,31 @@ func (e UserEdges) PetOrErr() ([]*Pet, error) {
 	return nil, &NotLoadedError{edge: "pet"}
 }
 
-// UserPetOrErr returns the UserPet value or an error if the edge
+// GroupsOrErr returns the Groups value or an error if the edge
 // was not loaded in eager-loading.
-func (e UserEdges) UserPetOrErr() ([]*UserPet, error) {
+func (e UserEdges) GroupsOrErr() ([]*Group, error) {
 	if e.loadedTypes[4] {
-		return e.UserPet, nil
+		return e.Groups, nil
 	}
-	return nil, &NotLoadedError{edge: "user_pet"}
+	return nil, &NotLoadedError{edge: "groups"}
+}
+
+// UserPetsOrErr returns the UserPets value or an error if the edge
+// was not loaded in eager-loading.
+func (e UserEdges) UserPetsOrErr() ([]*UserPet, error) {
+	if e.loadedTypes[5] {
+		return e.UserPets, nil
+	}
+	return nil, &NotLoadedError{edge: "user_pets"}
+}
+
+// GroupUsersOrErr returns the GroupUsers value or an error if the edge
+// was not loaded in eager-loading.
+func (e UserEdges) GroupUsersOrErr() ([]*GroupUser, error) {
+	if e.loadedTypes[6] {
+		return e.GroupUsers, nil
+	}
+	return nil, &NotLoadedError{edge: "group_users"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -233,9 +255,19 @@ func (u *User) QueryPet() *PetQuery {
 	return NewUserClient(u.config).QueryPet(u)
 }
 
-// QueryUserPet queries the "user_pet" edge of the User entity.
-func (u *User) QueryUserPet() *UserPetQuery {
-	return NewUserClient(u.config).QueryUserPet(u)
+// QueryGroups queries the "groups" edge of the User entity.
+func (u *User) QueryGroups() *GroupQuery {
+	return NewUserClient(u.config).QueryGroups(u)
+}
+
+// QueryUserPets queries the "user_pets" edge of the User entity.
+func (u *User) QueryUserPets() *UserPetQuery {
+	return NewUserClient(u.config).QueryUserPets(u)
+}
+
+// QueryGroupUsers queries the "group_users" edge of the User entity.
+func (u *User) QueryGroupUsers() *GroupUserQuery {
+	return NewUserClient(u.config).QueryGroupUsers(u)
 }
 
 // Update returns a builder for updating this User.

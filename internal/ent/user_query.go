@@ -12,6 +12,8 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/np-inprove/server/internal/ent/course"
+	"github.com/np-inprove/server/internal/ent/group"
+	"github.com/np-inprove/server/internal/ent/groupuser"
 	"github.com/np-inprove/server/internal/ent/institution"
 	"github.com/np-inprove/server/internal/ent/pet"
 	"github.com/np-inprove/server/internal/ent/predicate"
@@ -31,7 +33,9 @@ type UserQuery struct {
 	withCourse      *CourseQuery
 	withRedemptions *RedemptionQuery
 	withPet         *PetQuery
-	withUserPet     *UserPetQuery
+	withGroups      *GroupQuery
+	withUserPets    *UserPetQuery
+	withGroupUsers  *GroupUserQuery
 	withFKs         bool
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
@@ -157,8 +161,30 @@ func (uq *UserQuery) QueryPet() *PetQuery {
 	return query
 }
 
-// QueryUserPet chains the current query on the "user_pet" edge.
-func (uq *UserQuery) QueryUserPet() *UserPetQuery {
+// QueryGroups chains the current query on the "groups" edge.
+func (uq *UserQuery) QueryGroups() *GroupQuery {
+	query := (&GroupClient{config: uq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := uq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := uq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, selector),
+			sqlgraph.To(group.Table, group.FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, true, user.GroupsTable, user.GroupsPrimaryKey...),
+		)
+		fromU = sqlgraph.SetNeighbors(uq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryUserPets chains the current query on the "user_pets" edge.
+func (uq *UserQuery) QueryUserPets() *UserPetQuery {
 	query := (&UserPetClient{config: uq.config}).Query()
 	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
 		if err := uq.prepareQuery(ctx); err != nil {
@@ -171,7 +197,29 @@ func (uq *UserQuery) QueryUserPet() *UserPetQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(user.Table, user.FieldID, selector),
 			sqlgraph.To(userpet.Table, userpet.UserColumn),
-			sqlgraph.Edge(sqlgraph.O2M, true, user.UserPetTable, user.UserPetColumn),
+			sqlgraph.Edge(sqlgraph.O2M, true, user.UserPetsTable, user.UserPetsColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(uq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryGroupUsers chains the current query on the "group_users" edge.
+func (uq *UserQuery) QueryGroupUsers() *GroupUserQuery {
+	query := (&GroupUserClient{config: uq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := uq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := uq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, selector),
+			sqlgraph.To(groupuser.Table, groupuser.UserColumn),
+			sqlgraph.Edge(sqlgraph.O2M, true, user.GroupUsersTable, user.GroupUsersColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(uq.driver.Dialect(), step)
 		return fromU, nil
@@ -375,7 +423,9 @@ func (uq *UserQuery) Clone() *UserQuery {
 		withCourse:      uq.withCourse.Clone(),
 		withRedemptions: uq.withRedemptions.Clone(),
 		withPet:         uq.withPet.Clone(),
-		withUserPet:     uq.withUserPet.Clone(),
+		withGroups:      uq.withGroups.Clone(),
+		withUserPets:    uq.withUserPets.Clone(),
+		withGroupUsers:  uq.withGroupUsers.Clone(),
 		// clone intermediate query.
 		sql:  uq.sql.Clone(),
 		path: uq.path,
@@ -426,14 +476,36 @@ func (uq *UserQuery) WithPet(opts ...func(*PetQuery)) *UserQuery {
 	return uq
 }
 
-// WithUserPet tells the query-builder to eager-load the nodes that are connected to
-// the "user_pet" edge. The optional arguments are used to configure the query builder of the edge.
-func (uq *UserQuery) WithUserPet(opts ...func(*UserPetQuery)) *UserQuery {
+// WithGroups tells the query-builder to eager-load the nodes that are connected to
+// the "groups" edge. The optional arguments are used to configure the query builder of the edge.
+func (uq *UserQuery) WithGroups(opts ...func(*GroupQuery)) *UserQuery {
+	query := (&GroupClient{config: uq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	uq.withGroups = query
+	return uq
+}
+
+// WithUserPets tells the query-builder to eager-load the nodes that are connected to
+// the "user_pets" edge. The optional arguments are used to configure the query builder of the edge.
+func (uq *UserQuery) WithUserPets(opts ...func(*UserPetQuery)) *UserQuery {
 	query := (&UserPetClient{config: uq.config}).Query()
 	for _, opt := range opts {
 		opt(query)
 	}
-	uq.withUserPet = query
+	uq.withUserPets = query
+	return uq
+}
+
+// WithGroupUsers tells the query-builder to eager-load the nodes that are connected to
+// the "group_users" edge. The optional arguments are used to configure the query builder of the edge.
+func (uq *UserQuery) WithGroupUsers(opts ...func(*GroupUserQuery)) *UserQuery {
+	query := (&GroupUserClient{config: uq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	uq.withGroupUsers = query
 	return uq
 }
 
@@ -516,12 +588,14 @@ func (uq *UserQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*User, e
 		nodes       = []*User{}
 		withFKs     = uq.withFKs
 		_spec       = uq.querySpec()
-		loadedTypes = [5]bool{
+		loadedTypes = [7]bool{
 			uq.withInstitution != nil,
 			uq.withCourse != nil,
 			uq.withRedemptions != nil,
 			uq.withPet != nil,
-			uq.withUserPet != nil,
+			uq.withGroups != nil,
+			uq.withUserPets != nil,
+			uq.withGroupUsers != nil,
 		}
 	)
 	if uq.withCourse != nil {
@@ -575,10 +649,24 @@ func (uq *UserQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*User, e
 			return nil, err
 		}
 	}
-	if query := uq.withUserPet; query != nil {
-		if err := uq.loadUserPet(ctx, query, nodes,
-			func(n *User) { n.Edges.UserPet = []*UserPet{} },
-			func(n *User, e *UserPet) { n.Edges.UserPet = append(n.Edges.UserPet, e) }); err != nil {
+	if query := uq.withGroups; query != nil {
+		if err := uq.loadGroups(ctx, query, nodes,
+			func(n *User) { n.Edges.Groups = []*Group{} },
+			func(n *User, e *Group) { n.Edges.Groups = append(n.Edges.Groups, e) }); err != nil {
+			return nil, err
+		}
+	}
+	if query := uq.withUserPets; query != nil {
+		if err := uq.loadUserPets(ctx, query, nodes,
+			func(n *User) { n.Edges.UserPets = []*UserPet{} },
+			func(n *User, e *UserPet) { n.Edges.UserPets = append(n.Edges.UserPets, e) }); err != nil {
+			return nil, err
+		}
+	}
+	if query := uq.withGroupUsers; query != nil {
+		if err := uq.loadGroupUsers(ctx, query, nodes,
+			func(n *User) { n.Edges.GroupUsers = []*GroupUser{} },
+			func(n *User, e *GroupUser) { n.Edges.GroupUsers = append(n.Edges.GroupUsers, e) }); err != nil {
 			return nil, err
 		}
 	}
@@ -770,7 +858,68 @@ func (uq *UserQuery) loadPet(ctx context.Context, query *PetQuery, nodes []*User
 	}
 	return nil
 }
-func (uq *UserQuery) loadUserPet(ctx context.Context, query *UserPetQuery, nodes []*User, init func(*User), assign func(*User, *UserPet)) error {
+func (uq *UserQuery) loadGroups(ctx context.Context, query *GroupQuery, nodes []*User, init func(*User), assign func(*User, *Group)) error {
+	edgeIDs := make([]driver.Value, len(nodes))
+	byID := make(map[int]*User)
+	nids := make(map[int]map[*User]struct{})
+	for i, node := range nodes {
+		edgeIDs[i] = node.ID
+		byID[node.ID] = node
+		if init != nil {
+			init(node)
+		}
+	}
+	query.Where(func(s *sql.Selector) {
+		joinT := sql.Table(user.GroupsTable)
+		s.Join(joinT).On(s.C(group.FieldID), joinT.C(user.GroupsPrimaryKey[0]))
+		s.Where(sql.InValues(joinT.C(user.GroupsPrimaryKey[1]), edgeIDs...))
+		columns := s.SelectedColumns()
+		s.Select(joinT.C(user.GroupsPrimaryKey[1]))
+		s.AppendSelect(columns...)
+		s.SetDistinct(false)
+	})
+	if err := query.prepareQuery(ctx); err != nil {
+		return err
+	}
+	qr := QuerierFunc(func(ctx context.Context, q Query) (Value, error) {
+		return query.sqlAll(ctx, func(_ context.Context, spec *sqlgraph.QuerySpec) {
+			assign := spec.Assign
+			values := spec.ScanValues
+			spec.ScanValues = func(columns []string) ([]any, error) {
+				values, err := values(columns[1:])
+				if err != nil {
+					return nil, err
+				}
+				return append([]any{new(sql.NullInt64)}, values...), nil
+			}
+			spec.Assign = func(columns []string, values []any) error {
+				outValue := int(values[0].(*sql.NullInt64).Int64)
+				inValue := int(values[1].(*sql.NullInt64).Int64)
+				if nids[inValue] == nil {
+					nids[inValue] = map[*User]struct{}{byID[outValue]: {}}
+					return assign(columns[1:], values[1:])
+				}
+				nids[inValue][byID[outValue]] = struct{}{}
+				return nil
+			}
+		})
+	})
+	neighbors, err := withInterceptors[[]*Group](ctx, query, qr, query.inters)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		nodes, ok := nids[n.ID]
+		if !ok {
+			return fmt.Errorf(`unexpected "groups" node returned %v`, n.ID)
+		}
+		for kn := range nodes {
+			assign(kn, n)
+		}
+	}
+	return nil
+}
+func (uq *UserQuery) loadUserPets(ctx context.Context, query *UserPetQuery, nodes []*User, init func(*User), assign func(*User, *UserPet)) error {
 	fks := make([]driver.Value, 0, len(nodes))
 	nodeids := make(map[int]*User)
 	for i := range nodes {
@@ -784,7 +933,37 @@ func (uq *UserQuery) loadUserPet(ctx context.Context, query *UserPetQuery, nodes
 		query.ctx.AppendFieldOnce(userpet.FieldUserID)
 	}
 	query.Where(predicate.UserPet(func(s *sql.Selector) {
-		s.Where(sql.InValues(s.C(user.UserPetColumn), fks...))
+		s.Where(sql.InValues(s.C(user.UserPetsColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.UserID
+		node, ok := nodeids[fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "user_id" returned %v for node %v`, fk, n)
+		}
+		assign(node, n)
+	}
+	return nil
+}
+func (uq *UserQuery) loadGroupUsers(ctx context.Context, query *GroupUserQuery, nodes []*User, init func(*User), assign func(*User, *GroupUser)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int]*User)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(groupuser.FieldUserID)
+	}
+	query.Where(predicate.GroupUser(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(user.GroupUsersColumn), fks...))
 	}))
 	neighbors, err := query.All(ctx)
 	if err != nil {

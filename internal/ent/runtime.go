@@ -6,6 +6,7 @@ import (
 	"github.com/np-inprove/server/internal/ent/academicschool"
 	"github.com/np-inprove/server/internal/ent/accessory"
 	"github.com/np-inprove/server/internal/ent/course"
+	"github.com/np-inprove/server/internal/ent/group"
 	"github.com/np-inprove/server/internal/ent/institution"
 	"github.com/np-inprove/server/internal/ent/schema"
 	"github.com/np-inprove/server/internal/ent/user"
@@ -50,6 +51,16 @@ func init() {
 	courseDescCourseID := courseFields[1].Descriptor()
 	// course.CourseIDValidator is a validator for the "course_id" field. It is called by the builders before save.
 	course.CourseIDValidator = courseDescCourseID.Validators[0].(func(string) error)
+	groupFields := schema.Group{}.Fields()
+	_ = groupFields
+	// groupDescPath is the schema descriptor for path field.
+	groupDescPath := groupFields[0].Descriptor()
+	// group.PathValidator is a validator for the "path" field. It is called by the builders before save.
+	group.PathValidator = groupDescPath.Validators[0].(func(string) error)
+	// groupDescName is the schema descriptor for name field.
+	groupDescName := groupFields[1].Descriptor()
+	// group.NameValidator is a validator for the "name" field. It is called by the builders before save.
+	group.NameValidator = groupDescName.Validators[0].(func(string) error)
 	institutionFields := schema.Institution{}.Fields()
 	_ = institutionFields
 	// institutionDescName is the schema descriptor for name field.

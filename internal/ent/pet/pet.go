@@ -18,8 +18,8 @@ const (
 	FieldSvgRaw = "svg_raw"
 	// EdgeOwner holds the string denoting the owner edge name in mutations.
 	EdgeOwner = "owner"
-	// EdgeUserPet holds the string denoting the user_pet edge name in mutations.
-	EdgeUserPet = "user_pet"
+	// EdgeUserPets holds the string denoting the user_pets edge name in mutations.
+	EdgeUserPets = "user_pets"
 	// Table holds the table name of the pet in the database.
 	Table = "pets"
 	// OwnerTable is the table that holds the owner relation/edge. The primary key declared below.
@@ -27,13 +27,13 @@ const (
 	// OwnerInverseTable is the table name for the User entity.
 	// It exists in this package in order to avoid circular dependency with the "user" package.
 	OwnerInverseTable = "users"
-	// UserPetTable is the table that holds the user_pet relation/edge.
-	UserPetTable = "user_pets"
-	// UserPetInverseTable is the table name for the UserPet entity.
+	// UserPetsTable is the table that holds the user_pets relation/edge.
+	UserPetsTable = "user_pets"
+	// UserPetsInverseTable is the table name for the UserPet entity.
 	// It exists in this package in order to avoid circular dependency with the "userpet" package.
-	UserPetInverseTable = "user_pets"
-	// UserPetColumn is the table column denoting the user_pet relation/edge.
-	UserPetColumn = "pet_id"
+	UserPetsInverseTable = "user_pets"
+	// UserPetsColumn is the table column denoting the user_pets relation/edge.
+	UserPetsColumn = "pet_id"
 )
 
 // Columns holds all SQL columns for pet fields.
@@ -91,17 +91,17 @@ func ByOwner(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 	}
 }
 
-// ByUserPetCount orders the results by user_pet count.
-func ByUserPetCount(opts ...sql.OrderTermOption) OrderOption {
+// ByUserPetsCount orders the results by user_pets count.
+func ByUserPetsCount(opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborsCount(s, newUserPetStep(), opts...)
+		sqlgraph.OrderByNeighborsCount(s, newUserPetsStep(), opts...)
 	}
 }
 
-// ByUserPet orders the results by user_pet terms.
-func ByUserPet(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+// ByUserPets orders the results by user_pets terms.
+func ByUserPets(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newUserPetStep(), append([]sql.OrderTerm{term}, terms...)...)
+		sqlgraph.OrderByNeighborTerms(s, newUserPetsStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
 func newOwnerStep() *sqlgraph.Step {
@@ -111,10 +111,10 @@ func newOwnerStep() *sqlgraph.Step {
 		sqlgraph.Edge(sqlgraph.M2M, false, OwnerTable, OwnerPrimaryKey...),
 	)
 }
-func newUserPetStep() *sqlgraph.Step {
+func newUserPetsStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
-		sqlgraph.To(UserPetInverseTable, UserPetColumn),
-		sqlgraph.Edge(sqlgraph.O2M, true, UserPetTable, UserPetColumn),
+		sqlgraph.To(UserPetsInverseTable, UserPetsColumn),
+		sqlgraph.Edge(sqlgraph.O2M, true, UserPetsTable, UserPetsColumn),
 	)
 }
