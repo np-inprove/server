@@ -42,6 +42,10 @@ const (
 	EdgeGroups = "groups"
 	// EdgeReactedPosts holds the string denoting the reacted_posts edge name in mutations.
 	EdgeReactedPosts = "reacted_posts"
+	// EdgeVotedDeadlines holds the string denoting the voted_deadlines edge name in mutations.
+	EdgeVotedDeadlines = "voted_deadlines"
+	// EdgeAuthoredDeadlines holds the string denoting the authored_deadlines edge name in mutations.
+	EdgeAuthoredDeadlines = "authored_deadlines"
 	// EdgeUserPets holds the string denoting the user_pets edge name in mutations.
 	EdgeUserPets = "user_pets"
 	// EdgeGroupUsers holds the string denoting the group_users edge name in mutations.
@@ -91,6 +95,18 @@ const (
 	// ReactedPostsInverseTable is the table name for the ForumPost entity.
 	// It exists in this package in order to avoid circular dependency with the "forumpost" package.
 	ReactedPostsInverseTable = "forum_posts"
+	// VotedDeadlinesTable is the table that holds the voted_deadlines relation/edge. The primary key declared below.
+	VotedDeadlinesTable = "deadline_voted_users"
+	// VotedDeadlinesInverseTable is the table name for the Deadline entity.
+	// It exists in this package in order to avoid circular dependency with the "deadline" package.
+	VotedDeadlinesInverseTable = "deadlines"
+	// AuthoredDeadlinesTable is the table that holds the authored_deadlines relation/edge.
+	AuthoredDeadlinesTable = "deadlines"
+	// AuthoredDeadlinesInverseTable is the table name for the Deadline entity.
+	// It exists in this package in order to avoid circular dependency with the "deadline" package.
+	AuthoredDeadlinesInverseTable = "deadlines"
+	// AuthoredDeadlinesColumn is the table column denoting the authored_deadlines relation/edge.
+	AuthoredDeadlinesColumn = "deadline_author"
 	// UserPetsTable is the table that holds the user_pets relation/edge.
 	UserPetsTable = "user_pets"
 	// UserPetsInverseTable is the table name for the UserPet entity.
@@ -146,6 +162,9 @@ var (
 	// ReactedPostsPrimaryKey and ReactedPostsColumn2 are the table columns denoting the
 	// primary key for the reacted_posts relation (M2M).
 	ReactedPostsPrimaryKey = []string{"forum_post_id", "user_id"}
+	// VotedDeadlinesPrimaryKey and VotedDeadlinesColumn2 are the table columns denoting the
+	// primary key for the voted_deadlines relation (M2M).
+	VotedDeadlinesPrimaryKey = []string{"deadline_id", "user_id"}
 )
 
 // ValidColumn reports if the column name is valid (part of the table columns).
@@ -317,6 +336,34 @@ func ByReactedPosts(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 	}
 }
 
+// ByVotedDeadlinesCount orders the results by voted_deadlines count.
+func ByVotedDeadlinesCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newVotedDeadlinesStep(), opts...)
+	}
+}
+
+// ByVotedDeadlines orders the results by voted_deadlines terms.
+func ByVotedDeadlines(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newVotedDeadlinesStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
+// ByAuthoredDeadlinesCount orders the results by authored_deadlines count.
+func ByAuthoredDeadlinesCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newAuthoredDeadlinesStep(), opts...)
+	}
+}
+
+// ByAuthoredDeadlines orders the results by authored_deadlines terms.
+func ByAuthoredDeadlines(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newAuthoredDeadlinesStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
 // ByUserPetsCount orders the results by user_pets count.
 func ByUserPetsCount(opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
@@ -405,6 +452,20 @@ func newReactedPostsStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(ReactedPostsInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.M2M, true, ReactedPostsTable, ReactedPostsPrimaryKey...),
+	)
+}
+func newVotedDeadlinesStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(VotedDeadlinesInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.M2M, true, VotedDeadlinesTable, VotedDeadlinesPrimaryKey...),
+	)
+}
+func newAuthoredDeadlinesStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(AuthoredDeadlinesInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, true, AuthoredDeadlinesTable, AuthoredDeadlinesColumn),
 	)
 }
 func newUserPetsStep() *sqlgraph.Step {

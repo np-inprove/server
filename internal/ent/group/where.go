@@ -352,6 +352,29 @@ func HasForumPostsWith(preds ...predicate.ForumPost) predicate.Group {
 	})
 }
 
+// HasDeadlines applies the HasEdge predicate on the "deadlines" edge.
+func HasDeadlines() predicate.Group {
+	return predicate.Group(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, DeadlinesTable, DeadlinesColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasDeadlinesWith applies the HasEdge predicate on the "deadlines" edge with a given conditions (other predicates).
+func HasDeadlinesWith(preds ...predicate.Deadline) predicate.Group {
+	return predicate.Group(func(s *sql.Selector) {
+		step := newDeadlinesStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
 // HasGroupUsers applies the HasEdge predicate on the "group_users" edge.
 func HasGroupUsers() predicate.Group {
 	return predicate.Group(func(s *sql.Selector) {

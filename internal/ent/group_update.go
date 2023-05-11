@@ -10,6 +10,7 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
+	"github.com/np-inprove/server/internal/ent/deadline"
 	"github.com/np-inprove/server/internal/ent/event"
 	"github.com/np-inprove/server/internal/ent/forumpost"
 	"github.com/np-inprove/server/internal/ent/group"
@@ -99,6 +100,21 @@ func (gu *GroupUpdate) AddForumPosts(f ...*ForumPost) *GroupUpdate {
 	return gu.AddForumPostIDs(ids...)
 }
 
+// AddDeadlineIDs adds the "deadlines" edge to the Deadline entity by IDs.
+func (gu *GroupUpdate) AddDeadlineIDs(ids ...int) *GroupUpdate {
+	gu.mutation.AddDeadlineIDs(ids...)
+	return gu
+}
+
+// AddDeadlines adds the "deadlines" edges to the Deadline entity.
+func (gu *GroupUpdate) AddDeadlines(d ...*Deadline) *GroupUpdate {
+	ids := make([]int, len(d))
+	for i := range d {
+		ids[i] = d[i].ID
+	}
+	return gu.AddDeadlineIDs(ids...)
+}
+
 // Mutation returns the GroupMutation object of the builder.
 func (gu *GroupUpdate) Mutation() *GroupMutation {
 	return gu.mutation
@@ -165,6 +181,27 @@ func (gu *GroupUpdate) RemoveForumPosts(f ...*ForumPost) *GroupUpdate {
 		ids[i] = f[i].ID
 	}
 	return gu.RemoveForumPostIDs(ids...)
+}
+
+// ClearDeadlines clears all "deadlines" edges to the Deadline entity.
+func (gu *GroupUpdate) ClearDeadlines() *GroupUpdate {
+	gu.mutation.ClearDeadlines()
+	return gu
+}
+
+// RemoveDeadlineIDs removes the "deadlines" edge to Deadline entities by IDs.
+func (gu *GroupUpdate) RemoveDeadlineIDs(ids ...int) *GroupUpdate {
+	gu.mutation.RemoveDeadlineIDs(ids...)
+	return gu
+}
+
+// RemoveDeadlines removes "deadlines" edges to Deadline entities.
+func (gu *GroupUpdate) RemoveDeadlines(d ...*Deadline) *GroupUpdate {
+	ids := make([]int, len(d))
+	for i := range d {
+		ids[i] = d[i].ID
+	}
+	return gu.RemoveDeadlineIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -373,6 +410,51 @@ func (gu *GroupUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
+	if gu.mutation.DeadlinesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   group.DeadlinesTable,
+			Columns: []string{group.DeadlinesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(deadline.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := gu.mutation.RemovedDeadlinesIDs(); len(nodes) > 0 && !gu.mutation.DeadlinesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   group.DeadlinesTable,
+			Columns: []string{group.DeadlinesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(deadline.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := gu.mutation.DeadlinesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   group.DeadlinesTable,
+			Columns: []string{group.DeadlinesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(deadline.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
 	if n, err = sqlgraph.UpdateNodes(ctx, gu.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{group.Label}
@@ -462,6 +544,21 @@ func (guo *GroupUpdateOne) AddForumPosts(f ...*ForumPost) *GroupUpdateOne {
 	return guo.AddForumPostIDs(ids...)
 }
 
+// AddDeadlineIDs adds the "deadlines" edge to the Deadline entity by IDs.
+func (guo *GroupUpdateOne) AddDeadlineIDs(ids ...int) *GroupUpdateOne {
+	guo.mutation.AddDeadlineIDs(ids...)
+	return guo
+}
+
+// AddDeadlines adds the "deadlines" edges to the Deadline entity.
+func (guo *GroupUpdateOne) AddDeadlines(d ...*Deadline) *GroupUpdateOne {
+	ids := make([]int, len(d))
+	for i := range d {
+		ids[i] = d[i].ID
+	}
+	return guo.AddDeadlineIDs(ids...)
+}
+
 // Mutation returns the GroupMutation object of the builder.
 func (guo *GroupUpdateOne) Mutation() *GroupMutation {
 	return guo.mutation
@@ -528,6 +625,27 @@ func (guo *GroupUpdateOne) RemoveForumPosts(f ...*ForumPost) *GroupUpdateOne {
 		ids[i] = f[i].ID
 	}
 	return guo.RemoveForumPostIDs(ids...)
+}
+
+// ClearDeadlines clears all "deadlines" edges to the Deadline entity.
+func (guo *GroupUpdateOne) ClearDeadlines() *GroupUpdateOne {
+	guo.mutation.ClearDeadlines()
+	return guo
+}
+
+// RemoveDeadlineIDs removes the "deadlines" edge to Deadline entities by IDs.
+func (guo *GroupUpdateOne) RemoveDeadlineIDs(ids ...int) *GroupUpdateOne {
+	guo.mutation.RemoveDeadlineIDs(ids...)
+	return guo
+}
+
+// RemoveDeadlines removes "deadlines" edges to Deadline entities.
+func (guo *GroupUpdateOne) RemoveDeadlines(d ...*Deadline) *GroupUpdateOne {
+	ids := make([]int, len(d))
+	for i := range d {
+		ids[i] = d[i].ID
+	}
+	return guo.RemoveDeadlineIDs(ids...)
 }
 
 // Where appends a list predicates to the GroupUpdate builder.
@@ -759,6 +877,51 @@ func (guo *GroupUpdateOne) sqlSave(ctx context.Context) (_node *Group, err error
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(forumpost.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if guo.mutation.DeadlinesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   group.DeadlinesTable,
+			Columns: []string{group.DeadlinesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(deadline.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := guo.mutation.RemovedDeadlinesIDs(); len(nodes) > 0 && !guo.mutation.DeadlinesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   group.DeadlinesTable,
+			Columns: []string{group.DeadlinesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(deadline.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := guo.mutation.DeadlinesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   group.DeadlinesTable,
+			Columns: []string{group.DeadlinesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(deadline.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

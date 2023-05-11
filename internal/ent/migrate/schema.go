@@ -72,6 +72,34 @@ var (
 			},
 		},
 	}
+	// DeadlinesColumns holds the columns for the "deadlines" table.
+	DeadlinesColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "name", Type: field.TypeString},
+		{Name: "due_time", Type: field.TypeTime, Nullable: true},
+		{Name: "deadline_author", Type: field.TypeInt},
+		{Name: "group_deadlines", Type: field.TypeInt},
+	}
+	// DeadlinesTable holds the schema information for the "deadlines" table.
+	DeadlinesTable = &schema.Table{
+		Name:       "deadlines",
+		Columns:    DeadlinesColumns,
+		PrimaryKey: []*schema.Column{DeadlinesColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "deadlines_users_author",
+				Columns:    []*schema.Column{DeadlinesColumns[3]},
+				RefColumns: []*schema.Column{UsersColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+			{
+				Symbol:     "deadlines_groups_deadlines",
+				Columns:    []*schema.Column{DeadlinesColumns[4]},
+				RefColumns: []*schema.Column{GroupsColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+	}
 	// EventsColumns holds the columns for the "events" table.
 	EventsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
@@ -331,6 +359,31 @@ var (
 			},
 		},
 	}
+	// DeadlineVotedUsersColumns holds the columns for the "deadline_voted_users" table.
+	DeadlineVotedUsersColumns = []*schema.Column{
+		{Name: "deadline_id", Type: field.TypeInt},
+		{Name: "user_id", Type: field.TypeInt},
+	}
+	// DeadlineVotedUsersTable holds the schema information for the "deadline_voted_users" table.
+	DeadlineVotedUsersTable = &schema.Table{
+		Name:       "deadline_voted_users",
+		Columns:    DeadlineVotedUsersColumns,
+		PrimaryKey: []*schema.Column{DeadlineVotedUsersColumns[0], DeadlineVotedUsersColumns[1]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "deadline_voted_users_deadline_id",
+				Columns:    []*schema.Column{DeadlineVotedUsersColumns[0]},
+				RefColumns: []*schema.Column{DeadlinesColumns[0]},
+				OnDelete:   schema.Cascade,
+			},
+			{
+				Symbol:     "deadline_voted_users_user_id",
+				Columns:    []*schema.Column{DeadlineVotedUsersColumns[1]},
+				RefColumns: []*schema.Column{UsersColumns[0]},
+				OnDelete:   schema.Cascade,
+			},
+		},
+	}
 	// InstitutionAdminsColumns holds the columns for the "institution_admins" table.
 	InstitutionAdminsColumns = []*schema.Column{
 		{Name: "institution_id", Type: field.TypeInt},
@@ -361,6 +414,7 @@ var (
 		AcademicSchoolsTable,
 		AccessoriesTable,
 		CoursesTable,
+		DeadlinesTable,
 		EventsTable,
 		ForumPostsTable,
 		GroupsTable,
@@ -372,6 +426,7 @@ var (
 		UsersTable,
 		UserPetsTable,
 		VouchersTable,
+		DeadlineVotedUsersTable,
 		InstitutionAdminsTable,
 	}
 )
@@ -380,6 +435,8 @@ func init() {
 	AcademicSchoolsTable.ForeignKeys[0].RefTable = InstitutionsTable
 	AccessoriesTable.ForeignKeys[0].RefTable = InstitutionsTable
 	CoursesTable.ForeignKeys[0].RefTable = AcademicSchoolsTable
+	DeadlinesTable.ForeignKeys[0].RefTable = UsersTable
+	DeadlinesTable.ForeignKeys[1].RefTable = GroupsTable
 	EventsTable.ForeignKeys[0].RefTable = GroupsTable
 	ForumPostsTable.ForeignKeys[0].RefTable = UsersTable
 	ForumPostsTable.ForeignKeys[1].RefTable = ForumPostsTable
@@ -395,6 +452,8 @@ func init() {
 	UserPetsTable.ForeignKeys[0].RefTable = PetsTable
 	UserPetsTable.ForeignKeys[1].RefTable = UsersTable
 	VouchersTable.ForeignKeys[0].RefTable = InstitutionsTable
+	DeadlineVotedUsersTable.ForeignKeys[0].RefTable = DeadlinesTable
+	DeadlineVotedUsersTable.ForeignKeys[1].RefTable = UsersTable
 	InstitutionAdminsTable.ForeignKeys[0].RefTable = InstitutionsTable
 	InstitutionAdminsTable.ForeignKeys[1].RefTable = UsersTable
 }

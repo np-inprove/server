@@ -20,8 +20,7 @@ type Event struct {
 	ID int `json:"id,omitempty"`
 	// Name of the event
 	Name string `json:"name,omitempty"`
-	// Start time of the event.
-	// If event is all-day, set to 00:00:00
+	// Start time of the event
 	StartTime time.Time `json:"start_time,omitempty"`
 	// End time of the event.
 	// If event is all-day, set to nil

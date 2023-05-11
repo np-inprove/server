@@ -6,6 +6,7 @@ import (
 	"github.com/np-inprove/server/internal/ent/academicschool"
 	"github.com/np-inprove/server/internal/ent/accessory"
 	"github.com/np-inprove/server/internal/ent/course"
+	"github.com/np-inprove/server/internal/ent/deadline"
 	"github.com/np-inprove/server/internal/ent/event"
 	"github.com/np-inprove/server/internal/ent/forumpost"
 	"github.com/np-inprove/server/internal/ent/group"
@@ -54,6 +55,12 @@ func init() {
 	courseDescCourseID := courseFields[1].Descriptor()
 	// course.CourseIDValidator is a validator for the "course_id" field. It is called by the builders before save.
 	course.CourseIDValidator = courseDescCourseID.Validators[0].(func(string) error)
+	deadlineFields := schema.Deadline{}.Fields()
+	_ = deadlineFields
+	// deadlineDescName is the schema descriptor for name field.
+	deadlineDescName := deadlineFields[0].Descriptor()
+	// deadline.NameValidator is a validator for the "name" field. It is called by the builders before save.
+	deadline.NameValidator = deadlineDescName.Validators[0].(func(string) error)
 	eventFields := schema.Event{}.Fields()
 	_ = eventFields
 	// eventDescName is the schema descriptor for name field.

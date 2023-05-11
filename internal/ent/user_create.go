@@ -11,6 +11,7 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/np-inprove/server/internal/ent/course"
+	"github.com/np-inprove/server/internal/ent/deadline"
 	"github.com/np-inprove/server/internal/ent/forumpost"
 	"github.com/np-inprove/server/internal/ent/group"
 	"github.com/np-inprove/server/internal/ent/institution"
@@ -189,6 +190,36 @@ func (uc *UserCreate) AddReactedPosts(f ...*ForumPost) *UserCreate {
 		ids[i] = f[i].ID
 	}
 	return uc.AddReactedPostIDs(ids...)
+}
+
+// AddVotedDeadlineIDs adds the "voted_deadlines" edge to the Deadline entity by IDs.
+func (uc *UserCreate) AddVotedDeadlineIDs(ids ...int) *UserCreate {
+	uc.mutation.AddVotedDeadlineIDs(ids...)
+	return uc
+}
+
+// AddVotedDeadlines adds the "voted_deadlines" edges to the Deadline entity.
+func (uc *UserCreate) AddVotedDeadlines(d ...*Deadline) *UserCreate {
+	ids := make([]int, len(d))
+	for i := range d {
+		ids[i] = d[i].ID
+	}
+	return uc.AddVotedDeadlineIDs(ids...)
+}
+
+// AddAuthoredDeadlineIDs adds the "authored_deadlines" edge to the Deadline entity by IDs.
+func (uc *UserCreate) AddAuthoredDeadlineIDs(ids ...int) *UserCreate {
+	uc.mutation.AddAuthoredDeadlineIDs(ids...)
+	return uc
+}
+
+// AddAuthoredDeadlines adds the "authored_deadlines" edges to the Deadline entity.
+func (uc *UserCreate) AddAuthoredDeadlines(d ...*Deadline) *UserCreate {
+	ids := make([]int, len(d))
+	for i := range d {
+		ids[i] = d[i].ID
+	}
+	return uc.AddAuthoredDeadlineIDs(ids...)
 }
 
 // Mutation returns the UserMutation object of the builder.
@@ -444,6 +475,38 @@ func (uc *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(forumpost.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := uc.mutation.VotedDeadlinesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   user.VotedDeadlinesTable,
+			Columns: user.VotedDeadlinesPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(deadline.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := uc.mutation.AuthoredDeadlinesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: true,
+			Table:   user.AuthoredDeadlinesTable,
+			Columns: []string{user.AuthoredDeadlinesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(deadline.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

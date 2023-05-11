@@ -17,6 +17,7 @@ import (
 	"github.com/np-inprove/server/internal/ent/academicschool"
 	"github.com/np-inprove/server/internal/ent/accessory"
 	"github.com/np-inprove/server/internal/ent/course"
+	"github.com/np-inprove/server/internal/ent/deadline"
 	"github.com/np-inprove/server/internal/ent/event"
 	"github.com/np-inprove/server/internal/ent/forumpost"
 	"github.com/np-inprove/server/internal/ent/group"
@@ -41,6 +42,8 @@ type Client struct {
 	Accessory *AccessoryClient
 	// Course is the client for interacting with the Course builders.
 	Course *CourseClient
+	// Deadline is the client for interacting with the Deadline builders.
+	Deadline *DeadlineClient
 	// Event is the client for interacting with the Event builders.
 	Event *EventClient
 	// ForumPost is the client for interacting with the ForumPost builders.
@@ -79,6 +82,7 @@ func (c *Client) init() {
 	c.AcademicSchool = NewAcademicSchoolClient(c.config)
 	c.Accessory = NewAccessoryClient(c.config)
 	c.Course = NewCourseClient(c.config)
+	c.Deadline = NewDeadlineClient(c.config)
 	c.Event = NewEventClient(c.config)
 	c.ForumPost = NewForumPostClient(c.config)
 	c.Group = NewGroupClient(c.config)
@@ -175,6 +179,7 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 		AcademicSchool: NewAcademicSchoolClient(cfg),
 		Accessory:      NewAccessoryClient(cfg),
 		Course:         NewCourseClient(cfg),
+		Deadline:       NewDeadlineClient(cfg),
 		Event:          NewEventClient(cfg),
 		ForumPost:      NewForumPostClient(cfg),
 		Group:          NewGroupClient(cfg),
@@ -208,6 +213,7 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 		AcademicSchool: NewAcademicSchoolClient(cfg),
 		Accessory:      NewAccessoryClient(cfg),
 		Course:         NewCourseClient(cfg),
+		Deadline:       NewDeadlineClient(cfg),
 		Event:          NewEventClient(cfg),
 		ForumPost:      NewForumPostClient(cfg),
 		Group:          NewGroupClient(cfg),
@@ -248,9 +254,9 @@ func (c *Client) Close() error {
 // In order to add hooks to a specific client, call: `client.Node.Use(...)`.
 func (c *Client) Use(hooks ...Hook) {
 	for _, n := range []interface{ Use(...Hook) }{
-		c.AcademicSchool, c.Accessory, c.Course, c.Event, c.ForumPost, c.Group,
-		c.GroupUser, c.Institution, c.Pet, c.Reaction, c.Redemption, c.User, c.UserPet,
-		c.Voucher,
+		c.AcademicSchool, c.Accessory, c.Course, c.Deadline, c.Event, c.ForumPost,
+		c.Group, c.GroupUser, c.Institution, c.Pet, c.Reaction, c.Redemption, c.User,
+		c.UserPet, c.Voucher,
 	} {
 		n.Use(hooks...)
 	}
@@ -260,9 +266,9 @@ func (c *Client) Use(hooks ...Hook) {
 // In order to add interceptors to a specific client, call: `client.Node.Intercept(...)`.
 func (c *Client) Intercept(interceptors ...Interceptor) {
 	for _, n := range []interface{ Intercept(...Interceptor) }{
-		c.AcademicSchool, c.Accessory, c.Course, c.Event, c.ForumPost, c.Group,
-		c.GroupUser, c.Institution, c.Pet, c.Reaction, c.Redemption, c.User, c.UserPet,
-		c.Voucher,
+		c.AcademicSchool, c.Accessory, c.Course, c.Deadline, c.Event, c.ForumPost,
+		c.Group, c.GroupUser, c.Institution, c.Pet, c.Reaction, c.Redemption, c.User,
+		c.UserPet, c.Voucher,
 	} {
 		n.Intercept(interceptors...)
 	}
@@ -277,6 +283,8 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.Accessory.mutate(ctx, m)
 	case *CourseMutation:
 		return c.Course.mutate(ctx, m)
+	case *DeadlineMutation:
+		return c.Deadline.mutate(ctx, m)
 	case *EventMutation:
 		return c.Event.mutate(ctx, m)
 	case *ForumPostMutation:
@@ -751,6 +759,172 @@ func (c *CourseClient) mutate(ctx context.Context, m *CourseMutation) (Value, er
 		return (&CourseDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
 	default:
 		return nil, fmt.Errorf("ent: unknown Course mutation op: %q", m.Op())
+	}
+}
+
+// DeadlineClient is a client for the Deadline schema.
+type DeadlineClient struct {
+	config
+}
+
+// NewDeadlineClient returns a client for the Deadline from the given config.
+func NewDeadlineClient(c config) *DeadlineClient {
+	return &DeadlineClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `deadline.Hooks(f(g(h())))`.
+func (c *DeadlineClient) Use(hooks ...Hook) {
+	c.hooks.Deadline = append(c.hooks.Deadline, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `deadline.Intercept(f(g(h())))`.
+func (c *DeadlineClient) Intercept(interceptors ...Interceptor) {
+	c.inters.Deadline = append(c.inters.Deadline, interceptors...)
+}
+
+// Create returns a builder for creating a Deadline entity.
+func (c *DeadlineClient) Create() *DeadlineCreate {
+	mutation := newDeadlineMutation(c.config, OpCreate)
+	return &DeadlineCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of Deadline entities.
+func (c *DeadlineClient) CreateBulk(builders ...*DeadlineCreate) *DeadlineCreateBulk {
+	return &DeadlineCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for Deadline.
+func (c *DeadlineClient) Update() *DeadlineUpdate {
+	mutation := newDeadlineMutation(c.config, OpUpdate)
+	return &DeadlineUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *DeadlineClient) UpdateOne(d *Deadline) *DeadlineUpdateOne {
+	mutation := newDeadlineMutation(c.config, OpUpdateOne, withDeadline(d))
+	return &DeadlineUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *DeadlineClient) UpdateOneID(id int) *DeadlineUpdateOne {
+	mutation := newDeadlineMutation(c.config, OpUpdateOne, withDeadlineID(id))
+	return &DeadlineUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for Deadline.
+func (c *DeadlineClient) Delete() *DeadlineDelete {
+	mutation := newDeadlineMutation(c.config, OpDelete)
+	return &DeadlineDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *DeadlineClient) DeleteOne(d *Deadline) *DeadlineDeleteOne {
+	return c.DeleteOneID(d.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *DeadlineClient) DeleteOneID(id int) *DeadlineDeleteOne {
+	builder := c.Delete().Where(deadline.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &DeadlineDeleteOne{builder}
+}
+
+// Query returns a query builder for Deadline.
+func (c *DeadlineClient) Query() *DeadlineQuery {
+	return &DeadlineQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeDeadline},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a Deadline entity by its id.
+func (c *DeadlineClient) Get(ctx context.Context, id int) (*Deadline, error) {
+	return c.Query().Where(deadline.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *DeadlineClient) GetX(ctx context.Context, id int) *Deadline {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryAuthor queries the author edge of a Deadline.
+func (c *DeadlineClient) QueryAuthor(d *Deadline) *UserQuery {
+	query := (&UserClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := d.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(deadline.Table, deadline.FieldID, id),
+			sqlgraph.To(user.Table, user.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, false, deadline.AuthorTable, deadline.AuthorColumn),
+		)
+		fromV = sqlgraph.Neighbors(d.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryVotedUsers queries the voted_users edge of a Deadline.
+func (c *DeadlineClient) QueryVotedUsers(d *Deadline) *UserQuery {
+	query := (&UserClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := d.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(deadline.Table, deadline.FieldID, id),
+			sqlgraph.To(user.Table, user.FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, false, deadline.VotedUsersTable, deadline.VotedUsersPrimaryKey...),
+		)
+		fromV = sqlgraph.Neighbors(d.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryGroup queries the group edge of a Deadline.
+func (c *DeadlineClient) QueryGroup(d *Deadline) *GroupQuery {
+	query := (&GroupClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := d.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(deadline.Table, deadline.FieldID, id),
+			sqlgraph.To(group.Table, group.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, deadline.GroupTable, deadline.GroupColumn),
+		)
+		fromV = sqlgraph.Neighbors(d.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *DeadlineClient) Hooks() []Hook {
+	return c.hooks.Deadline
+}
+
+// Interceptors returns the client interceptors.
+func (c *DeadlineClient) Interceptors() []Interceptor {
+	return c.inters.Deadline
+}
+
+func (c *DeadlineClient) mutate(ctx context.Context, m *DeadlineMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&DeadlineCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&DeadlineUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&DeadlineUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&DeadlineDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown Deadline mutation op: %q", m.Op())
 	}
 }
 
@@ -1236,6 +1410,22 @@ func (c *GroupClient) QueryForumPosts(gr *Group) *ForumPostQuery {
 			sqlgraph.From(group.Table, group.FieldID, id),
 			sqlgraph.To(forumpost.Table, forumpost.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, group.ForumPostsTable, group.ForumPostsColumn),
+		)
+		fromV = sqlgraph.Neighbors(gr.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryDeadlines queries the deadlines edge of a Group.
+func (c *GroupClient) QueryDeadlines(gr *Group) *DeadlineQuery {
+	query := (&DeadlineClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := gr.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(group.Table, group.FieldID, id),
+			sqlgraph.To(deadline.Table, deadline.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, group.DeadlinesTable, group.DeadlinesColumn),
 		)
 		fromV = sqlgraph.Neighbors(gr.driver.Dialect(), step)
 		return fromV, nil
@@ -2189,6 +2379,38 @@ func (c *UserClient) QueryReactedPosts(u *User) *ForumPostQuery {
 	return query
 }
 
+// QueryVotedDeadlines queries the voted_deadlines edge of a User.
+func (c *UserClient) QueryVotedDeadlines(u *User) *DeadlineQuery {
+	query := (&DeadlineClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := u.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, id),
+			sqlgraph.To(deadline.Table, deadline.FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, true, user.VotedDeadlinesTable, user.VotedDeadlinesPrimaryKey...),
+		)
+		fromV = sqlgraph.Neighbors(u.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryAuthoredDeadlines queries the authored_deadlines edge of a User.
+func (c *UserClient) QueryAuthoredDeadlines(u *User) *DeadlineQuery {
+	query := (&DeadlineClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := u.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, id),
+			sqlgraph.To(deadline.Table, deadline.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, true, user.AuthoredDeadlinesTable, user.AuthoredDeadlinesColumn),
+		)
+		fromV = sqlgraph.Neighbors(u.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
 // QueryUserPets queries the user_pets edge of a User.
 func (c *UserClient) QueryUserPets(u *User) *UserPetQuery {
 	query := (&UserPetClient{config: c.config}).Query()
@@ -2516,11 +2738,11 @@ func (c *VoucherClient) mutate(ctx context.Context, m *VoucherMutation) (Value, 
 // hooks and interceptors per client, for fast access.
 type (
 	hooks struct {
-		AcademicSchool, Accessory, Course, Event, ForumPost, Group, GroupUser,
+		AcademicSchool, Accessory, Course, Deadline, Event, ForumPost, Group, GroupUser,
 		Institution, Pet, Reaction, Redemption, User, UserPet, Voucher []ent.Hook
 	}
 	inters struct {
-		AcademicSchool, Accessory, Course, Event, ForumPost, Group, GroupUser,
+		AcademicSchool, Accessory, Course, Deadline, Event, ForumPost, Group, GroupUser,
 		Institution, Pet, Reaction, Redemption, User, UserPet,
 		Voucher []ent.Interceptor
 	}

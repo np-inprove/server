@@ -12,6 +12,7 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/np-inprove/server/internal/ent/course"
+	"github.com/np-inprove/server/internal/ent/deadline"
 	"github.com/np-inprove/server/internal/ent/forumpost"
 	"github.com/np-inprove/server/internal/ent/group"
 	"github.com/np-inprove/server/internal/ent/institution"
@@ -219,6 +220,36 @@ func (uu *UserUpdate) AddReactedPosts(f ...*ForumPost) *UserUpdate {
 	return uu.AddReactedPostIDs(ids...)
 }
 
+// AddVotedDeadlineIDs adds the "voted_deadlines" edge to the Deadline entity by IDs.
+func (uu *UserUpdate) AddVotedDeadlineIDs(ids ...int) *UserUpdate {
+	uu.mutation.AddVotedDeadlineIDs(ids...)
+	return uu
+}
+
+// AddVotedDeadlines adds the "voted_deadlines" edges to the Deadline entity.
+func (uu *UserUpdate) AddVotedDeadlines(d ...*Deadline) *UserUpdate {
+	ids := make([]int, len(d))
+	for i := range d {
+		ids[i] = d[i].ID
+	}
+	return uu.AddVotedDeadlineIDs(ids...)
+}
+
+// AddAuthoredDeadlineIDs adds the "authored_deadlines" edge to the Deadline entity by IDs.
+func (uu *UserUpdate) AddAuthoredDeadlineIDs(ids ...int) *UserUpdate {
+	uu.mutation.AddAuthoredDeadlineIDs(ids...)
+	return uu
+}
+
+// AddAuthoredDeadlines adds the "authored_deadlines" edges to the Deadline entity.
+func (uu *UserUpdate) AddAuthoredDeadlines(d ...*Deadline) *UserUpdate {
+	ids := make([]int, len(d))
+	for i := range d {
+		ids[i] = d[i].ID
+	}
+	return uu.AddAuthoredDeadlineIDs(ids...)
+}
+
 // Mutation returns the UserMutation object of the builder.
 func (uu *UserUpdate) Mutation() *UserMutation {
 	return uu.mutation
@@ -354,6 +385,48 @@ func (uu *UserUpdate) RemoveReactedPosts(f ...*ForumPost) *UserUpdate {
 		ids[i] = f[i].ID
 	}
 	return uu.RemoveReactedPostIDs(ids...)
+}
+
+// ClearVotedDeadlines clears all "voted_deadlines" edges to the Deadline entity.
+func (uu *UserUpdate) ClearVotedDeadlines() *UserUpdate {
+	uu.mutation.ClearVotedDeadlines()
+	return uu
+}
+
+// RemoveVotedDeadlineIDs removes the "voted_deadlines" edge to Deadline entities by IDs.
+func (uu *UserUpdate) RemoveVotedDeadlineIDs(ids ...int) *UserUpdate {
+	uu.mutation.RemoveVotedDeadlineIDs(ids...)
+	return uu
+}
+
+// RemoveVotedDeadlines removes "voted_deadlines" edges to Deadline entities.
+func (uu *UserUpdate) RemoveVotedDeadlines(d ...*Deadline) *UserUpdate {
+	ids := make([]int, len(d))
+	for i := range d {
+		ids[i] = d[i].ID
+	}
+	return uu.RemoveVotedDeadlineIDs(ids...)
+}
+
+// ClearAuthoredDeadlines clears all "authored_deadlines" edges to the Deadline entity.
+func (uu *UserUpdate) ClearAuthoredDeadlines() *UserUpdate {
+	uu.mutation.ClearAuthoredDeadlines()
+	return uu
+}
+
+// RemoveAuthoredDeadlineIDs removes the "authored_deadlines" edge to Deadline entities by IDs.
+func (uu *UserUpdate) RemoveAuthoredDeadlineIDs(ids ...int) *UserUpdate {
+	uu.mutation.RemoveAuthoredDeadlineIDs(ids...)
+	return uu
+}
+
+// RemoveAuthoredDeadlines removes "authored_deadlines" edges to Deadline entities.
+func (uu *UserUpdate) RemoveAuthoredDeadlines(d ...*Deadline) *UserUpdate {
+	ids := make([]int, len(d))
+	for i := range d {
+		ids[i] = d[i].ID
+	}
+	return uu.RemoveAuthoredDeadlineIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -774,6 +847,96 @@ func (uu *UserUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
+	if uu.mutation.VotedDeadlinesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   user.VotedDeadlinesTable,
+			Columns: user.VotedDeadlinesPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(deadline.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uu.mutation.RemovedVotedDeadlinesIDs(); len(nodes) > 0 && !uu.mutation.VotedDeadlinesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   user.VotedDeadlinesTable,
+			Columns: user.VotedDeadlinesPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(deadline.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uu.mutation.VotedDeadlinesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   user.VotedDeadlinesTable,
+			Columns: user.VotedDeadlinesPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(deadline.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if uu.mutation.AuthoredDeadlinesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: true,
+			Table:   user.AuthoredDeadlinesTable,
+			Columns: []string{user.AuthoredDeadlinesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(deadline.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uu.mutation.RemovedAuthoredDeadlinesIDs(); len(nodes) > 0 && !uu.mutation.AuthoredDeadlinesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: true,
+			Table:   user.AuthoredDeadlinesTable,
+			Columns: []string{user.AuthoredDeadlinesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(deadline.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uu.mutation.AuthoredDeadlinesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: true,
+			Table:   user.AuthoredDeadlinesTable,
+			Columns: []string{user.AuthoredDeadlinesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(deadline.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
 	if n, err = sqlgraph.UpdateNodes(ctx, uu.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{user.Label}
@@ -979,6 +1142,36 @@ func (uuo *UserUpdateOne) AddReactedPosts(f ...*ForumPost) *UserUpdateOne {
 	return uuo.AddReactedPostIDs(ids...)
 }
 
+// AddVotedDeadlineIDs adds the "voted_deadlines" edge to the Deadline entity by IDs.
+func (uuo *UserUpdateOne) AddVotedDeadlineIDs(ids ...int) *UserUpdateOne {
+	uuo.mutation.AddVotedDeadlineIDs(ids...)
+	return uuo
+}
+
+// AddVotedDeadlines adds the "voted_deadlines" edges to the Deadline entity.
+func (uuo *UserUpdateOne) AddVotedDeadlines(d ...*Deadline) *UserUpdateOne {
+	ids := make([]int, len(d))
+	for i := range d {
+		ids[i] = d[i].ID
+	}
+	return uuo.AddVotedDeadlineIDs(ids...)
+}
+
+// AddAuthoredDeadlineIDs adds the "authored_deadlines" edge to the Deadline entity by IDs.
+func (uuo *UserUpdateOne) AddAuthoredDeadlineIDs(ids ...int) *UserUpdateOne {
+	uuo.mutation.AddAuthoredDeadlineIDs(ids...)
+	return uuo
+}
+
+// AddAuthoredDeadlines adds the "authored_deadlines" edges to the Deadline entity.
+func (uuo *UserUpdateOne) AddAuthoredDeadlines(d ...*Deadline) *UserUpdateOne {
+	ids := make([]int, len(d))
+	for i := range d {
+		ids[i] = d[i].ID
+	}
+	return uuo.AddAuthoredDeadlineIDs(ids...)
+}
+
 // Mutation returns the UserMutation object of the builder.
 func (uuo *UserUpdateOne) Mutation() *UserMutation {
 	return uuo.mutation
@@ -1114,6 +1307,48 @@ func (uuo *UserUpdateOne) RemoveReactedPosts(f ...*ForumPost) *UserUpdateOne {
 		ids[i] = f[i].ID
 	}
 	return uuo.RemoveReactedPostIDs(ids...)
+}
+
+// ClearVotedDeadlines clears all "voted_deadlines" edges to the Deadline entity.
+func (uuo *UserUpdateOne) ClearVotedDeadlines() *UserUpdateOne {
+	uuo.mutation.ClearVotedDeadlines()
+	return uuo
+}
+
+// RemoveVotedDeadlineIDs removes the "voted_deadlines" edge to Deadline entities by IDs.
+func (uuo *UserUpdateOne) RemoveVotedDeadlineIDs(ids ...int) *UserUpdateOne {
+	uuo.mutation.RemoveVotedDeadlineIDs(ids...)
+	return uuo
+}
+
+// RemoveVotedDeadlines removes "voted_deadlines" edges to Deadline entities.
+func (uuo *UserUpdateOne) RemoveVotedDeadlines(d ...*Deadline) *UserUpdateOne {
+	ids := make([]int, len(d))
+	for i := range d {
+		ids[i] = d[i].ID
+	}
+	return uuo.RemoveVotedDeadlineIDs(ids...)
+}
+
+// ClearAuthoredDeadlines clears all "authored_deadlines" edges to the Deadline entity.
+func (uuo *UserUpdateOne) ClearAuthoredDeadlines() *UserUpdateOne {
+	uuo.mutation.ClearAuthoredDeadlines()
+	return uuo
+}
+
+// RemoveAuthoredDeadlineIDs removes the "authored_deadlines" edge to Deadline entities by IDs.
+func (uuo *UserUpdateOne) RemoveAuthoredDeadlineIDs(ids ...int) *UserUpdateOne {
+	uuo.mutation.RemoveAuthoredDeadlineIDs(ids...)
+	return uuo
+}
+
+// RemoveAuthoredDeadlines removes "authored_deadlines" edges to Deadline entities.
+func (uuo *UserUpdateOne) RemoveAuthoredDeadlines(d ...*Deadline) *UserUpdateOne {
+	ids := make([]int, len(d))
+	for i := range d {
+		ids[i] = d[i].ID
+	}
+	return uuo.RemoveAuthoredDeadlineIDs(ids...)
 }
 
 // Where appends a list predicates to the UserUpdate builder.
@@ -1557,6 +1792,96 @@ func (uuo *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) 
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(forumpost.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if uuo.mutation.VotedDeadlinesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   user.VotedDeadlinesTable,
+			Columns: user.VotedDeadlinesPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(deadline.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uuo.mutation.RemovedVotedDeadlinesIDs(); len(nodes) > 0 && !uuo.mutation.VotedDeadlinesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   user.VotedDeadlinesTable,
+			Columns: user.VotedDeadlinesPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(deadline.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uuo.mutation.VotedDeadlinesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   user.VotedDeadlinesTable,
+			Columns: user.VotedDeadlinesPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(deadline.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if uuo.mutation.AuthoredDeadlinesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: true,
+			Table:   user.AuthoredDeadlinesTable,
+			Columns: []string{user.AuthoredDeadlinesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(deadline.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uuo.mutation.RemovedAuthoredDeadlinesIDs(); len(nodes) > 0 && !uuo.mutation.AuthoredDeadlinesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: true,
+			Table:   user.AuthoredDeadlinesTable,
+			Columns: []string{user.AuthoredDeadlinesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(deadline.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uuo.mutation.AuthoredDeadlinesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: true,
+			Table:   user.AuthoredDeadlinesTable,
+			Columns: []string{user.AuthoredDeadlinesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(deadline.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

@@ -28,6 +28,8 @@ const (
 	EdgeEvents = "events"
 	// EdgeForumPosts holds the string denoting the forum_posts edge name in mutations.
 	EdgeForumPosts = "forum_posts"
+	// EdgeDeadlines holds the string denoting the deadlines edge name in mutations.
+	EdgeDeadlines = "deadlines"
 	// EdgeGroupUsers holds the string denoting the group_users edge name in mutations.
 	EdgeGroupUsers = "group_users"
 	// Table holds the table name of the group in the database.
@@ -51,6 +53,13 @@ const (
 	ForumPostsInverseTable = "forum_posts"
 	// ForumPostsColumn is the table column denoting the forum_posts relation/edge.
 	ForumPostsColumn = "group_forum_posts"
+	// DeadlinesTable is the table that holds the deadlines relation/edge.
+	DeadlinesTable = "deadlines"
+	// DeadlinesInverseTable is the table name for the Deadline entity.
+	// It exists in this package in order to avoid circular dependency with the "deadline" package.
+	DeadlinesInverseTable = "deadlines"
+	// DeadlinesColumn is the table column denoting the deadlines relation/edge.
+	DeadlinesColumn = "group_deadlines"
 	// GroupUsersTable is the table that holds the group_users relation/edge.
 	GroupUsersTable = "group_users"
 	// GroupUsersInverseTable is the table name for the GroupUser entity.
@@ -187,6 +196,20 @@ func ByForumPosts(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 	}
 }
 
+// ByDeadlinesCount orders the results by deadlines count.
+func ByDeadlinesCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newDeadlinesStep(), opts...)
+	}
+}
+
+// ByDeadlines orders the results by deadlines terms.
+func ByDeadlines(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newDeadlinesStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
 // ByGroupUsersCount orders the results by group_users count.
 func ByGroupUsersCount(opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
@@ -219,6 +242,13 @@ func newForumPostsStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(ForumPostsInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.O2M, false, ForumPostsTable, ForumPostsColumn),
+	)
+}
+func newDeadlinesStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(DeadlinesInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, DeadlinesTable, DeadlinesColumn),
 	)
 }
 func newGroupUsersStep() *sqlgraph.Step {

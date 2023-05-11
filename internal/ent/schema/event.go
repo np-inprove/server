@@ -18,7 +18,7 @@ func (Event) Fields() []ent.Field {
 			NotEmpty().
 			Comment("Name of the event"),
 		field.Time("start_time").
-			Comment("Start time of the event.\nIf event is all-day, set to 00:00:00"),
+			Comment("Start time of the event"),
 		field.Time("end_time").
 			Optional().
 			Nillable().

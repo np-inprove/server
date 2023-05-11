@@ -38,5 +38,7 @@ func (Group) Edges() []ent.Edge {
 			Comment("Events from the group"),
 		edge.To("forum_posts", ForumPost.Type).
 			Comment("Forum posts from the group"),
+		edge.To("deadlines", Deadline.Type).
+			Comment("Deadlines created by users from the group"),
 	}
 }

@@ -9,6 +9,7 @@ import (
 
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
+	"github.com/np-inprove/server/internal/ent/deadline"
 	"github.com/np-inprove/server/internal/ent/event"
 	"github.com/np-inprove/server/internal/ent/forumpost"
 	"github.com/np-inprove/server/internal/ent/group"
@@ -89,6 +90,21 @@ func (gc *GroupCreate) AddForumPosts(f ...*ForumPost) *GroupCreate {
 		ids[i] = f[i].ID
 	}
 	return gc.AddForumPostIDs(ids...)
+}
+
+// AddDeadlineIDs adds the "deadlines" edge to the Deadline entity by IDs.
+func (gc *GroupCreate) AddDeadlineIDs(ids ...int) *GroupCreate {
+	gc.mutation.AddDeadlineIDs(ids...)
+	return gc
+}
+
+// AddDeadlines adds the "deadlines" edges to the Deadline entity.
+func (gc *GroupCreate) AddDeadlines(d ...*Deadline) *GroupCreate {
+	ids := make([]int, len(d))
+	for i := range d {
+		ids[i] = d[i].ID
+	}
+	return gc.AddDeadlineIDs(ids...)
 }
 
 // Mutation returns the GroupMutation object of the builder.
@@ -235,6 +251,22 @@ func (gc *GroupCreate) createSpec() (*Group, *sqlgraph.CreateSpec) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(forumpost.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := gc.mutation.DeadlinesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   group.DeadlinesTable,
+			Columns: []string{group.DeadlinesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(deadline.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

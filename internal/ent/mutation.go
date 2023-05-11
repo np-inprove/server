@@ -14,6 +14,7 @@ import (
 	"github.com/np-inprove/server/internal/ent/academicschool"
 	"github.com/np-inprove/server/internal/ent/accessory"
 	"github.com/np-inprove/server/internal/ent/course"
+	"github.com/np-inprove/server/internal/ent/deadline"
 	"github.com/np-inprove/server/internal/ent/event"
 	"github.com/np-inprove/server/internal/ent/forumpost"
 	"github.com/np-inprove/server/internal/ent/group"
@@ -40,6 +41,7 @@ const (
 	TypeAcademicSchool = "AcademicSchool"
 	TypeAccessory      = "Accessory"
 	TypeCourse         = "Course"
+	TypeDeadline       = "Deadline"
 	TypeEvent          = "Event"
 	TypeForumPost      = "ForumPost"
 	TypeGroup          = "Group"
@@ -1739,6 +1741,619 @@ func (m *CourseMutation) ResetEdge(name string) error {
 	return fmt.Errorf("unknown Course edge %s", name)
 }
 
+// DeadlineMutation represents an operation that mutates the Deadline nodes in the graph.
+type DeadlineMutation struct {
+	config
+	op                 Op
+	typ                string
+	id                 *int
+	name               *string
+	due_time           *time.Time
+	clearedFields      map[string]struct{}
+	author             *int
+	clearedauthor      bool
+	voted_users        map[int]struct{}
+	removedvoted_users map[int]struct{}
+	clearedvoted_users bool
+	group              *int
+	clearedgroup       bool
+	done               bool
+	oldValue           func(context.Context) (*Deadline, error)
+	predicates         []predicate.Deadline
+}
+
+var _ ent.Mutation = (*DeadlineMutation)(nil)
+
+// deadlineOption allows management of the mutation configuration using functional options.
+type deadlineOption func(*DeadlineMutation)
+
+// newDeadlineMutation creates new mutation for the Deadline entity.
+func newDeadlineMutation(c config, op Op, opts ...deadlineOption) *DeadlineMutation {
+	m := &DeadlineMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeDeadline,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withDeadlineID sets the ID field of the mutation.
+func withDeadlineID(id int) deadlineOption {
+	return func(m *DeadlineMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *Deadline
+		)
+		m.oldValue = func(ctx context.Context) (*Deadline, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().Deadline.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withDeadline sets the old Deadline of the mutation.
+func withDeadline(node *Deadline) deadlineOption {
+	return func(m *DeadlineMutation) {
+		m.oldValue = func(context.Context) (*Deadline, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m DeadlineMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m DeadlineMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *DeadlineMutation) ID() (id int, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *DeadlineMutation) IDs(ctx context.Context) ([]int, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []int{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().Deadline.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetName sets the "name" field.
+func (m *DeadlineMutation) SetName(s string) {
+	m.name = &s
+}
+
+// Name returns the value of the "name" field in the mutation.
+func (m *DeadlineMutation) Name() (r string, exists bool) {
+	v := m.name
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldName returns the old "name" field's value of the Deadline entity.
+// If the Deadline object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *DeadlineMutation) OldName(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldName is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldName requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldName: %w", err)
+	}
+	return oldValue.Name, nil
+}
+
+// ResetName resets all changes to the "name" field.
+func (m *DeadlineMutation) ResetName() {
+	m.name = nil
+}
+
+// SetDueTime sets the "due_time" field.
+func (m *DeadlineMutation) SetDueTime(t time.Time) {
+	m.due_time = &t
+}
+
+// DueTime returns the value of the "due_time" field in the mutation.
+func (m *DeadlineMutation) DueTime() (r time.Time, exists bool) {
+	v := m.due_time
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDueTime returns the old "due_time" field's value of the Deadline entity.
+// If the Deadline object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *DeadlineMutation) OldDueTime(ctx context.Context) (v *time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDueTime is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDueTime requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDueTime: %w", err)
+	}
+	return oldValue.DueTime, nil
+}
+
+// ClearDueTime clears the value of the "due_time" field.
+func (m *DeadlineMutation) ClearDueTime() {
+	m.due_time = nil
+	m.clearedFields[deadline.FieldDueTime] = struct{}{}
+}
+
+// DueTimeCleared returns if the "due_time" field was cleared in this mutation.
+func (m *DeadlineMutation) DueTimeCleared() bool {
+	_, ok := m.clearedFields[deadline.FieldDueTime]
+	return ok
+}
+
+// ResetDueTime resets all changes to the "due_time" field.
+func (m *DeadlineMutation) ResetDueTime() {
+	m.due_time = nil
+	delete(m.clearedFields, deadline.FieldDueTime)
+}
+
+// SetAuthorID sets the "author" edge to the User entity by id.
+func (m *DeadlineMutation) SetAuthorID(id int) {
+	m.author = &id
+}
+
+// ClearAuthor clears the "author" edge to the User entity.
+func (m *DeadlineMutation) ClearAuthor() {
+	m.clearedauthor = true
+}
+
+// AuthorCleared reports if the "author" edge to the User entity was cleared.
+func (m *DeadlineMutation) AuthorCleared() bool {
+	return m.clearedauthor
+}
+
+// AuthorID returns the "author" edge ID in the mutation.
+func (m *DeadlineMutation) AuthorID() (id int, exists bool) {
+	if m.author != nil {
+		return *m.author, true
+	}
+	return
+}
+
+// AuthorIDs returns the "author" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// AuthorID instead. It exists only for internal usage by the builders.
+func (m *DeadlineMutation) AuthorIDs() (ids []int) {
+	if id := m.author; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetAuthor resets all changes to the "author" edge.
+func (m *DeadlineMutation) ResetAuthor() {
+	m.author = nil
+	m.clearedauthor = false
+}
+
+// AddVotedUserIDs adds the "voted_users" edge to the User entity by ids.
+func (m *DeadlineMutation) AddVotedUserIDs(ids ...int) {
+	if m.voted_users == nil {
+		m.voted_users = make(map[int]struct{})
+	}
+	for i := range ids {
+		m.voted_users[ids[i]] = struct{}{}
+	}
+}
+
+// ClearVotedUsers clears the "voted_users" edge to the User entity.
+func (m *DeadlineMutation) ClearVotedUsers() {
+	m.clearedvoted_users = true
+}
+
+// VotedUsersCleared reports if the "voted_users" edge to the User entity was cleared.
+func (m *DeadlineMutation) VotedUsersCleared() bool {
+	return m.clearedvoted_users
+}
+
+// RemoveVotedUserIDs removes the "voted_users" edge to the User entity by IDs.
+func (m *DeadlineMutation) RemoveVotedUserIDs(ids ...int) {
+	if m.removedvoted_users == nil {
+		m.removedvoted_users = make(map[int]struct{})
+	}
+	for i := range ids {
+		delete(m.voted_users, ids[i])
+		m.removedvoted_users[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedVotedUsers returns the removed IDs of the "voted_users" edge to the User entity.
+func (m *DeadlineMutation) RemovedVotedUsersIDs() (ids []int) {
+	for id := range m.removedvoted_users {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// VotedUsersIDs returns the "voted_users" edge IDs in the mutation.
+func (m *DeadlineMutation) VotedUsersIDs() (ids []int) {
+	for id := range m.voted_users {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetVotedUsers resets all changes to the "voted_users" edge.
+func (m *DeadlineMutation) ResetVotedUsers() {
+	m.voted_users = nil
+	m.clearedvoted_users = false
+	m.removedvoted_users = nil
+}
+
+// SetGroupID sets the "group" edge to the Group entity by id.
+func (m *DeadlineMutation) SetGroupID(id int) {
+	m.group = &id
+}
+
+// ClearGroup clears the "group" edge to the Group entity.
+func (m *DeadlineMutation) ClearGroup() {
+	m.clearedgroup = true
+}
+
+// GroupCleared reports if the "group" edge to the Group entity was cleared.
+func (m *DeadlineMutation) GroupCleared() bool {
+	return m.clearedgroup
+}
+
+// GroupID returns the "group" edge ID in the mutation.
+func (m *DeadlineMutation) GroupID() (id int, exists bool) {
+	if m.group != nil {
+		return *m.group, true
+	}
+	return
+}
+
+// GroupIDs returns the "group" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// GroupID instead. It exists only for internal usage by the builders.
+func (m *DeadlineMutation) GroupIDs() (ids []int) {
+	if id := m.group; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetGroup resets all changes to the "group" edge.
+func (m *DeadlineMutation) ResetGroup() {
+	m.group = nil
+	m.clearedgroup = false
+}
+
+// Where appends a list predicates to the DeadlineMutation builder.
+func (m *DeadlineMutation) Where(ps ...predicate.Deadline) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the DeadlineMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *DeadlineMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.Deadline, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *DeadlineMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *DeadlineMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (Deadline).
+func (m *DeadlineMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *DeadlineMutation) Fields() []string {
+	fields := make([]string, 0, 2)
+	if m.name != nil {
+		fields = append(fields, deadline.FieldName)
+	}
+	if m.due_time != nil {
+		fields = append(fields, deadline.FieldDueTime)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *DeadlineMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case deadline.FieldName:
+		return m.Name()
+	case deadline.FieldDueTime:
+		return m.DueTime()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *DeadlineMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case deadline.FieldName:
+		return m.OldName(ctx)
+	case deadline.FieldDueTime:
+		return m.OldDueTime(ctx)
+	}
+	return nil, fmt.Errorf("unknown Deadline field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *DeadlineMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case deadline.FieldName:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetName(v)
+		return nil
+	case deadline.FieldDueTime:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDueTime(v)
+		return nil
+	}
+	return fmt.Errorf("unknown Deadline field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *DeadlineMutation) AddedFields() []string {
+	return nil
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *DeadlineMutation) AddedField(name string) (ent.Value, bool) {
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *DeadlineMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	}
+	return fmt.Errorf("unknown Deadline numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *DeadlineMutation) ClearedFields() []string {
+	var fields []string
+	if m.FieldCleared(deadline.FieldDueTime) {
+		fields = append(fields, deadline.FieldDueTime)
+	}
+	return fields
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *DeadlineMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *DeadlineMutation) ClearField(name string) error {
+	switch name {
+	case deadline.FieldDueTime:
+		m.ClearDueTime()
+		return nil
+	}
+	return fmt.Errorf("unknown Deadline nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *DeadlineMutation) ResetField(name string) error {
+	switch name {
+	case deadline.FieldName:
+		m.ResetName()
+		return nil
+	case deadline.FieldDueTime:
+		m.ResetDueTime()
+		return nil
+	}
+	return fmt.Errorf("unknown Deadline field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *DeadlineMutation) AddedEdges() []string {
+	edges := make([]string, 0, 3)
+	if m.author != nil {
+		edges = append(edges, deadline.EdgeAuthor)
+	}
+	if m.voted_users != nil {
+		edges = append(edges, deadline.EdgeVotedUsers)
+	}
+	if m.group != nil {
+		edges = append(edges, deadline.EdgeGroup)
+	}
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *DeadlineMutation) AddedIDs(name string) []ent.Value {
+	switch name {
+	case deadline.EdgeAuthor:
+		if id := m.author; id != nil {
+			return []ent.Value{*id}
+		}
+	case deadline.EdgeVotedUsers:
+		ids := make([]ent.Value, 0, len(m.voted_users))
+		for id := range m.voted_users {
+			ids = append(ids, id)
+		}
+		return ids
+	case deadline.EdgeGroup:
+		if id := m.group; id != nil {
+			return []ent.Value{*id}
+		}
+	}
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *DeadlineMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 3)
+	if m.removedvoted_users != nil {
+		edges = append(edges, deadline.EdgeVotedUsers)
+	}
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *DeadlineMutation) RemovedIDs(name string) []ent.Value {
+	switch name {
+	case deadline.EdgeVotedUsers:
+		ids := make([]ent.Value, 0, len(m.removedvoted_users))
+		for id := range m.removedvoted_users {
+			ids = append(ids, id)
+		}
+		return ids
+	}
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *DeadlineMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 3)
+	if m.clearedauthor {
+		edges = append(edges, deadline.EdgeAuthor)
+	}
+	if m.clearedvoted_users {
+		edges = append(edges, deadline.EdgeVotedUsers)
+	}
+	if m.clearedgroup {
+		edges = append(edges, deadline.EdgeGroup)
+	}
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *DeadlineMutation) EdgeCleared(name string) bool {
+	switch name {
+	case deadline.EdgeAuthor:
+		return m.clearedauthor
+	case deadline.EdgeVotedUsers:
+		return m.clearedvoted_users
+	case deadline.EdgeGroup:
+		return m.clearedgroup
+	}
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *DeadlineMutation) ClearEdge(name string) error {
+	switch name {
+	case deadline.EdgeAuthor:
+		m.ClearAuthor()
+		return nil
+	case deadline.EdgeGroup:
+		m.ClearGroup()
+		return nil
+	}
+	return fmt.Errorf("unknown Deadline unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *DeadlineMutation) ResetEdge(name string) error {
+	switch name {
+	case deadline.EdgeAuthor:
+		m.ResetAuthor()
+		return nil
+	case deadline.EdgeVotedUsers:
+		m.ResetVotedUsers()
+		return nil
+	case deadline.EdgeGroup:
+		m.ResetGroup()
+		return nil
+	}
+	return fmt.Errorf("unknown Deadline edge %s", name)
+}
+
 // EventMutation represents an operation that mutates the Event nodes in the graph.
 type EventMutation struct {
 	config
@@ -3231,6 +3846,9 @@ type GroupMutation struct {
 	forum_posts        map[int]struct{}
 	removedforum_posts map[int]struct{}
 	clearedforum_posts bool
+	deadlines          map[int]struct{}
+	removeddeadlines   map[int]struct{}
+	cleareddeadlines   bool
 	done               bool
 	oldValue           func(context.Context) (*Group, error)
 	predicates         []predicate.Group
@@ -3640,6 +4258,60 @@ func (m *GroupMutation) ResetForumPosts() {
 	m.removedforum_posts = nil
 }
 
+// AddDeadlineIDs adds the "deadlines" edge to the Deadline entity by ids.
+func (m *GroupMutation) AddDeadlineIDs(ids ...int) {
+	if m.deadlines == nil {
+		m.deadlines = make(map[int]struct{})
+	}
+	for i := range ids {
+		m.deadlines[ids[i]] = struct{}{}
+	}
+}
+
+// ClearDeadlines clears the "deadlines" edge to the Deadline entity.
+func (m *GroupMutation) ClearDeadlines() {
+	m.cleareddeadlines = true
+}
+
+// DeadlinesCleared reports if the "deadlines" edge to the Deadline entity was cleared.
+func (m *GroupMutation) DeadlinesCleared() bool {
+	return m.cleareddeadlines
+}
+
+// RemoveDeadlineIDs removes the "deadlines" edge to the Deadline entity by IDs.
+func (m *GroupMutation) RemoveDeadlineIDs(ids ...int) {
+	if m.removeddeadlines == nil {
+		m.removeddeadlines = make(map[int]struct{})
+	}
+	for i := range ids {
+		delete(m.deadlines, ids[i])
+		m.removeddeadlines[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedDeadlines returns the removed IDs of the "deadlines" edge to the Deadline entity.
+func (m *GroupMutation) RemovedDeadlinesIDs() (ids []int) {
+	for id := range m.removeddeadlines {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// DeadlinesIDs returns the "deadlines" edge IDs in the mutation.
+func (m *GroupMutation) DeadlinesIDs() (ids []int) {
+	for id := range m.deadlines {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetDeadlines resets all changes to the "deadlines" edge.
+func (m *GroupMutation) ResetDeadlines() {
+	m.deadlines = nil
+	m.cleareddeadlines = false
+	m.removeddeadlines = nil
+}
+
 // Where appends a list predicates to the GroupMutation builder.
 func (m *GroupMutation) Where(ps ...predicate.Group) {
 	m.predicates = append(m.predicates, ps...)
@@ -3824,7 +4496,7 @@ func (m *GroupMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *GroupMutation) AddedEdges() []string {
-	edges := make([]string, 0, 3)
+	edges := make([]string, 0, 4)
 	if m.users != nil {
 		edges = append(edges, group.EdgeUsers)
 	}
@@ -3833,6 +4505,9 @@ func (m *GroupMutation) AddedEdges() []string {
 	}
 	if m.forum_posts != nil {
 		edges = append(edges, group.EdgeForumPosts)
+	}
+	if m.deadlines != nil {
+		edges = append(edges, group.EdgeDeadlines)
 	}
 	return edges
 }
@@ -3859,13 +4534,19 @@ func (m *GroupMutation) AddedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case group.EdgeDeadlines:
+		ids := make([]ent.Value, 0, len(m.deadlines))
+		for id := range m.deadlines {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *GroupMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 3)
+	edges := make([]string, 0, 4)
 	if m.removedusers != nil {
 		edges = append(edges, group.EdgeUsers)
 	}
@@ -3874,6 +4555,9 @@ func (m *GroupMutation) RemovedEdges() []string {
 	}
 	if m.removedforum_posts != nil {
 		edges = append(edges, group.EdgeForumPosts)
+	}
+	if m.removeddeadlines != nil {
+		edges = append(edges, group.EdgeDeadlines)
 	}
 	return edges
 }
@@ -3900,13 +4584,19 @@ func (m *GroupMutation) RemovedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case group.EdgeDeadlines:
+		ids := make([]ent.Value, 0, len(m.removeddeadlines))
+		for id := range m.removeddeadlines {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *GroupMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 3)
+	edges := make([]string, 0, 4)
 	if m.clearedusers {
 		edges = append(edges, group.EdgeUsers)
 	}
@@ -3915,6 +4605,9 @@ func (m *GroupMutation) ClearedEdges() []string {
 	}
 	if m.clearedforum_posts {
 		edges = append(edges, group.EdgeForumPosts)
+	}
+	if m.cleareddeadlines {
+		edges = append(edges, group.EdgeDeadlines)
 	}
 	return edges
 }
@@ -3929,6 +4622,8 @@ func (m *GroupMutation) EdgeCleared(name string) bool {
 		return m.clearedevents
 	case group.EdgeForumPosts:
 		return m.clearedforum_posts
+	case group.EdgeDeadlines:
+		return m.cleareddeadlines
 	}
 	return false
 }
@@ -3953,6 +4648,9 @@ func (m *GroupMutation) ResetEdge(name string) error {
 		return nil
 	case group.EdgeForumPosts:
 		m.ResetForumPosts()
+		return nil
+	case group.EdgeDeadlines:
+		m.ResetDeadlines()
 		return nil
 	}
 	return fmt.Errorf("unknown Group edge %s", name)
@@ -6477,6 +7175,12 @@ type UserMutation struct {
 	reacted_posts             map[int]struct{}
 	removedreacted_posts      map[int]struct{}
 	clearedreacted_posts      bool
+	voted_deadlines           map[int]struct{}
+	removedvoted_deadlines    map[int]struct{}
+	clearedvoted_deadlines    bool
+	authored_deadlines        map[int]struct{}
+	removedauthored_deadlines map[int]struct{}
+	clearedauthored_deadlines bool
 	done                      bool
 	oldValue                  func(context.Context) (*User, error)
 	predicates                []predicate.User
@@ -7284,6 +7988,114 @@ func (m *UserMutation) ResetReactedPosts() {
 	m.removedreacted_posts = nil
 }
 
+// AddVotedDeadlineIDs adds the "voted_deadlines" edge to the Deadline entity by ids.
+func (m *UserMutation) AddVotedDeadlineIDs(ids ...int) {
+	if m.voted_deadlines == nil {
+		m.voted_deadlines = make(map[int]struct{})
+	}
+	for i := range ids {
+		m.voted_deadlines[ids[i]] = struct{}{}
+	}
+}
+
+// ClearVotedDeadlines clears the "voted_deadlines" edge to the Deadline entity.
+func (m *UserMutation) ClearVotedDeadlines() {
+	m.clearedvoted_deadlines = true
+}
+
+// VotedDeadlinesCleared reports if the "voted_deadlines" edge to the Deadline entity was cleared.
+func (m *UserMutation) VotedDeadlinesCleared() bool {
+	return m.clearedvoted_deadlines
+}
+
+// RemoveVotedDeadlineIDs removes the "voted_deadlines" edge to the Deadline entity by IDs.
+func (m *UserMutation) RemoveVotedDeadlineIDs(ids ...int) {
+	if m.removedvoted_deadlines == nil {
+		m.removedvoted_deadlines = make(map[int]struct{})
+	}
+	for i := range ids {
+		delete(m.voted_deadlines, ids[i])
+		m.removedvoted_deadlines[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedVotedDeadlines returns the removed IDs of the "voted_deadlines" edge to the Deadline entity.
+func (m *UserMutation) RemovedVotedDeadlinesIDs() (ids []int) {
+	for id := range m.removedvoted_deadlines {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// VotedDeadlinesIDs returns the "voted_deadlines" edge IDs in the mutation.
+func (m *UserMutation) VotedDeadlinesIDs() (ids []int) {
+	for id := range m.voted_deadlines {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetVotedDeadlines resets all changes to the "voted_deadlines" edge.
+func (m *UserMutation) ResetVotedDeadlines() {
+	m.voted_deadlines = nil
+	m.clearedvoted_deadlines = false
+	m.removedvoted_deadlines = nil
+}
+
+// AddAuthoredDeadlineIDs adds the "authored_deadlines" edge to the Deadline entity by ids.
+func (m *UserMutation) AddAuthoredDeadlineIDs(ids ...int) {
+	if m.authored_deadlines == nil {
+		m.authored_deadlines = make(map[int]struct{})
+	}
+	for i := range ids {
+		m.authored_deadlines[ids[i]] = struct{}{}
+	}
+}
+
+// ClearAuthoredDeadlines clears the "authored_deadlines" edge to the Deadline entity.
+func (m *UserMutation) ClearAuthoredDeadlines() {
+	m.clearedauthored_deadlines = true
+}
+
+// AuthoredDeadlinesCleared reports if the "authored_deadlines" edge to the Deadline entity was cleared.
+func (m *UserMutation) AuthoredDeadlinesCleared() bool {
+	return m.clearedauthored_deadlines
+}
+
+// RemoveAuthoredDeadlineIDs removes the "authored_deadlines" edge to the Deadline entity by IDs.
+func (m *UserMutation) RemoveAuthoredDeadlineIDs(ids ...int) {
+	if m.removedauthored_deadlines == nil {
+		m.removedauthored_deadlines = make(map[int]struct{})
+	}
+	for i := range ids {
+		delete(m.authored_deadlines, ids[i])
+		m.removedauthored_deadlines[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedAuthoredDeadlines returns the removed IDs of the "authored_deadlines" edge to the Deadline entity.
+func (m *UserMutation) RemovedAuthoredDeadlinesIDs() (ids []int) {
+	for id := range m.removedauthored_deadlines {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// AuthoredDeadlinesIDs returns the "authored_deadlines" edge IDs in the mutation.
+func (m *UserMutation) AuthoredDeadlinesIDs() (ids []int) {
+	for id := range m.authored_deadlines {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetAuthoredDeadlines resets all changes to the "authored_deadlines" edge.
+func (m *UserMutation) ResetAuthoredDeadlines() {
+	m.authored_deadlines = nil
+	m.clearedauthored_deadlines = false
+	m.removedauthored_deadlines = nil
+}
+
 // Where appends a list predicates to the UserMutation builder.
 func (m *UserMutation) Where(ps ...predicate.User) {
 	m.predicates = append(m.predicates, ps...)
@@ -7572,7 +8384,7 @@ func (m *UserMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *UserMutation) AddedEdges() []string {
-	edges := make([]string, 0, 7)
+	edges := make([]string, 0, 9)
 	if m.course != nil {
 		edges = append(edges, user.EdgeCourse)
 	}
@@ -7593,6 +8405,12 @@ func (m *UserMutation) AddedEdges() []string {
 	}
 	if m.reacted_posts != nil {
 		edges = append(edges, user.EdgeReactedPosts)
+	}
+	if m.voted_deadlines != nil {
+		edges = append(edges, user.EdgeVotedDeadlines)
+	}
+	if m.authored_deadlines != nil {
+		edges = append(edges, user.EdgeAuthoredDeadlines)
 	}
 	return edges
 }
@@ -7641,13 +8459,25 @@ func (m *UserMutation) AddedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case user.EdgeVotedDeadlines:
+		ids := make([]ent.Value, 0, len(m.voted_deadlines))
+		for id := range m.voted_deadlines {
+			ids = append(ids, id)
+		}
+		return ids
+	case user.EdgeAuthoredDeadlines:
+		ids := make([]ent.Value, 0, len(m.authored_deadlines))
+		for id := range m.authored_deadlines {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *UserMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 7)
+	edges := make([]string, 0, 9)
 	if m.removedinstitution != nil {
 		edges = append(edges, user.EdgeInstitution)
 	}
@@ -7665,6 +8495,12 @@ func (m *UserMutation) RemovedEdges() []string {
 	}
 	if m.removedreacted_posts != nil {
 		edges = append(edges, user.EdgeReactedPosts)
+	}
+	if m.removedvoted_deadlines != nil {
+		edges = append(edges, user.EdgeVotedDeadlines)
+	}
+	if m.removedauthored_deadlines != nil {
+		edges = append(edges, user.EdgeAuthoredDeadlines)
 	}
 	return edges
 }
@@ -7709,13 +8545,25 @@ func (m *UserMutation) RemovedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case user.EdgeVotedDeadlines:
+		ids := make([]ent.Value, 0, len(m.removedvoted_deadlines))
+		for id := range m.removedvoted_deadlines {
+			ids = append(ids, id)
+		}
+		return ids
+	case user.EdgeAuthoredDeadlines:
+		ids := make([]ent.Value, 0, len(m.removedauthored_deadlines))
+		for id := range m.removedauthored_deadlines {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *UserMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 7)
+	edges := make([]string, 0, 9)
 	if m.clearedcourse {
 		edges = append(edges, user.EdgeCourse)
 	}
@@ -7736,6 +8584,12 @@ func (m *UserMutation) ClearedEdges() []string {
 	}
 	if m.clearedreacted_posts {
 		edges = append(edges, user.EdgeReactedPosts)
+	}
+	if m.clearedvoted_deadlines {
+		edges = append(edges, user.EdgeVotedDeadlines)
+	}
+	if m.clearedauthored_deadlines {
+		edges = append(edges, user.EdgeAuthoredDeadlines)
 	}
 	return edges
 }
@@ -7758,6 +8612,10 @@ func (m *UserMutation) EdgeCleared(name string) bool {
 		return m.clearedgroups
 	case user.EdgeReactedPosts:
 		return m.clearedreacted_posts
+	case user.EdgeVotedDeadlines:
+		return m.clearedvoted_deadlines
+	case user.EdgeAuthoredDeadlines:
+		return m.clearedauthored_deadlines
 	}
 	return false
 }
@@ -7797,6 +8655,12 @@ func (m *UserMutation) ResetEdge(name string) error {
 		return nil
 	case user.EdgeReactedPosts:
 		m.ResetReactedPosts()
+		return nil
+	case user.EdgeVotedDeadlines:
+		m.ResetVotedDeadlines()
+		return nil
+	case user.EdgeAuthoredDeadlines:
+		m.ResetAuthoredDeadlines()
 		return nil
 	}
 	return fmt.Errorf("unknown User edge %s", name)

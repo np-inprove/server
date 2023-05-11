@@ -62,5 +62,9 @@ func (User) Edges() []ent.Edge {
 		edge.From("reacted_posts", ForumPost.Type).
 			Ref("reacted_users").
 			Through("reactions", Reaction.Type),
+		edge.From("voted_deadlines", Deadline.Type).
+			Ref("voted_users"),
+		edge.From("authored_deadlines", Deadline.Type).
+			Ref("author"),
 	}
 }

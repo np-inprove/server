@@ -11,6 +11,7 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
+	"github.com/np-inprove/server/internal/ent/deadline"
 	"github.com/np-inprove/server/internal/ent/event"
 	"github.com/np-inprove/server/internal/ent/forumpost"
 	"github.com/np-inprove/server/internal/ent/group"
@@ -29,6 +30,7 @@ type GroupQuery struct {
 	withUsers      *UserQuery
 	withEvents     *EventQuery
 	withForumPosts *ForumPostQuery
+	withDeadlines  *DeadlineQuery
 	withGroupUsers *GroupUserQuery
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
@@ -125,6 +127,28 @@ func (gq *GroupQuery) QueryForumPosts() *ForumPostQuery {
 			sqlgraph.From(group.Table, group.FieldID, selector),
 			sqlgraph.To(forumpost.Table, forumpost.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, group.ForumPostsTable, group.ForumPostsColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(gq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryDeadlines chains the current query on the "deadlines" edge.
+func (gq *GroupQuery) QueryDeadlines() *DeadlineQuery {
+	query := (&DeadlineClient{config: gq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := gq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := gq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(group.Table, group.FieldID, selector),
+			sqlgraph.To(deadline.Table, deadline.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, group.DeadlinesTable, group.DeadlinesColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(gq.driver.Dialect(), step)
 		return fromU, nil
@@ -349,6 +373,7 @@ func (gq *GroupQuery) Clone() *GroupQuery {
 		withUsers:      gq.withUsers.Clone(),
 		withEvents:     gq.withEvents.Clone(),
 		withForumPosts: gq.withForumPosts.Clone(),
+		withDeadlines:  gq.withDeadlines.Clone(),
 		withGroupUsers: gq.withGroupUsers.Clone(),
 		// clone intermediate query.
 		sql:  gq.sql.Clone(),
@@ -386,6 +411,17 @@ func (gq *GroupQuery) WithForumPosts(opts ...func(*ForumPostQuery)) *GroupQuery 
 		opt(query)
 	}
 	gq.withForumPosts = query
+	return gq
+}
+
+// WithDeadlines tells the query-builder to eager-load the nodes that are connected to
+// the "deadlines" edge. The optional arguments are used to configure the query builder of the edge.
+func (gq *GroupQuery) WithDeadlines(opts ...func(*DeadlineQuery)) *GroupQuery {
+	query := (&DeadlineClient{config: gq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	gq.withDeadlines = query
 	return gq
 }
 
@@ -478,10 +514,11 @@ func (gq *GroupQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Group,
 	var (
 		nodes       = []*Group{}
 		_spec       = gq.querySpec()
-		loadedTypes = [4]bool{
+		loadedTypes = [5]bool{
 			gq.withUsers != nil,
 			gq.withEvents != nil,
 			gq.withForumPosts != nil,
+			gq.withDeadlines != nil,
 			gq.withGroupUsers != nil,
 		}
 	)
@@ -521,6 +558,13 @@ func (gq *GroupQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Group,
 		if err := gq.loadForumPosts(ctx, query, nodes,
 			func(n *Group) { n.Edges.ForumPosts = []*ForumPost{} },
 			func(n *Group, e *ForumPost) { n.Edges.ForumPosts = append(n.Edges.ForumPosts, e) }); err != nil {
+			return nil, err
+		}
+	}
+	if query := gq.withDeadlines; query != nil {
+		if err := gq.loadDeadlines(ctx, query, nodes,
+			func(n *Group) { n.Edges.Deadlines = []*Deadline{} },
+			func(n *Group, e *Deadline) { n.Edges.Deadlines = append(n.Edges.Deadlines, e) }); err != nil {
 			return nil, err
 		}
 	}
@@ -652,6 +696,37 @@ func (gq *GroupQuery) loadForumPosts(ctx context.Context, query *ForumPostQuery,
 		node, ok := nodeids[*fk]
 		if !ok {
 			return fmt.Errorf(`unexpected referenced foreign-key "group_forum_posts" returned %v for node %v`, *fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
+func (gq *GroupQuery) loadDeadlines(ctx context.Context, query *DeadlineQuery, nodes []*Group, init func(*Group), assign func(*Group, *Deadline)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int]*Group)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	query.withFKs = true
+	query.Where(predicate.Deadline(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(group.DeadlinesColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.group_deadlines
+		if fk == nil {
+			return fmt.Errorf(`foreign-key "group_deadlines" is nil for node %v`, n.ID)
+		}
+		node, ok := nodeids[*fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "group_deadlines" returned %v for node %v`, *fk, n.ID)
 		}
 		assign(node, n)
 	}

@@ -656,6 +656,52 @@ func HasReactedPostsWith(preds ...predicate.ForumPost) predicate.User {
 	})
 }
 
+// HasVotedDeadlines applies the HasEdge predicate on the "voted_deadlines" edge.
+func HasVotedDeadlines() predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, true, VotedDeadlinesTable, VotedDeadlinesPrimaryKey...),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasVotedDeadlinesWith applies the HasEdge predicate on the "voted_deadlines" edge with a given conditions (other predicates).
+func HasVotedDeadlinesWith(preds ...predicate.Deadline) predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		step := newVotedDeadlinesStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasAuthoredDeadlines applies the HasEdge predicate on the "authored_deadlines" edge.
+func HasAuthoredDeadlines() predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, true, AuthoredDeadlinesTable, AuthoredDeadlinesColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasAuthoredDeadlinesWith applies the HasEdge predicate on the "authored_deadlines" edge with a given conditions (other predicates).
+func HasAuthoredDeadlinesWith(preds ...predicate.Deadline) predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		step := newAuthoredDeadlinesStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
 // HasUserPets applies the HasEdge predicate on the "user_pets" edge.
 func HasUserPets() predicate.User {
 	return predicate.User(func(s *sql.Selector) {

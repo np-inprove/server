@@ -15,6 +15,7 @@ import (
 	"github.com/np-inprove/server/internal/ent/academicschool"
 	"github.com/np-inprove/server/internal/ent/accessory"
 	"github.com/np-inprove/server/internal/ent/course"
+	"github.com/np-inprove/server/internal/ent/deadline"
 	"github.com/np-inprove/server/internal/ent/event"
 	"github.com/np-inprove/server/internal/ent/forumpost"
 	"github.com/np-inprove/server/internal/ent/group"
@@ -89,6 +90,7 @@ func checkColumn(table, column string) error {
 			academicschool.Table: academicschool.ValidColumn,
 			accessory.Table:      accessory.ValidColumn,
 			course.Table:         course.ValidColumn,
+			deadline.Table:       deadline.ValidColumn,
 			event.Table:          event.ValidColumn,
 			forumpost.Table:      forumpost.ValidColumn,
 			group.Table:          group.ValidColumn,

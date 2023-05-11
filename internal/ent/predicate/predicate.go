@@ -15,6 +15,9 @@ type Accessory func(*sql.Selector)
 // Course is the predicate function for course builders.
 type Course func(*sql.Selector)
 
+// Deadline is the predicate function for deadline builders.
+type Deadline func(*sql.Selector)
+
 // Event is the predicate function for event builders.
 type Event func(*sql.Selector)
 
