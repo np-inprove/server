@@ -146,21 +146,44 @@ func HasAdminsWith(preds ...predicate.User) predicate.Institution {
 	})
 }
 
-// HasPrizes applies the HasEdge predicate on the "prizes" edge.
-func HasPrizes() predicate.Institution {
+// HasVouchers applies the HasEdge predicate on the "vouchers" edge.
+func HasVouchers() predicate.Institution {
 	return predicate.Institution(func(s *sql.Selector) {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, PrizesTable, PrizesColumn),
+			sqlgraph.Edge(sqlgraph.O2M, false, VouchersTable, VouchersColumn),
 		)
 		sqlgraph.HasNeighbors(s, step)
 	})
 }
 
-// HasPrizesWith applies the HasEdge predicate on the "prizes" edge with a given conditions (other predicates).
-func HasPrizesWith(preds ...predicate.Prize) predicate.Institution {
+// HasVouchersWith applies the HasEdge predicate on the "vouchers" edge with a given conditions (other predicates).
+func HasVouchersWith(preds ...predicate.Voucher) predicate.Institution {
 	return predicate.Institution(func(s *sql.Selector) {
-		step := newPrizesStep()
+		step := newVouchersStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasAccessories applies the HasEdge predicate on the "accessories" edge.
+func HasAccessories() predicate.Institution {
+	return predicate.Institution(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, AccessoriesTable, AccessoriesColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasAccessoriesWith applies the HasEdge predicate on the "accessories" edge with a given conditions (other predicates).
+func HasAccessoriesWith(preds ...predicate.Accessory) predicate.Institution {
+	return predicate.Institution(func(s *sql.Selector) {
+		step := newAccessoriesStep()
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)

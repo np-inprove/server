@@ -15,13 +15,14 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"github.com/np-inprove/server/internal/ent/academicschool"
+	"github.com/np-inprove/server/internal/ent/accessory"
 	"github.com/np-inprove/server/internal/ent/course"
 	"github.com/np-inprove/server/internal/ent/institution"
 	"github.com/np-inprove/server/internal/ent/pet"
-	"github.com/np-inprove/server/internal/ent/prize"
-	"github.com/np-inprove/server/internal/ent/prizeredemptions"
+	"github.com/np-inprove/server/internal/ent/redemption"
 	"github.com/np-inprove/server/internal/ent/user"
 	"github.com/np-inprove/server/internal/ent/userpet"
+	"github.com/np-inprove/server/internal/ent/voucher"
 )
 
 // Client is the client that holds all ent builders.
@@ -31,20 +32,22 @@ type Client struct {
 	Schema *migrate.Schema
 	// AcademicSchool is the client for interacting with the AcademicSchool builders.
 	AcademicSchool *AcademicSchoolClient
+	// Accessory is the client for interacting with the Accessory builders.
+	Accessory *AccessoryClient
 	// Course is the client for interacting with the Course builders.
 	Course *CourseClient
 	// Institution is the client for interacting with the Institution builders.
 	Institution *InstitutionClient
 	// Pet is the client for interacting with the Pet builders.
 	Pet *PetClient
-	// Prize is the client for interacting with the Prize builders.
-	Prize *PrizeClient
-	// PrizeRedemptions is the client for interacting with the PrizeRedemptions builders.
-	PrizeRedemptions *PrizeRedemptionsClient
+	// Redemption is the client for interacting with the Redemption builders.
+	Redemption *RedemptionClient
 	// User is the client for interacting with the User builders.
 	User *UserClient
 	// UserPet is the client for interacting with the UserPet builders.
 	UserPet *UserPetClient
+	// Voucher is the client for interacting with the Voucher builders.
+	Voucher *VoucherClient
 }
 
 // NewClient creates a new client configured with the given options.
@@ -59,13 +62,14 @@ func NewClient(opts ...Option) *Client {
 func (c *Client) init() {
 	c.Schema = migrate.NewSchema(c.driver)
 	c.AcademicSchool = NewAcademicSchoolClient(c.config)
+	c.Accessory = NewAccessoryClient(c.config)
 	c.Course = NewCourseClient(c.config)
 	c.Institution = NewInstitutionClient(c.config)
 	c.Pet = NewPetClient(c.config)
-	c.Prize = NewPrizeClient(c.config)
-	c.PrizeRedemptions = NewPrizeRedemptionsClient(c.config)
+	c.Redemption = NewRedemptionClient(c.config)
 	c.User = NewUserClient(c.config)
 	c.UserPet = NewUserPetClient(c.config)
+	c.Voucher = NewVoucherClient(c.config)
 }
 
 type (
@@ -146,16 +150,17 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 	cfg := c.config
 	cfg.driver = tx
 	return &Tx{
-		ctx:              ctx,
-		config:           cfg,
-		AcademicSchool:   NewAcademicSchoolClient(cfg),
-		Course:           NewCourseClient(cfg),
-		Institution:      NewInstitutionClient(cfg),
-		Pet:              NewPetClient(cfg),
-		Prize:            NewPrizeClient(cfg),
-		PrizeRedemptions: NewPrizeRedemptionsClient(cfg),
-		User:             NewUserClient(cfg),
-		UserPet:          NewUserPetClient(cfg),
+		ctx:            ctx,
+		config:         cfg,
+		AcademicSchool: NewAcademicSchoolClient(cfg),
+		Accessory:      NewAccessoryClient(cfg),
+		Course:         NewCourseClient(cfg),
+		Institution:    NewInstitutionClient(cfg),
+		Pet:            NewPetClient(cfg),
+		Redemption:     NewRedemptionClient(cfg),
+		User:           NewUserClient(cfg),
+		UserPet:        NewUserPetClient(cfg),
+		Voucher:        NewVoucherClient(cfg),
 	}, nil
 }
 
@@ -173,16 +178,17 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 	cfg := c.config
 	cfg.driver = &txDriver{tx: tx, drv: c.driver}
 	return &Tx{
-		ctx:              ctx,
-		config:           cfg,
-		AcademicSchool:   NewAcademicSchoolClient(cfg),
-		Course:           NewCourseClient(cfg),
-		Institution:      NewInstitutionClient(cfg),
-		Pet:              NewPetClient(cfg),
-		Prize:            NewPrizeClient(cfg),
-		PrizeRedemptions: NewPrizeRedemptionsClient(cfg),
-		User:             NewUserClient(cfg),
-		UserPet:          NewUserPetClient(cfg),
+		ctx:            ctx,
+		config:         cfg,
+		AcademicSchool: NewAcademicSchoolClient(cfg),
+		Accessory:      NewAccessoryClient(cfg),
+		Course:         NewCourseClient(cfg),
+		Institution:    NewInstitutionClient(cfg),
+		Pet:            NewPetClient(cfg),
+		Redemption:     NewRedemptionClient(cfg),
+		User:           NewUserClient(cfg),
+		UserPet:        NewUserPetClient(cfg),
+		Voucher:        NewVoucherClient(cfg),
 	}, nil
 }
 
@@ -212,8 +218,8 @@ func (c *Client) Close() error {
 // In order to add hooks to a specific client, call: `client.Node.Use(...)`.
 func (c *Client) Use(hooks ...Hook) {
 	for _, n := range []interface{ Use(...Hook) }{
-		c.AcademicSchool, c.Course, c.Institution, c.Pet, c.Prize, c.PrizeRedemptions,
-		c.User, c.UserPet,
+		c.AcademicSchool, c.Accessory, c.Course, c.Institution, c.Pet, c.Redemption,
+		c.User, c.UserPet, c.Voucher,
 	} {
 		n.Use(hooks...)
 	}
@@ -223,8 +229,8 @@ func (c *Client) Use(hooks ...Hook) {
 // In order to add interceptors to a specific client, call: `client.Node.Intercept(...)`.
 func (c *Client) Intercept(interceptors ...Interceptor) {
 	for _, n := range []interface{ Intercept(...Interceptor) }{
-		c.AcademicSchool, c.Course, c.Institution, c.Pet, c.Prize, c.PrizeRedemptions,
-		c.User, c.UserPet,
+		c.AcademicSchool, c.Accessory, c.Course, c.Institution, c.Pet, c.Redemption,
+		c.User, c.UserPet, c.Voucher,
 	} {
 		n.Intercept(interceptors...)
 	}
@@ -235,20 +241,22 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 	switch m := m.(type) {
 	case *AcademicSchoolMutation:
 		return c.AcademicSchool.mutate(ctx, m)
+	case *AccessoryMutation:
+		return c.Accessory.mutate(ctx, m)
 	case *CourseMutation:
 		return c.Course.mutate(ctx, m)
 	case *InstitutionMutation:
 		return c.Institution.mutate(ctx, m)
 	case *PetMutation:
 		return c.Pet.mutate(ctx, m)
-	case *PrizeMutation:
-		return c.Prize.mutate(ctx, m)
-	case *PrizeRedemptionsMutation:
-		return c.PrizeRedemptions.mutate(ctx, m)
+	case *RedemptionMutation:
+		return c.Redemption.mutate(ctx, m)
 	case *UserMutation:
 		return c.User.mutate(ctx, m)
 	case *UserPetMutation:
 		return c.UserPet.mutate(ctx, m)
+	case *VoucherMutation:
+		return c.Voucher.mutate(ctx, m)
 	default:
 		return nil, fmt.Errorf("ent: unknown mutation type %T", m)
 	}
@@ -401,6 +409,156 @@ func (c *AcademicSchoolClient) mutate(ctx context.Context, m *AcademicSchoolMuta
 		return (&AcademicSchoolDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
 	default:
 		return nil, fmt.Errorf("ent: unknown AcademicSchool mutation op: %q", m.Op())
+	}
+}
+
+// AccessoryClient is a client for the Accessory schema.
+type AccessoryClient struct {
+	config
+}
+
+// NewAccessoryClient returns a client for the Accessory from the given config.
+func NewAccessoryClient(c config) *AccessoryClient {
+	return &AccessoryClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `accessory.Hooks(f(g(h())))`.
+func (c *AccessoryClient) Use(hooks ...Hook) {
+	c.hooks.Accessory = append(c.hooks.Accessory, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `accessory.Intercept(f(g(h())))`.
+func (c *AccessoryClient) Intercept(interceptors ...Interceptor) {
+	c.inters.Accessory = append(c.inters.Accessory, interceptors...)
+}
+
+// Create returns a builder for creating a Accessory entity.
+func (c *AccessoryClient) Create() *AccessoryCreate {
+	mutation := newAccessoryMutation(c.config, OpCreate)
+	return &AccessoryCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of Accessory entities.
+func (c *AccessoryClient) CreateBulk(builders ...*AccessoryCreate) *AccessoryCreateBulk {
+	return &AccessoryCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for Accessory.
+func (c *AccessoryClient) Update() *AccessoryUpdate {
+	mutation := newAccessoryMutation(c.config, OpUpdate)
+	return &AccessoryUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *AccessoryClient) UpdateOne(a *Accessory) *AccessoryUpdateOne {
+	mutation := newAccessoryMutation(c.config, OpUpdateOne, withAccessory(a))
+	return &AccessoryUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *AccessoryClient) UpdateOneID(id int) *AccessoryUpdateOne {
+	mutation := newAccessoryMutation(c.config, OpUpdateOne, withAccessoryID(id))
+	return &AccessoryUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for Accessory.
+func (c *AccessoryClient) Delete() *AccessoryDelete {
+	mutation := newAccessoryMutation(c.config, OpDelete)
+	return &AccessoryDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *AccessoryClient) DeleteOne(a *Accessory) *AccessoryDeleteOne {
+	return c.DeleteOneID(a.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *AccessoryClient) DeleteOneID(id int) *AccessoryDeleteOne {
+	builder := c.Delete().Where(accessory.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &AccessoryDeleteOne{builder}
+}
+
+// Query returns a query builder for Accessory.
+func (c *AccessoryClient) Query() *AccessoryQuery {
+	return &AccessoryQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeAccessory},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a Accessory entity by its id.
+func (c *AccessoryClient) Get(ctx context.Context, id int) (*Accessory, error) {
+	return c.Query().Where(accessory.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *AccessoryClient) GetX(ctx context.Context, id int) *Accessory {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryRedemptions queries the redemptions edge of a Accessory.
+func (c *AccessoryClient) QueryRedemptions(a *Accessory) *RedemptionQuery {
+	query := (&RedemptionClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := a.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(accessory.Table, accessory.FieldID, id),
+			sqlgraph.To(redemption.Table, redemption.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, accessory.RedemptionsTable, accessory.RedemptionsColumn),
+		)
+		fromV = sqlgraph.Neighbors(a.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryInstitution queries the institution edge of a Accessory.
+func (c *AccessoryClient) QueryInstitution(a *Accessory) *InstitutionQuery {
+	query := (&InstitutionClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := a.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(accessory.Table, accessory.FieldID, id),
+			sqlgraph.To(institution.Table, institution.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, accessory.InstitutionTable, accessory.InstitutionColumn),
+		)
+		fromV = sqlgraph.Neighbors(a.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *AccessoryClient) Hooks() []Hook {
+	return c.hooks.Accessory
+}
+
+// Interceptors returns the client interceptors.
+func (c *AccessoryClient) Interceptors() []Interceptor {
+	return c.inters.Accessory
+}
+
+func (c *AccessoryClient) mutate(ctx context.Context, m *AccessoryMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&AccessoryCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&AccessoryUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&AccessoryUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&AccessoryDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown Accessory mutation op: %q", m.Op())
 	}
 }
 
@@ -663,15 +821,31 @@ func (c *InstitutionClient) QueryAdmins(i *Institution) *UserQuery {
 	return query
 }
 
-// QueryPrizes queries the prizes edge of a Institution.
-func (c *InstitutionClient) QueryPrizes(i *Institution) *PrizeQuery {
-	query := (&PrizeClient{config: c.config}).Query()
+// QueryVouchers queries the vouchers edge of a Institution.
+func (c *InstitutionClient) QueryVouchers(i *Institution) *VoucherQuery {
+	query := (&VoucherClient{config: c.config}).Query()
 	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
 		id := i.ID
 		step := sqlgraph.NewStep(
 			sqlgraph.From(institution.Table, institution.FieldID, id),
-			sqlgraph.To(prize.Table, prize.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, institution.PrizesTable, institution.PrizesColumn),
+			sqlgraph.To(voucher.Table, voucher.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, institution.VouchersTable, institution.VouchersColumn),
+		)
+		fromV = sqlgraph.Neighbors(i.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryAccessories queries the accessories edge of a Institution.
+func (c *InstitutionClient) QueryAccessories(i *Institution) *AccessoryQuery {
+	query := (&AccessoryClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := i.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(institution.Table, institution.FieldID, id),
+			sqlgraph.To(accessory.Table, accessory.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, institution.AccessoriesTable, institution.AccessoriesColumn),
 		)
 		fromV = sqlgraph.Neighbors(i.driver.Dialect(), step)
 		return fromV, nil
@@ -870,92 +1044,92 @@ func (c *PetClient) mutate(ctx context.Context, m *PetMutation) (Value, error) {
 	}
 }
 
-// PrizeClient is a client for the Prize schema.
-type PrizeClient struct {
+// RedemptionClient is a client for the Redemption schema.
+type RedemptionClient struct {
 	config
 }
 
-// NewPrizeClient returns a client for the Prize from the given config.
-func NewPrizeClient(c config) *PrizeClient {
-	return &PrizeClient{config: c}
+// NewRedemptionClient returns a client for the Redemption from the given config.
+func NewRedemptionClient(c config) *RedemptionClient {
+	return &RedemptionClient{config: c}
 }
 
 // Use adds a list of mutation hooks to the hooks stack.
-// A call to `Use(f, g, h)` equals to `prize.Hooks(f(g(h())))`.
-func (c *PrizeClient) Use(hooks ...Hook) {
-	c.hooks.Prize = append(c.hooks.Prize, hooks...)
+// A call to `Use(f, g, h)` equals to `redemption.Hooks(f(g(h())))`.
+func (c *RedemptionClient) Use(hooks ...Hook) {
+	c.hooks.Redemption = append(c.hooks.Redemption, hooks...)
 }
 
 // Intercept adds a list of query interceptors to the interceptors stack.
-// A call to `Intercept(f, g, h)` equals to `prize.Intercept(f(g(h())))`.
-func (c *PrizeClient) Intercept(interceptors ...Interceptor) {
-	c.inters.Prize = append(c.inters.Prize, interceptors...)
+// A call to `Intercept(f, g, h)` equals to `redemption.Intercept(f(g(h())))`.
+func (c *RedemptionClient) Intercept(interceptors ...Interceptor) {
+	c.inters.Redemption = append(c.inters.Redemption, interceptors...)
 }
 
-// Create returns a builder for creating a Prize entity.
-func (c *PrizeClient) Create() *PrizeCreate {
-	mutation := newPrizeMutation(c.config, OpCreate)
-	return &PrizeCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+// Create returns a builder for creating a Redemption entity.
+func (c *RedemptionClient) Create() *RedemptionCreate {
+	mutation := newRedemptionMutation(c.config, OpCreate)
+	return &RedemptionCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
 }
 
-// CreateBulk returns a builder for creating a bulk of Prize entities.
-func (c *PrizeClient) CreateBulk(builders ...*PrizeCreate) *PrizeCreateBulk {
-	return &PrizeCreateBulk{config: c.config, builders: builders}
+// CreateBulk returns a builder for creating a bulk of Redemption entities.
+func (c *RedemptionClient) CreateBulk(builders ...*RedemptionCreate) *RedemptionCreateBulk {
+	return &RedemptionCreateBulk{config: c.config, builders: builders}
 }
 
-// Update returns an update builder for Prize.
-func (c *PrizeClient) Update() *PrizeUpdate {
-	mutation := newPrizeMutation(c.config, OpUpdate)
-	return &PrizeUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+// Update returns an update builder for Redemption.
+func (c *RedemptionClient) Update() *RedemptionUpdate {
+	mutation := newRedemptionMutation(c.config, OpUpdate)
+	return &RedemptionUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
 }
 
 // UpdateOne returns an update builder for the given entity.
-func (c *PrizeClient) UpdateOne(pr *Prize) *PrizeUpdateOne {
-	mutation := newPrizeMutation(c.config, OpUpdateOne, withPrize(pr))
-	return &PrizeUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+func (c *RedemptionClient) UpdateOne(r *Redemption) *RedemptionUpdateOne {
+	mutation := newRedemptionMutation(c.config, OpUpdateOne, withRedemption(r))
+	return &RedemptionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
 }
 
 // UpdateOneID returns an update builder for the given id.
-func (c *PrizeClient) UpdateOneID(id int) *PrizeUpdateOne {
-	mutation := newPrizeMutation(c.config, OpUpdateOne, withPrizeID(id))
-	return &PrizeUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+func (c *RedemptionClient) UpdateOneID(id int) *RedemptionUpdateOne {
+	mutation := newRedemptionMutation(c.config, OpUpdateOne, withRedemptionID(id))
+	return &RedemptionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
 }
 
-// Delete returns a delete builder for Prize.
-func (c *PrizeClient) Delete() *PrizeDelete {
-	mutation := newPrizeMutation(c.config, OpDelete)
-	return &PrizeDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+// Delete returns a delete builder for Redemption.
+func (c *RedemptionClient) Delete() *RedemptionDelete {
+	mutation := newRedemptionMutation(c.config, OpDelete)
+	return &RedemptionDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
 }
 
 // DeleteOne returns a builder for deleting the given entity.
-func (c *PrizeClient) DeleteOne(pr *Prize) *PrizeDeleteOne {
-	return c.DeleteOneID(pr.ID)
+func (c *RedemptionClient) DeleteOne(r *Redemption) *RedemptionDeleteOne {
+	return c.DeleteOneID(r.ID)
 }
 
 // DeleteOneID returns a builder for deleting the given entity by its id.
-func (c *PrizeClient) DeleteOneID(id int) *PrizeDeleteOne {
-	builder := c.Delete().Where(prize.ID(id))
+func (c *RedemptionClient) DeleteOneID(id int) *RedemptionDeleteOne {
+	builder := c.Delete().Where(redemption.ID(id))
 	builder.mutation.id = &id
 	builder.mutation.op = OpDeleteOne
-	return &PrizeDeleteOne{builder}
+	return &RedemptionDeleteOne{builder}
 }
 
-// Query returns a query builder for Prize.
-func (c *PrizeClient) Query() *PrizeQuery {
-	return &PrizeQuery{
+// Query returns a query builder for Redemption.
+func (c *RedemptionClient) Query() *RedemptionQuery {
+	return &RedemptionQuery{
 		config: c.config,
-		ctx:    &QueryContext{Type: TypePrize},
+		ctx:    &QueryContext{Type: TypeRedemption},
 		inters: c.Interceptors(),
 	}
 }
 
-// Get returns a Prize entity by its id.
-func (c *PrizeClient) Get(ctx context.Context, id int) (*Prize, error) {
-	return c.Query().Where(prize.ID(id)).Only(ctx)
+// Get returns a Redemption entity by its id.
+func (c *RedemptionClient) Get(ctx context.Context, id int) (*Redemption, error) {
+	return c.Query().Where(redemption.ID(id)).Only(ctx)
 }
 
 // GetX is like Get, but panics if an error occurs.
-func (c *PrizeClient) GetX(ctx context.Context, id int) *Prize {
+func (c *RedemptionClient) GetX(ctx context.Context, id int) *Redemption {
 	obj, err := c.Get(ctx, id)
 	if err != nil {
 		panic(err)
@@ -963,177 +1137,76 @@ func (c *PrizeClient) GetX(ctx context.Context, id int) *Prize {
 	return obj
 }
 
-// QueryInstitution queries the institution edge of a Prize.
-func (c *PrizeClient) QueryInstitution(pr *Prize) *InstitutionQuery {
-	query := (&InstitutionClient{config: c.config}).Query()
+// QueryVoucher queries the voucher edge of a Redemption.
+func (c *RedemptionClient) QueryVoucher(r *Redemption) *VoucherQuery {
+	query := (&VoucherClient{config: c.config}).Query()
 	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := pr.ID
+		id := r.ID
 		step := sqlgraph.NewStep(
-			sqlgraph.From(prize.Table, prize.FieldID, id),
-			sqlgraph.To(institution.Table, institution.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, prize.InstitutionTable, prize.InstitutionColumn),
+			sqlgraph.From(redemption.Table, redemption.FieldID, id),
+			sqlgraph.To(voucher.Table, voucher.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, redemption.VoucherTable, redemption.VoucherColumn),
 		)
-		fromV = sqlgraph.Neighbors(pr.driver.Dialect(), step)
+		fromV = sqlgraph.Neighbors(r.driver.Dialect(), step)
 		return fromV, nil
 	}
 	return query
 }
 
-// QueryRedemptionUsers queries the redemption_users edge of a Prize.
-func (c *PrizeClient) QueryRedemptionUsers(pr *Prize) *UserQuery {
+// QueryAccessory queries the accessory edge of a Redemption.
+func (c *RedemptionClient) QueryAccessory(r *Redemption) *AccessoryQuery {
+	query := (&AccessoryClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := r.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(redemption.Table, redemption.FieldID, id),
+			sqlgraph.To(accessory.Table, accessory.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, redemption.AccessoryTable, redemption.AccessoryColumn),
+		)
+		fromV = sqlgraph.Neighbors(r.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryUser queries the user edge of a Redemption.
+func (c *RedemptionClient) QueryUser(r *Redemption) *UserQuery {
 	query := (&UserClient{config: c.config}).Query()
 	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := pr.ID
+		id := r.ID
 		step := sqlgraph.NewStep(
-			sqlgraph.From(prize.Table, prize.FieldID, id),
+			sqlgraph.From(redemption.Table, redemption.FieldID, id),
 			sqlgraph.To(user.Table, user.FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, false, prize.RedemptionUsersTable, prize.RedemptionUsersPrimaryKey...),
+			sqlgraph.Edge(sqlgraph.M2O, false, redemption.UserTable, redemption.UserColumn),
 		)
-		fromV = sqlgraph.Neighbors(pr.driver.Dialect(), step)
-		return fromV, nil
-	}
-	return query
-}
-
-// QueryPrizeRedemptions queries the prize_redemptions edge of a Prize.
-func (c *PrizeClient) QueryPrizeRedemptions(pr *Prize) *PrizeRedemptionsQuery {
-	query := (&PrizeRedemptionsClient{config: c.config}).Query()
-	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := pr.ID
-		step := sqlgraph.NewStep(
-			sqlgraph.From(prize.Table, prize.FieldID, id),
-			sqlgraph.To(prizeredemptions.Table, prizeredemptions.PrizeColumn),
-			sqlgraph.Edge(sqlgraph.O2M, true, prize.PrizeRedemptionsTable, prize.PrizeRedemptionsColumn),
-		)
-		fromV = sqlgraph.Neighbors(pr.driver.Dialect(), step)
+		fromV = sqlgraph.Neighbors(r.driver.Dialect(), step)
 		return fromV, nil
 	}
 	return query
 }
 
 // Hooks returns the client hooks.
-func (c *PrizeClient) Hooks() []Hook {
-	return c.hooks.Prize
+func (c *RedemptionClient) Hooks() []Hook {
+	return c.hooks.Redemption
 }
 
 // Interceptors returns the client interceptors.
-func (c *PrizeClient) Interceptors() []Interceptor {
-	return c.inters.Prize
+func (c *RedemptionClient) Interceptors() []Interceptor {
+	return c.inters.Redemption
 }
 
-func (c *PrizeClient) mutate(ctx context.Context, m *PrizeMutation) (Value, error) {
+func (c *RedemptionClient) mutate(ctx context.Context, m *RedemptionMutation) (Value, error) {
 	switch m.Op() {
 	case OpCreate:
-		return (&PrizeCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+		return (&RedemptionCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
 	case OpUpdate:
-		return (&PrizeUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+		return (&RedemptionUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
 	case OpUpdateOne:
-		return (&PrizeUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+		return (&RedemptionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
 	case OpDelete, OpDeleteOne:
-		return (&PrizeDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+		return (&RedemptionDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
 	default:
-		return nil, fmt.Errorf("ent: unknown Prize mutation op: %q", m.Op())
-	}
-}
-
-// PrizeRedemptionsClient is a client for the PrizeRedemptions schema.
-type PrizeRedemptionsClient struct {
-	config
-}
-
-// NewPrizeRedemptionsClient returns a client for the PrizeRedemptions from the given config.
-func NewPrizeRedemptionsClient(c config) *PrizeRedemptionsClient {
-	return &PrizeRedemptionsClient{config: c}
-}
-
-// Use adds a list of mutation hooks to the hooks stack.
-// A call to `Use(f, g, h)` equals to `prizeredemptions.Hooks(f(g(h())))`.
-func (c *PrizeRedemptionsClient) Use(hooks ...Hook) {
-	c.hooks.PrizeRedemptions = append(c.hooks.PrizeRedemptions, hooks...)
-}
-
-// Intercept adds a list of query interceptors to the interceptors stack.
-// A call to `Intercept(f, g, h)` equals to `prizeredemptions.Intercept(f(g(h())))`.
-func (c *PrizeRedemptionsClient) Intercept(interceptors ...Interceptor) {
-	c.inters.PrizeRedemptions = append(c.inters.PrizeRedemptions, interceptors...)
-}
-
-// Create returns a builder for creating a PrizeRedemptions entity.
-func (c *PrizeRedemptionsClient) Create() *PrizeRedemptionsCreate {
-	mutation := newPrizeRedemptionsMutation(c.config, OpCreate)
-	return &PrizeRedemptionsCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// CreateBulk returns a builder for creating a bulk of PrizeRedemptions entities.
-func (c *PrizeRedemptionsClient) CreateBulk(builders ...*PrizeRedemptionsCreate) *PrizeRedemptionsCreateBulk {
-	return &PrizeRedemptionsCreateBulk{config: c.config, builders: builders}
-}
-
-// Update returns an update builder for PrizeRedemptions.
-func (c *PrizeRedemptionsClient) Update() *PrizeRedemptionsUpdate {
-	mutation := newPrizeRedemptionsMutation(c.config, OpUpdate)
-	return &PrizeRedemptionsUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// UpdateOne returns an update builder for the given entity.
-func (c *PrizeRedemptionsClient) UpdateOne(pr *PrizeRedemptions) *PrizeRedemptionsUpdateOne {
-	mutation := newPrizeRedemptionsMutation(c.config, OpUpdateOne)
-	mutation.prize = &pr.PrizeID
-	mutation.user = &pr.UserID
-	return &PrizeRedemptionsUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// Delete returns a delete builder for PrizeRedemptions.
-func (c *PrizeRedemptionsClient) Delete() *PrizeRedemptionsDelete {
-	mutation := newPrizeRedemptionsMutation(c.config, OpDelete)
-	return &PrizeRedemptionsDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// Query returns a query builder for PrizeRedemptions.
-func (c *PrizeRedemptionsClient) Query() *PrizeRedemptionsQuery {
-	return &PrizeRedemptionsQuery{
-		config: c.config,
-		ctx:    &QueryContext{Type: TypePrizeRedemptions},
-		inters: c.Interceptors(),
-	}
-}
-
-// QueryPrize queries the prize edge of a PrizeRedemptions.
-func (c *PrizeRedemptionsClient) QueryPrize(pr *PrizeRedemptions) *PrizeQuery {
-	return c.Query().
-		Where(prizeredemptions.PrizeID(pr.PrizeID), prizeredemptions.UserID(pr.UserID)).
-		QueryPrize()
-}
-
-// QueryUser queries the user edge of a PrizeRedemptions.
-func (c *PrizeRedemptionsClient) QueryUser(pr *PrizeRedemptions) *UserQuery {
-	return c.Query().
-		Where(prizeredemptions.PrizeID(pr.PrizeID), prizeredemptions.UserID(pr.UserID)).
-		QueryUser()
-}
-
-// Hooks returns the client hooks.
-func (c *PrizeRedemptionsClient) Hooks() []Hook {
-	return c.hooks.PrizeRedemptions
-}
-
-// Interceptors returns the client interceptors.
-func (c *PrizeRedemptionsClient) Interceptors() []Interceptor {
-	return c.inters.PrizeRedemptions
-}
-
-func (c *PrizeRedemptionsClient) mutate(ctx context.Context, m *PrizeRedemptionsMutation) (Value, error) {
-	switch m.Op() {
-	case OpCreate:
-		return (&PrizeRedemptionsCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
-	case OpUpdate:
-		return (&PrizeRedemptionsUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
-	case OpUpdateOne:
-		return (&PrizeRedemptionsUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
-	case OpDelete, OpDeleteOne:
-		return (&PrizeRedemptionsDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
-	default:
-		return nil, fmt.Errorf("ent: unknown PrizeRedemptions mutation op: %q", m.Op())
+		return nil, fmt.Errorf("ent: unknown Redemption mutation op: %q", m.Op())
 	}
 }
 
@@ -1262,15 +1335,15 @@ func (c *UserClient) QueryCourse(u *User) *CourseQuery {
 	return query
 }
 
-// QueryPrize queries the prize edge of a User.
-func (c *UserClient) QueryPrize(u *User) *PrizeQuery {
-	query := (&PrizeClient{config: c.config}).Query()
+// QueryRedemptions queries the redemptions edge of a User.
+func (c *UserClient) QueryRedemptions(u *User) *RedemptionQuery {
+	query := (&RedemptionClient{config: c.config}).Query()
 	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
 		id := u.ID
 		step := sqlgraph.NewStep(
 			sqlgraph.From(user.Table, user.FieldID, id),
-			sqlgraph.To(prize.Table, prize.FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, true, user.PrizeTable, user.PrizePrimaryKey...),
+			sqlgraph.To(redemption.Table, redemption.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, true, user.RedemptionsTable, user.RedemptionsColumn),
 		)
 		fromV = sqlgraph.Neighbors(u.driver.Dialect(), step)
 		return fromV, nil
@@ -1287,22 +1360,6 @@ func (c *UserClient) QueryPet(u *User) *PetQuery {
 			sqlgraph.From(user.Table, user.FieldID, id),
 			sqlgraph.To(pet.Table, pet.FieldID),
 			sqlgraph.Edge(sqlgraph.M2M, true, user.PetTable, user.PetPrimaryKey...),
-		)
-		fromV = sqlgraph.Neighbors(u.driver.Dialect(), step)
-		return fromV, nil
-	}
-	return query
-}
-
-// QueryPrizeRedemptions queries the prize_redemptions edge of a User.
-func (c *UserClient) QueryPrizeRedemptions(u *User) *PrizeRedemptionsQuery {
-	query := (&PrizeRedemptionsClient{config: c.config}).Query()
-	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := u.ID
-		step := sqlgraph.NewStep(
-			sqlgraph.From(user.Table, user.FieldID, id),
-			sqlgraph.To(prizeredemptions.Table, prizeredemptions.UserColumn),
-			sqlgraph.Edge(sqlgraph.O2M, true, user.PrizeRedemptionsTable, user.PrizeRedemptionsColumn),
 		)
 		fromV = sqlgraph.Neighbors(u.driver.Dialect(), step)
 		return fromV, nil
@@ -1452,14 +1509,164 @@ func (c *UserPetClient) mutate(ctx context.Context, m *UserPetMutation) (Value, 
 	}
 }
 
+// VoucherClient is a client for the Voucher schema.
+type VoucherClient struct {
+	config
+}
+
+// NewVoucherClient returns a client for the Voucher from the given config.
+func NewVoucherClient(c config) *VoucherClient {
+	return &VoucherClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `voucher.Hooks(f(g(h())))`.
+func (c *VoucherClient) Use(hooks ...Hook) {
+	c.hooks.Voucher = append(c.hooks.Voucher, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `voucher.Intercept(f(g(h())))`.
+func (c *VoucherClient) Intercept(interceptors ...Interceptor) {
+	c.inters.Voucher = append(c.inters.Voucher, interceptors...)
+}
+
+// Create returns a builder for creating a Voucher entity.
+func (c *VoucherClient) Create() *VoucherCreate {
+	mutation := newVoucherMutation(c.config, OpCreate)
+	return &VoucherCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of Voucher entities.
+func (c *VoucherClient) CreateBulk(builders ...*VoucherCreate) *VoucherCreateBulk {
+	return &VoucherCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for Voucher.
+func (c *VoucherClient) Update() *VoucherUpdate {
+	mutation := newVoucherMutation(c.config, OpUpdate)
+	return &VoucherUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *VoucherClient) UpdateOne(v *Voucher) *VoucherUpdateOne {
+	mutation := newVoucherMutation(c.config, OpUpdateOne, withVoucher(v))
+	return &VoucherUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *VoucherClient) UpdateOneID(id int) *VoucherUpdateOne {
+	mutation := newVoucherMutation(c.config, OpUpdateOne, withVoucherID(id))
+	return &VoucherUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for Voucher.
+func (c *VoucherClient) Delete() *VoucherDelete {
+	mutation := newVoucherMutation(c.config, OpDelete)
+	return &VoucherDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *VoucherClient) DeleteOne(v *Voucher) *VoucherDeleteOne {
+	return c.DeleteOneID(v.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *VoucherClient) DeleteOneID(id int) *VoucherDeleteOne {
+	builder := c.Delete().Where(voucher.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &VoucherDeleteOne{builder}
+}
+
+// Query returns a query builder for Voucher.
+func (c *VoucherClient) Query() *VoucherQuery {
+	return &VoucherQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeVoucher},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a Voucher entity by its id.
+func (c *VoucherClient) Get(ctx context.Context, id int) (*Voucher, error) {
+	return c.Query().Where(voucher.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *VoucherClient) GetX(ctx context.Context, id int) *Voucher {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryRedemptions queries the redemptions edge of a Voucher.
+func (c *VoucherClient) QueryRedemptions(v *Voucher) *RedemptionQuery {
+	query := (&RedemptionClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := v.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(voucher.Table, voucher.FieldID, id),
+			sqlgraph.To(redemption.Table, redemption.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, voucher.RedemptionsTable, voucher.RedemptionsColumn),
+		)
+		fromV = sqlgraph.Neighbors(v.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryInstitution queries the institution edge of a Voucher.
+func (c *VoucherClient) QueryInstitution(v *Voucher) *InstitutionQuery {
+	query := (&InstitutionClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := v.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(voucher.Table, voucher.FieldID, id),
+			sqlgraph.To(institution.Table, institution.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, voucher.InstitutionTable, voucher.InstitutionColumn),
+		)
+		fromV = sqlgraph.Neighbors(v.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *VoucherClient) Hooks() []Hook {
+	return c.hooks.Voucher
+}
+
+// Interceptors returns the client interceptors.
+func (c *VoucherClient) Interceptors() []Interceptor {
+	return c.inters.Voucher
+}
+
+func (c *VoucherClient) mutate(ctx context.Context, m *VoucherMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&VoucherCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&VoucherUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&VoucherUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&VoucherDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown Voucher mutation op: %q", m.Op())
+	}
+}
+
 // hooks and interceptors per client, for fast access.
 type (
 	hooks struct {
-		AcademicSchool, Course, Institution, Pet, Prize, PrizeRedemptions, User,
-		UserPet []ent.Hook
+		AcademicSchool, Accessory, Course, Institution, Pet, Redemption, User, UserPet,
+		Voucher []ent.Hook
 	}
 	inters struct {
-		AcademicSchool, Course, Institution, Pet, Prize, PrizeRedemptions, User,
-		UserPet []ent.Interceptor
+		AcademicSchool, Accessory, Course, Institution, Pet, Redemption, User, UserPet,
+		Voucher []ent.Interceptor
 	}
 )

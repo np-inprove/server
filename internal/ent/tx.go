@@ -14,20 +14,22 @@ type Tx struct {
 	config
 	// AcademicSchool is the client for interacting with the AcademicSchool builders.
 	AcademicSchool *AcademicSchoolClient
+	// Accessory is the client for interacting with the Accessory builders.
+	Accessory *AccessoryClient
 	// Course is the client for interacting with the Course builders.
 	Course *CourseClient
 	// Institution is the client for interacting with the Institution builders.
 	Institution *InstitutionClient
 	// Pet is the client for interacting with the Pet builders.
 	Pet *PetClient
-	// Prize is the client for interacting with the Prize builders.
-	Prize *PrizeClient
-	// PrizeRedemptions is the client for interacting with the PrizeRedemptions builders.
-	PrizeRedemptions *PrizeRedemptionsClient
+	// Redemption is the client for interacting with the Redemption builders.
+	Redemption *RedemptionClient
 	// User is the client for interacting with the User builders.
 	User *UserClient
 	// UserPet is the client for interacting with the UserPet builders.
 	UserPet *UserPetClient
+	// Voucher is the client for interacting with the Voucher builders.
+	Voucher *VoucherClient
 
 	// lazily loaded.
 	client     *Client
@@ -160,13 +162,14 @@ func (tx *Tx) Client() *Client {
 
 func (tx *Tx) init() {
 	tx.AcademicSchool = NewAcademicSchoolClient(tx.config)
+	tx.Accessory = NewAccessoryClient(tx.config)
 	tx.Course = NewCourseClient(tx.config)
 	tx.Institution = NewInstitutionClient(tx.config)
 	tx.Pet = NewPetClient(tx.config)
-	tx.Prize = NewPrizeClient(tx.config)
-	tx.PrizeRedemptions = NewPrizeRedemptionsClient(tx.config)
+	tx.Redemption = NewRedemptionClient(tx.config)
 	tx.User = NewUserClient(tx.config)
 	tx.UserPet = NewUserPetClient(tx.config)
+	tx.Voucher = NewVoucherClient(tx.config)
 }
 
 // txDriver wraps the given dialect.Tx with a nop dialect.Driver implementation.

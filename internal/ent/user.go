@@ -35,7 +35,7 @@ type User struct {
 	// Time when points_awarded_count was last reset to 0
 	PointsAwardedResetTime time.Time `json:"points_awarded_reset_time,omitempty"`
 	// Superuser of the iNProve platform
-	Superuser bool `json:"superuser,omitempty"`
+	GodMode bool `json:"god_mode,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the UserQuery when eager-loading is set.
 	Edges           UserEdges `json:"edges"`
@@ -49,17 +49,15 @@ type UserEdges struct {
 	Institution []*Institution `json:"institution,omitempty"`
 	// Course holds the value of the course edge.
 	Course *Course `json:"course,omitempty"`
-	// Prize holds the value of the prize edge.
-	Prize []*Prize `json:"prize,omitempty"`
+	// Redemptions holds the value of the redemptions edge.
+	Redemptions []*Redemption `json:"redemptions,omitempty"`
 	// Pet holds the value of the pet edge.
 	Pet []*Pet `json:"pet,omitempty"`
-	// PrizeRedemptions holds the value of the prize_redemptions edge.
-	PrizeRedemptions []*PrizeRedemptions `json:"prize_redemptions,omitempty"`
 	// UserPet holds the value of the user_pet edge.
 	UserPet []*UserPet `json:"user_pet,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [6]bool
+	loadedTypes [5]bool
 }
 
 // InstitutionOrErr returns the Institution value or an error if the edge
@@ -84,13 +82,13 @@ func (e UserEdges) CourseOrErr() (*Course, error) {
 	return nil, &NotLoadedError{edge: "course"}
 }
 
-// PrizeOrErr returns the Prize value or an error if the edge
+// RedemptionsOrErr returns the Redemptions value or an error if the edge
 // was not loaded in eager-loading.
-func (e UserEdges) PrizeOrErr() ([]*Prize, error) {
+func (e UserEdges) RedemptionsOrErr() ([]*Redemption, error) {
 	if e.loadedTypes[2] {
-		return e.Prize, nil
+		return e.Redemptions, nil
 	}
-	return nil, &NotLoadedError{edge: "prize"}
+	return nil, &NotLoadedError{edge: "redemptions"}
 }
 
 // PetOrErr returns the Pet value or an error if the edge
@@ -102,19 +100,10 @@ func (e UserEdges) PetOrErr() ([]*Pet, error) {
 	return nil, &NotLoadedError{edge: "pet"}
 }
 
-// PrizeRedemptionsOrErr returns the PrizeRedemptions value or an error if the edge
-// was not loaded in eager-loading.
-func (e UserEdges) PrizeRedemptionsOrErr() ([]*PrizeRedemptions, error) {
-	if e.loadedTypes[4] {
-		return e.PrizeRedemptions, nil
-	}
-	return nil, &NotLoadedError{edge: "prize_redemptions"}
-}
-
 // UserPetOrErr returns the UserPet value or an error if the edge
 // was not loaded in eager-loading.
 func (e UserEdges) UserPetOrErr() ([]*UserPet, error) {
-	if e.loadedTypes[5] {
+	if e.loadedTypes[4] {
 		return e.UserPet, nil
 	}
 	return nil, &NotLoadedError{edge: "user_pet"}
@@ -125,7 +114,7 @@ func (*User) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case user.FieldSuperuser:
+		case user.FieldGodMode:
 			values[i] = new(sql.NullBool)
 		case user.FieldID, user.FieldPoints, user.FieldPointsAwardedCount:
 			values[i] = new(sql.NullInt64)
@@ -198,11 +187,11 @@ func (u *User) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				u.PointsAwardedResetTime = value.Time
 			}
-		case user.FieldSuperuser:
+		case user.FieldGodMode:
 			if value, ok := values[i].(*sql.NullBool); !ok {
-				return fmt.Errorf("unexpected type %T for field superuser", values[i])
+				return fmt.Errorf("unexpected type %T for field god_mode", values[i])
 			} else if value.Valid {
-				u.Superuser = value.Bool
+				u.GodMode = value.Bool
 			}
 		case user.ForeignKeys[0]:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
@@ -234,19 +223,14 @@ func (u *User) QueryCourse() *CourseQuery {
 	return NewUserClient(u.config).QueryCourse(u)
 }
 
-// QueryPrize queries the "prize" edge of the User entity.
-func (u *User) QueryPrize() *PrizeQuery {
-	return NewUserClient(u.config).QueryPrize(u)
+// QueryRedemptions queries the "redemptions" edge of the User entity.
+func (u *User) QueryRedemptions() *RedemptionQuery {
+	return NewUserClient(u.config).QueryRedemptions(u)
 }
 
 // QueryPet queries the "pet" edge of the User entity.
 func (u *User) QueryPet() *PetQuery {
 	return NewUserClient(u.config).QueryPet(u)
-}
-
-// QueryPrizeRedemptions queries the "prize_redemptions" edge of the User entity.
-func (u *User) QueryPrizeRedemptions() *PrizeRedemptionsQuery {
-	return NewUserClient(u.config).QueryPrizeRedemptions(u)
 }
 
 // QueryUserPet queries the "user_pet" edge of the User entity.
@@ -297,8 +281,8 @@ func (u *User) String() string {
 	builder.WriteString("points_awarded_reset_time=")
 	builder.WriteString(u.PointsAwardedResetTime.Format(time.ANSIC))
 	builder.WriteString(", ")
-	builder.WriteString("superuser=")
-	builder.WriteString(fmt.Sprintf("%v", u.Superuser))
+	builder.WriteString("god_mode=")
+	builder.WriteString(fmt.Sprintf("%v", u.GodMode))
 	builder.WriteByte(')')
 	return builder.String()
 }

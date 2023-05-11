@@ -36,7 +36,7 @@ func (User) Fields() []ent.Field {
 		field.Time("points_awarded_reset_time").
 			Optional().
 			Comment("Time when points_awarded_count was last reset to 0"),
-		field.Bool("superuser").
+		field.Bool("god_mode").
 			Comment("Superuser of the iNProve platform"),
 	}
 }
@@ -49,9 +49,8 @@ func (User) Edges() []ent.Edge {
 		edge.From("course", Course.Type).
 			Ref("students").
 			Unique(),
-		edge.From("prize", Prize.Type).
-			Ref("redemption_users").
-			Through("prize_redemptions", PrizeRedemptions.Type),
+		edge.From("redemptions", Redemption.Type).
+			Ref("user"),
 		edge.From("pet", Pet.Type).
 			Ref("owner").
 			Through("user_pet", UserPet.Type),

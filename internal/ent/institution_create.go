@@ -10,9 +10,10 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/np-inprove/server/internal/ent/academicschool"
+	"github.com/np-inprove/server/internal/ent/accessory"
 	"github.com/np-inprove/server/internal/ent/institution"
-	"github.com/np-inprove/server/internal/ent/prize"
 	"github.com/np-inprove/server/internal/ent/user"
+	"github.com/np-inprove/server/internal/ent/voucher"
 )
 
 // InstitutionCreate is the builder for creating a Institution entity.
@@ -43,19 +44,34 @@ func (ic *InstitutionCreate) AddAdmins(u ...*User) *InstitutionCreate {
 	return ic.AddAdminIDs(ids...)
 }
 
-// AddPrizeIDs adds the "prizes" edge to the Prize entity by IDs.
-func (ic *InstitutionCreate) AddPrizeIDs(ids ...int) *InstitutionCreate {
-	ic.mutation.AddPrizeIDs(ids...)
+// AddVoucherIDs adds the "vouchers" edge to the Voucher entity by IDs.
+func (ic *InstitutionCreate) AddVoucherIDs(ids ...int) *InstitutionCreate {
+	ic.mutation.AddVoucherIDs(ids...)
 	return ic
 }
 
-// AddPrizes adds the "prizes" edges to the Prize entity.
-func (ic *InstitutionCreate) AddPrizes(p ...*Prize) *InstitutionCreate {
-	ids := make([]int, len(p))
-	for i := range p {
-		ids[i] = p[i].ID
+// AddVouchers adds the "vouchers" edges to the Voucher entity.
+func (ic *InstitutionCreate) AddVouchers(v ...*Voucher) *InstitutionCreate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return ic.AddPrizeIDs(ids...)
+	return ic.AddVoucherIDs(ids...)
+}
+
+// AddAccessoryIDs adds the "accessories" edge to the Accessory entity by IDs.
+func (ic *InstitutionCreate) AddAccessoryIDs(ids ...int) *InstitutionCreate {
+	ic.mutation.AddAccessoryIDs(ids...)
+	return ic
+}
+
+// AddAccessories adds the "accessories" edges to the Accessory entity.
+func (ic *InstitutionCreate) AddAccessories(a ...*Accessory) *InstitutionCreate {
+	ids := make([]int, len(a))
+	for i := range a {
+		ids[i] = a[i].ID
+	}
+	return ic.AddAccessoryIDs(ids...)
 }
 
 // AddAcademicSchoolIDs adds the "academic_schools" edge to the AcademicSchool entity by IDs.
@@ -161,15 +177,31 @@ func (ic *InstitutionCreate) createSpec() (*Institution, *sqlgraph.CreateSpec) {
 		}
 		_spec.Edges = append(_spec.Edges, edge)
 	}
-	if nodes := ic.mutation.PrizesIDs(); len(nodes) > 0 {
+	if nodes := ic.mutation.VouchersIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
-			Table:   institution.PrizesTable,
-			Columns: []string{institution.PrizesColumn},
+			Table:   institution.VouchersTable,
+			Columns: []string{institution.VouchersColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(prize.FieldID, field.TypeInt),
+				IDSpec: sqlgraph.NewFieldSpec(voucher.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := ic.mutation.AccessoriesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   institution.AccessoriesTable,
+			Columns: []string{institution.AccessoriesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(accessory.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

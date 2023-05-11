@@ -29,6 +29,28 @@ var (
 			},
 		},
 	}
+	// AccessoriesColumns holds the columns for the "accessories" table.
+	AccessoriesColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "name", Type: field.TypeString},
+		{Name: "description", Type: field.TypeString},
+		{Name: "points_required", Type: field.TypeInt},
+		{Name: "institution_accessories", Type: field.TypeInt},
+	}
+	// AccessoriesTable holds the schema information for the "accessories" table.
+	AccessoriesTable = &schema.Table{
+		Name:       "accessories",
+		Columns:    AccessoriesColumns,
+		PrimaryKey: []*schema.Column{AccessoriesColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "accessories_institutions_accessories",
+				Columns:    []*schema.Column{AccessoriesColumns[4]},
+				RefColumns: []*schema.Column{InstitutionsColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+	}
 	// CoursesColumns holds the columns for the "courses" table.
 	CoursesColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
@@ -73,52 +95,37 @@ var (
 		Columns:    PetsColumns,
 		PrimaryKey: []*schema.Column{PetsColumns[0]},
 	}
-	// PrizesColumns holds the columns for the "prizes" table.
-	PrizesColumns = []*schema.Column{
+	// RedemptionsColumns holds the columns for the "redemptions" table.
+	RedemptionsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
-		{Name: "name", Type: field.TypeString},
-		{Name: "description", Type: field.TypeString},
-		{Name: "points_required", Type: field.TypeInt},
-		{Name: "discriminator", Type: field.TypeEnum, Enums: []string{"voucher", "accessory"}},
-		{Name: "institution_prizes", Type: field.TypeInt, Nullable: true},
+		{Name: "redeemed_at", Type: field.TypeTime},
+		{Name: "accessory_redemptions", Type: field.TypeInt, Nullable: true},
+		{Name: "redemption_user", Type: field.TypeInt},
+		{Name: "voucher_redemptions", Type: field.TypeInt, Nullable: true},
 	}
-	// PrizesTable holds the schema information for the "prizes" table.
-	PrizesTable = &schema.Table{
-		Name:       "prizes",
-		Columns:    PrizesColumns,
-		PrimaryKey: []*schema.Column{PrizesColumns[0]},
+	// RedemptionsTable holds the schema information for the "redemptions" table.
+	RedemptionsTable = &schema.Table{
+		Name:       "redemptions",
+		Columns:    RedemptionsColumns,
+		PrimaryKey: []*schema.Column{RedemptionsColumns[0]},
 		ForeignKeys: []*schema.ForeignKey{
 			{
-				Symbol:     "prizes_institutions_prizes",
-				Columns:    []*schema.Column{PrizesColumns[5]},
-				RefColumns: []*schema.Column{InstitutionsColumns[0]},
+				Symbol:     "redemptions_accessories_redemptions",
+				Columns:    []*schema.Column{RedemptionsColumns[2]},
+				RefColumns: []*schema.Column{AccessoriesColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
-		},
-	}
-	// PrizeRedemptionsColumns holds the columns for the "prize_redemptions" table.
-	PrizeRedemptionsColumns = []*schema.Column{
-		{Name: "redeemed_at", Type: field.TypeTime},
-		{Name: "prize_id", Type: field.TypeInt},
-		{Name: "user_id", Type: field.TypeInt},
-	}
-	// PrizeRedemptionsTable holds the schema information for the "prize_redemptions" table.
-	PrizeRedemptionsTable = &schema.Table{
-		Name:       "prize_redemptions",
-		Columns:    PrizeRedemptionsColumns,
-		PrimaryKey: []*schema.Column{PrizeRedemptionsColumns[1], PrizeRedemptionsColumns[2]},
-		ForeignKeys: []*schema.ForeignKey{
 			{
-				Symbol:     "prize_redemptions_prizes_prize",
-				Columns:    []*schema.Column{PrizeRedemptionsColumns[1]},
-				RefColumns: []*schema.Column{PrizesColumns[0]},
+				Symbol:     "redemptions_users_user",
+				Columns:    []*schema.Column{RedemptionsColumns[3]},
+				RefColumns: []*schema.Column{UsersColumns[0]},
 				OnDelete:   schema.NoAction,
 			},
 			{
-				Symbol:     "prize_redemptions_users_user",
-				Columns:    []*schema.Column{PrizeRedemptionsColumns[2]},
-				RefColumns: []*schema.Column{UsersColumns[0]},
-				OnDelete:   schema.NoAction,
+				Symbol:     "redemptions_vouchers_redemptions",
+				Columns:    []*schema.Column{RedemptionsColumns[4]},
+				RefColumns: []*schema.Column{VouchersColumns[0]},
+				OnDelete:   schema.SetNull,
 			},
 		},
 	}
@@ -132,7 +139,7 @@ var (
 		{Name: "points", Type: field.TypeInt},
 		{Name: "points_awarded_count", Type: field.TypeInt},
 		{Name: "points_awarded_reset_time", Type: field.TypeTime, Nullable: true},
-		{Name: "superuser", Type: field.TypeBool},
+		{Name: "god_mode", Type: field.TypeBool},
 		{Name: "course_students", Type: field.TypeInt, Nullable: true},
 	}
 	// UsersTable holds the schema information for the "users" table.
@@ -176,6 +183,28 @@ var (
 			},
 		},
 	}
+	// VouchersColumns holds the columns for the "vouchers" table.
+	VouchersColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "name", Type: field.TypeString},
+		{Name: "description", Type: field.TypeString},
+		{Name: "points_required", Type: field.TypeInt},
+		{Name: "institution_vouchers", Type: field.TypeInt},
+	}
+	// VouchersTable holds the schema information for the "vouchers" table.
+	VouchersTable = &schema.Table{
+		Name:       "vouchers",
+		Columns:    VouchersColumns,
+		PrimaryKey: []*schema.Column{VouchersColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "vouchers_institutions_vouchers",
+				Columns:    []*schema.Column{VouchersColumns[4]},
+				RefColumns: []*schema.Column{InstitutionsColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+	}
 	// InstitutionAdminsColumns holds the columns for the "institution_admins" table.
 	InstitutionAdminsColumns = []*schema.Column{
 		{Name: "institution_id", Type: field.TypeInt},
@@ -204,26 +233,29 @@ var (
 	// Tables holds all the tables in the schema.
 	Tables = []*schema.Table{
 		AcademicSchoolsTable,
+		AccessoriesTable,
 		CoursesTable,
 		InstitutionsTable,
 		PetsTable,
-		PrizesTable,
-		PrizeRedemptionsTable,
+		RedemptionsTable,
 		UsersTable,
 		UserPetsTable,
+		VouchersTable,
 		InstitutionAdminsTable,
 	}
 )
 
 func init() {
 	AcademicSchoolsTable.ForeignKeys[0].RefTable = InstitutionsTable
+	AccessoriesTable.ForeignKeys[0].RefTable = InstitutionsTable
 	CoursesTable.ForeignKeys[0].RefTable = AcademicSchoolsTable
-	PrizesTable.ForeignKeys[0].RefTable = InstitutionsTable
-	PrizeRedemptionsTable.ForeignKeys[0].RefTable = PrizesTable
-	PrizeRedemptionsTable.ForeignKeys[1].RefTable = UsersTable
+	RedemptionsTable.ForeignKeys[0].RefTable = AccessoriesTable
+	RedemptionsTable.ForeignKeys[1].RefTable = UsersTable
+	RedemptionsTable.ForeignKeys[2].RefTable = VouchersTable
 	UsersTable.ForeignKeys[0].RefTable = CoursesTable
 	UserPetsTable.ForeignKeys[0].RefTable = PetsTable
 	UserPetsTable.ForeignKeys[1].RefTable = UsersTable
+	VouchersTable.ForeignKeys[0].RefTable = InstitutionsTable
 	InstitutionAdminsTable.ForeignKeys[0].RefTable = InstitutionsTable
 	InstitutionAdminsTable.ForeignKeys[1].RefTable = UsersTable
 }

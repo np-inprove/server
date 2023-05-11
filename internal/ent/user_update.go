@@ -15,7 +15,7 @@ import (
 	"github.com/np-inprove/server/internal/ent/institution"
 	"github.com/np-inprove/server/internal/ent/pet"
 	"github.com/np-inprove/server/internal/ent/predicate"
-	"github.com/np-inprove/server/internal/ent/prize"
+	"github.com/np-inprove/server/internal/ent/redemption"
 	"github.com/np-inprove/server/internal/ent/user"
 )
 
@@ -102,9 +102,9 @@ func (uu *UserUpdate) ClearPointsAwardedResetTime() *UserUpdate {
 	return uu
 }
 
-// SetSuperuser sets the "superuser" field.
-func (uu *UserUpdate) SetSuperuser(b bool) *UserUpdate {
-	uu.mutation.SetSuperuser(b)
+// SetGodMode sets the "god_mode" field.
+func (uu *UserUpdate) SetGodMode(b bool) *UserUpdate {
+	uu.mutation.SetGodMode(b)
 	return uu
 }
 
@@ -142,19 +142,19 @@ func (uu *UserUpdate) SetCourse(c *Course) *UserUpdate {
 	return uu.SetCourseID(c.ID)
 }
 
-// AddPrizeIDs adds the "prize" edge to the Prize entity by IDs.
-func (uu *UserUpdate) AddPrizeIDs(ids ...int) *UserUpdate {
-	uu.mutation.AddPrizeIDs(ids...)
+// AddRedemptionIDs adds the "redemptions" edge to the Redemption entity by IDs.
+func (uu *UserUpdate) AddRedemptionIDs(ids ...int) *UserUpdate {
+	uu.mutation.AddRedemptionIDs(ids...)
 	return uu
 }
 
-// AddPrize adds the "prize" edges to the Prize entity.
-func (uu *UserUpdate) AddPrize(p ...*Prize) *UserUpdate {
-	ids := make([]int, len(p))
-	for i := range p {
-		ids[i] = p[i].ID
+// AddRedemptions adds the "redemptions" edges to the Redemption entity.
+func (uu *UserUpdate) AddRedemptions(r ...*Redemption) *UserUpdate {
+	ids := make([]int, len(r))
+	for i := range r {
+		ids[i] = r[i].ID
 	}
-	return uu.AddPrizeIDs(ids...)
+	return uu.AddRedemptionIDs(ids...)
 }
 
 // AddPetIDs adds the "pet" edge to the Pet entity by IDs.
@@ -204,25 +204,25 @@ func (uu *UserUpdate) ClearCourse() *UserUpdate {
 	return uu
 }
 
-// ClearPrize clears all "prize" edges to the Prize entity.
-func (uu *UserUpdate) ClearPrize() *UserUpdate {
-	uu.mutation.ClearPrize()
+// ClearRedemptions clears all "redemptions" edges to the Redemption entity.
+func (uu *UserUpdate) ClearRedemptions() *UserUpdate {
+	uu.mutation.ClearRedemptions()
 	return uu
 }
 
-// RemovePrizeIDs removes the "prize" edge to Prize entities by IDs.
-func (uu *UserUpdate) RemovePrizeIDs(ids ...int) *UserUpdate {
-	uu.mutation.RemovePrizeIDs(ids...)
+// RemoveRedemptionIDs removes the "redemptions" edge to Redemption entities by IDs.
+func (uu *UserUpdate) RemoveRedemptionIDs(ids ...int) *UserUpdate {
+	uu.mutation.RemoveRedemptionIDs(ids...)
 	return uu
 }
 
-// RemovePrize removes "prize" edges to Prize entities.
-func (uu *UserUpdate) RemovePrize(p ...*Prize) *UserUpdate {
-	ids := make([]int, len(p))
-	for i := range p {
-		ids[i] = p[i].ID
+// RemoveRedemptions removes "redemptions" edges to Redemption entities.
+func (uu *UserUpdate) RemoveRedemptions(r ...*Redemption) *UserUpdate {
+	ids := make([]int, len(r))
+	for i := range r {
+		ids[i] = r[i].ID
 	}
-	return uu.RemovePrizeIDs(ids...)
+	return uu.RemoveRedemptionIDs(ids...)
 }
 
 // ClearPet clears all "pet" edges to the Pet entity.
@@ -350,8 +350,8 @@ func (uu *UserUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if uu.mutation.PointsAwardedResetTimeCleared() {
 		_spec.ClearField(user.FieldPointsAwardedResetTime, field.TypeTime)
 	}
-	if value, ok := uu.mutation.Superuser(); ok {
-		_spec.SetField(user.FieldSuperuser, field.TypeBool, value)
+	if value, ok := uu.mutation.GodMode(); ok {
+		_spec.SetField(user.FieldGodMode, field.TypeBool, value)
 	}
 	if uu.mutation.InstitutionCleared() {
 		edge := &sqlgraph.EdgeSpec{
@@ -427,28 +427,28 @@ func (uu *UserUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if uu.mutation.PrizeCleared() {
+	if uu.mutation.RedemptionsCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.O2M,
 			Inverse: true,
-			Table:   user.PrizeTable,
-			Columns: user.PrizePrimaryKey,
+			Table:   user.RedemptionsTable,
+			Columns: []string{user.RedemptionsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(prize.FieldID, field.TypeInt),
+				IDSpec: sqlgraph.NewFieldSpec(redemption.FieldID, field.TypeInt),
 			},
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := uu.mutation.RemovedPrizeIDs(); len(nodes) > 0 && !uu.mutation.PrizeCleared() {
+	if nodes := uu.mutation.RemovedRedemptionsIDs(); len(nodes) > 0 && !uu.mutation.RedemptionsCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.O2M,
 			Inverse: true,
-			Table:   user.PrizeTable,
-			Columns: user.PrizePrimaryKey,
+			Table:   user.RedemptionsTable,
+			Columns: []string{user.RedemptionsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(prize.FieldID, field.TypeInt),
+				IDSpec: sqlgraph.NewFieldSpec(redemption.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -456,15 +456,15 @@ func (uu *UserUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := uu.mutation.PrizeIDs(); len(nodes) > 0 {
+	if nodes := uu.mutation.RedemptionsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.O2M,
 			Inverse: true,
-			Table:   user.PrizeTable,
-			Columns: user.PrizePrimaryKey,
+			Table:   user.RedemptionsTable,
+			Columns: []string{user.RedemptionsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(prize.FieldID, field.TypeInt),
+				IDSpec: sqlgraph.NewFieldSpec(redemption.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -619,9 +619,9 @@ func (uuo *UserUpdateOne) ClearPointsAwardedResetTime() *UserUpdateOne {
 	return uuo
 }
 
-// SetSuperuser sets the "superuser" field.
-func (uuo *UserUpdateOne) SetSuperuser(b bool) *UserUpdateOne {
-	uuo.mutation.SetSuperuser(b)
+// SetGodMode sets the "god_mode" field.
+func (uuo *UserUpdateOne) SetGodMode(b bool) *UserUpdateOne {
+	uuo.mutation.SetGodMode(b)
 	return uuo
 }
 
@@ -659,19 +659,19 @@ func (uuo *UserUpdateOne) SetCourse(c *Course) *UserUpdateOne {
 	return uuo.SetCourseID(c.ID)
 }
 
-// AddPrizeIDs adds the "prize" edge to the Prize entity by IDs.
-func (uuo *UserUpdateOne) AddPrizeIDs(ids ...int) *UserUpdateOne {
-	uuo.mutation.AddPrizeIDs(ids...)
+// AddRedemptionIDs adds the "redemptions" edge to the Redemption entity by IDs.
+func (uuo *UserUpdateOne) AddRedemptionIDs(ids ...int) *UserUpdateOne {
+	uuo.mutation.AddRedemptionIDs(ids...)
 	return uuo
 }
 
-// AddPrize adds the "prize" edges to the Prize entity.
-func (uuo *UserUpdateOne) AddPrize(p ...*Prize) *UserUpdateOne {
-	ids := make([]int, len(p))
-	for i := range p {
-		ids[i] = p[i].ID
+// AddRedemptions adds the "redemptions" edges to the Redemption entity.
+func (uuo *UserUpdateOne) AddRedemptions(r ...*Redemption) *UserUpdateOne {
+	ids := make([]int, len(r))
+	for i := range r {
+		ids[i] = r[i].ID
 	}
-	return uuo.AddPrizeIDs(ids...)
+	return uuo.AddRedemptionIDs(ids...)
 }
 
 // AddPetIDs adds the "pet" edge to the Pet entity by IDs.
@@ -721,25 +721,25 @@ func (uuo *UserUpdateOne) ClearCourse() *UserUpdateOne {
 	return uuo
 }
 
-// ClearPrize clears all "prize" edges to the Prize entity.
-func (uuo *UserUpdateOne) ClearPrize() *UserUpdateOne {
-	uuo.mutation.ClearPrize()
+// ClearRedemptions clears all "redemptions" edges to the Redemption entity.
+func (uuo *UserUpdateOne) ClearRedemptions() *UserUpdateOne {
+	uuo.mutation.ClearRedemptions()
 	return uuo
 }
 
-// RemovePrizeIDs removes the "prize" edge to Prize entities by IDs.
-func (uuo *UserUpdateOne) RemovePrizeIDs(ids ...int) *UserUpdateOne {
-	uuo.mutation.RemovePrizeIDs(ids...)
+// RemoveRedemptionIDs removes the "redemptions" edge to Redemption entities by IDs.
+func (uuo *UserUpdateOne) RemoveRedemptionIDs(ids ...int) *UserUpdateOne {
+	uuo.mutation.RemoveRedemptionIDs(ids...)
 	return uuo
 }
 
-// RemovePrize removes "prize" edges to Prize entities.
-func (uuo *UserUpdateOne) RemovePrize(p ...*Prize) *UserUpdateOne {
-	ids := make([]int, len(p))
-	for i := range p {
-		ids[i] = p[i].ID
+// RemoveRedemptions removes "redemptions" edges to Redemption entities.
+func (uuo *UserUpdateOne) RemoveRedemptions(r ...*Redemption) *UserUpdateOne {
+	ids := make([]int, len(r))
+	for i := range r {
+		ids[i] = r[i].ID
 	}
-	return uuo.RemovePrizeIDs(ids...)
+	return uuo.RemoveRedemptionIDs(ids...)
 }
 
 // ClearPet clears all "pet" edges to the Pet entity.
@@ -897,8 +897,8 @@ func (uuo *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) 
 	if uuo.mutation.PointsAwardedResetTimeCleared() {
 		_spec.ClearField(user.FieldPointsAwardedResetTime, field.TypeTime)
 	}
-	if value, ok := uuo.mutation.Superuser(); ok {
-		_spec.SetField(user.FieldSuperuser, field.TypeBool, value)
+	if value, ok := uuo.mutation.GodMode(); ok {
+		_spec.SetField(user.FieldGodMode, field.TypeBool, value)
 	}
 	if uuo.mutation.InstitutionCleared() {
 		edge := &sqlgraph.EdgeSpec{
@@ -974,28 +974,28 @@ func (uuo *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) 
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if uuo.mutation.PrizeCleared() {
+	if uuo.mutation.RedemptionsCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.O2M,
 			Inverse: true,
-			Table:   user.PrizeTable,
-			Columns: user.PrizePrimaryKey,
+			Table:   user.RedemptionsTable,
+			Columns: []string{user.RedemptionsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(prize.FieldID, field.TypeInt),
+				IDSpec: sqlgraph.NewFieldSpec(redemption.FieldID, field.TypeInt),
 			},
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := uuo.mutation.RemovedPrizeIDs(); len(nodes) > 0 && !uuo.mutation.PrizeCleared() {
+	if nodes := uuo.mutation.RemovedRedemptionsIDs(); len(nodes) > 0 && !uuo.mutation.RedemptionsCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.O2M,
 			Inverse: true,
-			Table:   user.PrizeTable,
-			Columns: user.PrizePrimaryKey,
+			Table:   user.RedemptionsTable,
+			Columns: []string{user.RedemptionsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(prize.FieldID, field.TypeInt),
+				IDSpec: sqlgraph.NewFieldSpec(redemption.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -1003,15 +1003,15 @@ func (uuo *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) 
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := uuo.mutation.PrizeIDs(); len(nodes) > 0 {
+	if nodes := uuo.mutation.RedemptionsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.O2M,
 			Inverse: true,
-			Table:   user.PrizeTable,
-			Columns: user.PrizePrimaryKey,
+			Table:   user.RedemptionsTable,
+			Columns: []string{user.RedemptionsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(prize.FieldID, field.TypeInt),
+				IDSpec: sqlgraph.NewFieldSpec(redemption.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

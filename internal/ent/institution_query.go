@@ -12,10 +12,11 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/np-inprove/server/internal/ent/academicschool"
+	"github.com/np-inprove/server/internal/ent/accessory"
 	"github.com/np-inprove/server/internal/ent/institution"
 	"github.com/np-inprove/server/internal/ent/predicate"
-	"github.com/np-inprove/server/internal/ent/prize"
 	"github.com/np-inprove/server/internal/ent/user"
+	"github.com/np-inprove/server/internal/ent/voucher"
 )
 
 // InstitutionQuery is the builder for querying Institution entities.
@@ -26,7 +27,8 @@ type InstitutionQuery struct {
 	inters              []Interceptor
 	predicates          []predicate.Institution
 	withAdmins          *UserQuery
-	withPrizes          *PrizeQuery
+	withVouchers        *VoucherQuery
+	withAccessories     *AccessoryQuery
 	withAcademicSchools *AcademicSchoolQuery
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
@@ -86,9 +88,9 @@ func (iq *InstitutionQuery) QueryAdmins() *UserQuery {
 	return query
 }
 
-// QueryPrizes chains the current query on the "prizes" edge.
-func (iq *InstitutionQuery) QueryPrizes() *PrizeQuery {
-	query := (&PrizeClient{config: iq.config}).Query()
+// QueryVouchers chains the current query on the "vouchers" edge.
+func (iq *InstitutionQuery) QueryVouchers() *VoucherQuery {
+	query := (&VoucherClient{config: iq.config}).Query()
 	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
 		if err := iq.prepareQuery(ctx); err != nil {
 			return nil, err
@@ -99,8 +101,30 @@ func (iq *InstitutionQuery) QueryPrizes() *PrizeQuery {
 		}
 		step := sqlgraph.NewStep(
 			sqlgraph.From(institution.Table, institution.FieldID, selector),
-			sqlgraph.To(prize.Table, prize.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, institution.PrizesTable, institution.PrizesColumn),
+			sqlgraph.To(voucher.Table, voucher.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, institution.VouchersTable, institution.VouchersColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(iq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryAccessories chains the current query on the "accessories" edge.
+func (iq *InstitutionQuery) QueryAccessories() *AccessoryQuery {
+	query := (&AccessoryClient{config: iq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := iq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := iq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(institution.Table, institution.FieldID, selector),
+			sqlgraph.To(accessory.Table, accessory.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, institution.AccessoriesTable, institution.AccessoriesColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(iq.driver.Dialect(), step)
 		return fromU, nil
@@ -323,7 +347,8 @@ func (iq *InstitutionQuery) Clone() *InstitutionQuery {
 		inters:              append([]Interceptor{}, iq.inters...),
 		predicates:          append([]predicate.Institution{}, iq.predicates...),
 		withAdmins:          iq.withAdmins.Clone(),
-		withPrizes:          iq.withPrizes.Clone(),
+		withVouchers:        iq.withVouchers.Clone(),
+		withAccessories:     iq.withAccessories.Clone(),
 		withAcademicSchools: iq.withAcademicSchools.Clone(),
 		// clone intermediate query.
 		sql:  iq.sql.Clone(),
@@ -342,14 +367,25 @@ func (iq *InstitutionQuery) WithAdmins(opts ...func(*UserQuery)) *InstitutionQue
 	return iq
 }
 
-// WithPrizes tells the query-builder to eager-load the nodes that are connected to
-// the "prizes" edge. The optional arguments are used to configure the query builder of the edge.
-func (iq *InstitutionQuery) WithPrizes(opts ...func(*PrizeQuery)) *InstitutionQuery {
-	query := (&PrizeClient{config: iq.config}).Query()
+// WithVouchers tells the query-builder to eager-load the nodes that are connected to
+// the "vouchers" edge. The optional arguments are used to configure the query builder of the edge.
+func (iq *InstitutionQuery) WithVouchers(opts ...func(*VoucherQuery)) *InstitutionQuery {
+	query := (&VoucherClient{config: iq.config}).Query()
 	for _, opt := range opts {
 		opt(query)
 	}
-	iq.withPrizes = query
+	iq.withVouchers = query
+	return iq
+}
+
+// WithAccessories tells the query-builder to eager-load the nodes that are connected to
+// the "accessories" edge. The optional arguments are used to configure the query builder of the edge.
+func (iq *InstitutionQuery) WithAccessories(opts ...func(*AccessoryQuery)) *InstitutionQuery {
+	query := (&AccessoryClient{config: iq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	iq.withAccessories = query
 	return iq
 }
 
@@ -442,9 +478,10 @@ func (iq *InstitutionQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*
 	var (
 		nodes       = []*Institution{}
 		_spec       = iq.querySpec()
-		loadedTypes = [3]bool{
+		loadedTypes = [4]bool{
 			iq.withAdmins != nil,
-			iq.withPrizes != nil,
+			iq.withVouchers != nil,
+			iq.withAccessories != nil,
 			iq.withAcademicSchools != nil,
 		}
 	)
@@ -473,10 +510,17 @@ func (iq *InstitutionQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*
 			return nil, err
 		}
 	}
-	if query := iq.withPrizes; query != nil {
-		if err := iq.loadPrizes(ctx, query, nodes,
-			func(n *Institution) { n.Edges.Prizes = []*Prize{} },
-			func(n *Institution, e *Prize) { n.Edges.Prizes = append(n.Edges.Prizes, e) }); err != nil {
+	if query := iq.withVouchers; query != nil {
+		if err := iq.loadVouchers(ctx, query, nodes,
+			func(n *Institution) { n.Edges.Vouchers = []*Voucher{} },
+			func(n *Institution, e *Voucher) { n.Edges.Vouchers = append(n.Edges.Vouchers, e) }); err != nil {
+			return nil, err
+		}
+	}
+	if query := iq.withAccessories; query != nil {
+		if err := iq.loadAccessories(ctx, query, nodes,
+			func(n *Institution) { n.Edges.Accessories = []*Accessory{} },
+			func(n *Institution, e *Accessory) { n.Edges.Accessories = append(n.Edges.Accessories, e) }); err != nil {
 			return nil, err
 		}
 	}
@@ -551,7 +595,7 @@ func (iq *InstitutionQuery) loadAdmins(ctx context.Context, query *UserQuery, no
 	}
 	return nil
 }
-func (iq *InstitutionQuery) loadPrizes(ctx context.Context, query *PrizeQuery, nodes []*Institution, init func(*Institution), assign func(*Institution, *Prize)) error {
+func (iq *InstitutionQuery) loadVouchers(ctx context.Context, query *VoucherQuery, nodes []*Institution, init func(*Institution), assign func(*Institution, *Voucher)) error {
 	fks := make([]driver.Value, 0, len(nodes))
 	nodeids := make(map[int]*Institution)
 	for i := range nodes {
@@ -562,21 +606,52 @@ func (iq *InstitutionQuery) loadPrizes(ctx context.Context, query *PrizeQuery, n
 		}
 	}
 	query.withFKs = true
-	query.Where(predicate.Prize(func(s *sql.Selector) {
-		s.Where(sql.InValues(s.C(institution.PrizesColumn), fks...))
+	query.Where(predicate.Voucher(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(institution.VouchersColumn), fks...))
 	}))
 	neighbors, err := query.All(ctx)
 	if err != nil {
 		return err
 	}
 	for _, n := range neighbors {
-		fk := n.institution_prizes
+		fk := n.institution_vouchers
 		if fk == nil {
-			return fmt.Errorf(`foreign-key "institution_prizes" is nil for node %v`, n.ID)
+			return fmt.Errorf(`foreign-key "institution_vouchers" is nil for node %v`, n.ID)
 		}
 		node, ok := nodeids[*fk]
 		if !ok {
-			return fmt.Errorf(`unexpected referenced foreign-key "institution_prizes" returned %v for node %v`, *fk, n.ID)
+			return fmt.Errorf(`unexpected referenced foreign-key "institution_vouchers" returned %v for node %v`, *fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
+func (iq *InstitutionQuery) loadAccessories(ctx context.Context, query *AccessoryQuery, nodes []*Institution, init func(*Institution), assign func(*Institution, *Accessory)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int]*Institution)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	query.withFKs = true
+	query.Where(predicate.Accessory(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(institution.AccessoriesColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.institution_accessories
+		if fk == nil {
+			return fmt.Errorf(`foreign-key "institution_accessories" is nil for node %v`, n.ID)
+		}
+		node, ok := nodeids[*fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "institution_accessories" returned %v for node %v`, *fk, n.ID)
 		}
 		assign(node, n)
 	}

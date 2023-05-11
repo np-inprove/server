@@ -21,6 +21,18 @@ func (f AcademicSchoolFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Val
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.AcademicSchoolMutation", m)
 }
 
+// The AccessoryFunc type is an adapter to allow the use of ordinary
+// function as Accessory mutator.
+type AccessoryFunc func(context.Context, *ent.AccessoryMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f AccessoryFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.AccessoryMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.AccessoryMutation", m)
+}
+
 // The CourseFunc type is an adapter to allow the use of ordinary
 // function as Course mutator.
 type CourseFunc func(context.Context, *ent.CourseMutation) (ent.Value, error)
@@ -57,28 +69,16 @@ func (f PetFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) 
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.PetMutation", m)
 }
 
-// The PrizeFunc type is an adapter to allow the use of ordinary
-// function as Prize mutator.
-type PrizeFunc func(context.Context, *ent.PrizeMutation) (ent.Value, error)
+// The RedemptionFunc type is an adapter to allow the use of ordinary
+// function as Redemption mutator.
+type RedemptionFunc func(context.Context, *ent.RedemptionMutation) (ent.Value, error)
 
 // Mutate calls f(ctx, m).
-func (f PrizeFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
-	if mv, ok := m.(*ent.PrizeMutation); ok {
+func (f RedemptionFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.RedemptionMutation); ok {
 		return f(ctx, mv)
 	}
-	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.PrizeMutation", m)
-}
-
-// The PrizeRedemptionsFunc type is an adapter to allow the use of ordinary
-// function as PrizeRedemptions mutator.
-type PrizeRedemptionsFunc func(context.Context, *ent.PrizeRedemptionsMutation) (ent.Value, error)
-
-// Mutate calls f(ctx, m).
-func (f PrizeRedemptionsFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
-	if mv, ok := m.(*ent.PrizeRedemptionsMutation); ok {
-		return f(ctx, mv)
-	}
-	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.PrizeRedemptionsMutation", m)
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.RedemptionMutation", m)
 }
 
 // The UserFunc type is an adapter to allow the use of ordinary
@@ -103,6 +103,18 @@ func (f UserPetFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, err
 		return f(ctx, mv)
 	}
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.UserPetMutation", m)
+}
+
+// The VoucherFunc type is an adapter to allow the use of ordinary
+// function as Voucher mutator.
+type VoucherFunc func(context.Context, *ent.VoucherMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f VoucherFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.VoucherMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.VoucherMutation", m)
 }
 
 // Condition is a hook condition function.

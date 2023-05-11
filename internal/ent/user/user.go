@@ -26,18 +26,16 @@ const (
 	FieldPointsAwardedCount = "points_awarded_count"
 	// FieldPointsAwardedResetTime holds the string denoting the points_awarded_reset_time field in the database.
 	FieldPointsAwardedResetTime = "points_awarded_reset_time"
-	// FieldSuperuser holds the string denoting the superuser field in the database.
-	FieldSuperuser = "superuser"
+	// FieldGodMode holds the string denoting the god_mode field in the database.
+	FieldGodMode = "god_mode"
 	// EdgeInstitution holds the string denoting the institution edge name in mutations.
 	EdgeInstitution = "institution"
 	// EdgeCourse holds the string denoting the course edge name in mutations.
 	EdgeCourse = "course"
-	// EdgePrize holds the string denoting the prize edge name in mutations.
-	EdgePrize = "prize"
+	// EdgeRedemptions holds the string denoting the redemptions edge name in mutations.
+	EdgeRedemptions = "redemptions"
 	// EdgePet holds the string denoting the pet edge name in mutations.
 	EdgePet = "pet"
-	// EdgePrizeRedemptions holds the string denoting the prize_redemptions edge name in mutations.
-	EdgePrizeRedemptions = "prize_redemptions"
 	// EdgeUserPet holds the string denoting the user_pet edge name in mutations.
 	EdgeUserPet = "user_pet"
 	// Table holds the table name of the user in the database.
@@ -54,23 +52,18 @@ const (
 	CourseInverseTable = "courses"
 	// CourseColumn is the table column denoting the course relation/edge.
 	CourseColumn = "course_students"
-	// PrizeTable is the table that holds the prize relation/edge. The primary key declared below.
-	PrizeTable = "prize_redemptions"
-	// PrizeInverseTable is the table name for the Prize entity.
-	// It exists in this package in order to avoid circular dependency with the "prize" package.
-	PrizeInverseTable = "prizes"
+	// RedemptionsTable is the table that holds the redemptions relation/edge.
+	RedemptionsTable = "redemptions"
+	// RedemptionsInverseTable is the table name for the Redemption entity.
+	// It exists in this package in order to avoid circular dependency with the "redemption" package.
+	RedemptionsInverseTable = "redemptions"
+	// RedemptionsColumn is the table column denoting the redemptions relation/edge.
+	RedemptionsColumn = "redemption_user"
 	// PetTable is the table that holds the pet relation/edge. The primary key declared below.
 	PetTable = "user_pets"
 	// PetInverseTable is the table name for the Pet entity.
 	// It exists in this package in order to avoid circular dependency with the "pet" package.
 	PetInverseTable = "pets"
-	// PrizeRedemptionsTable is the table that holds the prize_redemptions relation/edge.
-	PrizeRedemptionsTable = "prize_redemptions"
-	// PrizeRedemptionsInverseTable is the table name for the PrizeRedemptions entity.
-	// It exists in this package in order to avoid circular dependency with the "prizeredemptions" package.
-	PrizeRedemptionsInverseTable = "prize_redemptions"
-	// PrizeRedemptionsColumn is the table column denoting the prize_redemptions relation/edge.
-	PrizeRedemptionsColumn = "user_id"
 	// UserPetTable is the table that holds the user_pet relation/edge.
 	UserPetTable = "user_pets"
 	// UserPetInverseTable is the table name for the UserPet entity.
@@ -90,7 +83,7 @@ var Columns = []string{
 	FieldPoints,
 	FieldPointsAwardedCount,
 	FieldPointsAwardedResetTime,
-	FieldSuperuser,
+	FieldGodMode,
 }
 
 // ForeignKeys holds the SQL foreign-keys that are owned by the "users"
@@ -103,9 +96,6 @@ var (
 	// InstitutionPrimaryKey and InstitutionColumn2 are the table columns denoting the
 	// primary key for the institution relation (M2M).
 	InstitutionPrimaryKey = []string{"institution_id", "user_id"}
-	// PrizePrimaryKey and PrizeColumn2 are the table columns denoting the
-	// primary key for the prize relation (M2M).
-	PrizePrimaryKey = []string{"prize_id", "user_id"}
 	// PetPrimaryKey and PetColumn2 are the table columns denoting the
 	// primary key for the pet relation (M2M).
 	PetPrimaryKey = []string{"pet_id", "user_id"}
@@ -184,9 +174,9 @@ func ByPointsAwardedResetTime(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldPointsAwardedResetTime, opts...).ToFunc()
 }
 
-// BySuperuser orders the results by the superuser field.
-func BySuperuser(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldSuperuser, opts...).ToFunc()
+// ByGodMode orders the results by the god_mode field.
+func ByGodMode(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldGodMode, opts...).ToFunc()
 }
 
 // ByInstitutionCount orders the results by institution count.
@@ -210,17 +200,17 @@ func ByCourseField(field string, opts ...sql.OrderTermOption) OrderOption {
 	}
 }
 
-// ByPrizeCount orders the results by prize count.
-func ByPrizeCount(opts ...sql.OrderTermOption) OrderOption {
+// ByRedemptionsCount orders the results by redemptions count.
+func ByRedemptionsCount(opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborsCount(s, newPrizeStep(), opts...)
+		sqlgraph.OrderByNeighborsCount(s, newRedemptionsStep(), opts...)
 	}
 }
 
-// ByPrize orders the results by prize terms.
-func ByPrize(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+// ByRedemptions orders the results by redemptions terms.
+func ByRedemptions(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newPrizeStep(), append([]sql.OrderTerm{term}, terms...)...)
+		sqlgraph.OrderByNeighborTerms(s, newRedemptionsStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
 
@@ -235,20 +225,6 @@ func ByPetCount(opts ...sql.OrderTermOption) OrderOption {
 func ByPet(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 	return func(s *sql.Selector) {
 		sqlgraph.OrderByNeighborTerms(s, newPetStep(), append([]sql.OrderTerm{term}, terms...)...)
-	}
-}
-
-// ByPrizeRedemptionsCount orders the results by prize_redemptions count.
-func ByPrizeRedemptionsCount(opts ...sql.OrderTermOption) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborsCount(s, newPrizeRedemptionsStep(), opts...)
-	}
-}
-
-// ByPrizeRedemptions orders the results by prize_redemptions terms.
-func ByPrizeRedemptions(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newPrizeRedemptionsStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
 
@@ -279,11 +255,11 @@ func newCourseStep() *sqlgraph.Step {
 		sqlgraph.Edge(sqlgraph.M2O, true, CourseTable, CourseColumn),
 	)
 }
-func newPrizeStep() *sqlgraph.Step {
+func newRedemptionsStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
-		sqlgraph.To(PrizeInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.M2M, true, PrizeTable, PrizePrimaryKey...),
+		sqlgraph.To(RedemptionsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, true, RedemptionsTable, RedemptionsColumn),
 	)
 }
 func newPetStep() *sqlgraph.Step {
@@ -291,13 +267,6 @@ func newPetStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(PetInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.M2M, true, PetTable, PetPrimaryKey...),
-	)
-}
-func newPrizeRedemptionsStep() *sqlgraph.Step {
-	return sqlgraph.NewStep(
-		sqlgraph.From(Table, FieldID),
-		sqlgraph.To(PrizeRedemptionsInverseTable, PrizeRedemptionsColumn),
-		sqlgraph.Edge(sqlgraph.O2M, true, PrizeRedemptionsTable, PrizeRedemptionsColumn),
 	)
 }
 func newUserPetStep() *sqlgraph.Step {

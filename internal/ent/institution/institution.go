@@ -16,8 +16,10 @@ const (
 	FieldName = "name"
 	// EdgeAdmins holds the string denoting the admins edge name in mutations.
 	EdgeAdmins = "admins"
-	// EdgePrizes holds the string denoting the prizes edge name in mutations.
-	EdgePrizes = "prizes"
+	// EdgeVouchers holds the string denoting the vouchers edge name in mutations.
+	EdgeVouchers = "vouchers"
+	// EdgeAccessories holds the string denoting the accessories edge name in mutations.
+	EdgeAccessories = "accessories"
 	// EdgeAcademicSchools holds the string denoting the academic_schools edge name in mutations.
 	EdgeAcademicSchools = "academic_schools"
 	// Table holds the table name of the institution in the database.
@@ -27,13 +29,20 @@ const (
 	// AdminsInverseTable is the table name for the User entity.
 	// It exists in this package in order to avoid circular dependency with the "user" package.
 	AdminsInverseTable = "users"
-	// PrizesTable is the table that holds the prizes relation/edge.
-	PrizesTable = "prizes"
-	// PrizesInverseTable is the table name for the Prize entity.
-	// It exists in this package in order to avoid circular dependency with the "prize" package.
-	PrizesInverseTable = "prizes"
-	// PrizesColumn is the table column denoting the prizes relation/edge.
-	PrizesColumn = "institution_prizes"
+	// VouchersTable is the table that holds the vouchers relation/edge.
+	VouchersTable = "vouchers"
+	// VouchersInverseTable is the table name for the Voucher entity.
+	// It exists in this package in order to avoid circular dependency with the "voucher" package.
+	VouchersInverseTable = "vouchers"
+	// VouchersColumn is the table column denoting the vouchers relation/edge.
+	VouchersColumn = "institution_vouchers"
+	// AccessoriesTable is the table that holds the accessories relation/edge.
+	AccessoriesTable = "accessories"
+	// AccessoriesInverseTable is the table name for the Accessory entity.
+	// It exists in this package in order to avoid circular dependency with the "accessory" package.
+	AccessoriesInverseTable = "accessories"
+	// AccessoriesColumn is the table column denoting the accessories relation/edge.
+	AccessoriesColumn = "institution_accessories"
 	// AcademicSchoolsTable is the table that holds the academic_schools relation/edge.
 	AcademicSchoolsTable = "academic_schools"
 	// AcademicSchoolsInverseTable is the table name for the AcademicSchool entity.
@@ -97,17 +106,31 @@ func ByAdmins(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 	}
 }
 
-// ByPrizesCount orders the results by prizes count.
-func ByPrizesCount(opts ...sql.OrderTermOption) OrderOption {
+// ByVouchersCount orders the results by vouchers count.
+func ByVouchersCount(opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborsCount(s, newPrizesStep(), opts...)
+		sqlgraph.OrderByNeighborsCount(s, newVouchersStep(), opts...)
 	}
 }
 
-// ByPrizes orders the results by prizes terms.
-func ByPrizes(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+// ByVouchers orders the results by vouchers terms.
+func ByVouchers(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newPrizesStep(), append([]sql.OrderTerm{term}, terms...)...)
+		sqlgraph.OrderByNeighborTerms(s, newVouchersStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
+// ByAccessoriesCount orders the results by accessories count.
+func ByAccessoriesCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newAccessoriesStep(), opts...)
+	}
+}
+
+// ByAccessories orders the results by accessories terms.
+func ByAccessories(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newAccessoriesStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
 
@@ -131,11 +154,18 @@ func newAdminsStep() *sqlgraph.Step {
 		sqlgraph.Edge(sqlgraph.M2M, false, AdminsTable, AdminsPrimaryKey...),
 	)
 }
-func newPrizesStep() *sqlgraph.Step {
+func newVouchersStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
-		sqlgraph.To(PrizesInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.O2M, false, PrizesTable, PrizesColumn),
+		sqlgraph.To(VouchersInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, VouchersTable, VouchersColumn),
+	)
+}
+func newAccessoriesStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(AccessoriesInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, AccessoriesTable, AccessoriesColumn),
 	)
 }
 func newAcademicSchoolsStep() *sqlgraph.Step {

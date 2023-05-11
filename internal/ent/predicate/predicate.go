@@ -9,6 +9,9 @@ import (
 // AcademicSchool is the predicate function for academicschool builders.
 type AcademicSchool func(*sql.Selector)
 
+// Accessory is the predicate function for accessory builders.
+type Accessory func(*sql.Selector)
+
 // Course is the predicate function for course builders.
 type Course func(*sql.Selector)
 
@@ -18,14 +21,14 @@ type Institution func(*sql.Selector)
 // Pet is the predicate function for pet builders.
 type Pet func(*sql.Selector)
 
-// Prize is the predicate function for prize builders.
-type Prize func(*sql.Selector)
-
-// PrizeRedemptions is the predicate function for prizeredemptions builders.
-type PrizeRedemptions func(*sql.Selector)
+// Redemption is the predicate function for redemption builders.
+type Redemption func(*sql.Selector)
 
 // User is the predicate function for user builders.
 type User func(*sql.Selector)
 
 // UserPet is the predicate function for userpet builders.
 type UserPet func(*sql.Selector)
+
+// Voucher is the predicate function for voucher builders.
+type Voucher func(*sql.Selector)

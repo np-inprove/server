@@ -13,7 +13,7 @@ import (
 	"github.com/np-inprove/server/internal/ent/course"
 	"github.com/np-inprove/server/internal/ent/institution"
 	"github.com/np-inprove/server/internal/ent/pet"
-	"github.com/np-inprove/server/internal/ent/prize"
+	"github.com/np-inprove/server/internal/ent/redemption"
 	"github.com/np-inprove/server/internal/ent/user"
 )
 
@@ -74,9 +74,9 @@ func (uc *UserCreate) SetNillablePointsAwardedResetTime(t *time.Time) *UserCreat
 	return uc
 }
 
-// SetSuperuser sets the "superuser" field.
-func (uc *UserCreate) SetSuperuser(b bool) *UserCreate {
-	uc.mutation.SetSuperuser(b)
+// SetGodMode sets the "god_mode" field.
+func (uc *UserCreate) SetGodMode(b bool) *UserCreate {
+	uc.mutation.SetGodMode(b)
 	return uc
 }
 
@@ -114,19 +114,19 @@ func (uc *UserCreate) SetCourse(c *Course) *UserCreate {
 	return uc.SetCourseID(c.ID)
 }
 
-// AddPrizeIDs adds the "prize" edge to the Prize entity by IDs.
-func (uc *UserCreate) AddPrizeIDs(ids ...int) *UserCreate {
-	uc.mutation.AddPrizeIDs(ids...)
+// AddRedemptionIDs adds the "redemptions" edge to the Redemption entity by IDs.
+func (uc *UserCreate) AddRedemptionIDs(ids ...int) *UserCreate {
+	uc.mutation.AddRedemptionIDs(ids...)
 	return uc
 }
 
-// AddPrize adds the "prize" edges to the Prize entity.
-func (uc *UserCreate) AddPrize(p ...*Prize) *UserCreate {
-	ids := make([]int, len(p))
-	for i := range p {
-		ids[i] = p[i].ID
+// AddRedemptions adds the "redemptions" edges to the Redemption entity.
+func (uc *UserCreate) AddRedemptions(r ...*Redemption) *UserCreate {
+	ids := make([]int, len(r))
+	for i := range r {
+		ids[i] = r[i].ID
 	}
-	return uc.AddPrizeIDs(ids...)
+	return uc.AddRedemptionIDs(ids...)
 }
 
 // AddPetIDs adds the "pet" edge to the Pet entity by IDs.
@@ -226,8 +226,8 @@ func (uc *UserCreate) check() error {
 			return &ValidationError{Name: "points_awarded_count", err: fmt.Errorf(`ent: validator failed for field "User.points_awarded_count": %w`, err)}
 		}
 	}
-	if _, ok := uc.mutation.Superuser(); !ok {
-		return &ValidationError{Name: "superuser", err: errors.New(`ent: missing required field "User.superuser"`)}
+	if _, ok := uc.mutation.GodMode(); !ok {
+		return &ValidationError{Name: "god_mode", err: errors.New(`ent: missing required field "User.god_mode"`)}
 	}
 	return nil
 }
@@ -283,9 +283,9 @@ func (uc *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 		_spec.SetField(user.FieldPointsAwardedResetTime, field.TypeTime, value)
 		_node.PointsAwardedResetTime = value
 	}
-	if value, ok := uc.mutation.Superuser(); ok {
-		_spec.SetField(user.FieldSuperuser, field.TypeBool, value)
-		_node.Superuser = value
+	if value, ok := uc.mutation.GodMode(); ok {
+		_spec.SetField(user.FieldGodMode, field.TypeBool, value)
+		_node.GodMode = value
 	}
 	if nodes := uc.mutation.InstitutionIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
@@ -320,15 +320,15 @@ func (uc *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 		_node.course_students = &nodes[0]
 		_spec.Edges = append(_spec.Edges, edge)
 	}
-	if nodes := uc.mutation.PrizeIDs(); len(nodes) > 0 {
+	if nodes := uc.mutation.RedemptionsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.O2M,
 			Inverse: true,
-			Table:   user.PrizeTable,
-			Columns: user.PrizePrimaryKey,
+			Table:   user.RedemptionsTable,
+			Columns: []string{user.RedemptionsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(prize.FieldID, field.TypeInt),
+				IDSpec: sqlgraph.NewFieldSpec(redemption.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

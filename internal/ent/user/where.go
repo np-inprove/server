@@ -90,9 +90,9 @@ func PointsAwardedResetTime(v time.Time) predicate.User {
 	return predicate.User(sql.FieldEQ(FieldPointsAwardedResetTime, v))
 }
 
-// Superuser applies equality check predicate on the "superuser" field. It's identical to SuperuserEQ.
-func Superuser(v bool) predicate.User {
-	return predicate.User(sql.FieldEQ(FieldSuperuser, v))
+// GodMode applies equality check predicate on the "god_mode" field. It's identical to GodModeEQ.
+func GodMode(v bool) predicate.User {
+	return predicate.User(sql.FieldEQ(FieldGodMode, v))
 }
 
 // FirstNameEQ applies the EQ predicate on the "first_name" field.
@@ -485,14 +485,14 @@ func PointsAwardedResetTimeNotNil() predicate.User {
 	return predicate.User(sql.FieldNotNull(FieldPointsAwardedResetTime))
 }
 
-// SuperuserEQ applies the EQ predicate on the "superuser" field.
-func SuperuserEQ(v bool) predicate.User {
-	return predicate.User(sql.FieldEQ(FieldSuperuser, v))
+// GodModeEQ applies the EQ predicate on the "god_mode" field.
+func GodModeEQ(v bool) predicate.User {
+	return predicate.User(sql.FieldEQ(FieldGodMode, v))
 }
 
-// SuperuserNEQ applies the NEQ predicate on the "superuser" field.
-func SuperuserNEQ(v bool) predicate.User {
-	return predicate.User(sql.FieldNEQ(FieldSuperuser, v))
+// GodModeNEQ applies the NEQ predicate on the "god_mode" field.
+func GodModeNEQ(v bool) predicate.User {
+	return predicate.User(sql.FieldNEQ(FieldGodMode, v))
 }
 
 // HasInstitution applies the HasEdge predicate on the "institution" edge.
@@ -541,21 +541,21 @@ func HasCourseWith(preds ...predicate.Course) predicate.User {
 	})
 }
 
-// HasPrize applies the HasEdge predicate on the "prize" edge.
-func HasPrize() predicate.User {
+// HasRedemptions applies the HasEdge predicate on the "redemptions" edge.
+func HasRedemptions() predicate.User {
 	return predicate.User(func(s *sql.Selector) {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, true, PrizeTable, PrizePrimaryKey...),
+			sqlgraph.Edge(sqlgraph.O2M, true, RedemptionsTable, RedemptionsColumn),
 		)
 		sqlgraph.HasNeighbors(s, step)
 	})
 }
 
-// HasPrizeWith applies the HasEdge predicate on the "prize" edge with a given conditions (other predicates).
-func HasPrizeWith(preds ...predicate.Prize) predicate.User {
+// HasRedemptionsWith applies the HasEdge predicate on the "redemptions" edge with a given conditions (other predicates).
+func HasRedemptionsWith(preds ...predicate.Redemption) predicate.User {
 	return predicate.User(func(s *sql.Selector) {
-		step := newPrizeStep()
+		step := newRedemptionsStep()
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)
@@ -579,29 +579,6 @@ func HasPet() predicate.User {
 func HasPetWith(preds ...predicate.Pet) predicate.User {
 	return predicate.User(func(s *sql.Selector) {
 		step := newPetStep()
-		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
-			for _, p := range preds {
-				p(s)
-			}
-		})
-	})
-}
-
-// HasPrizeRedemptions applies the HasEdge predicate on the "prize_redemptions" edge.
-func HasPrizeRedemptions() predicate.User {
-	return predicate.User(func(s *sql.Selector) {
-		step := sqlgraph.NewStep(
-			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, true, PrizeRedemptionsTable, PrizeRedemptionsColumn),
-		)
-		sqlgraph.HasNeighbors(s, step)
-	})
-}
-
-// HasPrizeRedemptionsWith applies the HasEdge predicate on the "prize_redemptions" edge with a given conditions (other predicates).
-func HasPrizeRedemptionsWith(preds ...predicate.PrizeRedemptions) predicate.User {
-	return predicate.User(func(s *sql.Selector) {
-		step := newPrizeRedemptionsStep()
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)

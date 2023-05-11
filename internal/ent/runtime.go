@@ -4,12 +4,13 @@ package ent
 
 import (
 	"github.com/np-inprove/server/internal/ent/academicschool"
+	"github.com/np-inprove/server/internal/ent/accessory"
 	"github.com/np-inprove/server/internal/ent/course"
 	"github.com/np-inprove/server/internal/ent/institution"
-	"github.com/np-inprove/server/internal/ent/prize"
 	"github.com/np-inprove/server/internal/ent/schema"
 	"github.com/np-inprove/server/internal/ent/user"
 	"github.com/np-inprove/server/internal/ent/userpet"
+	"github.com/np-inprove/server/internal/ent/voucher"
 )
 
 // The init function reads all schema descriptors with runtime code
@@ -26,6 +27,19 @@ func init() {
 	academicschoolDescSchoolCode := academicschoolFields[1].Descriptor()
 	// academicschool.SchoolCodeValidator is a validator for the "school_code" field. It is called by the builders before save.
 	academicschool.SchoolCodeValidator = academicschoolDescSchoolCode.Validators[0].(func(string) error)
+	accessoryMixin := schema.Accessory{}.Mixin()
+	accessoryMixinFields0 := accessoryMixin[0].Fields()
+	_ = accessoryMixinFields0
+	accessoryFields := schema.Accessory{}.Fields()
+	_ = accessoryFields
+	// accessoryDescName is the schema descriptor for name field.
+	accessoryDescName := accessoryMixinFields0[0].Descriptor()
+	// accessory.NameValidator is a validator for the "name" field. It is called by the builders before save.
+	accessory.NameValidator = accessoryDescName.Validators[0].(func(string) error)
+	// accessoryDescPointsRequired is the schema descriptor for points_required field.
+	accessoryDescPointsRequired := accessoryMixinFields0[2].Descriptor()
+	// accessory.PointsRequiredValidator is a validator for the "points_required" field. It is called by the builders before save.
+	accessory.PointsRequiredValidator = accessoryDescPointsRequired.Validators[0].(func(int) error)
 	courseFields := schema.Course{}.Fields()
 	_ = courseFields
 	// courseDescName is the schema descriptor for name field.
@@ -42,16 +56,6 @@ func init() {
 	institutionDescName := institutionFields[0].Descriptor()
 	// institution.NameValidator is a validator for the "name" field. It is called by the builders before save.
 	institution.NameValidator = institutionDescName.Validators[0].(func(string) error)
-	prizeFields := schema.Prize{}.Fields()
-	_ = prizeFields
-	// prizeDescName is the schema descriptor for name field.
-	prizeDescName := prizeFields[0].Descriptor()
-	// prize.NameValidator is a validator for the "name" field. It is called by the builders before save.
-	prize.NameValidator = prizeDescName.Validators[0].(func(string) error)
-	// prizeDescPointsRequired is the schema descriptor for points_required field.
-	prizeDescPointsRequired := prizeFields[2].Descriptor()
-	// prize.PointsRequiredValidator is a validator for the "points_required" field. It is called by the builders before save.
-	prize.PointsRequiredValidator = prizeDescPointsRequired.Validators[0].(func(int) error)
 	userFields := schema.User{}.Fields()
 	_ = userFields
 	// userDescFirstName is the schema descriptor for first_name field.
@@ -102,4 +106,17 @@ func init() {
 	userpetDescEnabledSvgGroupElementIds := userpetFields[1].Descriptor()
 	// userpet.DefaultEnabledSvgGroupElementIds holds the default value on creation for the enabled_svg_group_element_ids field.
 	userpet.DefaultEnabledSvgGroupElementIds = userpetDescEnabledSvgGroupElementIds.Default.(map[string]bool)
+	voucherMixin := schema.Voucher{}.Mixin()
+	voucherMixinFields0 := voucherMixin[0].Fields()
+	_ = voucherMixinFields0
+	voucherFields := schema.Voucher{}.Fields()
+	_ = voucherFields
+	// voucherDescName is the schema descriptor for name field.
+	voucherDescName := voucherMixinFields0[0].Descriptor()
+	// voucher.NameValidator is a validator for the "name" field. It is called by the builders before save.
+	voucher.NameValidator = voucherDescName.Validators[0].(func(string) error)
+	// voucherDescPointsRequired is the schema descriptor for points_required field.
+	voucherDescPointsRequired := voucherMixinFields0[2].Descriptor()
+	// voucher.PointsRequiredValidator is a validator for the "points_required" field. It is called by the builders before save.
+	voucher.PointsRequiredValidator = voucherDescPointsRequired.Validators[0].(func(int) error)
 }

@@ -11,10 +11,11 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/np-inprove/server/internal/ent/academicschool"
+	"github.com/np-inprove/server/internal/ent/accessory"
 	"github.com/np-inprove/server/internal/ent/institution"
 	"github.com/np-inprove/server/internal/ent/predicate"
-	"github.com/np-inprove/server/internal/ent/prize"
 	"github.com/np-inprove/server/internal/ent/user"
+	"github.com/np-inprove/server/internal/ent/voucher"
 )
 
 // InstitutionUpdate is the builder for updating Institution entities.
@@ -51,19 +52,34 @@ func (iu *InstitutionUpdate) AddAdmins(u ...*User) *InstitutionUpdate {
 	return iu.AddAdminIDs(ids...)
 }
 
-// AddPrizeIDs adds the "prizes" edge to the Prize entity by IDs.
-func (iu *InstitutionUpdate) AddPrizeIDs(ids ...int) *InstitutionUpdate {
-	iu.mutation.AddPrizeIDs(ids...)
+// AddVoucherIDs adds the "vouchers" edge to the Voucher entity by IDs.
+func (iu *InstitutionUpdate) AddVoucherIDs(ids ...int) *InstitutionUpdate {
+	iu.mutation.AddVoucherIDs(ids...)
 	return iu
 }
 
-// AddPrizes adds the "prizes" edges to the Prize entity.
-func (iu *InstitutionUpdate) AddPrizes(p ...*Prize) *InstitutionUpdate {
-	ids := make([]int, len(p))
-	for i := range p {
-		ids[i] = p[i].ID
+// AddVouchers adds the "vouchers" edges to the Voucher entity.
+func (iu *InstitutionUpdate) AddVouchers(v ...*Voucher) *InstitutionUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return iu.AddPrizeIDs(ids...)
+	return iu.AddVoucherIDs(ids...)
+}
+
+// AddAccessoryIDs adds the "accessories" edge to the Accessory entity by IDs.
+func (iu *InstitutionUpdate) AddAccessoryIDs(ids ...int) *InstitutionUpdate {
+	iu.mutation.AddAccessoryIDs(ids...)
+	return iu
+}
+
+// AddAccessories adds the "accessories" edges to the Accessory entity.
+func (iu *InstitutionUpdate) AddAccessories(a ...*Accessory) *InstitutionUpdate {
+	ids := make([]int, len(a))
+	for i := range a {
+		ids[i] = a[i].ID
+	}
+	return iu.AddAccessoryIDs(ids...)
 }
 
 // AddAcademicSchoolIDs adds the "academic_schools" edge to the AcademicSchool entity by IDs.
@@ -107,25 +123,46 @@ func (iu *InstitutionUpdate) RemoveAdmins(u ...*User) *InstitutionUpdate {
 	return iu.RemoveAdminIDs(ids...)
 }
 
-// ClearPrizes clears all "prizes" edges to the Prize entity.
-func (iu *InstitutionUpdate) ClearPrizes() *InstitutionUpdate {
-	iu.mutation.ClearPrizes()
+// ClearVouchers clears all "vouchers" edges to the Voucher entity.
+func (iu *InstitutionUpdate) ClearVouchers() *InstitutionUpdate {
+	iu.mutation.ClearVouchers()
 	return iu
 }
 
-// RemovePrizeIDs removes the "prizes" edge to Prize entities by IDs.
-func (iu *InstitutionUpdate) RemovePrizeIDs(ids ...int) *InstitutionUpdate {
-	iu.mutation.RemovePrizeIDs(ids...)
+// RemoveVoucherIDs removes the "vouchers" edge to Voucher entities by IDs.
+func (iu *InstitutionUpdate) RemoveVoucherIDs(ids ...int) *InstitutionUpdate {
+	iu.mutation.RemoveVoucherIDs(ids...)
 	return iu
 }
 
-// RemovePrizes removes "prizes" edges to Prize entities.
-func (iu *InstitutionUpdate) RemovePrizes(p ...*Prize) *InstitutionUpdate {
-	ids := make([]int, len(p))
-	for i := range p {
-		ids[i] = p[i].ID
+// RemoveVouchers removes "vouchers" edges to Voucher entities.
+func (iu *InstitutionUpdate) RemoveVouchers(v ...*Voucher) *InstitutionUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return iu.RemovePrizeIDs(ids...)
+	return iu.RemoveVoucherIDs(ids...)
+}
+
+// ClearAccessories clears all "accessories" edges to the Accessory entity.
+func (iu *InstitutionUpdate) ClearAccessories() *InstitutionUpdate {
+	iu.mutation.ClearAccessories()
+	return iu
+}
+
+// RemoveAccessoryIDs removes the "accessories" edge to Accessory entities by IDs.
+func (iu *InstitutionUpdate) RemoveAccessoryIDs(ids ...int) *InstitutionUpdate {
+	iu.mutation.RemoveAccessoryIDs(ids...)
+	return iu
+}
+
+// RemoveAccessories removes "accessories" edges to Accessory entities.
+func (iu *InstitutionUpdate) RemoveAccessories(a ...*Accessory) *InstitutionUpdate {
+	ids := make([]int, len(a))
+	for i := range a {
+		ids[i] = a[i].ID
+	}
+	return iu.RemoveAccessoryIDs(ids...)
 }
 
 // ClearAcademicSchools clears all "academic_schools" edges to the AcademicSchool entity.
@@ -246,28 +283,28 @@ func (iu *InstitutionUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if iu.mutation.PrizesCleared() {
+	if iu.mutation.VouchersCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
-			Table:   institution.PrizesTable,
-			Columns: []string{institution.PrizesColumn},
+			Table:   institution.VouchersTable,
+			Columns: []string{institution.VouchersColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(prize.FieldID, field.TypeInt),
+				IDSpec: sqlgraph.NewFieldSpec(voucher.FieldID, field.TypeInt),
 			},
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := iu.mutation.RemovedPrizesIDs(); len(nodes) > 0 && !iu.mutation.PrizesCleared() {
+	if nodes := iu.mutation.RemovedVouchersIDs(); len(nodes) > 0 && !iu.mutation.VouchersCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
-			Table:   institution.PrizesTable,
-			Columns: []string{institution.PrizesColumn},
+			Table:   institution.VouchersTable,
+			Columns: []string{institution.VouchersColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(prize.FieldID, field.TypeInt),
+				IDSpec: sqlgraph.NewFieldSpec(voucher.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -275,15 +312,60 @@ func (iu *InstitutionUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := iu.mutation.PrizesIDs(); len(nodes) > 0 {
+	if nodes := iu.mutation.VouchersIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
-			Table:   institution.PrizesTable,
-			Columns: []string{institution.PrizesColumn},
+			Table:   institution.VouchersTable,
+			Columns: []string{institution.VouchersColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(prize.FieldID, field.TypeInt),
+				IDSpec: sqlgraph.NewFieldSpec(voucher.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if iu.mutation.AccessoriesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   institution.AccessoriesTable,
+			Columns: []string{institution.AccessoriesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(accessory.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := iu.mutation.RemovedAccessoriesIDs(); len(nodes) > 0 && !iu.mutation.AccessoriesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   institution.AccessoriesTable,
+			Columns: []string{institution.AccessoriesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(accessory.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := iu.mutation.AccessoriesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   institution.AccessoriesTable,
+			Columns: []string{institution.AccessoriesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(accessory.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -377,19 +459,34 @@ func (iuo *InstitutionUpdateOne) AddAdmins(u ...*User) *InstitutionUpdateOne {
 	return iuo.AddAdminIDs(ids...)
 }
 
-// AddPrizeIDs adds the "prizes" edge to the Prize entity by IDs.
-func (iuo *InstitutionUpdateOne) AddPrizeIDs(ids ...int) *InstitutionUpdateOne {
-	iuo.mutation.AddPrizeIDs(ids...)
+// AddVoucherIDs adds the "vouchers" edge to the Voucher entity by IDs.
+func (iuo *InstitutionUpdateOne) AddVoucherIDs(ids ...int) *InstitutionUpdateOne {
+	iuo.mutation.AddVoucherIDs(ids...)
 	return iuo
 }
 
-// AddPrizes adds the "prizes" edges to the Prize entity.
-func (iuo *InstitutionUpdateOne) AddPrizes(p ...*Prize) *InstitutionUpdateOne {
-	ids := make([]int, len(p))
-	for i := range p {
-		ids[i] = p[i].ID
+// AddVouchers adds the "vouchers" edges to the Voucher entity.
+func (iuo *InstitutionUpdateOne) AddVouchers(v ...*Voucher) *InstitutionUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return iuo.AddPrizeIDs(ids...)
+	return iuo.AddVoucherIDs(ids...)
+}
+
+// AddAccessoryIDs adds the "accessories" edge to the Accessory entity by IDs.
+func (iuo *InstitutionUpdateOne) AddAccessoryIDs(ids ...int) *InstitutionUpdateOne {
+	iuo.mutation.AddAccessoryIDs(ids...)
+	return iuo
+}
+
+// AddAccessories adds the "accessories" edges to the Accessory entity.
+func (iuo *InstitutionUpdateOne) AddAccessories(a ...*Accessory) *InstitutionUpdateOne {
+	ids := make([]int, len(a))
+	for i := range a {
+		ids[i] = a[i].ID
+	}
+	return iuo.AddAccessoryIDs(ids...)
 }
 
 // AddAcademicSchoolIDs adds the "academic_schools" edge to the AcademicSchool entity by IDs.
@@ -433,25 +530,46 @@ func (iuo *InstitutionUpdateOne) RemoveAdmins(u ...*User) *InstitutionUpdateOne 
 	return iuo.RemoveAdminIDs(ids...)
 }
 
-// ClearPrizes clears all "prizes" edges to the Prize entity.
-func (iuo *InstitutionUpdateOne) ClearPrizes() *InstitutionUpdateOne {
-	iuo.mutation.ClearPrizes()
+// ClearVouchers clears all "vouchers" edges to the Voucher entity.
+func (iuo *InstitutionUpdateOne) ClearVouchers() *InstitutionUpdateOne {
+	iuo.mutation.ClearVouchers()
 	return iuo
 }
 
-// RemovePrizeIDs removes the "prizes" edge to Prize entities by IDs.
-func (iuo *InstitutionUpdateOne) RemovePrizeIDs(ids ...int) *InstitutionUpdateOne {
-	iuo.mutation.RemovePrizeIDs(ids...)
+// RemoveVoucherIDs removes the "vouchers" edge to Voucher entities by IDs.
+func (iuo *InstitutionUpdateOne) RemoveVoucherIDs(ids ...int) *InstitutionUpdateOne {
+	iuo.mutation.RemoveVoucherIDs(ids...)
 	return iuo
 }
 
-// RemovePrizes removes "prizes" edges to Prize entities.
-func (iuo *InstitutionUpdateOne) RemovePrizes(p ...*Prize) *InstitutionUpdateOne {
-	ids := make([]int, len(p))
-	for i := range p {
-		ids[i] = p[i].ID
+// RemoveVouchers removes "vouchers" edges to Voucher entities.
+func (iuo *InstitutionUpdateOne) RemoveVouchers(v ...*Voucher) *InstitutionUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return iuo.RemovePrizeIDs(ids...)
+	return iuo.RemoveVoucherIDs(ids...)
+}
+
+// ClearAccessories clears all "accessories" edges to the Accessory entity.
+func (iuo *InstitutionUpdateOne) ClearAccessories() *InstitutionUpdateOne {
+	iuo.mutation.ClearAccessories()
+	return iuo
+}
+
+// RemoveAccessoryIDs removes the "accessories" edge to Accessory entities by IDs.
+func (iuo *InstitutionUpdateOne) RemoveAccessoryIDs(ids ...int) *InstitutionUpdateOne {
+	iuo.mutation.RemoveAccessoryIDs(ids...)
+	return iuo
+}
+
+// RemoveAccessories removes "accessories" edges to Accessory entities.
+func (iuo *InstitutionUpdateOne) RemoveAccessories(a ...*Accessory) *InstitutionUpdateOne {
+	ids := make([]int, len(a))
+	for i := range a {
+		ids[i] = a[i].ID
+	}
+	return iuo.RemoveAccessoryIDs(ids...)
 }
 
 // ClearAcademicSchools clears all "academic_schools" edges to the AcademicSchool entity.
@@ -602,28 +720,28 @@ func (iuo *InstitutionUpdateOne) sqlSave(ctx context.Context) (_node *Institutio
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if iuo.mutation.PrizesCleared() {
+	if iuo.mutation.VouchersCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
-			Table:   institution.PrizesTable,
-			Columns: []string{institution.PrizesColumn},
+			Table:   institution.VouchersTable,
+			Columns: []string{institution.VouchersColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(prize.FieldID, field.TypeInt),
+				IDSpec: sqlgraph.NewFieldSpec(voucher.FieldID, field.TypeInt),
 			},
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := iuo.mutation.RemovedPrizesIDs(); len(nodes) > 0 && !iuo.mutation.PrizesCleared() {
+	if nodes := iuo.mutation.RemovedVouchersIDs(); len(nodes) > 0 && !iuo.mutation.VouchersCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
-			Table:   institution.PrizesTable,
-			Columns: []string{institution.PrizesColumn},
+			Table:   institution.VouchersTable,
+			Columns: []string{institution.VouchersColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(prize.FieldID, field.TypeInt),
+				IDSpec: sqlgraph.NewFieldSpec(voucher.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -631,15 +749,60 @@ func (iuo *InstitutionUpdateOne) sqlSave(ctx context.Context) (_node *Institutio
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := iuo.mutation.PrizesIDs(); len(nodes) > 0 {
+	if nodes := iuo.mutation.VouchersIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
-			Table:   institution.PrizesTable,
-			Columns: []string{institution.PrizesColumn},
+			Table:   institution.VouchersTable,
+			Columns: []string{institution.VouchersColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(prize.FieldID, field.TypeInt),
+				IDSpec: sqlgraph.NewFieldSpec(voucher.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if iuo.mutation.AccessoriesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   institution.AccessoriesTable,
+			Columns: []string{institution.AccessoriesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(accessory.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := iuo.mutation.RemovedAccessoriesIDs(); len(nodes) > 0 && !iuo.mutation.AccessoriesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   institution.AccessoriesTable,
+			Columns: []string{institution.AccessoriesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(accessory.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := iuo.mutation.AccessoriesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   institution.AccessoriesTable,
+			Columns: []string{institution.AccessoriesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(accessory.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
