@@ -21,9 +21,11 @@ import (
 	"github.com/np-inprove/server/internal/ent/group"
 	"github.com/np-inprove/server/internal/ent/groupuser"
 	"github.com/np-inprove/server/internal/ent/institution"
+	"github.com/np-inprove/server/internal/ent/milestone"
 	"github.com/np-inprove/server/internal/ent/pet"
 	"github.com/np-inprove/server/internal/ent/reaction"
 	"github.com/np-inprove/server/internal/ent/redemption"
+	"github.com/np-inprove/server/internal/ent/studyplan"
 	"github.com/np-inprove/server/internal/ent/user"
 	"github.com/np-inprove/server/internal/ent/userpet"
 	"github.com/np-inprove/server/internal/ent/voucher"
@@ -96,9 +98,11 @@ func checkColumn(table, column string) error {
 			group.Table:          group.ValidColumn,
 			groupuser.Table:      groupuser.ValidColumn,
 			institution.Table:    institution.ValidColumn,
+			milestone.Table:      milestone.ValidColumn,
 			pet.Table:            pet.ValidColumn,
 			reaction.Table:       reaction.ValidColumn,
 			redemption.Table:     redemption.ValidColumn,
+			studyplan.Table:      studyplan.ValidColumn,
 			user.Table:           user.ValidColumn,
 			userpet.Table:        userpet.ValidColumn,
 			voucher.Table:        voucher.ValidColumn,

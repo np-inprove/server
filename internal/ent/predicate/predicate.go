@@ -33,6 +33,9 @@ type GroupUser func(*sql.Selector)
 // Institution is the predicate function for institution builders.
 type Institution func(*sql.Selector)
 
+// Milestone is the predicate function for milestone builders.
+type Milestone func(*sql.Selector)
+
 // Pet is the predicate function for pet builders.
 type Pet func(*sql.Selector)
 
@@ -41,6 +44,9 @@ type Reaction func(*sql.Selector)
 
 // Redemption is the predicate function for redemption builders.
 type Redemption func(*sql.Selector)
+
+// StudyPlan is the predicate function for studyplan builders.
+type StudyPlan func(*sql.Selector)
 
 // User is the predicate function for user builders.
 type User func(*sql.Selector)

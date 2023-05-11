@@ -11,8 +11,10 @@ import (
 	"github.com/np-inprove/server/internal/ent/forumpost"
 	"github.com/np-inprove/server/internal/ent/group"
 	"github.com/np-inprove/server/internal/ent/institution"
+	"github.com/np-inprove/server/internal/ent/milestone"
 	"github.com/np-inprove/server/internal/ent/reaction"
 	"github.com/np-inprove/server/internal/ent/schema"
+	"github.com/np-inprove/server/internal/ent/studyplan"
 	"github.com/np-inprove/server/internal/ent/user"
 	"github.com/np-inprove/server/internal/ent/userpet"
 	"github.com/np-inprove/server/internal/ent/voucher"
@@ -93,12 +95,24 @@ func init() {
 	institutionDescName := institutionFields[0].Descriptor()
 	// institution.NameValidator is a validator for the "name" field. It is called by the builders before save.
 	institution.NameValidator = institutionDescName.Validators[0].(func(string) error)
+	milestoneFields := schema.Milestone{}.Fields()
+	_ = milestoneFields
+	// milestoneDescName is the schema descriptor for name field.
+	milestoneDescName := milestoneFields[0].Descriptor()
+	// milestone.NameValidator is a validator for the "name" field. It is called by the builders before save.
+	milestone.NameValidator = milestoneDescName.Validators[0].(func(string) error)
 	reactionFields := schema.Reaction{}.Fields()
 	_ = reactionFields
 	// reactionDescEmoji is the schema descriptor for emoji field.
 	reactionDescEmoji := reactionFields[2].Descriptor()
 	// reaction.EmojiValidator is a validator for the "emoji" field. It is called by the builders before save.
 	reaction.EmojiValidator = reactionDescEmoji.Validators[0].(func(string) error)
+	studyplanFields := schema.StudyPlan{}.Fields()
+	_ = studyplanFields
+	// studyplanDescName is the schema descriptor for name field.
+	studyplanDescName := studyplanFields[0].Descriptor()
+	// studyplan.NameValidator is a validator for the "name" field. It is called by the builders before save.
+	studyplan.NameValidator = studyplanDescName.Validators[0].(func(string) error)
 	userFields := schema.User{}.Fields()
 	_ = userFields
 	// userDescFirstName is the schema descriptor for first_name field.

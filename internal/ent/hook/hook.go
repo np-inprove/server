@@ -117,6 +117,18 @@ func (f InstitutionFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value,
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.InstitutionMutation", m)
 }
 
+// The MilestoneFunc type is an adapter to allow the use of ordinary
+// function as Milestone mutator.
+type MilestoneFunc func(context.Context, *ent.MilestoneMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f MilestoneFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.MilestoneMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.MilestoneMutation", m)
+}
+
 // The PetFunc type is an adapter to allow the use of ordinary
 // function as Pet mutator.
 type PetFunc func(context.Context, *ent.PetMutation) (ent.Value, error)
@@ -151,6 +163,18 @@ func (f RedemptionFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, 
 		return f(ctx, mv)
 	}
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.RedemptionMutation", m)
+}
+
+// The StudyPlanFunc type is an adapter to allow the use of ordinary
+// function as StudyPlan mutator.
+type StudyPlanFunc func(context.Context, *ent.StudyPlanMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f StudyPlanFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.StudyPlanMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.StudyPlanMutation", m)
 }
 
 // The UserFunc type is an adapter to allow the use of ordinary

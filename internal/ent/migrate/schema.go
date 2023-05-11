@@ -211,6 +211,27 @@ var (
 		Columns:    InstitutionsColumns,
 		PrimaryKey: []*schema.Column{InstitutionsColumns[0]},
 	}
+	// MilestonesColumns holds the columns for the "milestones" table.
+	MilestonesColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "name", Type: field.TypeString},
+		{Name: "target_completion_time", Type: field.TypeTime},
+		{Name: "study_plan_milestones", Type: field.TypeInt},
+	}
+	// MilestonesTable holds the schema information for the "milestones" table.
+	MilestonesTable = &schema.Table{
+		Name:       "milestones",
+		Columns:    MilestonesColumns,
+		PrimaryKey: []*schema.Column{MilestonesColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "milestones_study_plans_milestones",
+				Columns:    []*schema.Column{MilestonesColumns[3]},
+				RefColumns: []*schema.Column{StudyPlansColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+	}
 	// PetsColumns holds the columns for the "pets" table.
 	PetsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
@@ -280,6 +301,27 @@ var (
 				Columns:    []*schema.Column{RedemptionsColumns[4]},
 				RefColumns: []*schema.Column{VouchersColumns[0]},
 				OnDelete:   schema.SetNull,
+			},
+		},
+	}
+	// StudyPlansColumns holds the columns for the "study_plans" table.
+	StudyPlansColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "name", Type: field.TypeString},
+		{Name: "share_code", Type: field.TypeString, Nullable: true},
+		{Name: "study_plan_author", Type: field.TypeInt},
+	}
+	// StudyPlansTable holds the schema information for the "study_plans" table.
+	StudyPlansTable = &schema.Table{
+		Name:       "study_plans",
+		Columns:    StudyPlansColumns,
+		PrimaryKey: []*schema.Column{StudyPlansColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "study_plans_users_author",
+				Columns:    []*schema.Column{StudyPlansColumns[3]},
+				RefColumns: []*schema.Column{UsersColumns[0]},
+				OnDelete:   schema.NoAction,
 			},
 		},
 	}
@@ -420,9 +462,11 @@ var (
 		GroupsTable,
 		GroupUsersTable,
 		InstitutionsTable,
+		MilestonesTable,
 		PetsTable,
 		ReactionsTable,
 		RedemptionsTable,
+		StudyPlansTable,
 		UsersTable,
 		UserPetsTable,
 		VouchersTable,
@@ -443,11 +487,13 @@ func init() {
 	ForumPostsTable.ForeignKeys[2].RefTable = GroupsTable
 	GroupUsersTable.ForeignKeys[0].RefTable = GroupsTable
 	GroupUsersTable.ForeignKeys[1].RefTable = UsersTable
+	MilestonesTable.ForeignKeys[0].RefTable = StudyPlansTable
 	ReactionsTable.ForeignKeys[0].RefTable = UsersTable
 	ReactionsTable.ForeignKeys[1].RefTable = ForumPostsTable
 	RedemptionsTable.ForeignKeys[0].RefTable = AccessoriesTable
 	RedemptionsTable.ForeignKeys[1].RefTable = UsersTable
 	RedemptionsTable.ForeignKeys[2].RefTable = VouchersTable
+	StudyPlansTable.ForeignKeys[0].RefTable = UsersTable
 	UsersTable.ForeignKeys[0].RefTable = CoursesTable
 	UserPetsTable.ForeignKeys[0].RefTable = PetsTable
 	UserPetsTable.ForeignKeys[1].RefTable = UsersTable

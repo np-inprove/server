@@ -30,12 +30,16 @@ type Tx struct {
 	GroupUser *GroupUserClient
 	// Institution is the client for interacting with the Institution builders.
 	Institution *InstitutionClient
+	// Milestone is the client for interacting with the Milestone builders.
+	Milestone *MilestoneClient
 	// Pet is the client for interacting with the Pet builders.
 	Pet *PetClient
 	// Reaction is the client for interacting with the Reaction builders.
 	Reaction *ReactionClient
 	// Redemption is the client for interacting with the Redemption builders.
 	Redemption *RedemptionClient
+	// StudyPlan is the client for interacting with the StudyPlan builders.
+	StudyPlan *StudyPlanClient
 	// User is the client for interacting with the User builders.
 	User *UserClient
 	// UserPet is the client for interacting with the UserPet builders.
@@ -182,9 +186,11 @@ func (tx *Tx) init() {
 	tx.Group = NewGroupClient(tx.config)
 	tx.GroupUser = NewGroupUserClient(tx.config)
 	tx.Institution = NewInstitutionClient(tx.config)
+	tx.Milestone = NewMilestoneClient(tx.config)
 	tx.Pet = NewPetClient(tx.config)
 	tx.Reaction = NewReactionClient(tx.config)
 	tx.Redemption = NewRedemptionClient(tx.config)
+	tx.StudyPlan = NewStudyPlanClient(tx.config)
 	tx.User = NewUserClient(tx.config)
 	tx.UserPet = NewUserPetClient(tx.config)
 	tx.Voucher = NewVoucherClient(tx.config)

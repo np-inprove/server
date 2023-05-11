@@ -23,9 +23,11 @@ import (
 	"github.com/np-inprove/server/internal/ent/group"
 	"github.com/np-inprove/server/internal/ent/groupuser"
 	"github.com/np-inprove/server/internal/ent/institution"
+	"github.com/np-inprove/server/internal/ent/milestone"
 	"github.com/np-inprove/server/internal/ent/pet"
 	"github.com/np-inprove/server/internal/ent/reaction"
 	"github.com/np-inprove/server/internal/ent/redemption"
+	"github.com/np-inprove/server/internal/ent/studyplan"
 	"github.com/np-inprove/server/internal/ent/user"
 	"github.com/np-inprove/server/internal/ent/userpet"
 	"github.com/np-inprove/server/internal/ent/voucher"
@@ -54,12 +56,16 @@ type Client struct {
 	GroupUser *GroupUserClient
 	// Institution is the client for interacting with the Institution builders.
 	Institution *InstitutionClient
+	// Milestone is the client for interacting with the Milestone builders.
+	Milestone *MilestoneClient
 	// Pet is the client for interacting with the Pet builders.
 	Pet *PetClient
 	// Reaction is the client for interacting with the Reaction builders.
 	Reaction *ReactionClient
 	// Redemption is the client for interacting with the Redemption builders.
 	Redemption *RedemptionClient
+	// StudyPlan is the client for interacting with the StudyPlan builders.
+	StudyPlan *StudyPlanClient
 	// User is the client for interacting with the User builders.
 	User *UserClient
 	// UserPet is the client for interacting with the UserPet builders.
@@ -88,9 +94,11 @@ func (c *Client) init() {
 	c.Group = NewGroupClient(c.config)
 	c.GroupUser = NewGroupUserClient(c.config)
 	c.Institution = NewInstitutionClient(c.config)
+	c.Milestone = NewMilestoneClient(c.config)
 	c.Pet = NewPetClient(c.config)
 	c.Reaction = NewReactionClient(c.config)
 	c.Redemption = NewRedemptionClient(c.config)
+	c.StudyPlan = NewStudyPlanClient(c.config)
 	c.User = NewUserClient(c.config)
 	c.UserPet = NewUserPetClient(c.config)
 	c.Voucher = NewVoucherClient(c.config)
@@ -185,9 +193,11 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 		Group:          NewGroupClient(cfg),
 		GroupUser:      NewGroupUserClient(cfg),
 		Institution:    NewInstitutionClient(cfg),
+		Milestone:      NewMilestoneClient(cfg),
 		Pet:            NewPetClient(cfg),
 		Reaction:       NewReactionClient(cfg),
 		Redemption:     NewRedemptionClient(cfg),
+		StudyPlan:      NewStudyPlanClient(cfg),
 		User:           NewUserClient(cfg),
 		UserPet:        NewUserPetClient(cfg),
 		Voucher:        NewVoucherClient(cfg),
@@ -219,9 +229,11 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 		Group:          NewGroupClient(cfg),
 		GroupUser:      NewGroupUserClient(cfg),
 		Institution:    NewInstitutionClient(cfg),
+		Milestone:      NewMilestoneClient(cfg),
 		Pet:            NewPetClient(cfg),
 		Reaction:       NewReactionClient(cfg),
 		Redemption:     NewRedemptionClient(cfg),
+		StudyPlan:      NewStudyPlanClient(cfg),
 		User:           NewUserClient(cfg),
 		UserPet:        NewUserPetClient(cfg),
 		Voucher:        NewVoucherClient(cfg),
@@ -255,8 +267,8 @@ func (c *Client) Close() error {
 func (c *Client) Use(hooks ...Hook) {
 	for _, n := range []interface{ Use(...Hook) }{
 		c.AcademicSchool, c.Accessory, c.Course, c.Deadline, c.Event, c.ForumPost,
-		c.Group, c.GroupUser, c.Institution, c.Pet, c.Reaction, c.Redemption, c.User,
-		c.UserPet, c.Voucher,
+		c.Group, c.GroupUser, c.Institution, c.Milestone, c.Pet, c.Reaction,
+		c.Redemption, c.StudyPlan, c.User, c.UserPet, c.Voucher,
 	} {
 		n.Use(hooks...)
 	}
@@ -267,8 +279,8 @@ func (c *Client) Use(hooks ...Hook) {
 func (c *Client) Intercept(interceptors ...Interceptor) {
 	for _, n := range []interface{ Intercept(...Interceptor) }{
 		c.AcademicSchool, c.Accessory, c.Course, c.Deadline, c.Event, c.ForumPost,
-		c.Group, c.GroupUser, c.Institution, c.Pet, c.Reaction, c.Redemption, c.User,
-		c.UserPet, c.Voucher,
+		c.Group, c.GroupUser, c.Institution, c.Milestone, c.Pet, c.Reaction,
+		c.Redemption, c.StudyPlan, c.User, c.UserPet, c.Voucher,
 	} {
 		n.Intercept(interceptors...)
 	}
@@ -295,12 +307,16 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.GroupUser.mutate(ctx, m)
 	case *InstitutionMutation:
 		return c.Institution.mutate(ctx, m)
+	case *MilestoneMutation:
+		return c.Milestone.mutate(ctx, m)
 	case *PetMutation:
 		return c.Pet.mutate(ctx, m)
 	case *ReactionMutation:
 		return c.Reaction.mutate(ctx, m)
 	case *RedemptionMutation:
 		return c.Redemption.mutate(ctx, m)
+	case *StudyPlanMutation:
+		return c.StudyPlan.mutate(ctx, m)
 	case *UserMutation:
 		return c.User.mutate(ctx, m)
 	case *UserPetMutation:
@@ -1757,6 +1773,140 @@ func (c *InstitutionClient) mutate(ctx context.Context, m *InstitutionMutation) 
 	}
 }
 
+// MilestoneClient is a client for the Milestone schema.
+type MilestoneClient struct {
+	config
+}
+
+// NewMilestoneClient returns a client for the Milestone from the given config.
+func NewMilestoneClient(c config) *MilestoneClient {
+	return &MilestoneClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `milestone.Hooks(f(g(h())))`.
+func (c *MilestoneClient) Use(hooks ...Hook) {
+	c.hooks.Milestone = append(c.hooks.Milestone, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `milestone.Intercept(f(g(h())))`.
+func (c *MilestoneClient) Intercept(interceptors ...Interceptor) {
+	c.inters.Milestone = append(c.inters.Milestone, interceptors...)
+}
+
+// Create returns a builder for creating a Milestone entity.
+func (c *MilestoneClient) Create() *MilestoneCreate {
+	mutation := newMilestoneMutation(c.config, OpCreate)
+	return &MilestoneCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of Milestone entities.
+func (c *MilestoneClient) CreateBulk(builders ...*MilestoneCreate) *MilestoneCreateBulk {
+	return &MilestoneCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for Milestone.
+func (c *MilestoneClient) Update() *MilestoneUpdate {
+	mutation := newMilestoneMutation(c.config, OpUpdate)
+	return &MilestoneUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *MilestoneClient) UpdateOne(m *Milestone) *MilestoneUpdateOne {
+	mutation := newMilestoneMutation(c.config, OpUpdateOne, withMilestone(m))
+	return &MilestoneUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *MilestoneClient) UpdateOneID(id int) *MilestoneUpdateOne {
+	mutation := newMilestoneMutation(c.config, OpUpdateOne, withMilestoneID(id))
+	return &MilestoneUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for Milestone.
+func (c *MilestoneClient) Delete() *MilestoneDelete {
+	mutation := newMilestoneMutation(c.config, OpDelete)
+	return &MilestoneDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *MilestoneClient) DeleteOne(m *Milestone) *MilestoneDeleteOne {
+	return c.DeleteOneID(m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *MilestoneClient) DeleteOneID(id int) *MilestoneDeleteOne {
+	builder := c.Delete().Where(milestone.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &MilestoneDeleteOne{builder}
+}
+
+// Query returns a query builder for Milestone.
+func (c *MilestoneClient) Query() *MilestoneQuery {
+	return &MilestoneQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeMilestone},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a Milestone entity by its id.
+func (c *MilestoneClient) Get(ctx context.Context, id int) (*Milestone, error) {
+	return c.Query().Where(milestone.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *MilestoneClient) GetX(ctx context.Context, id int) *Milestone {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryStudyPlan queries the study_plan edge of a Milestone.
+func (c *MilestoneClient) QueryStudyPlan(m *Milestone) *StudyPlanQuery {
+	query := (&StudyPlanClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(milestone.Table, milestone.FieldID, id),
+			sqlgraph.To(studyplan.Table, studyplan.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, milestone.StudyPlanTable, milestone.StudyPlanColumn),
+		)
+		fromV = sqlgraph.Neighbors(m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *MilestoneClient) Hooks() []Hook {
+	return c.hooks.Milestone
+}
+
+// Interceptors returns the client interceptors.
+func (c *MilestoneClient) Interceptors() []Interceptor {
+	return c.inters.Milestone
+}
+
+func (c *MilestoneClient) mutate(ctx context.Context, m *MilestoneMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&MilestoneCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&MilestoneUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&MilestoneUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&MilestoneDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown Milestone mutation op: %q", m.Op())
+	}
+}
+
 // PetClient is a client for the Pet schema.
 type PetClient struct {
 	config
@@ -2171,6 +2321,156 @@ func (c *RedemptionClient) mutate(ctx context.Context, m *RedemptionMutation) (V
 		return (&RedemptionDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
 	default:
 		return nil, fmt.Errorf("ent: unknown Redemption mutation op: %q", m.Op())
+	}
+}
+
+// StudyPlanClient is a client for the StudyPlan schema.
+type StudyPlanClient struct {
+	config
+}
+
+// NewStudyPlanClient returns a client for the StudyPlan from the given config.
+func NewStudyPlanClient(c config) *StudyPlanClient {
+	return &StudyPlanClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `studyplan.Hooks(f(g(h())))`.
+func (c *StudyPlanClient) Use(hooks ...Hook) {
+	c.hooks.StudyPlan = append(c.hooks.StudyPlan, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `studyplan.Intercept(f(g(h())))`.
+func (c *StudyPlanClient) Intercept(interceptors ...Interceptor) {
+	c.inters.StudyPlan = append(c.inters.StudyPlan, interceptors...)
+}
+
+// Create returns a builder for creating a StudyPlan entity.
+func (c *StudyPlanClient) Create() *StudyPlanCreate {
+	mutation := newStudyPlanMutation(c.config, OpCreate)
+	return &StudyPlanCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of StudyPlan entities.
+func (c *StudyPlanClient) CreateBulk(builders ...*StudyPlanCreate) *StudyPlanCreateBulk {
+	return &StudyPlanCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for StudyPlan.
+func (c *StudyPlanClient) Update() *StudyPlanUpdate {
+	mutation := newStudyPlanMutation(c.config, OpUpdate)
+	return &StudyPlanUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *StudyPlanClient) UpdateOne(sp *StudyPlan) *StudyPlanUpdateOne {
+	mutation := newStudyPlanMutation(c.config, OpUpdateOne, withStudyPlan(sp))
+	return &StudyPlanUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *StudyPlanClient) UpdateOneID(id int) *StudyPlanUpdateOne {
+	mutation := newStudyPlanMutation(c.config, OpUpdateOne, withStudyPlanID(id))
+	return &StudyPlanUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for StudyPlan.
+func (c *StudyPlanClient) Delete() *StudyPlanDelete {
+	mutation := newStudyPlanMutation(c.config, OpDelete)
+	return &StudyPlanDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *StudyPlanClient) DeleteOne(sp *StudyPlan) *StudyPlanDeleteOne {
+	return c.DeleteOneID(sp.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *StudyPlanClient) DeleteOneID(id int) *StudyPlanDeleteOne {
+	builder := c.Delete().Where(studyplan.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &StudyPlanDeleteOne{builder}
+}
+
+// Query returns a query builder for StudyPlan.
+func (c *StudyPlanClient) Query() *StudyPlanQuery {
+	return &StudyPlanQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeStudyPlan},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a StudyPlan entity by its id.
+func (c *StudyPlanClient) Get(ctx context.Context, id int) (*StudyPlan, error) {
+	return c.Query().Where(studyplan.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *StudyPlanClient) GetX(ctx context.Context, id int) *StudyPlan {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryAuthor queries the author edge of a StudyPlan.
+func (c *StudyPlanClient) QueryAuthor(sp *StudyPlan) *UserQuery {
+	query := (&UserClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := sp.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(studyplan.Table, studyplan.FieldID, id),
+			sqlgraph.To(user.Table, user.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, false, studyplan.AuthorTable, studyplan.AuthorColumn),
+		)
+		fromV = sqlgraph.Neighbors(sp.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryMilestones queries the milestones edge of a StudyPlan.
+func (c *StudyPlanClient) QueryMilestones(sp *StudyPlan) *MilestoneQuery {
+	query := (&MilestoneClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := sp.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(studyplan.Table, studyplan.FieldID, id),
+			sqlgraph.To(milestone.Table, milestone.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, studyplan.MilestonesTable, studyplan.MilestonesColumn),
+		)
+		fromV = sqlgraph.Neighbors(sp.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *StudyPlanClient) Hooks() []Hook {
+	return c.hooks.StudyPlan
+}
+
+// Interceptors returns the client interceptors.
+func (c *StudyPlanClient) Interceptors() []Interceptor {
+	return c.inters.StudyPlan
+}
+
+func (c *StudyPlanClient) mutate(ctx context.Context, m *StudyPlanMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&StudyPlanCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&StudyPlanUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&StudyPlanUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&StudyPlanDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown StudyPlan mutation op: %q", m.Op())
 	}
 }
 
@@ -2739,11 +3039,12 @@ func (c *VoucherClient) mutate(ctx context.Context, m *VoucherMutation) (Value, 
 type (
 	hooks struct {
 		AcademicSchool, Accessory, Course, Deadline, Event, ForumPost, Group, GroupUser,
-		Institution, Pet, Reaction, Redemption, User, UserPet, Voucher []ent.Hook
+		Institution, Milestone, Pet, Reaction, Redemption, StudyPlan, User, UserPet,
+		Voucher []ent.Hook
 	}
 	inters struct {
 		AcademicSchool, Accessory, Course, Deadline, Event, ForumPost, Group, GroupUser,
-		Institution, Pet, Reaction, Redemption, User, UserPet,
+		Institution, Milestone, Pet, Reaction, Redemption, StudyPlan, User, UserPet,
 		Voucher []ent.Interceptor
 	}
 )

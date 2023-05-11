@@ -20,10 +20,12 @@ import (
 	"github.com/np-inprove/server/internal/ent/group"
 	"github.com/np-inprove/server/internal/ent/groupuser"
 	"github.com/np-inprove/server/internal/ent/institution"
+	"github.com/np-inprove/server/internal/ent/milestone"
 	"github.com/np-inprove/server/internal/ent/pet"
 	"github.com/np-inprove/server/internal/ent/predicate"
 	"github.com/np-inprove/server/internal/ent/reaction"
 	"github.com/np-inprove/server/internal/ent/redemption"
+	"github.com/np-inprove/server/internal/ent/studyplan"
 	"github.com/np-inprove/server/internal/ent/user"
 	"github.com/np-inprove/server/internal/ent/userpet"
 	"github.com/np-inprove/server/internal/ent/voucher"
@@ -47,9 +49,11 @@ const (
 	TypeGroup          = "Group"
 	TypeGroupUser      = "GroupUser"
 	TypeInstitution    = "Institution"
+	TypeMilestone      = "Milestone"
 	TypePet            = "Pet"
 	TypeReaction       = "Reaction"
 	TypeRedemption     = "Redemption"
+	TypeStudyPlan      = "StudyPlan"
 	TypeUser           = "User"
 	TypeUserPet        = "UserPet"
 	TypeVoucher        = "Voucher"
@@ -5739,6 +5743,453 @@ func (m *InstitutionMutation) ResetEdge(name string) error {
 	return fmt.Errorf("unknown Institution edge %s", name)
 }
 
+// MilestoneMutation represents an operation that mutates the Milestone nodes in the graph.
+type MilestoneMutation struct {
+	config
+	op                     Op
+	typ                    string
+	id                     *int
+	name                   *string
+	target_completion_time *time.Time
+	clearedFields          map[string]struct{}
+	study_plan             *int
+	clearedstudy_plan      bool
+	done                   bool
+	oldValue               func(context.Context) (*Milestone, error)
+	predicates             []predicate.Milestone
+}
+
+var _ ent.Mutation = (*MilestoneMutation)(nil)
+
+// milestoneOption allows management of the mutation configuration using functional options.
+type milestoneOption func(*MilestoneMutation)
+
+// newMilestoneMutation creates new mutation for the Milestone entity.
+func newMilestoneMutation(c config, op Op, opts ...milestoneOption) *MilestoneMutation {
+	m := &MilestoneMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeMilestone,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withMilestoneID sets the ID field of the mutation.
+func withMilestoneID(id int) milestoneOption {
+	return func(m *MilestoneMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *Milestone
+		)
+		m.oldValue = func(ctx context.Context) (*Milestone, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().Milestone.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withMilestone sets the old Milestone of the mutation.
+func withMilestone(node *Milestone) milestoneOption {
+	return func(m *MilestoneMutation) {
+		m.oldValue = func(context.Context) (*Milestone, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m MilestoneMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m MilestoneMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *MilestoneMutation) ID() (id int, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *MilestoneMutation) IDs(ctx context.Context) ([]int, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []int{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().Milestone.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetName sets the "name" field.
+func (m *MilestoneMutation) SetName(s string) {
+	m.name = &s
+}
+
+// Name returns the value of the "name" field in the mutation.
+func (m *MilestoneMutation) Name() (r string, exists bool) {
+	v := m.name
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldName returns the old "name" field's value of the Milestone entity.
+// If the Milestone object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MilestoneMutation) OldName(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldName is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldName requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldName: %w", err)
+	}
+	return oldValue.Name, nil
+}
+
+// ResetName resets all changes to the "name" field.
+func (m *MilestoneMutation) ResetName() {
+	m.name = nil
+}
+
+// SetTargetCompletionTime sets the "target_completion_time" field.
+func (m *MilestoneMutation) SetTargetCompletionTime(t time.Time) {
+	m.target_completion_time = &t
+}
+
+// TargetCompletionTime returns the value of the "target_completion_time" field in the mutation.
+func (m *MilestoneMutation) TargetCompletionTime() (r time.Time, exists bool) {
+	v := m.target_completion_time
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldTargetCompletionTime returns the old "target_completion_time" field's value of the Milestone entity.
+// If the Milestone object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MilestoneMutation) OldTargetCompletionTime(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldTargetCompletionTime is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldTargetCompletionTime requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldTargetCompletionTime: %w", err)
+	}
+	return oldValue.TargetCompletionTime, nil
+}
+
+// ResetTargetCompletionTime resets all changes to the "target_completion_time" field.
+func (m *MilestoneMutation) ResetTargetCompletionTime() {
+	m.target_completion_time = nil
+}
+
+// SetStudyPlanID sets the "study_plan" edge to the StudyPlan entity by id.
+func (m *MilestoneMutation) SetStudyPlanID(id int) {
+	m.study_plan = &id
+}
+
+// ClearStudyPlan clears the "study_plan" edge to the StudyPlan entity.
+func (m *MilestoneMutation) ClearStudyPlan() {
+	m.clearedstudy_plan = true
+}
+
+// StudyPlanCleared reports if the "study_plan" edge to the StudyPlan entity was cleared.
+func (m *MilestoneMutation) StudyPlanCleared() bool {
+	return m.clearedstudy_plan
+}
+
+// StudyPlanID returns the "study_plan" edge ID in the mutation.
+func (m *MilestoneMutation) StudyPlanID() (id int, exists bool) {
+	if m.study_plan != nil {
+		return *m.study_plan, true
+	}
+	return
+}
+
+// StudyPlanIDs returns the "study_plan" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// StudyPlanID instead. It exists only for internal usage by the builders.
+func (m *MilestoneMutation) StudyPlanIDs() (ids []int) {
+	if id := m.study_plan; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetStudyPlan resets all changes to the "study_plan" edge.
+func (m *MilestoneMutation) ResetStudyPlan() {
+	m.study_plan = nil
+	m.clearedstudy_plan = false
+}
+
+// Where appends a list predicates to the MilestoneMutation builder.
+func (m *MilestoneMutation) Where(ps ...predicate.Milestone) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the MilestoneMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *MilestoneMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.Milestone, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *MilestoneMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *MilestoneMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (Milestone).
+func (m *MilestoneMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *MilestoneMutation) Fields() []string {
+	fields := make([]string, 0, 2)
+	if m.name != nil {
+		fields = append(fields, milestone.FieldName)
+	}
+	if m.target_completion_time != nil {
+		fields = append(fields, milestone.FieldTargetCompletionTime)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *MilestoneMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case milestone.FieldName:
+		return m.Name()
+	case milestone.FieldTargetCompletionTime:
+		return m.TargetCompletionTime()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *MilestoneMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case milestone.FieldName:
+		return m.OldName(ctx)
+	case milestone.FieldTargetCompletionTime:
+		return m.OldTargetCompletionTime(ctx)
+	}
+	return nil, fmt.Errorf("unknown Milestone field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *MilestoneMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case milestone.FieldName:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetName(v)
+		return nil
+	case milestone.FieldTargetCompletionTime:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetTargetCompletionTime(v)
+		return nil
+	}
+	return fmt.Errorf("unknown Milestone field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *MilestoneMutation) AddedFields() []string {
+	return nil
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *MilestoneMutation) AddedField(name string) (ent.Value, bool) {
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *MilestoneMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	}
+	return fmt.Errorf("unknown Milestone numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *MilestoneMutation) ClearedFields() []string {
+	return nil
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *MilestoneMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *MilestoneMutation) ClearField(name string) error {
+	return fmt.Errorf("unknown Milestone nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *MilestoneMutation) ResetField(name string) error {
+	switch name {
+	case milestone.FieldName:
+		m.ResetName()
+		return nil
+	case milestone.FieldTargetCompletionTime:
+		m.ResetTargetCompletionTime()
+		return nil
+	}
+	return fmt.Errorf("unknown Milestone field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *MilestoneMutation) AddedEdges() []string {
+	edges := make([]string, 0, 1)
+	if m.study_plan != nil {
+		edges = append(edges, milestone.EdgeStudyPlan)
+	}
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *MilestoneMutation) AddedIDs(name string) []ent.Value {
+	switch name {
+	case milestone.EdgeStudyPlan:
+		if id := m.study_plan; id != nil {
+			return []ent.Value{*id}
+		}
+	}
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *MilestoneMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 1)
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *MilestoneMutation) RemovedIDs(name string) []ent.Value {
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *MilestoneMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 1)
+	if m.clearedstudy_plan {
+		edges = append(edges, milestone.EdgeStudyPlan)
+	}
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *MilestoneMutation) EdgeCleared(name string) bool {
+	switch name {
+	case milestone.EdgeStudyPlan:
+		return m.clearedstudy_plan
+	}
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *MilestoneMutation) ClearEdge(name string) error {
+	switch name {
+	case milestone.EdgeStudyPlan:
+		m.ClearStudyPlan()
+		return nil
+	}
+	return fmt.Errorf("unknown Milestone unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *MilestoneMutation) ResetEdge(name string) error {
+	switch name {
+	case milestone.EdgeStudyPlan:
+		m.ResetStudyPlan()
+		return nil
+	}
+	return fmt.Errorf("unknown Milestone edge %s", name)
+}
+
 // PetMutation represents an operation that mutates the Pet nodes in the graph.
 type PetMutation struct {
 	config
@@ -7136,6 +7587,560 @@ func (m *RedemptionMutation) ResetEdge(name string) error {
 		return nil
 	}
 	return fmt.Errorf("unknown Redemption edge %s", name)
+}
+
+// StudyPlanMutation represents an operation that mutates the StudyPlan nodes in the graph.
+type StudyPlanMutation struct {
+	config
+	op                Op
+	typ               string
+	id                *int
+	name              *string
+	share_code        *string
+	clearedFields     map[string]struct{}
+	author            *int
+	clearedauthor     bool
+	milestones        map[int]struct{}
+	removedmilestones map[int]struct{}
+	clearedmilestones bool
+	done              bool
+	oldValue          func(context.Context) (*StudyPlan, error)
+	predicates        []predicate.StudyPlan
+}
+
+var _ ent.Mutation = (*StudyPlanMutation)(nil)
+
+// studyplanOption allows management of the mutation configuration using functional options.
+type studyplanOption func(*StudyPlanMutation)
+
+// newStudyPlanMutation creates new mutation for the StudyPlan entity.
+func newStudyPlanMutation(c config, op Op, opts ...studyplanOption) *StudyPlanMutation {
+	m := &StudyPlanMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeStudyPlan,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withStudyPlanID sets the ID field of the mutation.
+func withStudyPlanID(id int) studyplanOption {
+	return func(m *StudyPlanMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *StudyPlan
+		)
+		m.oldValue = func(ctx context.Context) (*StudyPlan, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().StudyPlan.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withStudyPlan sets the old StudyPlan of the mutation.
+func withStudyPlan(node *StudyPlan) studyplanOption {
+	return func(m *StudyPlanMutation) {
+		m.oldValue = func(context.Context) (*StudyPlan, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m StudyPlanMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m StudyPlanMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *StudyPlanMutation) ID() (id int, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *StudyPlanMutation) IDs(ctx context.Context) ([]int, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []int{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().StudyPlan.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetName sets the "name" field.
+func (m *StudyPlanMutation) SetName(s string) {
+	m.name = &s
+}
+
+// Name returns the value of the "name" field in the mutation.
+func (m *StudyPlanMutation) Name() (r string, exists bool) {
+	v := m.name
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldName returns the old "name" field's value of the StudyPlan entity.
+// If the StudyPlan object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *StudyPlanMutation) OldName(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldName is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldName requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldName: %w", err)
+	}
+	return oldValue.Name, nil
+}
+
+// ResetName resets all changes to the "name" field.
+func (m *StudyPlanMutation) ResetName() {
+	m.name = nil
+}
+
+// SetShareCode sets the "share_code" field.
+func (m *StudyPlanMutation) SetShareCode(s string) {
+	m.share_code = &s
+}
+
+// ShareCode returns the value of the "share_code" field in the mutation.
+func (m *StudyPlanMutation) ShareCode() (r string, exists bool) {
+	v := m.share_code
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldShareCode returns the old "share_code" field's value of the StudyPlan entity.
+// If the StudyPlan object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *StudyPlanMutation) OldShareCode(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldShareCode is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldShareCode requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldShareCode: %w", err)
+	}
+	return oldValue.ShareCode, nil
+}
+
+// ClearShareCode clears the value of the "share_code" field.
+func (m *StudyPlanMutation) ClearShareCode() {
+	m.share_code = nil
+	m.clearedFields[studyplan.FieldShareCode] = struct{}{}
+}
+
+// ShareCodeCleared returns if the "share_code" field was cleared in this mutation.
+func (m *StudyPlanMutation) ShareCodeCleared() bool {
+	_, ok := m.clearedFields[studyplan.FieldShareCode]
+	return ok
+}
+
+// ResetShareCode resets all changes to the "share_code" field.
+func (m *StudyPlanMutation) ResetShareCode() {
+	m.share_code = nil
+	delete(m.clearedFields, studyplan.FieldShareCode)
+}
+
+// SetAuthorID sets the "author" edge to the User entity by id.
+func (m *StudyPlanMutation) SetAuthorID(id int) {
+	m.author = &id
+}
+
+// ClearAuthor clears the "author" edge to the User entity.
+func (m *StudyPlanMutation) ClearAuthor() {
+	m.clearedauthor = true
+}
+
+// AuthorCleared reports if the "author" edge to the User entity was cleared.
+func (m *StudyPlanMutation) AuthorCleared() bool {
+	return m.clearedauthor
+}
+
+// AuthorID returns the "author" edge ID in the mutation.
+func (m *StudyPlanMutation) AuthorID() (id int, exists bool) {
+	if m.author != nil {
+		return *m.author, true
+	}
+	return
+}
+
+// AuthorIDs returns the "author" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// AuthorID instead. It exists only for internal usage by the builders.
+func (m *StudyPlanMutation) AuthorIDs() (ids []int) {
+	if id := m.author; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetAuthor resets all changes to the "author" edge.
+func (m *StudyPlanMutation) ResetAuthor() {
+	m.author = nil
+	m.clearedauthor = false
+}
+
+// AddMilestoneIDs adds the "milestones" edge to the Milestone entity by ids.
+func (m *StudyPlanMutation) AddMilestoneIDs(ids ...int) {
+	if m.milestones == nil {
+		m.milestones = make(map[int]struct{})
+	}
+	for i := range ids {
+		m.milestones[ids[i]] = struct{}{}
+	}
+}
+
+// ClearMilestones clears the "milestones" edge to the Milestone entity.
+func (m *StudyPlanMutation) ClearMilestones() {
+	m.clearedmilestones = true
+}
+
+// MilestonesCleared reports if the "milestones" edge to the Milestone entity was cleared.
+func (m *StudyPlanMutation) MilestonesCleared() bool {
+	return m.clearedmilestones
+}
+
+// RemoveMilestoneIDs removes the "milestones" edge to the Milestone entity by IDs.
+func (m *StudyPlanMutation) RemoveMilestoneIDs(ids ...int) {
+	if m.removedmilestones == nil {
+		m.removedmilestones = make(map[int]struct{})
+	}
+	for i := range ids {
+		delete(m.milestones, ids[i])
+		m.removedmilestones[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedMilestones returns the removed IDs of the "milestones" edge to the Milestone entity.
+func (m *StudyPlanMutation) RemovedMilestonesIDs() (ids []int) {
+	for id := range m.removedmilestones {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// MilestonesIDs returns the "milestones" edge IDs in the mutation.
+func (m *StudyPlanMutation) MilestonesIDs() (ids []int) {
+	for id := range m.milestones {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetMilestones resets all changes to the "milestones" edge.
+func (m *StudyPlanMutation) ResetMilestones() {
+	m.milestones = nil
+	m.clearedmilestones = false
+	m.removedmilestones = nil
+}
+
+// Where appends a list predicates to the StudyPlanMutation builder.
+func (m *StudyPlanMutation) Where(ps ...predicate.StudyPlan) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the StudyPlanMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *StudyPlanMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.StudyPlan, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *StudyPlanMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *StudyPlanMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (StudyPlan).
+func (m *StudyPlanMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *StudyPlanMutation) Fields() []string {
+	fields := make([]string, 0, 2)
+	if m.name != nil {
+		fields = append(fields, studyplan.FieldName)
+	}
+	if m.share_code != nil {
+		fields = append(fields, studyplan.FieldShareCode)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *StudyPlanMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case studyplan.FieldName:
+		return m.Name()
+	case studyplan.FieldShareCode:
+		return m.ShareCode()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *StudyPlanMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case studyplan.FieldName:
+		return m.OldName(ctx)
+	case studyplan.FieldShareCode:
+		return m.OldShareCode(ctx)
+	}
+	return nil, fmt.Errorf("unknown StudyPlan field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *StudyPlanMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case studyplan.FieldName:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetName(v)
+		return nil
+	case studyplan.FieldShareCode:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetShareCode(v)
+		return nil
+	}
+	return fmt.Errorf("unknown StudyPlan field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *StudyPlanMutation) AddedFields() []string {
+	return nil
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *StudyPlanMutation) AddedField(name string) (ent.Value, bool) {
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *StudyPlanMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	}
+	return fmt.Errorf("unknown StudyPlan numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *StudyPlanMutation) ClearedFields() []string {
+	var fields []string
+	if m.FieldCleared(studyplan.FieldShareCode) {
+		fields = append(fields, studyplan.FieldShareCode)
+	}
+	return fields
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *StudyPlanMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *StudyPlanMutation) ClearField(name string) error {
+	switch name {
+	case studyplan.FieldShareCode:
+		m.ClearShareCode()
+		return nil
+	}
+	return fmt.Errorf("unknown StudyPlan nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *StudyPlanMutation) ResetField(name string) error {
+	switch name {
+	case studyplan.FieldName:
+		m.ResetName()
+		return nil
+	case studyplan.FieldShareCode:
+		m.ResetShareCode()
+		return nil
+	}
+	return fmt.Errorf("unknown StudyPlan field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *StudyPlanMutation) AddedEdges() []string {
+	edges := make([]string, 0, 2)
+	if m.author != nil {
+		edges = append(edges, studyplan.EdgeAuthor)
+	}
+	if m.milestones != nil {
+		edges = append(edges, studyplan.EdgeMilestones)
+	}
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *StudyPlanMutation) AddedIDs(name string) []ent.Value {
+	switch name {
+	case studyplan.EdgeAuthor:
+		if id := m.author; id != nil {
+			return []ent.Value{*id}
+		}
+	case studyplan.EdgeMilestones:
+		ids := make([]ent.Value, 0, len(m.milestones))
+		for id := range m.milestones {
+			ids = append(ids, id)
+		}
+		return ids
+	}
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *StudyPlanMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 2)
+	if m.removedmilestones != nil {
+		edges = append(edges, studyplan.EdgeMilestones)
+	}
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *StudyPlanMutation) RemovedIDs(name string) []ent.Value {
+	switch name {
+	case studyplan.EdgeMilestones:
+		ids := make([]ent.Value, 0, len(m.removedmilestones))
+		for id := range m.removedmilestones {
+			ids = append(ids, id)
+		}
+		return ids
+	}
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *StudyPlanMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 2)
+	if m.clearedauthor {
+		edges = append(edges, studyplan.EdgeAuthor)
+	}
+	if m.clearedmilestones {
+		edges = append(edges, studyplan.EdgeMilestones)
+	}
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *StudyPlanMutation) EdgeCleared(name string) bool {
+	switch name {
+	case studyplan.EdgeAuthor:
+		return m.clearedauthor
+	case studyplan.EdgeMilestones:
+		return m.clearedmilestones
+	}
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *StudyPlanMutation) ClearEdge(name string) error {
+	switch name {
+	case studyplan.EdgeAuthor:
+		m.ClearAuthor()
+		return nil
+	}
+	return fmt.Errorf("unknown StudyPlan unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *StudyPlanMutation) ResetEdge(name string) error {
+	switch name {
+	case studyplan.EdgeAuthor:
+		m.ResetAuthor()
+		return nil
+	case studyplan.EdgeMilestones:
+		m.ResetMilestones()
+		return nil
+	}
+	return fmt.Errorf("unknown StudyPlan edge %s", name)
 }
 
 // UserMutation represents an operation that mutates the User nodes in the graph.
