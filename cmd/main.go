@@ -125,7 +125,7 @@ func main() {
 		logger.String("addr", cfg.HTTP.Addr),
 	)
 
-	interrupt := make(chan os.Signal)
+	interrupt := make(chan os.Signal, 1)
 	signal.Notify(interrupt, syscall.SIGTERM, syscall.SIGINT)
 
 	wg := sync.WaitGroup{}
