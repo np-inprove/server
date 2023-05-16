@@ -117,6 +117,18 @@ func (f InstitutionFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value,
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.InstitutionMutation", m)
 }
 
+// The JWTRevocationFunc type is an adapter to allow the use of ordinary
+// function as JWTRevocation mutator.
+type JWTRevocationFunc func(context.Context, *ent.JWTRevocationMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f JWTRevocationFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.JWTRevocationMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.JWTRevocationMutation", m)
+}
+
 // The MilestoneFunc type is an adapter to allow the use of ordinary
 // function as Milestone mutator.
 type MilestoneFunc func(context.Context, *ent.MilestoneMutation) (ent.Value, error)

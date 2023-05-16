@@ -1,4 +1,4 @@
-package entities
+package entity
 
 import "github.com/np-inprove/server/internal/ent"
 
@@ -11,6 +11,7 @@ type ForumPost = ent.ForumPost
 type Group = ent.Group
 type GroupUser = ent.GroupUser
 type Institution = ent.Institution
+type JWTRevocation = ent.JWTRevocation
 type Milestone = ent.Milestone
 type Pet = ent.Pet
 type Reaction = ent.Reaction

@@ -21,6 +21,7 @@ import (
 	"github.com/np-inprove/server/internal/ent/group"
 	"github.com/np-inprove/server/internal/ent/groupuser"
 	"github.com/np-inprove/server/internal/ent/institution"
+	"github.com/np-inprove/server/internal/ent/jwtrevocation"
 	"github.com/np-inprove/server/internal/ent/milestone"
 	"github.com/np-inprove/server/internal/ent/pet"
 	"github.com/np-inprove/server/internal/ent/reaction"
@@ -98,6 +99,7 @@ func checkColumn(table, column string) error {
 			group.Table:          group.ValidColumn,
 			groupuser.Table:      groupuser.ValidColumn,
 			institution.Table:    institution.ValidColumn,
+			jwtrevocation.Table:  jwtrevocation.ValidColumn,
 			milestone.Table:      milestone.ValidColumn,
 			pet.Table:            pet.ValidColumn,
 			reaction.Table:       reaction.ValidColumn,

@@ -23,6 +23,7 @@ import (
 	"github.com/np-inprove/server/internal/ent/group"
 	"github.com/np-inprove/server/internal/ent/groupuser"
 	"github.com/np-inprove/server/internal/ent/institution"
+	"github.com/np-inprove/server/internal/ent/jwtrevocation"
 	"github.com/np-inprove/server/internal/ent/milestone"
 	"github.com/np-inprove/server/internal/ent/pet"
 	"github.com/np-inprove/server/internal/ent/reaction"
@@ -56,6 +57,8 @@ type Client struct {
 	GroupUser *GroupUserClient
 	// Institution is the client for interacting with the Institution builders.
 	Institution *InstitutionClient
+	// JWTRevocation is the client for interacting with the JWTRevocation builders.
+	JWTRevocation *JWTRevocationClient
 	// Milestone is the client for interacting with the Milestone builders.
 	Milestone *MilestoneClient
 	// Pet is the client for interacting with the Pet builders.
@@ -94,6 +97,7 @@ func (c *Client) init() {
 	c.Group = NewGroupClient(c.config)
 	c.GroupUser = NewGroupUserClient(c.config)
 	c.Institution = NewInstitutionClient(c.config)
+	c.JWTRevocation = NewJWTRevocationClient(c.config)
 	c.Milestone = NewMilestoneClient(c.config)
 	c.Pet = NewPetClient(c.config)
 	c.Reaction = NewReactionClient(c.config)
@@ -193,6 +197,7 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 		Group:          NewGroupClient(cfg),
 		GroupUser:      NewGroupUserClient(cfg),
 		Institution:    NewInstitutionClient(cfg),
+		JWTRevocation:  NewJWTRevocationClient(cfg),
 		Milestone:      NewMilestoneClient(cfg),
 		Pet:            NewPetClient(cfg),
 		Reaction:       NewReactionClient(cfg),
@@ -229,6 +234,7 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 		Group:          NewGroupClient(cfg),
 		GroupUser:      NewGroupUserClient(cfg),
 		Institution:    NewInstitutionClient(cfg),
+		JWTRevocation:  NewJWTRevocationClient(cfg),
 		Milestone:      NewMilestoneClient(cfg),
 		Pet:            NewPetClient(cfg),
 		Reaction:       NewReactionClient(cfg),
@@ -267,8 +273,8 @@ func (c *Client) Close() error {
 func (c *Client) Use(hooks ...Hook) {
 	for _, n := range []interface{ Use(...Hook) }{
 		c.AcademicSchool, c.Accessory, c.Course, c.Deadline, c.Event, c.ForumPost,
-		c.Group, c.GroupUser, c.Institution, c.Milestone, c.Pet, c.Reaction,
-		c.Redemption, c.StudyPlan, c.User, c.UserPet, c.Voucher,
+		c.Group, c.GroupUser, c.Institution, c.JWTRevocation, c.Milestone, c.Pet,
+		c.Reaction, c.Redemption, c.StudyPlan, c.User, c.UserPet, c.Voucher,
 	} {
 		n.Use(hooks...)
 	}
@@ -279,8 +285,8 @@ func (c *Client) Use(hooks ...Hook) {
 func (c *Client) Intercept(interceptors ...Interceptor) {
 	for _, n := range []interface{ Intercept(...Interceptor) }{
 		c.AcademicSchool, c.Accessory, c.Course, c.Deadline, c.Event, c.ForumPost,
-		c.Group, c.GroupUser, c.Institution, c.Milestone, c.Pet, c.Reaction,
-		c.Redemption, c.StudyPlan, c.User, c.UserPet, c.Voucher,
+		c.Group, c.GroupUser, c.Institution, c.JWTRevocation, c.Milestone, c.Pet,
+		c.Reaction, c.Redemption, c.StudyPlan, c.User, c.UserPet, c.Voucher,
 	} {
 		n.Intercept(interceptors...)
 	}
@@ -307,6 +313,8 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.GroupUser.mutate(ctx, m)
 	case *InstitutionMutation:
 		return c.Institution.mutate(ctx, m)
+	case *JWTRevocationMutation:
+		return c.JWTRevocation.mutate(ctx, m)
 	case *MilestoneMutation:
 		return c.Milestone.mutate(ctx, m)
 	case *PetMutation:
@@ -1773,6 +1781,124 @@ func (c *InstitutionClient) mutate(ctx context.Context, m *InstitutionMutation) 
 	}
 }
 
+// JWTRevocationClient is a client for the JWTRevocation schema.
+type JWTRevocationClient struct {
+	config
+}
+
+// NewJWTRevocationClient returns a client for the JWTRevocation from the given config.
+func NewJWTRevocationClient(c config) *JWTRevocationClient {
+	return &JWTRevocationClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `jwtrevocation.Hooks(f(g(h())))`.
+func (c *JWTRevocationClient) Use(hooks ...Hook) {
+	c.hooks.JWTRevocation = append(c.hooks.JWTRevocation, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `jwtrevocation.Intercept(f(g(h())))`.
+func (c *JWTRevocationClient) Intercept(interceptors ...Interceptor) {
+	c.inters.JWTRevocation = append(c.inters.JWTRevocation, interceptors...)
+}
+
+// Create returns a builder for creating a JWTRevocation entity.
+func (c *JWTRevocationClient) Create() *JWTRevocationCreate {
+	mutation := newJWTRevocationMutation(c.config, OpCreate)
+	return &JWTRevocationCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of JWTRevocation entities.
+func (c *JWTRevocationClient) CreateBulk(builders ...*JWTRevocationCreate) *JWTRevocationCreateBulk {
+	return &JWTRevocationCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for JWTRevocation.
+func (c *JWTRevocationClient) Update() *JWTRevocationUpdate {
+	mutation := newJWTRevocationMutation(c.config, OpUpdate)
+	return &JWTRevocationUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *JWTRevocationClient) UpdateOne(jr *JWTRevocation) *JWTRevocationUpdateOne {
+	mutation := newJWTRevocationMutation(c.config, OpUpdateOne, withJWTRevocation(jr))
+	return &JWTRevocationUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *JWTRevocationClient) UpdateOneID(id int) *JWTRevocationUpdateOne {
+	mutation := newJWTRevocationMutation(c.config, OpUpdateOne, withJWTRevocationID(id))
+	return &JWTRevocationUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for JWTRevocation.
+func (c *JWTRevocationClient) Delete() *JWTRevocationDelete {
+	mutation := newJWTRevocationMutation(c.config, OpDelete)
+	return &JWTRevocationDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *JWTRevocationClient) DeleteOne(jr *JWTRevocation) *JWTRevocationDeleteOne {
+	return c.DeleteOneID(jr.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *JWTRevocationClient) DeleteOneID(id int) *JWTRevocationDeleteOne {
+	builder := c.Delete().Where(jwtrevocation.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &JWTRevocationDeleteOne{builder}
+}
+
+// Query returns a query builder for JWTRevocation.
+func (c *JWTRevocationClient) Query() *JWTRevocationQuery {
+	return &JWTRevocationQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeJWTRevocation},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a JWTRevocation entity by its id.
+func (c *JWTRevocationClient) Get(ctx context.Context, id int) (*JWTRevocation, error) {
+	return c.Query().Where(jwtrevocation.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *JWTRevocationClient) GetX(ctx context.Context, id int) *JWTRevocation {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *JWTRevocationClient) Hooks() []Hook {
+	return c.hooks.JWTRevocation
+}
+
+// Interceptors returns the client interceptors.
+func (c *JWTRevocationClient) Interceptors() []Interceptor {
+	return c.inters.JWTRevocation
+}
+
+func (c *JWTRevocationClient) mutate(ctx context.Context, m *JWTRevocationMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&JWTRevocationCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&JWTRevocationUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&JWTRevocationUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&JWTRevocationDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown JWTRevocation mutation op: %q", m.Op())
+	}
+}
+
 // MilestoneClient is a client for the Milestone schema.
 type MilestoneClient struct {
 	config
@@ -3039,12 +3165,12 @@ func (c *VoucherClient) mutate(ctx context.Context, m *VoucherMutation) (Value, 
 type (
 	hooks struct {
 		AcademicSchool, Accessory, Course, Deadline, Event, ForumPost, Group, GroupUser,
-		Institution, Milestone, Pet, Reaction, Redemption, StudyPlan, User, UserPet,
-		Voucher []ent.Hook
+		Institution, JWTRevocation, Milestone, Pet, Reaction, Redemption, StudyPlan,
+		User, UserPet, Voucher []ent.Hook
 	}
 	inters struct {
 		AcademicSchool, Accessory, Course, Deadline, Event, ForumPost, Group, GroupUser,
-		Institution, Milestone, Pet, Reaction, Redemption, StudyPlan, User, UserPet,
-		Voucher []ent.Interceptor
+		Institution, JWTRevocation, Milestone, Pet, Reaction, Redemption, StudyPlan,
+		User, UserPet, Voucher []ent.Interceptor
 	}
 )

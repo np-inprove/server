@@ -1,10 +1,13 @@
 http:
-  host: 0.0.0.0
-  port: 5000
+  addr: :3333
 
 database:
   drivername: sqlite3
   datasourcename: file:test.db?_fk=1&cache=shared&mode=memory
+  automigration: true
 
 app:
   production: false
+  jwtalgorithm: HS256
+  jwtsignkey: secret
+  jwtverifykey:

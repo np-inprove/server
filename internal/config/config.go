@@ -9,15 +9,18 @@ import (
 
 type Config struct {
 	HTTP struct {
-		Host string
-		Port int
+		Addr string
 	}
 	Database struct {
 		DriverName     string
 		DataSourceName string
+		AutoMigration  bool
 	}
 	App struct {
-		Production bool
+		Production   bool
+		JWTAlgorithm string
+		JWTSignKey   string
+		JWTVerifyKey string
 	}
 }
 

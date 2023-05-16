@@ -33,6 +33,9 @@ type GroupUser func(*sql.Selector)
 // Institution is the predicate function for institution builders.
 type Institution func(*sql.Selector)
 
+// JWTRevocation is the predicate function for jwtrevocation builders.
+type JWTRevocation func(*sql.Selector)
+
 // Milestone is the predicate function for milestone builders.
 type Milestone func(*sql.Selector)
 

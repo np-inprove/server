@@ -30,6 +30,8 @@ type Tx struct {
 	GroupUser *GroupUserClient
 	// Institution is the client for interacting with the Institution builders.
 	Institution *InstitutionClient
+	// JWTRevocation is the client for interacting with the JWTRevocation builders.
+	JWTRevocation *JWTRevocationClient
 	// Milestone is the client for interacting with the Milestone builders.
 	Milestone *MilestoneClient
 	// Pet is the client for interacting with the Pet builders.
@@ -186,6 +188,7 @@ func (tx *Tx) init() {
 	tx.Group = NewGroupClient(tx.config)
 	tx.GroupUser = NewGroupUserClient(tx.config)
 	tx.Institution = NewInstitutionClient(tx.config)
+	tx.JWTRevocation = NewJWTRevocationClient(tx.config)
 	tx.Milestone = NewMilestoneClient(tx.config)
 	tx.Pet = NewPetClient(tx.config)
 	tx.Reaction = NewReactionClient(tx.config)

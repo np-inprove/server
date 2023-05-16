@@ -211,6 +211,18 @@ var (
 		Columns:    InstitutionsColumns,
 		PrimaryKey: []*schema.Column{InstitutionsColumns[0]},
 	}
+	// JwtRevocationsColumns holds the columns for the "jwt_revocations" table.
+	JwtRevocationsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "jti", Type: field.TypeString},
+		{Name: "expiry", Type: field.TypeTime},
+	}
+	// JwtRevocationsTable holds the schema information for the "jwt_revocations" table.
+	JwtRevocationsTable = &schema.Table{
+		Name:       "jwt_revocations",
+		Columns:    JwtRevocationsColumns,
+		PrimaryKey: []*schema.Column{JwtRevocationsColumns[0]},
+	}
 	// MilestonesColumns holds the columns for the "milestones" table.
 	MilestonesColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
@@ -462,6 +474,7 @@ var (
 		GroupsTable,
 		GroupUsersTable,
 		InstitutionsTable,
+		JwtRevocationsTable,
 		MilestonesTable,
 		PetsTable,
 		ReactionsTable,

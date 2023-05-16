@@ -11,6 +11,7 @@ import (
 	"github.com/np-inprove/server/internal/ent/forumpost"
 	"github.com/np-inprove/server/internal/ent/group"
 	"github.com/np-inprove/server/internal/ent/institution"
+	"github.com/np-inprove/server/internal/ent/jwtrevocation"
 	"github.com/np-inprove/server/internal/ent/milestone"
 	"github.com/np-inprove/server/internal/ent/reaction"
 	"github.com/np-inprove/server/internal/ent/schema"
@@ -95,6 +96,12 @@ func init() {
 	institutionDescName := institutionFields[0].Descriptor()
 	// institution.NameValidator is a validator for the "name" field. It is called by the builders before save.
 	institution.NameValidator = institutionDescName.Validators[0].(func(string) error)
+	jwtrevocationFields := schema.JWTRevocation{}.Fields()
+	_ = jwtrevocationFields
+	// jwtrevocationDescJti is the schema descriptor for jti field.
+	jwtrevocationDescJti := jwtrevocationFields[0].Descriptor()
+	// jwtrevocation.JtiValidator is a validator for the "jti" field. It is called by the builders before save.
+	jwtrevocation.JtiValidator = jwtrevocationDescJti.Validators[0].(func(string) error)
 	milestoneFields := schema.Milestone{}.Fields()
 	_ = milestoneFields
 	// milestoneDescName is the schema descriptor for name field.
