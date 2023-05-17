@@ -1,6 +1,3 @@
-# fly.toml file generated for np-inprove-server on 2023-05-16T14:24:11Z
-
-app = "np-inprove-server"
 kill_signal = "SIGINT"
 kill_timeout = 5
 mounts = []
