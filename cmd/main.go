@@ -31,7 +31,7 @@ func main() {
 	}
 
 	var appLogger logger.AppLogger
-	if cfg.App.Production {
+	if cfg.AppProduction() {
 		appLogger, err = logger.NewZapProduction()
 	} else {
 		appLogger, err = logger.NewZapDevelopment()
@@ -44,10 +44,10 @@ func main() {
 	appLogger.Info("initializing server: hello, world!")
 	appLogger.Info("opening connection",
 		logger.String("area", "database"),
-		logger.String("driverName", cfg.Database.DriverName),
+		logger.String("driverName", cfg.DatabaseDriverName()),
 	)
 
-	client, err := ent.Open(cfg.Database.DriverName, cfg.Database.DataSourceName)
+	client, err := ent.Open(cfg.DatabaseDriverName(), cfg.DatabaseDataSourceName())
 	if err != nil {
 		appLogger.Fatal("failed opening connection",
 			logger.String("err", err.Error()),
@@ -57,17 +57,17 @@ func main() {
 
 	appLogger.Info("successfully opened connection",
 		logger.String("area", "database"),
-		logger.String("driverName", cfg.Database.DriverName),
+		logger.String("driverName", cfg.DatabaseDriverName()),
 	)
 
 	defer func(client *ent.Client) {
 		_ = client.Close()
 	}(client)
 
-	if cfg.Database.AutoMigration {
+	if cfg.DatabaseAutoMigration() {
 		appLogger.Info("running auto migration",
 			logger.String("area", "database"),
-			logger.String("driverName", cfg.Database.DriverName),
+			logger.String("driverName", cfg.DatabaseDriverName()),
 		)
 
 		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
@@ -77,13 +77,13 @@ func main() {
 			appLogger.Fatal("failed creating schema resources",
 				logger.String("err", err.Error()),
 				logger.String("area", "database"),
-				logger.String("driverName", cfg.Database.DriverName),
+				logger.String("driverName", cfg.DatabaseDriverName()),
 			)
 		}
 
 		appLogger.Info("completed auto migration",
 			logger.String("area", "database"),
-			logger.String("driverName", cfg.Database.DriverName),
+			logger.String("driverName", cfg.DatabaseDriverName()),
 		)
 	}
 
@@ -118,11 +118,11 @@ func main() {
 	})
 	r.Mount("/auth", authHandler)
 
-	server := http.Server{Addr: cfg.HTTP.Addr, Handler: r}
+	server := http.Server{Addr: cfg.HTTPAddr(), Handler: r}
 
 	appLogger.Info("created http server",
 		logger.String("area", "http"),
-		logger.String("addr", cfg.HTTP.Addr),
+		logger.String("addr", cfg.HTTPAddr()),
 	)
 
 	interrupt := make(chan os.Signal, 1)
@@ -137,7 +137,7 @@ func main() {
 			appLogger.Fatal("failed to listen",
 				logger.String("err", err.Error()),
 				logger.String("area", "http"),
-				logger.String("addr", cfg.HTTP.Addr),
+				logger.String("addr", cfg.HTTPAddr()),
 			)
 		}
 		wg.Done()
