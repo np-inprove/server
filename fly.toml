@@ -1,0 +1,35 @@
+# fly.toml file generated for np-inprove-server on 2023-05-16T14:24:11Z
+
+app = "np-inprove-server"
+kill_signal = "SIGINT"
+kill_timeout = 5
+mounts = []
+primary_region = "ams"
+processes = []
+
+[env]
+INPROVE_HTTP_ADDR = ":8080"
+INPROVE_DATABASE_DRIVERNAME = "postgres"
+INPROVE_DATABASE_AUTOMIGRATIOn = true
+INPROVE_APP_PRODUCTION = true
+
+[build]
+dockerfile = "./build/docker/Dockerfile"
+
+[[services]]
+internal_port = 8080
+processes = ["app"]
+protocol = "tcp"
+[services.concurrency]
+hard_limit = 25
+soft_limit = 20
+type = "connections"
+
+[[services.ports]]
+force_https = true
+handlers = ["http"]
+port = 80
+
+[[services.ports]]
+handlers = ["tls", "http"]
+port = 443
