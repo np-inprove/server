@@ -2,10 +2,6 @@ package main
 
 import (
 	"context"
-	"github.com/go-chi/chi/v5/middleware"
-	"github.com/go-chi/render"
-	"github.com/np-inprove/server/internal/httphandler"
-	"github.com/np-inprove/server/internal/usecase"
 	"log"
 	"net/http"
 	"os"
@@ -18,8 +14,14 @@ import (
 	"github.com/np-inprove/server/internal/ent"
 	"github.com/np-inprove/server/internal/logger"
 
+	"github.com/np-inprove/server/internal/auth"
+
 	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
+	"github.com/go-chi/jwtauth"
+	"github.com/go-chi/render"
+	"github.com/lestrrat-go/jwx/v2/jwk"
 	_ "github.com/lib/pq"
 	_ "github.com/mattn/go-sqlite3"
 )
@@ -87,6 +89,16 @@ func main() {
 		)
 	}
 
+	privateKey, err := jwk.ParseKey([]byte(cfg.AppJWK()))
+	if err != nil {
+		appLogger.Fatal("failed to parse jwk", logger.String("err", err.Error()))
+	}
+
+	publicKey, err := privateKey.PublicKey()
+	if err != nil {
+		appLogger.Warn("failed to get jwk public key, if the jwt algorithm requires a public key, it will not work", logger.String("err", err.Error()))
+	}
+
 	appLogger.Info("creating http server",
 		logger.String("area", "http"),
 	)
@@ -94,7 +106,7 @@ func main() {
 	r := chi.NewRouter()
 	loggerMiddleware := logger.NewMiddleware(appLogger)
 
-	//tokenAuth := jwtauth.New(cfg.App.JWTAlgorithm, cfg.App.JWTSignKey, cfg.App.JWTVerifyKey)
+	tokenAuth := jwtauth.New(cfg.AppJWTAlgorithm().String(), publicKey, privateKey)
 
 	r.Use(cors.Handler(cors.Options{
 		AllowOriginFunc:  func(r *http.Request, origin string) bool { return true },
@@ -110,12 +122,19 @@ func main() {
 	r.Use(middleware.URLFormat)
 	r.Use(loggerMiddleware.Request)
 
-	auc := usecase.NewAuth()
-	authHandler := httphandler.NewAuth(auc)
+	ar := auth.NewEntRepository(client)
+	auc, err := auth.NewUseCase(ar, cfg, publicKey, privateKey)
+	if err != nil {
+		appLogger.Fatal("failed to initialize auth use case",
+			logger.String("err", err.Error()),
+		)
+	}
+	authHandler := auth.NewHTTPHandler(auc, cfg, tokenAuth)
 
 	r.Get("/healthz", func(w http.ResponseWriter, r *http.Request) {
 		render.DefaultResponder(w, r, render.M{"ok": true})
 	})
+
 	r.Mount("/auth", authHandler)
 
 	server := http.Server{Addr: cfg.HTTPAddr(), Handler: r}

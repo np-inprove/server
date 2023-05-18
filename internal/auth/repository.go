@@ -1,18 +1,16 @@
-package repository
+package auth
 
 import (
 	"context"
 	"time"
-
-	"github.com/np-inprove/server/internal/entity"
 )
 
-type AuthReader interface {
-	FindUserByEmail(ctx context.Context, email string) (entity.User, error)
-	FindJWTRevocationByJTI(ctx context.Context, jti string) (entity.JWTRevocation, error)
+type Reader interface {
+	FindUser(ctx context.Context, opts ...UserOption) (User, error)
+	FindJWTRevocation(ctx context.Context, jti string) (JWTRevocation, error)
 }
 
-type AuthWriter interface {
+type Writer interface {
 	CreateUser(
 		ctx context.Context,
 		firstName string,
@@ -20,16 +18,17 @@ type AuthWriter interface {
 		email string,
 		passwordHash string,
 		opts ...UserOption,
-	) (entity.User, error)
-	CreateJWTRevocation(ctx context.Context, jti string, expiry time.Time) (entity.JWTRevocation, error)
+	) (User, error)
+	CreateJWTRevocation(ctx context.Context, jti string, expiry time.Time) (JWTRevocation, error)
 }
 
-type Auth interface {
-	AuthReader
-	AuthWriter
+type Repository interface {
+	Reader
+	Writer
 }
 
 type userOptions struct {
+	email                  string
 	points                 int
 	pointsAwardedCount     int
 	pointsAwardedResetTime time.Time
@@ -37,6 +36,12 @@ type userOptions struct {
 }
 
 type UserOption func(*userOptions)
+
+func Email(email string) UserOption {
+	return func(opts *userOptions) {
+		opts.email = email
+	}
+}
 
 func Points(points int) UserOption {
 	return func(opts *userOptions) {
