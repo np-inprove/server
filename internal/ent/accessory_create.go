@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 
+	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/np-inprove/server/internal/ent/accessory"
@@ -19,6 +20,7 @@ type AccessoryCreate struct {
 	config
 	mutation *AccessoryMutation
 	hooks    []Hook
+	conflict []sql.ConflictOption
 }
 
 // SetName sets the "name" field.
@@ -147,6 +149,7 @@ func (ac *AccessoryCreate) createSpec() (*Accessory, *sqlgraph.CreateSpec) {
 		_node = &Accessory{config: ac.config}
 		_spec = sqlgraph.NewCreateSpec(accessory.Table, sqlgraph.NewFieldSpec(accessory.FieldID, field.TypeInt))
 	)
+	_spec.OnConflict = ac.conflict
 	if value, ok := ac.mutation.Name(); ok {
 		_spec.SetField(accessory.FieldName, field.TypeString, value)
 		_node.Name = value
@@ -195,10 +198,224 @@ func (ac *AccessoryCreate) createSpec() (*Accessory, *sqlgraph.CreateSpec) {
 	return _node, _spec
 }
 
+// OnConflict allows configuring the `ON CONFLICT` / `ON DUPLICATE KEY` clause
+// of the `INSERT` statement. For example:
+//
+//	client.Accessory.Create().
+//		SetName(v).
+//		OnConflict(
+//			// Update the row with the new values
+//			// the was proposed for insertion.
+//			sql.ResolveWithNewValues(),
+//		).
+//		// Override some of the fields with custom
+//		// update values.
+//		Update(func(u *ent.AccessoryUpsert) {
+//			SetName(v+v).
+//		}).
+//		Exec(ctx)
+func (ac *AccessoryCreate) OnConflict(opts ...sql.ConflictOption) *AccessoryUpsertOne {
+	ac.conflict = opts
+	return &AccessoryUpsertOne{
+		create: ac,
+	}
+}
+
+// OnConflictColumns calls `OnConflict` and configures the columns
+// as conflict target. Using this option is equivalent to using:
+//
+//	client.Accessory.Create().
+//		OnConflict(sql.ConflictColumns(columns...)).
+//		Exec(ctx)
+func (ac *AccessoryCreate) OnConflictColumns(columns ...string) *AccessoryUpsertOne {
+	ac.conflict = append(ac.conflict, sql.ConflictColumns(columns...))
+	return &AccessoryUpsertOne{
+		create: ac,
+	}
+}
+
+type (
+	// AccessoryUpsertOne is the builder for "upsert"-ing
+	//  one Accessory node.
+	AccessoryUpsertOne struct {
+		create *AccessoryCreate
+	}
+
+	// AccessoryUpsert is the "OnConflict" setter.
+	AccessoryUpsert struct {
+		*sql.UpdateSet
+	}
+)
+
+// SetName sets the "name" field.
+func (u *AccessoryUpsert) SetName(v string) *AccessoryUpsert {
+	u.Set(accessory.FieldName, v)
+	return u
+}
+
+// UpdateName sets the "name" field to the value that was provided on create.
+func (u *AccessoryUpsert) UpdateName() *AccessoryUpsert {
+	u.SetExcluded(accessory.FieldName)
+	return u
+}
+
+// SetDescription sets the "description" field.
+func (u *AccessoryUpsert) SetDescription(v string) *AccessoryUpsert {
+	u.Set(accessory.FieldDescription, v)
+	return u
+}
+
+// UpdateDescription sets the "description" field to the value that was provided on create.
+func (u *AccessoryUpsert) UpdateDescription() *AccessoryUpsert {
+	u.SetExcluded(accessory.FieldDescription)
+	return u
+}
+
+// SetPointsRequired sets the "points_required" field.
+func (u *AccessoryUpsert) SetPointsRequired(v int) *AccessoryUpsert {
+	u.Set(accessory.FieldPointsRequired, v)
+	return u
+}
+
+// UpdatePointsRequired sets the "points_required" field to the value that was provided on create.
+func (u *AccessoryUpsert) UpdatePointsRequired() *AccessoryUpsert {
+	u.SetExcluded(accessory.FieldPointsRequired)
+	return u
+}
+
+// AddPointsRequired adds v to the "points_required" field.
+func (u *AccessoryUpsert) AddPointsRequired(v int) *AccessoryUpsert {
+	u.Add(accessory.FieldPointsRequired, v)
+	return u
+}
+
+// UpdateNewValues updates the mutable fields using the new values that were set on create.
+// Using this option is equivalent to using:
+//
+//	client.Accessory.Create().
+//		OnConflict(
+//			sql.ResolveWithNewValues(),
+//		).
+//		Exec(ctx)
+func (u *AccessoryUpsertOne) UpdateNewValues() *AccessoryUpsertOne {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWithNewValues())
+	return u
+}
+
+// Ignore sets each column to itself in case of conflict.
+// Using this option is equivalent to using:
+//
+//	client.Accessory.Create().
+//	    OnConflict(sql.ResolveWithIgnore()).
+//	    Exec(ctx)
+func (u *AccessoryUpsertOne) Ignore() *AccessoryUpsertOne {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWithIgnore())
+	return u
+}
+
+// DoNothing configures the conflict_action to `DO NOTHING`.
+// Supported only by SQLite and PostgreSQL.
+func (u *AccessoryUpsertOne) DoNothing() *AccessoryUpsertOne {
+	u.create.conflict = append(u.create.conflict, sql.DoNothing())
+	return u
+}
+
+// Update allows overriding fields `UPDATE` values. See the AccessoryCreate.OnConflict
+// documentation for more info.
+func (u *AccessoryUpsertOne) Update(set func(*AccessoryUpsert)) *AccessoryUpsertOne {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWith(func(update *sql.UpdateSet) {
+		set(&AccessoryUpsert{UpdateSet: update})
+	}))
+	return u
+}
+
+// SetName sets the "name" field.
+func (u *AccessoryUpsertOne) SetName(v string) *AccessoryUpsertOne {
+	return u.Update(func(s *AccessoryUpsert) {
+		s.SetName(v)
+	})
+}
+
+// UpdateName sets the "name" field to the value that was provided on create.
+func (u *AccessoryUpsertOne) UpdateName() *AccessoryUpsertOne {
+	return u.Update(func(s *AccessoryUpsert) {
+		s.UpdateName()
+	})
+}
+
+// SetDescription sets the "description" field.
+func (u *AccessoryUpsertOne) SetDescription(v string) *AccessoryUpsertOne {
+	return u.Update(func(s *AccessoryUpsert) {
+		s.SetDescription(v)
+	})
+}
+
+// UpdateDescription sets the "description" field to the value that was provided on create.
+func (u *AccessoryUpsertOne) UpdateDescription() *AccessoryUpsertOne {
+	return u.Update(func(s *AccessoryUpsert) {
+		s.UpdateDescription()
+	})
+}
+
+// SetPointsRequired sets the "points_required" field.
+func (u *AccessoryUpsertOne) SetPointsRequired(v int) *AccessoryUpsertOne {
+	return u.Update(func(s *AccessoryUpsert) {
+		s.SetPointsRequired(v)
+	})
+}
+
+// AddPointsRequired adds v to the "points_required" field.
+func (u *AccessoryUpsertOne) AddPointsRequired(v int) *AccessoryUpsertOne {
+	return u.Update(func(s *AccessoryUpsert) {
+		s.AddPointsRequired(v)
+	})
+}
+
+// UpdatePointsRequired sets the "points_required" field to the value that was provided on create.
+func (u *AccessoryUpsertOne) UpdatePointsRequired() *AccessoryUpsertOne {
+	return u.Update(func(s *AccessoryUpsert) {
+		s.UpdatePointsRequired()
+	})
+}
+
+// Exec executes the query.
+func (u *AccessoryUpsertOne) Exec(ctx context.Context) error {
+	if len(u.create.conflict) == 0 {
+		return errors.New("ent: missing options for AccessoryCreate.OnConflict")
+	}
+	return u.create.Exec(ctx)
+}
+
+// ExecX is like Exec, but panics if an error occurs.
+func (u *AccessoryUpsertOne) ExecX(ctx context.Context) {
+	if err := u.create.Exec(ctx); err != nil {
+		panic(err)
+	}
+}
+
+// Exec executes the UPSERT query and returns the inserted/updated ID.
+func (u *AccessoryUpsertOne) ID(ctx context.Context) (id int, err error) {
+	node, err := u.create.Save(ctx)
+	if err != nil {
+		return id, err
+	}
+	return node.ID, nil
+}
+
+// IDX is like ID, but panics if an error occurs.
+func (u *AccessoryUpsertOne) IDX(ctx context.Context) int {
+	id, err := u.ID(ctx)
+	if err != nil {
+		panic(err)
+	}
+	return id
+}
+
 // AccessoryCreateBulk is the builder for creating many Accessory entities in bulk.
 type AccessoryCreateBulk struct {
 	config
 	builders []*AccessoryCreate
+	conflict []sql.ConflictOption
 }
 
 // Save creates the Accessory entities in the database.
@@ -224,6 +441,7 @@ func (acb *AccessoryCreateBulk) Save(ctx context.Context) ([]*Accessory, error) 
 					_, err = mutators[i+1].Mutate(root, acb.builders[i+1].mutation)
 				} else {
 					spec := &sqlgraph.BatchCreateSpec{Nodes: specs}
+					spec.OnConflict = acb.conflict
 					// Invoke the actual operation on the latest mutation in the chain.
 					if err = sqlgraph.BatchCreate(ctx, acb.driver, spec); err != nil {
 						if sqlgraph.IsConstraintError(err) {
@@ -274,6 +492,156 @@ func (acb *AccessoryCreateBulk) Exec(ctx context.Context) error {
 // ExecX is like Exec, but panics if an error occurs.
 func (acb *AccessoryCreateBulk) ExecX(ctx context.Context) {
 	if err := acb.Exec(ctx); err != nil {
+		panic(err)
+	}
+}
+
+// OnConflict allows configuring the `ON CONFLICT` / `ON DUPLICATE KEY` clause
+// of the `INSERT` statement. For example:
+//
+//	client.Accessory.CreateBulk(builders...).
+//		OnConflict(
+//			// Update the row with the new values
+//			// the was proposed for insertion.
+//			sql.ResolveWithNewValues(),
+//		).
+//		// Override some of the fields with custom
+//		// update values.
+//		Update(func(u *ent.AccessoryUpsert) {
+//			SetName(v+v).
+//		}).
+//		Exec(ctx)
+func (acb *AccessoryCreateBulk) OnConflict(opts ...sql.ConflictOption) *AccessoryUpsertBulk {
+	acb.conflict = opts
+	return &AccessoryUpsertBulk{
+		create: acb,
+	}
+}
+
+// OnConflictColumns calls `OnConflict` and configures the columns
+// as conflict target. Using this option is equivalent to using:
+//
+//	client.Accessory.Create().
+//		OnConflict(sql.ConflictColumns(columns...)).
+//		Exec(ctx)
+func (acb *AccessoryCreateBulk) OnConflictColumns(columns ...string) *AccessoryUpsertBulk {
+	acb.conflict = append(acb.conflict, sql.ConflictColumns(columns...))
+	return &AccessoryUpsertBulk{
+		create: acb,
+	}
+}
+
+// AccessoryUpsertBulk is the builder for "upsert"-ing
+// a bulk of Accessory nodes.
+type AccessoryUpsertBulk struct {
+	create *AccessoryCreateBulk
+}
+
+// UpdateNewValues updates the mutable fields using the new values that
+// were set on create. Using this option is equivalent to using:
+//
+//	client.Accessory.Create().
+//		OnConflict(
+//			sql.ResolveWithNewValues(),
+//		).
+//		Exec(ctx)
+func (u *AccessoryUpsertBulk) UpdateNewValues() *AccessoryUpsertBulk {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWithNewValues())
+	return u
+}
+
+// Ignore sets each column to itself in case of conflict.
+// Using this option is equivalent to using:
+//
+//	client.Accessory.Create().
+//		OnConflict(sql.ResolveWithIgnore()).
+//		Exec(ctx)
+func (u *AccessoryUpsertBulk) Ignore() *AccessoryUpsertBulk {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWithIgnore())
+	return u
+}
+
+// DoNothing configures the conflict_action to `DO NOTHING`.
+// Supported only by SQLite and PostgreSQL.
+func (u *AccessoryUpsertBulk) DoNothing() *AccessoryUpsertBulk {
+	u.create.conflict = append(u.create.conflict, sql.DoNothing())
+	return u
+}
+
+// Update allows overriding fields `UPDATE` values. See the AccessoryCreateBulk.OnConflict
+// documentation for more info.
+func (u *AccessoryUpsertBulk) Update(set func(*AccessoryUpsert)) *AccessoryUpsertBulk {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWith(func(update *sql.UpdateSet) {
+		set(&AccessoryUpsert{UpdateSet: update})
+	}))
+	return u
+}
+
+// SetName sets the "name" field.
+func (u *AccessoryUpsertBulk) SetName(v string) *AccessoryUpsertBulk {
+	return u.Update(func(s *AccessoryUpsert) {
+		s.SetName(v)
+	})
+}
+
+// UpdateName sets the "name" field to the value that was provided on create.
+func (u *AccessoryUpsertBulk) UpdateName() *AccessoryUpsertBulk {
+	return u.Update(func(s *AccessoryUpsert) {
+		s.UpdateName()
+	})
+}
+
+// SetDescription sets the "description" field.
+func (u *AccessoryUpsertBulk) SetDescription(v string) *AccessoryUpsertBulk {
+	return u.Update(func(s *AccessoryUpsert) {
+		s.SetDescription(v)
+	})
+}
+
+// UpdateDescription sets the "description" field to the value that was provided on create.
+func (u *AccessoryUpsertBulk) UpdateDescription() *AccessoryUpsertBulk {
+	return u.Update(func(s *AccessoryUpsert) {
+		s.UpdateDescription()
+	})
+}
+
+// SetPointsRequired sets the "points_required" field.
+func (u *AccessoryUpsertBulk) SetPointsRequired(v int) *AccessoryUpsertBulk {
+	return u.Update(func(s *AccessoryUpsert) {
+		s.SetPointsRequired(v)
+	})
+}
+
+// AddPointsRequired adds v to the "points_required" field.
+func (u *AccessoryUpsertBulk) AddPointsRequired(v int) *AccessoryUpsertBulk {
+	return u.Update(func(s *AccessoryUpsert) {
+		s.AddPointsRequired(v)
+	})
+}
+
+// UpdatePointsRequired sets the "points_required" field to the value that was provided on create.
+func (u *AccessoryUpsertBulk) UpdatePointsRequired() *AccessoryUpsertBulk {
+	return u.Update(func(s *AccessoryUpsert) {
+		s.UpdatePointsRequired()
+	})
+}
+
+// Exec executes the query.
+func (u *AccessoryUpsertBulk) Exec(ctx context.Context) error {
+	for i, b := range u.create.builders {
+		if len(b.conflict) != 0 {
+			return fmt.Errorf("ent: OnConflict was set for builder %d. Set it on the AccessoryCreateBulk instead", i)
+		}
+	}
+	if len(u.create.conflict) == 0 {
+		return errors.New("ent: missing options for AccessoryCreateBulk.OnConflict")
+	}
+	return u.create.Exec(ctx)
+}
+
+// ExecX is like Exec, but panics if an error occurs.
+func (u *AccessoryUpsertBulk) ExecX(ctx context.Context) {
+	if err := u.create.Exec(ctx); err != nil {
 		panic(err)
 	}
 }

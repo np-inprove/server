@@ -8,10 +8,11 @@ import (
 	"fmt"
 	"time"
 
+	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
-	"github.com/np-inprove/server/internal/ent/course"
 	"github.com/np-inprove/server/internal/ent/deadline"
+	"github.com/np-inprove/server/internal/ent/department"
 	"github.com/np-inprove/server/internal/ent/forumpost"
 	"github.com/np-inprove/server/internal/ent/group"
 	"github.com/np-inprove/server/internal/ent/institution"
@@ -25,6 +26,7 @@ type UserCreate struct {
 	config
 	mutation *UserMutation
 	hooks    []Hook
+	conflict []sql.ConflictOption
 }
 
 // SetFirstName sets the "first_name" field.
@@ -57,9 +59,25 @@ func (uc *UserCreate) SetPoints(i int) *UserCreate {
 	return uc
 }
 
+// SetNillablePoints sets the "points" field if the given value is not nil.
+func (uc *UserCreate) SetNillablePoints(i *int) *UserCreate {
+	if i != nil {
+		uc.SetPoints(*i)
+	}
+	return uc
+}
+
 // SetPointsAwardedCount sets the "points_awarded_count" field.
 func (uc *UserCreate) SetPointsAwardedCount(i int) *UserCreate {
 	uc.mutation.SetPointsAwardedCount(i)
+	return uc
+}
+
+// SetNillablePointsAwardedCount sets the "points_awarded_count" field if the given value is not nil.
+func (uc *UserCreate) SetNillablePointsAwardedCount(i *int) *UserCreate {
+	if i != nil {
+		uc.SetPointsAwardedCount(*i)
+	}
 	return uc
 }
 
@@ -83,23 +101,15 @@ func (uc *UserCreate) SetGodMode(b bool) *UserCreate {
 	return uc
 }
 
-// SetCourseID sets the "course" edge to the Course entity by ID.
-func (uc *UserCreate) SetCourseID(id int) *UserCreate {
-	uc.mutation.SetCourseID(id)
+// SetDepartmentID sets the "department" edge to the Department entity by ID.
+func (uc *UserCreate) SetDepartmentID(id int) *UserCreate {
+	uc.mutation.SetDepartmentID(id)
 	return uc
 }
 
-// SetNillableCourseID sets the "course" edge to the Course entity by ID if the given value is not nil.
-func (uc *UserCreate) SetNillableCourseID(id *int) *UserCreate {
-	if id != nil {
-		uc = uc.SetCourseID(*id)
-	}
-	return uc
-}
-
-// SetCourse sets the "course" edge to the Course entity.
-func (uc *UserCreate) SetCourse(c *Course) *UserCreate {
-	return uc.SetCourseID(c.ID)
+// SetDepartment sets the "department" edge to the Department entity.
+func (uc *UserCreate) SetDepartment(d *Department) *UserCreate {
+	return uc.SetDepartmentID(d.ID)
 }
 
 // AddInstitutionIDs adds the "institution" edge to the Institution entity by IDs.
@@ -229,6 +239,7 @@ func (uc *UserCreate) Mutation() *UserMutation {
 
 // Save creates the User in the database.
 func (uc *UserCreate) Save(ctx context.Context) (*User, error) {
+	uc.defaults()
 	return withHooks(ctx, uc.sqlSave, uc.mutation, uc.hooks)
 }
 
@@ -251,6 +262,18 @@ func (uc *UserCreate) Exec(ctx context.Context) error {
 func (uc *UserCreate) ExecX(ctx context.Context) {
 	if err := uc.Exec(ctx); err != nil {
 		panic(err)
+	}
+}
+
+// defaults sets the default values of the builder before save.
+func (uc *UserCreate) defaults() {
+	if _, ok := uc.mutation.Points(); !ok {
+		v := user.DefaultPoints
+		uc.mutation.SetPoints(v)
+	}
+	if _, ok := uc.mutation.PointsAwardedCount(); !ok {
+		v := user.DefaultPointsAwardedCount
+		uc.mutation.SetPointsAwardedCount(v)
 	}
 }
 
@@ -307,6 +330,9 @@ func (uc *UserCreate) check() error {
 	if _, ok := uc.mutation.GodMode(); !ok {
 		return &ValidationError{Name: "god_mode", err: errors.New(`ent: missing required field "User.god_mode"`)}
 	}
+	if _, ok := uc.mutation.DepartmentID(); !ok {
+		return &ValidationError{Name: "department", err: errors.New(`ent: missing required edge "User.department"`)}
+	}
 	return nil
 }
 
@@ -333,6 +359,7 @@ func (uc *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 		_node = &User{config: uc.config}
 		_spec = sqlgraph.NewCreateSpec(user.Table, sqlgraph.NewFieldSpec(user.FieldID, field.TypeInt))
 	)
+	_spec.OnConflict = uc.conflict
 	if value, ok := uc.mutation.FirstName(); ok {
 		_spec.SetField(user.FieldFirstName, field.TypeString, value)
 		_node.FirstName = value
@@ -365,21 +392,21 @@ func (uc *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 		_spec.SetField(user.FieldGodMode, field.TypeBool, value)
 		_node.GodMode = value
 	}
-	if nodes := uc.mutation.CourseIDs(); len(nodes) > 0 {
+	if nodes := uc.mutation.DepartmentIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
-			Table:   user.CourseTable,
-			Columns: []string{user.CourseColumn},
+			Table:   user.DepartmentTable,
+			Columns: []string{user.DepartmentColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(course.FieldID, field.TypeInt),
+				IDSpec: sqlgraph.NewFieldSpec(department.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
-		_node.course_students = &nodes[0]
+		_node.department_users = &nodes[0]
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	if nodes := uc.mutation.InstitutionIDs(); len(nodes) > 0 {
@@ -517,10 +544,380 @@ func (uc *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 	return _node, _spec
 }
 
+// OnConflict allows configuring the `ON CONFLICT` / `ON DUPLICATE KEY` clause
+// of the `INSERT` statement. For example:
+//
+//	client.User.Create().
+//		SetFirstName(v).
+//		OnConflict(
+//			// Update the row with the new values
+//			// the was proposed for insertion.
+//			sql.ResolveWithNewValues(),
+//		).
+//		// Override some of the fields with custom
+//		// update values.
+//		Update(func(u *ent.UserUpsert) {
+//			SetFirstName(v+v).
+//		}).
+//		Exec(ctx)
+func (uc *UserCreate) OnConflict(opts ...sql.ConflictOption) *UserUpsertOne {
+	uc.conflict = opts
+	return &UserUpsertOne{
+		create: uc,
+	}
+}
+
+// OnConflictColumns calls `OnConflict` and configures the columns
+// as conflict target. Using this option is equivalent to using:
+//
+//	client.User.Create().
+//		OnConflict(sql.ConflictColumns(columns...)).
+//		Exec(ctx)
+func (uc *UserCreate) OnConflictColumns(columns ...string) *UserUpsertOne {
+	uc.conflict = append(uc.conflict, sql.ConflictColumns(columns...))
+	return &UserUpsertOne{
+		create: uc,
+	}
+}
+
+type (
+	// UserUpsertOne is the builder for "upsert"-ing
+	//  one User node.
+	UserUpsertOne struct {
+		create *UserCreate
+	}
+
+	// UserUpsert is the "OnConflict" setter.
+	UserUpsert struct {
+		*sql.UpdateSet
+	}
+)
+
+// SetFirstName sets the "first_name" field.
+func (u *UserUpsert) SetFirstName(v string) *UserUpsert {
+	u.Set(user.FieldFirstName, v)
+	return u
+}
+
+// UpdateFirstName sets the "first_name" field to the value that was provided on create.
+func (u *UserUpsert) UpdateFirstName() *UserUpsert {
+	u.SetExcluded(user.FieldFirstName)
+	return u
+}
+
+// SetLastName sets the "last_name" field.
+func (u *UserUpsert) SetLastName(v string) *UserUpsert {
+	u.Set(user.FieldLastName, v)
+	return u
+}
+
+// UpdateLastName sets the "last_name" field to the value that was provided on create.
+func (u *UserUpsert) UpdateLastName() *UserUpsert {
+	u.SetExcluded(user.FieldLastName)
+	return u
+}
+
+// SetEmail sets the "email" field.
+func (u *UserUpsert) SetEmail(v string) *UserUpsert {
+	u.Set(user.FieldEmail, v)
+	return u
+}
+
+// UpdateEmail sets the "email" field to the value that was provided on create.
+func (u *UserUpsert) UpdateEmail() *UserUpsert {
+	u.SetExcluded(user.FieldEmail)
+	return u
+}
+
+// SetPasswordHash sets the "password_hash" field.
+func (u *UserUpsert) SetPasswordHash(v string) *UserUpsert {
+	u.Set(user.FieldPasswordHash, v)
+	return u
+}
+
+// UpdatePasswordHash sets the "password_hash" field to the value that was provided on create.
+func (u *UserUpsert) UpdatePasswordHash() *UserUpsert {
+	u.SetExcluded(user.FieldPasswordHash)
+	return u
+}
+
+// SetPoints sets the "points" field.
+func (u *UserUpsert) SetPoints(v int) *UserUpsert {
+	u.Set(user.FieldPoints, v)
+	return u
+}
+
+// UpdatePoints sets the "points" field to the value that was provided on create.
+func (u *UserUpsert) UpdatePoints() *UserUpsert {
+	u.SetExcluded(user.FieldPoints)
+	return u
+}
+
+// AddPoints adds v to the "points" field.
+func (u *UserUpsert) AddPoints(v int) *UserUpsert {
+	u.Add(user.FieldPoints, v)
+	return u
+}
+
+// SetPointsAwardedCount sets the "points_awarded_count" field.
+func (u *UserUpsert) SetPointsAwardedCount(v int) *UserUpsert {
+	u.Set(user.FieldPointsAwardedCount, v)
+	return u
+}
+
+// UpdatePointsAwardedCount sets the "points_awarded_count" field to the value that was provided on create.
+func (u *UserUpsert) UpdatePointsAwardedCount() *UserUpsert {
+	u.SetExcluded(user.FieldPointsAwardedCount)
+	return u
+}
+
+// AddPointsAwardedCount adds v to the "points_awarded_count" field.
+func (u *UserUpsert) AddPointsAwardedCount(v int) *UserUpsert {
+	u.Add(user.FieldPointsAwardedCount, v)
+	return u
+}
+
+// SetPointsAwardedResetTime sets the "points_awarded_reset_time" field.
+func (u *UserUpsert) SetPointsAwardedResetTime(v time.Time) *UserUpsert {
+	u.Set(user.FieldPointsAwardedResetTime, v)
+	return u
+}
+
+// UpdatePointsAwardedResetTime sets the "points_awarded_reset_time" field to the value that was provided on create.
+func (u *UserUpsert) UpdatePointsAwardedResetTime() *UserUpsert {
+	u.SetExcluded(user.FieldPointsAwardedResetTime)
+	return u
+}
+
+// ClearPointsAwardedResetTime clears the value of the "points_awarded_reset_time" field.
+func (u *UserUpsert) ClearPointsAwardedResetTime() *UserUpsert {
+	u.SetNull(user.FieldPointsAwardedResetTime)
+	return u
+}
+
+// SetGodMode sets the "god_mode" field.
+func (u *UserUpsert) SetGodMode(v bool) *UserUpsert {
+	u.Set(user.FieldGodMode, v)
+	return u
+}
+
+// UpdateGodMode sets the "god_mode" field to the value that was provided on create.
+func (u *UserUpsert) UpdateGodMode() *UserUpsert {
+	u.SetExcluded(user.FieldGodMode)
+	return u
+}
+
+// UpdateNewValues updates the mutable fields using the new values that were set on create.
+// Using this option is equivalent to using:
+//
+//	client.User.Create().
+//		OnConflict(
+//			sql.ResolveWithNewValues(),
+//		).
+//		Exec(ctx)
+func (u *UserUpsertOne) UpdateNewValues() *UserUpsertOne {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWithNewValues())
+	return u
+}
+
+// Ignore sets each column to itself in case of conflict.
+// Using this option is equivalent to using:
+//
+//	client.User.Create().
+//	    OnConflict(sql.ResolveWithIgnore()).
+//	    Exec(ctx)
+func (u *UserUpsertOne) Ignore() *UserUpsertOne {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWithIgnore())
+	return u
+}
+
+// DoNothing configures the conflict_action to `DO NOTHING`.
+// Supported only by SQLite and PostgreSQL.
+func (u *UserUpsertOne) DoNothing() *UserUpsertOne {
+	u.create.conflict = append(u.create.conflict, sql.DoNothing())
+	return u
+}
+
+// Update allows overriding fields `UPDATE` values. See the UserCreate.OnConflict
+// documentation for more info.
+func (u *UserUpsertOne) Update(set func(*UserUpsert)) *UserUpsertOne {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWith(func(update *sql.UpdateSet) {
+		set(&UserUpsert{UpdateSet: update})
+	}))
+	return u
+}
+
+// SetFirstName sets the "first_name" field.
+func (u *UserUpsertOne) SetFirstName(v string) *UserUpsertOne {
+	return u.Update(func(s *UserUpsert) {
+		s.SetFirstName(v)
+	})
+}
+
+// UpdateFirstName sets the "first_name" field to the value that was provided on create.
+func (u *UserUpsertOne) UpdateFirstName() *UserUpsertOne {
+	return u.Update(func(s *UserUpsert) {
+		s.UpdateFirstName()
+	})
+}
+
+// SetLastName sets the "last_name" field.
+func (u *UserUpsertOne) SetLastName(v string) *UserUpsertOne {
+	return u.Update(func(s *UserUpsert) {
+		s.SetLastName(v)
+	})
+}
+
+// UpdateLastName sets the "last_name" field to the value that was provided on create.
+func (u *UserUpsertOne) UpdateLastName() *UserUpsertOne {
+	return u.Update(func(s *UserUpsert) {
+		s.UpdateLastName()
+	})
+}
+
+// SetEmail sets the "email" field.
+func (u *UserUpsertOne) SetEmail(v string) *UserUpsertOne {
+	return u.Update(func(s *UserUpsert) {
+		s.SetEmail(v)
+	})
+}
+
+// UpdateEmail sets the "email" field to the value that was provided on create.
+func (u *UserUpsertOne) UpdateEmail() *UserUpsertOne {
+	return u.Update(func(s *UserUpsert) {
+		s.UpdateEmail()
+	})
+}
+
+// SetPasswordHash sets the "password_hash" field.
+func (u *UserUpsertOne) SetPasswordHash(v string) *UserUpsertOne {
+	return u.Update(func(s *UserUpsert) {
+		s.SetPasswordHash(v)
+	})
+}
+
+// UpdatePasswordHash sets the "password_hash" field to the value that was provided on create.
+func (u *UserUpsertOne) UpdatePasswordHash() *UserUpsertOne {
+	return u.Update(func(s *UserUpsert) {
+		s.UpdatePasswordHash()
+	})
+}
+
+// SetPoints sets the "points" field.
+func (u *UserUpsertOne) SetPoints(v int) *UserUpsertOne {
+	return u.Update(func(s *UserUpsert) {
+		s.SetPoints(v)
+	})
+}
+
+// AddPoints adds v to the "points" field.
+func (u *UserUpsertOne) AddPoints(v int) *UserUpsertOne {
+	return u.Update(func(s *UserUpsert) {
+		s.AddPoints(v)
+	})
+}
+
+// UpdatePoints sets the "points" field to the value that was provided on create.
+func (u *UserUpsertOne) UpdatePoints() *UserUpsertOne {
+	return u.Update(func(s *UserUpsert) {
+		s.UpdatePoints()
+	})
+}
+
+// SetPointsAwardedCount sets the "points_awarded_count" field.
+func (u *UserUpsertOne) SetPointsAwardedCount(v int) *UserUpsertOne {
+	return u.Update(func(s *UserUpsert) {
+		s.SetPointsAwardedCount(v)
+	})
+}
+
+// AddPointsAwardedCount adds v to the "points_awarded_count" field.
+func (u *UserUpsertOne) AddPointsAwardedCount(v int) *UserUpsertOne {
+	return u.Update(func(s *UserUpsert) {
+		s.AddPointsAwardedCount(v)
+	})
+}
+
+// UpdatePointsAwardedCount sets the "points_awarded_count" field to the value that was provided on create.
+func (u *UserUpsertOne) UpdatePointsAwardedCount() *UserUpsertOne {
+	return u.Update(func(s *UserUpsert) {
+		s.UpdatePointsAwardedCount()
+	})
+}
+
+// SetPointsAwardedResetTime sets the "points_awarded_reset_time" field.
+func (u *UserUpsertOne) SetPointsAwardedResetTime(v time.Time) *UserUpsertOne {
+	return u.Update(func(s *UserUpsert) {
+		s.SetPointsAwardedResetTime(v)
+	})
+}
+
+// UpdatePointsAwardedResetTime sets the "points_awarded_reset_time" field to the value that was provided on create.
+func (u *UserUpsertOne) UpdatePointsAwardedResetTime() *UserUpsertOne {
+	return u.Update(func(s *UserUpsert) {
+		s.UpdatePointsAwardedResetTime()
+	})
+}
+
+// ClearPointsAwardedResetTime clears the value of the "points_awarded_reset_time" field.
+func (u *UserUpsertOne) ClearPointsAwardedResetTime() *UserUpsertOne {
+	return u.Update(func(s *UserUpsert) {
+		s.ClearPointsAwardedResetTime()
+	})
+}
+
+// SetGodMode sets the "god_mode" field.
+func (u *UserUpsertOne) SetGodMode(v bool) *UserUpsertOne {
+	return u.Update(func(s *UserUpsert) {
+		s.SetGodMode(v)
+	})
+}
+
+// UpdateGodMode sets the "god_mode" field to the value that was provided on create.
+func (u *UserUpsertOne) UpdateGodMode() *UserUpsertOne {
+	return u.Update(func(s *UserUpsert) {
+		s.UpdateGodMode()
+	})
+}
+
+// Exec executes the query.
+func (u *UserUpsertOne) Exec(ctx context.Context) error {
+	if len(u.create.conflict) == 0 {
+		return errors.New("ent: missing options for UserCreate.OnConflict")
+	}
+	return u.create.Exec(ctx)
+}
+
+// ExecX is like Exec, but panics if an error occurs.
+func (u *UserUpsertOne) ExecX(ctx context.Context) {
+	if err := u.create.Exec(ctx); err != nil {
+		panic(err)
+	}
+}
+
+// Exec executes the UPSERT query and returns the inserted/updated ID.
+func (u *UserUpsertOne) ID(ctx context.Context) (id int, err error) {
+	node, err := u.create.Save(ctx)
+	if err != nil {
+		return id, err
+	}
+	return node.ID, nil
+}
+
+// IDX is like ID, but panics if an error occurs.
+func (u *UserUpsertOne) IDX(ctx context.Context) int {
+	id, err := u.ID(ctx)
+	if err != nil {
+		panic(err)
+	}
+	return id
+}
+
 // UserCreateBulk is the builder for creating many User entities in bulk.
 type UserCreateBulk struct {
 	config
 	builders []*UserCreate
+	conflict []sql.ConflictOption
 }
 
 // Save creates the User entities in the database.
@@ -531,6 +928,7 @@ func (ucb *UserCreateBulk) Save(ctx context.Context) ([]*User, error) {
 	for i := range ucb.builders {
 		func(i int, root context.Context) {
 			builder := ucb.builders[i]
+			builder.defaults()
 			var mut Mutator = MutateFunc(func(ctx context.Context, m Mutation) (Value, error) {
 				mutation, ok := m.(*UserMutation)
 				if !ok {
@@ -546,6 +944,7 @@ func (ucb *UserCreateBulk) Save(ctx context.Context) ([]*User, error) {
 					_, err = mutators[i+1].Mutate(root, ucb.builders[i+1].mutation)
 				} else {
 					spec := &sqlgraph.BatchCreateSpec{Nodes: specs}
+					spec.OnConflict = ucb.conflict
 					// Invoke the actual operation on the latest mutation in the chain.
 					if err = sqlgraph.BatchCreate(ctx, ucb.driver, spec); err != nil {
 						if sqlgraph.IsConstraintError(err) {
@@ -596,6 +995,240 @@ func (ucb *UserCreateBulk) Exec(ctx context.Context) error {
 // ExecX is like Exec, but panics if an error occurs.
 func (ucb *UserCreateBulk) ExecX(ctx context.Context) {
 	if err := ucb.Exec(ctx); err != nil {
+		panic(err)
+	}
+}
+
+// OnConflict allows configuring the `ON CONFLICT` / `ON DUPLICATE KEY` clause
+// of the `INSERT` statement. For example:
+//
+//	client.User.CreateBulk(builders...).
+//		OnConflict(
+//			// Update the row with the new values
+//			// the was proposed for insertion.
+//			sql.ResolveWithNewValues(),
+//		).
+//		// Override some of the fields with custom
+//		// update values.
+//		Update(func(u *ent.UserUpsert) {
+//			SetFirstName(v+v).
+//		}).
+//		Exec(ctx)
+func (ucb *UserCreateBulk) OnConflict(opts ...sql.ConflictOption) *UserUpsertBulk {
+	ucb.conflict = opts
+	return &UserUpsertBulk{
+		create: ucb,
+	}
+}
+
+// OnConflictColumns calls `OnConflict` and configures the columns
+// as conflict target. Using this option is equivalent to using:
+//
+//	client.User.Create().
+//		OnConflict(sql.ConflictColumns(columns...)).
+//		Exec(ctx)
+func (ucb *UserCreateBulk) OnConflictColumns(columns ...string) *UserUpsertBulk {
+	ucb.conflict = append(ucb.conflict, sql.ConflictColumns(columns...))
+	return &UserUpsertBulk{
+		create: ucb,
+	}
+}
+
+// UserUpsertBulk is the builder for "upsert"-ing
+// a bulk of User nodes.
+type UserUpsertBulk struct {
+	create *UserCreateBulk
+}
+
+// UpdateNewValues updates the mutable fields using the new values that
+// were set on create. Using this option is equivalent to using:
+//
+//	client.User.Create().
+//		OnConflict(
+//			sql.ResolveWithNewValues(),
+//		).
+//		Exec(ctx)
+func (u *UserUpsertBulk) UpdateNewValues() *UserUpsertBulk {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWithNewValues())
+	return u
+}
+
+// Ignore sets each column to itself in case of conflict.
+// Using this option is equivalent to using:
+//
+//	client.User.Create().
+//		OnConflict(sql.ResolveWithIgnore()).
+//		Exec(ctx)
+func (u *UserUpsertBulk) Ignore() *UserUpsertBulk {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWithIgnore())
+	return u
+}
+
+// DoNothing configures the conflict_action to `DO NOTHING`.
+// Supported only by SQLite and PostgreSQL.
+func (u *UserUpsertBulk) DoNothing() *UserUpsertBulk {
+	u.create.conflict = append(u.create.conflict, sql.DoNothing())
+	return u
+}
+
+// Update allows overriding fields `UPDATE` values. See the UserCreateBulk.OnConflict
+// documentation for more info.
+func (u *UserUpsertBulk) Update(set func(*UserUpsert)) *UserUpsertBulk {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWith(func(update *sql.UpdateSet) {
+		set(&UserUpsert{UpdateSet: update})
+	}))
+	return u
+}
+
+// SetFirstName sets the "first_name" field.
+func (u *UserUpsertBulk) SetFirstName(v string) *UserUpsertBulk {
+	return u.Update(func(s *UserUpsert) {
+		s.SetFirstName(v)
+	})
+}
+
+// UpdateFirstName sets the "first_name" field to the value that was provided on create.
+func (u *UserUpsertBulk) UpdateFirstName() *UserUpsertBulk {
+	return u.Update(func(s *UserUpsert) {
+		s.UpdateFirstName()
+	})
+}
+
+// SetLastName sets the "last_name" field.
+func (u *UserUpsertBulk) SetLastName(v string) *UserUpsertBulk {
+	return u.Update(func(s *UserUpsert) {
+		s.SetLastName(v)
+	})
+}
+
+// UpdateLastName sets the "last_name" field to the value that was provided on create.
+func (u *UserUpsertBulk) UpdateLastName() *UserUpsertBulk {
+	return u.Update(func(s *UserUpsert) {
+		s.UpdateLastName()
+	})
+}
+
+// SetEmail sets the "email" field.
+func (u *UserUpsertBulk) SetEmail(v string) *UserUpsertBulk {
+	return u.Update(func(s *UserUpsert) {
+		s.SetEmail(v)
+	})
+}
+
+// UpdateEmail sets the "email" field to the value that was provided on create.
+func (u *UserUpsertBulk) UpdateEmail() *UserUpsertBulk {
+	return u.Update(func(s *UserUpsert) {
+		s.UpdateEmail()
+	})
+}
+
+// SetPasswordHash sets the "password_hash" field.
+func (u *UserUpsertBulk) SetPasswordHash(v string) *UserUpsertBulk {
+	return u.Update(func(s *UserUpsert) {
+		s.SetPasswordHash(v)
+	})
+}
+
+// UpdatePasswordHash sets the "password_hash" field to the value that was provided on create.
+func (u *UserUpsertBulk) UpdatePasswordHash() *UserUpsertBulk {
+	return u.Update(func(s *UserUpsert) {
+		s.UpdatePasswordHash()
+	})
+}
+
+// SetPoints sets the "points" field.
+func (u *UserUpsertBulk) SetPoints(v int) *UserUpsertBulk {
+	return u.Update(func(s *UserUpsert) {
+		s.SetPoints(v)
+	})
+}
+
+// AddPoints adds v to the "points" field.
+func (u *UserUpsertBulk) AddPoints(v int) *UserUpsertBulk {
+	return u.Update(func(s *UserUpsert) {
+		s.AddPoints(v)
+	})
+}
+
+// UpdatePoints sets the "points" field to the value that was provided on create.
+func (u *UserUpsertBulk) UpdatePoints() *UserUpsertBulk {
+	return u.Update(func(s *UserUpsert) {
+		s.UpdatePoints()
+	})
+}
+
+// SetPointsAwardedCount sets the "points_awarded_count" field.
+func (u *UserUpsertBulk) SetPointsAwardedCount(v int) *UserUpsertBulk {
+	return u.Update(func(s *UserUpsert) {
+		s.SetPointsAwardedCount(v)
+	})
+}
+
+// AddPointsAwardedCount adds v to the "points_awarded_count" field.
+func (u *UserUpsertBulk) AddPointsAwardedCount(v int) *UserUpsertBulk {
+	return u.Update(func(s *UserUpsert) {
+		s.AddPointsAwardedCount(v)
+	})
+}
+
+// UpdatePointsAwardedCount sets the "points_awarded_count" field to the value that was provided on create.
+func (u *UserUpsertBulk) UpdatePointsAwardedCount() *UserUpsertBulk {
+	return u.Update(func(s *UserUpsert) {
+		s.UpdatePointsAwardedCount()
+	})
+}
+
+// SetPointsAwardedResetTime sets the "points_awarded_reset_time" field.
+func (u *UserUpsertBulk) SetPointsAwardedResetTime(v time.Time) *UserUpsertBulk {
+	return u.Update(func(s *UserUpsert) {
+		s.SetPointsAwardedResetTime(v)
+	})
+}
+
+// UpdatePointsAwardedResetTime sets the "points_awarded_reset_time" field to the value that was provided on create.
+func (u *UserUpsertBulk) UpdatePointsAwardedResetTime() *UserUpsertBulk {
+	return u.Update(func(s *UserUpsert) {
+		s.UpdatePointsAwardedResetTime()
+	})
+}
+
+// ClearPointsAwardedResetTime clears the value of the "points_awarded_reset_time" field.
+func (u *UserUpsertBulk) ClearPointsAwardedResetTime() *UserUpsertBulk {
+	return u.Update(func(s *UserUpsert) {
+		s.ClearPointsAwardedResetTime()
+	})
+}
+
+// SetGodMode sets the "god_mode" field.
+func (u *UserUpsertBulk) SetGodMode(v bool) *UserUpsertBulk {
+	return u.Update(func(s *UserUpsert) {
+		s.SetGodMode(v)
+	})
+}
+
+// UpdateGodMode sets the "god_mode" field to the value that was provided on create.
+func (u *UserUpsertBulk) UpdateGodMode() *UserUpsertBulk {
+	return u.Update(func(s *UserUpsert) {
+		s.UpdateGodMode()
+	})
+}
+
+// Exec executes the query.
+func (u *UserUpsertBulk) Exec(ctx context.Context) error {
+	for i, b := range u.create.builders {
+		if len(b.conflict) != 0 {
+			return fmt.Errorf("ent: OnConflict was set for builder %d. Set it on the UserCreateBulk instead", i)
+		}
+	}
+	if len(u.create.conflict) == 0 {
+		return errors.New("ent: missing options for UserCreateBulk.OnConflict")
+	}
+	return u.create.Exec(ctx)
+}
+
+// ExecX is like Exec, but panics if an error occurs.
+func (u *UserUpsertBulk) ExecX(ctx context.Context) {
+	if err := u.create.Exec(ctx); err != nil {
 		panic(err)
 	}
 }

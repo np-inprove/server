@@ -495,21 +495,21 @@ func GodModeNEQ(v bool) predicate.User {
 	return predicate.User(sql.FieldNEQ(FieldGodMode, v))
 }
 
-// HasCourse applies the HasEdge predicate on the "course" edge.
-func HasCourse() predicate.User {
+// HasDepartment applies the HasEdge predicate on the "department" edge.
+func HasDepartment() predicate.User {
 	return predicate.User(func(s *sql.Selector) {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, CourseTable, CourseColumn),
+			sqlgraph.Edge(sqlgraph.M2O, true, DepartmentTable, DepartmentColumn),
 		)
 		sqlgraph.HasNeighbors(s, step)
 	})
 }
 
-// HasCourseWith applies the HasEdge predicate on the "course" edge with a given conditions (other predicates).
-func HasCourseWith(preds ...predicate.Course) predicate.User {
+// HasDepartmentWith applies the HasEdge predicate on the "department" edge with a given conditions (other predicates).
+func HasDepartmentWith(preds ...predicate.Department) predicate.User {
 	return predicate.User(func(s *sql.Selector) {
-		step := newCourseStep()
+		step := newDepartmentStep()
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)

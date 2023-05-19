@@ -11,8 +11,8 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
-	"github.com/np-inprove/server/internal/ent/course"
 	"github.com/np-inprove/server/internal/ent/deadline"
+	"github.com/np-inprove/server/internal/ent/department"
 	"github.com/np-inprove/server/internal/ent/forumpost"
 	"github.com/np-inprove/server/internal/ent/group"
 	"github.com/np-inprove/server/internal/ent/groupuser"
@@ -32,7 +32,7 @@ type UserQuery struct {
 	order                 []user.OrderOption
 	inters                []Interceptor
 	predicates            []predicate.User
-	withCourse            *CourseQuery
+	withDepartment        *DepartmentQuery
 	withInstitution       *InstitutionQuery
 	withRedemptions       *RedemptionQuery
 	withForumPosts        *ForumPostQuery
@@ -81,9 +81,9 @@ func (uq *UserQuery) Order(o ...user.OrderOption) *UserQuery {
 	return uq
 }
 
-// QueryCourse chains the current query on the "course" edge.
-func (uq *UserQuery) QueryCourse() *CourseQuery {
-	query := (&CourseClient{config: uq.config}).Query()
+// QueryDepartment chains the current query on the "department" edge.
+func (uq *UserQuery) QueryDepartment() *DepartmentQuery {
+	query := (&DepartmentClient{config: uq.config}).Query()
 	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
 		if err := uq.prepareQuery(ctx); err != nil {
 			return nil, err
@@ -94,8 +94,8 @@ func (uq *UserQuery) QueryCourse() *CourseQuery {
 		}
 		step := sqlgraph.NewStep(
 			sqlgraph.From(user.Table, user.FieldID, selector),
-			sqlgraph.To(course.Table, course.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, user.CourseTable, user.CourseColumn),
+			sqlgraph.To(department.Table, department.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, user.DepartmentTable, user.DepartmentColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(uq.driver.Dialect(), step)
 		return fromU, nil
@@ -537,7 +537,7 @@ func (uq *UserQuery) Clone() *UserQuery {
 		order:                 append([]user.OrderOption{}, uq.order...),
 		inters:                append([]Interceptor{}, uq.inters...),
 		predicates:            append([]predicate.User{}, uq.predicates...),
-		withCourse:            uq.withCourse.Clone(),
+		withDepartment:        uq.withDepartment.Clone(),
 		withInstitution:       uq.withInstitution.Clone(),
 		withRedemptions:       uq.withRedemptions.Clone(),
 		withForumPosts:        uq.withForumPosts.Clone(),
@@ -555,14 +555,14 @@ func (uq *UserQuery) Clone() *UserQuery {
 	}
 }
 
-// WithCourse tells the query-builder to eager-load the nodes that are connected to
-// the "course" edge. The optional arguments are used to configure the query builder of the edge.
-func (uq *UserQuery) WithCourse(opts ...func(*CourseQuery)) *UserQuery {
-	query := (&CourseClient{config: uq.config}).Query()
+// WithDepartment tells the query-builder to eager-load the nodes that are connected to
+// the "department" edge. The optional arguments are used to configure the query builder of the edge.
+func (uq *UserQuery) WithDepartment(opts ...func(*DepartmentQuery)) *UserQuery {
+	query := (&DepartmentClient{config: uq.config}).Query()
 	for _, opt := range opts {
 		opt(query)
 	}
-	uq.withCourse = query
+	uq.withDepartment = query
 	return uq
 }
 
@@ -767,7 +767,7 @@ func (uq *UserQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*User, e
 		withFKs     = uq.withFKs
 		_spec       = uq.querySpec()
 		loadedTypes = [12]bool{
-			uq.withCourse != nil,
+			uq.withDepartment != nil,
 			uq.withInstitution != nil,
 			uq.withRedemptions != nil,
 			uq.withForumPosts != nil,
@@ -781,7 +781,7 @@ func (uq *UserQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*User, e
 			uq.withReactions != nil,
 		}
 	)
-	if uq.withCourse != nil {
+	if uq.withDepartment != nil {
 		withFKs = true
 	}
 	if withFKs {
@@ -805,9 +805,9 @@ func (uq *UserQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*User, e
 	if len(nodes) == 0 {
 		return nodes, nil
 	}
-	if query := uq.withCourse; query != nil {
-		if err := uq.loadCourse(ctx, query, nodes, nil,
-			func(n *User, e *Course) { n.Edges.Course = e }); err != nil {
+	if query := uq.withDepartment; query != nil {
+		if err := uq.loadDepartment(ctx, query, nodes, nil,
+			func(n *User, e *Department) { n.Edges.Department = e }); err != nil {
 			return nil, err
 		}
 	}
@@ -891,14 +891,14 @@ func (uq *UserQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*User, e
 	return nodes, nil
 }
 
-func (uq *UserQuery) loadCourse(ctx context.Context, query *CourseQuery, nodes []*User, init func(*User), assign func(*User, *Course)) error {
+func (uq *UserQuery) loadDepartment(ctx context.Context, query *DepartmentQuery, nodes []*User, init func(*User), assign func(*User, *Department)) error {
 	ids := make([]int, 0, len(nodes))
 	nodeids := make(map[int][]*User)
 	for i := range nodes {
-		if nodes[i].course_students == nil {
+		if nodes[i].department_users == nil {
 			continue
 		}
-		fk := *nodes[i].course_students
+		fk := *nodes[i].department_users
 		if _, ok := nodeids[fk]; !ok {
 			ids = append(ids, fk)
 		}
@@ -907,7 +907,7 @@ func (uq *UserQuery) loadCourse(ctx context.Context, query *CourseQuery, nodes [
 	if len(ids) == 0 {
 		return nil
 	}
-	query.Where(course.IDIn(ids...))
+	query.Where(department.IDIn(ids...))
 	neighbors, err := query.All(ctx)
 	if err != nil {
 		return err
@@ -915,7 +915,7 @@ func (uq *UserQuery) loadCourse(ctx context.Context, query *CourseQuery, nodes [
 	for _, n := range neighbors {
 		nodes, ok := nodeids[n.ID]
 		if !ok {
-			return fmt.Errorf(`unexpected foreign-key "course_students" returned %v`, n.ID)
+			return fmt.Errorf(`unexpected foreign-key "department_users" returned %v`, n.ID)
 		}
 		for i := range nodes {
 			assign(nodes[i], n)

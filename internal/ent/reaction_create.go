@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 
+	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/np-inprove/server/internal/ent/forumpost"
@@ -19,6 +20,7 @@ type ReactionCreate struct {
 	config
 	mutation *ReactionMutation
 	hooks    []Hook
+	conflict []sql.ConflictOption
 }
 
 // SetUserID sets the "user_id" field.
@@ -125,6 +127,7 @@ func (rc *ReactionCreate) createSpec() (*Reaction, *sqlgraph.CreateSpec) {
 		_node = &Reaction{config: rc.config}
 		_spec = sqlgraph.NewCreateSpec(reaction.Table, nil)
 	)
+	_spec.OnConflict = rc.conflict
 	if value, ok := rc.mutation.Emoji(); ok {
 		_spec.SetField(reaction.FieldEmoji, field.TypeString, value)
 		_node.Emoji = value
@@ -166,10 +169,193 @@ func (rc *ReactionCreate) createSpec() (*Reaction, *sqlgraph.CreateSpec) {
 	return _node, _spec
 }
 
+// OnConflict allows configuring the `ON CONFLICT` / `ON DUPLICATE KEY` clause
+// of the `INSERT` statement. For example:
+//
+//	client.Reaction.Create().
+//		SetUserID(v).
+//		OnConflict(
+//			// Update the row with the new values
+//			// the was proposed for insertion.
+//			sql.ResolveWithNewValues(),
+//		).
+//		// Override some of the fields with custom
+//		// update values.
+//		Update(func(u *ent.ReactionUpsert) {
+//			SetUserID(v+v).
+//		}).
+//		Exec(ctx)
+func (rc *ReactionCreate) OnConflict(opts ...sql.ConflictOption) *ReactionUpsertOne {
+	rc.conflict = opts
+	return &ReactionUpsertOne{
+		create: rc,
+	}
+}
+
+// OnConflictColumns calls `OnConflict` and configures the columns
+// as conflict target. Using this option is equivalent to using:
+//
+//	client.Reaction.Create().
+//		OnConflict(sql.ConflictColumns(columns...)).
+//		Exec(ctx)
+func (rc *ReactionCreate) OnConflictColumns(columns ...string) *ReactionUpsertOne {
+	rc.conflict = append(rc.conflict, sql.ConflictColumns(columns...))
+	return &ReactionUpsertOne{
+		create: rc,
+	}
+}
+
+type (
+	// ReactionUpsertOne is the builder for "upsert"-ing
+	//  one Reaction node.
+	ReactionUpsertOne struct {
+		create *ReactionCreate
+	}
+
+	// ReactionUpsert is the "OnConflict" setter.
+	ReactionUpsert struct {
+		*sql.UpdateSet
+	}
+)
+
+// SetUserID sets the "user_id" field.
+func (u *ReactionUpsert) SetUserID(v int) *ReactionUpsert {
+	u.Set(reaction.FieldUserID, v)
+	return u
+}
+
+// UpdateUserID sets the "user_id" field to the value that was provided on create.
+func (u *ReactionUpsert) UpdateUserID() *ReactionUpsert {
+	u.SetExcluded(reaction.FieldUserID)
+	return u
+}
+
+// SetForumPostID sets the "forum_post_id" field.
+func (u *ReactionUpsert) SetForumPostID(v int) *ReactionUpsert {
+	u.Set(reaction.FieldForumPostID, v)
+	return u
+}
+
+// UpdateForumPostID sets the "forum_post_id" field to the value that was provided on create.
+func (u *ReactionUpsert) UpdateForumPostID() *ReactionUpsert {
+	u.SetExcluded(reaction.FieldForumPostID)
+	return u
+}
+
+// SetEmoji sets the "emoji" field.
+func (u *ReactionUpsert) SetEmoji(v string) *ReactionUpsert {
+	u.Set(reaction.FieldEmoji, v)
+	return u
+}
+
+// UpdateEmoji sets the "emoji" field to the value that was provided on create.
+func (u *ReactionUpsert) UpdateEmoji() *ReactionUpsert {
+	u.SetExcluded(reaction.FieldEmoji)
+	return u
+}
+
+// UpdateNewValues updates the mutable fields using the new values that were set on create.
+// Using this option is equivalent to using:
+//
+//	client.Reaction.Create().
+//		OnConflict(
+//			sql.ResolveWithNewValues(),
+//		).
+//		Exec(ctx)
+func (u *ReactionUpsertOne) UpdateNewValues() *ReactionUpsertOne {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWithNewValues())
+	return u
+}
+
+// Ignore sets each column to itself in case of conflict.
+// Using this option is equivalent to using:
+//
+//	client.Reaction.Create().
+//	    OnConflict(sql.ResolveWithIgnore()).
+//	    Exec(ctx)
+func (u *ReactionUpsertOne) Ignore() *ReactionUpsertOne {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWithIgnore())
+	return u
+}
+
+// DoNothing configures the conflict_action to `DO NOTHING`.
+// Supported only by SQLite and PostgreSQL.
+func (u *ReactionUpsertOne) DoNothing() *ReactionUpsertOne {
+	u.create.conflict = append(u.create.conflict, sql.DoNothing())
+	return u
+}
+
+// Update allows overriding fields `UPDATE` values. See the ReactionCreate.OnConflict
+// documentation for more info.
+func (u *ReactionUpsertOne) Update(set func(*ReactionUpsert)) *ReactionUpsertOne {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWith(func(update *sql.UpdateSet) {
+		set(&ReactionUpsert{UpdateSet: update})
+	}))
+	return u
+}
+
+// SetUserID sets the "user_id" field.
+func (u *ReactionUpsertOne) SetUserID(v int) *ReactionUpsertOne {
+	return u.Update(func(s *ReactionUpsert) {
+		s.SetUserID(v)
+	})
+}
+
+// UpdateUserID sets the "user_id" field to the value that was provided on create.
+func (u *ReactionUpsertOne) UpdateUserID() *ReactionUpsertOne {
+	return u.Update(func(s *ReactionUpsert) {
+		s.UpdateUserID()
+	})
+}
+
+// SetForumPostID sets the "forum_post_id" field.
+func (u *ReactionUpsertOne) SetForumPostID(v int) *ReactionUpsertOne {
+	return u.Update(func(s *ReactionUpsert) {
+		s.SetForumPostID(v)
+	})
+}
+
+// UpdateForumPostID sets the "forum_post_id" field to the value that was provided on create.
+func (u *ReactionUpsertOne) UpdateForumPostID() *ReactionUpsertOne {
+	return u.Update(func(s *ReactionUpsert) {
+		s.UpdateForumPostID()
+	})
+}
+
+// SetEmoji sets the "emoji" field.
+func (u *ReactionUpsertOne) SetEmoji(v string) *ReactionUpsertOne {
+	return u.Update(func(s *ReactionUpsert) {
+		s.SetEmoji(v)
+	})
+}
+
+// UpdateEmoji sets the "emoji" field to the value that was provided on create.
+func (u *ReactionUpsertOne) UpdateEmoji() *ReactionUpsertOne {
+	return u.Update(func(s *ReactionUpsert) {
+		s.UpdateEmoji()
+	})
+}
+
+// Exec executes the query.
+func (u *ReactionUpsertOne) Exec(ctx context.Context) error {
+	if len(u.create.conflict) == 0 {
+		return errors.New("ent: missing options for ReactionCreate.OnConflict")
+	}
+	return u.create.Exec(ctx)
+}
+
+// ExecX is like Exec, but panics if an error occurs.
+func (u *ReactionUpsertOne) ExecX(ctx context.Context) {
+	if err := u.create.Exec(ctx); err != nil {
+		panic(err)
+	}
+}
+
 // ReactionCreateBulk is the builder for creating many Reaction entities in bulk.
 type ReactionCreateBulk struct {
 	config
 	builders []*ReactionCreate
+	conflict []sql.ConflictOption
 }
 
 // Save creates the Reaction entities in the database.
@@ -195,6 +381,7 @@ func (rcb *ReactionCreateBulk) Save(ctx context.Context) ([]*Reaction, error) {
 					_, err = mutators[i+1].Mutate(root, rcb.builders[i+1].mutation)
 				} else {
 					spec := &sqlgraph.BatchCreateSpec{Nodes: specs}
+					spec.OnConflict = rcb.conflict
 					// Invoke the actual operation on the latest mutation in the chain.
 					if err = sqlgraph.BatchCreate(ctx, rcb.driver, spec); err != nil {
 						if sqlgraph.IsConstraintError(err) {
@@ -240,6 +427,149 @@ func (rcb *ReactionCreateBulk) Exec(ctx context.Context) error {
 // ExecX is like Exec, but panics if an error occurs.
 func (rcb *ReactionCreateBulk) ExecX(ctx context.Context) {
 	if err := rcb.Exec(ctx); err != nil {
+		panic(err)
+	}
+}
+
+// OnConflict allows configuring the `ON CONFLICT` / `ON DUPLICATE KEY` clause
+// of the `INSERT` statement. For example:
+//
+//	client.Reaction.CreateBulk(builders...).
+//		OnConflict(
+//			// Update the row with the new values
+//			// the was proposed for insertion.
+//			sql.ResolveWithNewValues(),
+//		).
+//		// Override some of the fields with custom
+//		// update values.
+//		Update(func(u *ent.ReactionUpsert) {
+//			SetUserID(v+v).
+//		}).
+//		Exec(ctx)
+func (rcb *ReactionCreateBulk) OnConflict(opts ...sql.ConflictOption) *ReactionUpsertBulk {
+	rcb.conflict = opts
+	return &ReactionUpsertBulk{
+		create: rcb,
+	}
+}
+
+// OnConflictColumns calls `OnConflict` and configures the columns
+// as conflict target. Using this option is equivalent to using:
+//
+//	client.Reaction.Create().
+//		OnConflict(sql.ConflictColumns(columns...)).
+//		Exec(ctx)
+func (rcb *ReactionCreateBulk) OnConflictColumns(columns ...string) *ReactionUpsertBulk {
+	rcb.conflict = append(rcb.conflict, sql.ConflictColumns(columns...))
+	return &ReactionUpsertBulk{
+		create: rcb,
+	}
+}
+
+// ReactionUpsertBulk is the builder for "upsert"-ing
+// a bulk of Reaction nodes.
+type ReactionUpsertBulk struct {
+	create *ReactionCreateBulk
+}
+
+// UpdateNewValues updates the mutable fields using the new values that
+// were set on create. Using this option is equivalent to using:
+//
+//	client.Reaction.Create().
+//		OnConflict(
+//			sql.ResolveWithNewValues(),
+//		).
+//		Exec(ctx)
+func (u *ReactionUpsertBulk) UpdateNewValues() *ReactionUpsertBulk {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWithNewValues())
+	return u
+}
+
+// Ignore sets each column to itself in case of conflict.
+// Using this option is equivalent to using:
+//
+//	client.Reaction.Create().
+//		OnConflict(sql.ResolveWithIgnore()).
+//		Exec(ctx)
+func (u *ReactionUpsertBulk) Ignore() *ReactionUpsertBulk {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWithIgnore())
+	return u
+}
+
+// DoNothing configures the conflict_action to `DO NOTHING`.
+// Supported only by SQLite and PostgreSQL.
+func (u *ReactionUpsertBulk) DoNothing() *ReactionUpsertBulk {
+	u.create.conflict = append(u.create.conflict, sql.DoNothing())
+	return u
+}
+
+// Update allows overriding fields `UPDATE` values. See the ReactionCreateBulk.OnConflict
+// documentation for more info.
+func (u *ReactionUpsertBulk) Update(set func(*ReactionUpsert)) *ReactionUpsertBulk {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWith(func(update *sql.UpdateSet) {
+		set(&ReactionUpsert{UpdateSet: update})
+	}))
+	return u
+}
+
+// SetUserID sets the "user_id" field.
+func (u *ReactionUpsertBulk) SetUserID(v int) *ReactionUpsertBulk {
+	return u.Update(func(s *ReactionUpsert) {
+		s.SetUserID(v)
+	})
+}
+
+// UpdateUserID sets the "user_id" field to the value that was provided on create.
+func (u *ReactionUpsertBulk) UpdateUserID() *ReactionUpsertBulk {
+	return u.Update(func(s *ReactionUpsert) {
+		s.UpdateUserID()
+	})
+}
+
+// SetForumPostID sets the "forum_post_id" field.
+func (u *ReactionUpsertBulk) SetForumPostID(v int) *ReactionUpsertBulk {
+	return u.Update(func(s *ReactionUpsert) {
+		s.SetForumPostID(v)
+	})
+}
+
+// UpdateForumPostID sets the "forum_post_id" field to the value that was provided on create.
+func (u *ReactionUpsertBulk) UpdateForumPostID() *ReactionUpsertBulk {
+	return u.Update(func(s *ReactionUpsert) {
+		s.UpdateForumPostID()
+	})
+}
+
+// SetEmoji sets the "emoji" field.
+func (u *ReactionUpsertBulk) SetEmoji(v string) *ReactionUpsertBulk {
+	return u.Update(func(s *ReactionUpsert) {
+		s.SetEmoji(v)
+	})
+}
+
+// UpdateEmoji sets the "emoji" field to the value that was provided on create.
+func (u *ReactionUpsertBulk) UpdateEmoji() *ReactionUpsertBulk {
+	return u.Update(func(s *ReactionUpsert) {
+		s.UpdateEmoji()
+	})
+}
+
+// Exec executes the query.
+func (u *ReactionUpsertBulk) Exec(ctx context.Context) error {
+	for i, b := range u.create.builders {
+		if len(b.conflict) != 0 {
+			return fmt.Errorf("ent: OnConflict was set for builder %d. Set it on the ReactionCreateBulk instead", i)
+		}
+	}
+	if len(u.create.conflict) == 0 {
+		return errors.New("ent: missing options for ReactionCreateBulk.OnConflict")
+	}
+	return u.create.Exec(ctx)
+}
+
+// ExecX is like Exec, but panics if an error occurs.
+func (u *ReactionUpsertBulk) ExecX(ctx context.Context) {
+	if err := u.create.Exec(ctx); err != nil {
 		panic(err)
 	}
 }

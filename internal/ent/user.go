@@ -9,7 +9,7 @@ import (
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
-	"github.com/np-inprove/server/internal/ent/course"
+	"github.com/np-inprove/server/internal/ent/department"
 	"github.com/np-inprove/server/internal/ent/user"
 )
 
@@ -38,15 +38,15 @@ type User struct {
 	GodMode bool `json:"god_mode,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the UserQuery when eager-loading is set.
-	Edges           UserEdges `json:"edges"`
-	course_students *int
-	selectValues    sql.SelectValues
+	Edges            UserEdges `json:"edges"`
+	department_users *int
+	selectValues     sql.SelectValues
 }
 
 // UserEdges holds the relations/edges for other nodes in the graph.
 type UserEdges struct {
-	// Course holds the value of the course edge.
-	Course *Course `json:"course,omitempty"`
+	// Department holds the value of the department edge.
+	Department *Department `json:"department,omitempty"`
 	// Institution holds the value of the institution edge.
 	Institution []*Institution `json:"institution,omitempty"`
 	// Redemptions holds the value of the redemptions edge.
@@ -74,17 +74,17 @@ type UserEdges struct {
 	loadedTypes [12]bool
 }
 
-// CourseOrErr returns the Course value or an error if the edge
+// DepartmentOrErr returns the Department value or an error if the edge
 // was not loaded in eager-loading, or loaded but was not found.
-func (e UserEdges) CourseOrErr() (*Course, error) {
+func (e UserEdges) DepartmentOrErr() (*Department, error) {
 	if e.loadedTypes[0] {
-		if e.Course == nil {
+		if e.Department == nil {
 			// Edge was loaded but was not found.
-			return nil, &NotFoundError{label: course.Label}
+			return nil, &NotFoundError{label: department.Label}
 		}
-		return e.Course, nil
+		return e.Department, nil
 	}
-	return nil, &NotLoadedError{edge: "course"}
+	return nil, &NotLoadedError{edge: "department"}
 }
 
 // InstitutionOrErr returns the Institution value or an error if the edge
@@ -199,7 +199,7 @@ func (*User) scanValues(columns []string) ([]any, error) {
 			values[i] = new(sql.NullString)
 		case user.FieldPointsAwardedResetTime:
 			values[i] = new(sql.NullTime)
-		case user.ForeignKeys[0]: // course_students
+		case user.ForeignKeys[0]: // department_users
 			values[i] = new(sql.NullInt64)
 		default:
 			values[i] = new(sql.UnknownType)
@@ -272,10 +272,10 @@ func (u *User) assignValues(columns []string, values []any) error {
 			}
 		case user.ForeignKeys[0]:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
-				return fmt.Errorf("unexpected type %T for edge-field course_students", value)
+				return fmt.Errorf("unexpected type %T for edge-field department_users", value)
 			} else if value.Valid {
-				u.course_students = new(int)
-				*u.course_students = int(value.Int64)
+				u.department_users = new(int)
+				*u.department_users = int(value.Int64)
 			}
 		default:
 			u.selectValues.Set(columns[i], values[i])
@@ -290,9 +290,9 @@ func (u *User) Value(name string) (ent.Value, error) {
 	return u.selectValues.Get(name)
 }
 
-// QueryCourse queries the "course" edge of the User entity.
-func (u *User) QueryCourse() *CourseQuery {
-	return NewUserClient(u.config).QueryCourse(u)
+// QueryDepartment queries the "department" edge of the User entity.
+func (u *User) QueryDepartment() *DepartmentQuery {
+	return NewUserClient(u.config).QueryDepartment(u)
 }
 
 // QueryInstitution queries the "institution" edge of the User entity.

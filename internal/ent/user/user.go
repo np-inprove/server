@@ -28,8 +28,8 @@ const (
 	FieldPointsAwardedResetTime = "points_awarded_reset_time"
 	// FieldGodMode holds the string denoting the god_mode field in the database.
 	FieldGodMode = "god_mode"
-	// EdgeCourse holds the string denoting the course edge name in mutations.
-	EdgeCourse = "course"
+	// EdgeDepartment holds the string denoting the department edge name in mutations.
+	EdgeDepartment = "department"
 	// EdgeInstitution holds the string denoting the institution edge name in mutations.
 	EdgeInstitution = "institution"
 	// EdgeRedemptions holds the string denoting the redemptions edge name in mutations.
@@ -54,13 +54,13 @@ const (
 	EdgeReactions = "reactions"
 	// Table holds the table name of the user in the database.
 	Table = "users"
-	// CourseTable is the table that holds the course relation/edge.
-	CourseTable = "users"
-	// CourseInverseTable is the table name for the Course entity.
-	// It exists in this package in order to avoid circular dependency with the "course" package.
-	CourseInverseTable = "courses"
-	// CourseColumn is the table column denoting the course relation/edge.
-	CourseColumn = "course_students"
+	// DepartmentTable is the table that holds the department relation/edge.
+	DepartmentTable = "users"
+	// DepartmentInverseTable is the table name for the Department entity.
+	// It exists in this package in order to avoid circular dependency with the "department" package.
+	DepartmentInverseTable = "departments"
+	// DepartmentColumn is the table column denoting the department relation/edge.
+	DepartmentColumn = "department_users"
 	// InstitutionTable is the table that holds the institution relation/edge. The primary key declared below.
 	InstitutionTable = "institution_admins"
 	// InstitutionInverseTable is the table name for the Institution entity.
@@ -146,7 +146,7 @@ var Columns = []string{
 // ForeignKeys holds the SQL foreign-keys that are owned by the "users"
 // table and are not defined as standalone fields in the schema.
 var ForeignKeys = []string{
-	"course_students",
+	"department_users",
 }
 
 var (
@@ -191,8 +191,12 @@ var (
 	EmailValidator func(string) error
 	// PasswordHashValidator is a validator for the "password_hash" field. It is called by the builders before save.
 	PasswordHashValidator func(string) error
+	// DefaultPoints holds the default value on creation for the "points" field.
+	DefaultPoints int
 	// PointsValidator is a validator for the "points" field. It is called by the builders before save.
 	PointsValidator func(int) error
+	// DefaultPointsAwardedCount holds the default value on creation for the "points_awarded_count" field.
+	DefaultPointsAwardedCount int
 	// PointsAwardedCountValidator is a validator for the "points_awarded_count" field. It is called by the builders before save.
 	PointsAwardedCountValidator func(int) error
 )
@@ -245,10 +249,10 @@ func ByGodMode(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldGodMode, opts...).ToFunc()
 }
 
-// ByCourseField orders the results by course field.
-func ByCourseField(field string, opts ...sql.OrderTermOption) OrderOption {
+// ByDepartmentField orders the results by department field.
+func ByDepartmentField(field string, opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newCourseStep(), sql.OrderByField(field, opts...))
+		sqlgraph.OrderByNeighborTerms(s, newDepartmentStep(), sql.OrderByField(field, opts...))
 	}
 }
 
@@ -405,11 +409,11 @@ func ByReactions(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 		sqlgraph.OrderByNeighborTerms(s, newReactionsStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
-func newCourseStep() *sqlgraph.Step {
+func newDepartmentStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
-		sqlgraph.To(CourseInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.M2O, true, CourseTable, CourseColumn),
+		sqlgraph.To(DepartmentInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.M2O, true, DepartmentTable, DepartmentColumn),
 	)
 }
 func newInstitutionStep() *sqlgraph.Step {

@@ -58,6 +58,11 @@ func Name(v string) predicate.Institution {
 	return predicate.Institution(sql.FieldEQ(FieldName, v))
 }
 
+// ShortName applies equality check predicate on the "short_name" field. It's identical to ShortNameEQ.
+func ShortName(v string) predicate.Institution {
+	return predicate.Institution(sql.FieldEQ(FieldShortName, v))
+}
+
 // NameEQ applies the EQ predicate on the "name" field.
 func NameEQ(v string) predicate.Institution {
 	return predicate.Institution(sql.FieldEQ(FieldName, v))
@@ -121,6 +126,71 @@ func NameEqualFold(v string) predicate.Institution {
 // NameContainsFold applies the ContainsFold predicate on the "name" field.
 func NameContainsFold(v string) predicate.Institution {
 	return predicate.Institution(sql.FieldContainsFold(FieldName, v))
+}
+
+// ShortNameEQ applies the EQ predicate on the "short_name" field.
+func ShortNameEQ(v string) predicate.Institution {
+	return predicate.Institution(sql.FieldEQ(FieldShortName, v))
+}
+
+// ShortNameNEQ applies the NEQ predicate on the "short_name" field.
+func ShortNameNEQ(v string) predicate.Institution {
+	return predicate.Institution(sql.FieldNEQ(FieldShortName, v))
+}
+
+// ShortNameIn applies the In predicate on the "short_name" field.
+func ShortNameIn(vs ...string) predicate.Institution {
+	return predicate.Institution(sql.FieldIn(FieldShortName, vs...))
+}
+
+// ShortNameNotIn applies the NotIn predicate on the "short_name" field.
+func ShortNameNotIn(vs ...string) predicate.Institution {
+	return predicate.Institution(sql.FieldNotIn(FieldShortName, vs...))
+}
+
+// ShortNameGT applies the GT predicate on the "short_name" field.
+func ShortNameGT(v string) predicate.Institution {
+	return predicate.Institution(sql.FieldGT(FieldShortName, v))
+}
+
+// ShortNameGTE applies the GTE predicate on the "short_name" field.
+func ShortNameGTE(v string) predicate.Institution {
+	return predicate.Institution(sql.FieldGTE(FieldShortName, v))
+}
+
+// ShortNameLT applies the LT predicate on the "short_name" field.
+func ShortNameLT(v string) predicate.Institution {
+	return predicate.Institution(sql.FieldLT(FieldShortName, v))
+}
+
+// ShortNameLTE applies the LTE predicate on the "short_name" field.
+func ShortNameLTE(v string) predicate.Institution {
+	return predicate.Institution(sql.FieldLTE(FieldShortName, v))
+}
+
+// ShortNameContains applies the Contains predicate on the "short_name" field.
+func ShortNameContains(v string) predicate.Institution {
+	return predicate.Institution(sql.FieldContains(FieldShortName, v))
+}
+
+// ShortNameHasPrefix applies the HasPrefix predicate on the "short_name" field.
+func ShortNameHasPrefix(v string) predicate.Institution {
+	return predicate.Institution(sql.FieldHasPrefix(FieldShortName, v))
+}
+
+// ShortNameHasSuffix applies the HasSuffix predicate on the "short_name" field.
+func ShortNameHasSuffix(v string) predicate.Institution {
+	return predicate.Institution(sql.FieldHasSuffix(FieldShortName, v))
+}
+
+// ShortNameEqualFold applies the EqualFold predicate on the "short_name" field.
+func ShortNameEqualFold(v string) predicate.Institution {
+	return predicate.Institution(sql.FieldEqualFold(FieldShortName, v))
+}
+
+// ShortNameContainsFold applies the ContainsFold predicate on the "short_name" field.
+func ShortNameContainsFold(v string) predicate.Institution {
+	return predicate.Institution(sql.FieldContainsFold(FieldShortName, v))
 }
 
 // HasAdmins applies the HasEdge predicate on the "admins" edge.
@@ -192,21 +262,21 @@ func HasAccessoriesWith(preds ...predicate.Accessory) predicate.Institution {
 	})
 }
 
-// HasAcademicSchools applies the HasEdge predicate on the "academic_schools" edge.
-func HasAcademicSchools() predicate.Institution {
+// HasDepartments applies the HasEdge predicate on the "departments" edge.
+func HasDepartments() predicate.Institution {
 	return predicate.Institution(func(s *sql.Selector) {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, AcademicSchoolsTable, AcademicSchoolsColumn),
+			sqlgraph.Edge(sqlgraph.O2M, false, DepartmentsTable, DepartmentsColumn),
 		)
 		sqlgraph.HasNeighbors(s, step)
 	})
 }
 
-// HasAcademicSchoolsWith applies the HasEdge predicate on the "academic_schools" edge with a given conditions (other predicates).
-func HasAcademicSchoolsWith(preds ...predicate.AcademicSchool) predicate.Institution {
+// HasDepartmentsWith applies the HasEdge predicate on the "departments" edge with a given conditions (other predicates).
+func HasDepartmentsWith(preds ...predicate.Department) predicate.Institution {
 	return predicate.Institution(func(s *sql.Selector) {
-		step := newAcademicSchoolsStep()
+		step := newDepartmentsStep()
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)

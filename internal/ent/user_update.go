@@ -11,8 +11,8 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
-	"github.com/np-inprove/server/internal/ent/course"
 	"github.com/np-inprove/server/internal/ent/deadline"
+	"github.com/np-inprove/server/internal/ent/department"
 	"github.com/np-inprove/server/internal/ent/forumpost"
 	"github.com/np-inprove/server/internal/ent/group"
 	"github.com/np-inprove/server/internal/ent/institution"
@@ -66,6 +66,14 @@ func (uu *UserUpdate) SetPoints(i int) *UserUpdate {
 	return uu
 }
 
+// SetNillablePoints sets the "points" field if the given value is not nil.
+func (uu *UserUpdate) SetNillablePoints(i *int) *UserUpdate {
+	if i != nil {
+		uu.SetPoints(*i)
+	}
+	return uu
+}
+
 // AddPoints adds i to the "points" field.
 func (uu *UserUpdate) AddPoints(i int) *UserUpdate {
 	uu.mutation.AddPoints(i)
@@ -76,6 +84,14 @@ func (uu *UserUpdate) AddPoints(i int) *UserUpdate {
 func (uu *UserUpdate) SetPointsAwardedCount(i int) *UserUpdate {
 	uu.mutation.ResetPointsAwardedCount()
 	uu.mutation.SetPointsAwardedCount(i)
+	return uu
+}
+
+// SetNillablePointsAwardedCount sets the "points_awarded_count" field if the given value is not nil.
+func (uu *UserUpdate) SetNillablePointsAwardedCount(i *int) *UserUpdate {
+	if i != nil {
+		uu.SetPointsAwardedCount(*i)
+	}
 	return uu
 }
 
@@ -111,23 +127,15 @@ func (uu *UserUpdate) SetGodMode(b bool) *UserUpdate {
 	return uu
 }
 
-// SetCourseID sets the "course" edge to the Course entity by ID.
-func (uu *UserUpdate) SetCourseID(id int) *UserUpdate {
-	uu.mutation.SetCourseID(id)
+// SetDepartmentID sets the "department" edge to the Department entity by ID.
+func (uu *UserUpdate) SetDepartmentID(id int) *UserUpdate {
+	uu.mutation.SetDepartmentID(id)
 	return uu
 }
 
-// SetNillableCourseID sets the "course" edge to the Course entity by ID if the given value is not nil.
-func (uu *UserUpdate) SetNillableCourseID(id *int) *UserUpdate {
-	if id != nil {
-		uu = uu.SetCourseID(*id)
-	}
-	return uu
-}
-
-// SetCourse sets the "course" edge to the Course entity.
-func (uu *UserUpdate) SetCourse(c *Course) *UserUpdate {
-	return uu.SetCourseID(c.ID)
+// SetDepartment sets the "department" edge to the Department entity.
+func (uu *UserUpdate) SetDepartment(d *Department) *UserUpdate {
+	return uu.SetDepartmentID(d.ID)
 }
 
 // AddInstitutionIDs adds the "institution" edge to the Institution entity by IDs.
@@ -255,9 +263,9 @@ func (uu *UserUpdate) Mutation() *UserMutation {
 	return uu.mutation
 }
 
-// ClearCourse clears the "course" edge to the Course entity.
-func (uu *UserUpdate) ClearCourse() *UserUpdate {
-	uu.mutation.ClearCourse()
+// ClearDepartment clears the "department" edge to the Department entity.
+func (uu *UserUpdate) ClearDepartment() *UserUpdate {
+	uu.mutation.ClearDepartment()
 	return uu
 }
 
@@ -488,6 +496,9 @@ func (uu *UserUpdate) check() error {
 			return &ValidationError{Name: "points_awarded_count", err: fmt.Errorf(`ent: validator failed for field "User.points_awarded_count": %w`, err)}
 		}
 	}
+	if _, ok := uu.mutation.DepartmentID(); uu.mutation.DepartmentCleared() && !ok {
+		return errors.New(`ent: clearing a required unique edge "User.department"`)
+	}
 	return nil
 }
 
@@ -536,28 +547,28 @@ func (uu *UserUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if value, ok := uu.mutation.GodMode(); ok {
 		_spec.SetField(user.FieldGodMode, field.TypeBool, value)
 	}
-	if uu.mutation.CourseCleared() {
+	if uu.mutation.DepartmentCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
-			Table:   user.CourseTable,
-			Columns: []string{user.CourseColumn},
+			Table:   user.DepartmentTable,
+			Columns: []string{user.DepartmentColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(course.FieldID, field.TypeInt),
+				IDSpec: sqlgraph.NewFieldSpec(department.FieldID, field.TypeInt),
 			},
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := uu.mutation.CourseIDs(); len(nodes) > 0 {
+	if nodes := uu.mutation.DepartmentIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
-			Table:   user.CourseTable,
-			Columns: []string{user.CourseColumn},
+			Table:   user.DepartmentTable,
+			Columns: []string{user.DepartmentColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(course.FieldID, field.TypeInt),
+				IDSpec: sqlgraph.NewFieldSpec(department.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -988,6 +999,14 @@ func (uuo *UserUpdateOne) SetPoints(i int) *UserUpdateOne {
 	return uuo
 }
 
+// SetNillablePoints sets the "points" field if the given value is not nil.
+func (uuo *UserUpdateOne) SetNillablePoints(i *int) *UserUpdateOne {
+	if i != nil {
+		uuo.SetPoints(*i)
+	}
+	return uuo
+}
+
 // AddPoints adds i to the "points" field.
 func (uuo *UserUpdateOne) AddPoints(i int) *UserUpdateOne {
 	uuo.mutation.AddPoints(i)
@@ -998,6 +1017,14 @@ func (uuo *UserUpdateOne) AddPoints(i int) *UserUpdateOne {
 func (uuo *UserUpdateOne) SetPointsAwardedCount(i int) *UserUpdateOne {
 	uuo.mutation.ResetPointsAwardedCount()
 	uuo.mutation.SetPointsAwardedCount(i)
+	return uuo
+}
+
+// SetNillablePointsAwardedCount sets the "points_awarded_count" field if the given value is not nil.
+func (uuo *UserUpdateOne) SetNillablePointsAwardedCount(i *int) *UserUpdateOne {
+	if i != nil {
+		uuo.SetPointsAwardedCount(*i)
+	}
 	return uuo
 }
 
@@ -1033,23 +1060,15 @@ func (uuo *UserUpdateOne) SetGodMode(b bool) *UserUpdateOne {
 	return uuo
 }
 
-// SetCourseID sets the "course" edge to the Course entity by ID.
-func (uuo *UserUpdateOne) SetCourseID(id int) *UserUpdateOne {
-	uuo.mutation.SetCourseID(id)
+// SetDepartmentID sets the "department" edge to the Department entity by ID.
+func (uuo *UserUpdateOne) SetDepartmentID(id int) *UserUpdateOne {
+	uuo.mutation.SetDepartmentID(id)
 	return uuo
 }
 
-// SetNillableCourseID sets the "course" edge to the Course entity by ID if the given value is not nil.
-func (uuo *UserUpdateOne) SetNillableCourseID(id *int) *UserUpdateOne {
-	if id != nil {
-		uuo = uuo.SetCourseID(*id)
-	}
-	return uuo
-}
-
-// SetCourse sets the "course" edge to the Course entity.
-func (uuo *UserUpdateOne) SetCourse(c *Course) *UserUpdateOne {
-	return uuo.SetCourseID(c.ID)
+// SetDepartment sets the "department" edge to the Department entity.
+func (uuo *UserUpdateOne) SetDepartment(d *Department) *UserUpdateOne {
+	return uuo.SetDepartmentID(d.ID)
 }
 
 // AddInstitutionIDs adds the "institution" edge to the Institution entity by IDs.
@@ -1177,9 +1196,9 @@ func (uuo *UserUpdateOne) Mutation() *UserMutation {
 	return uuo.mutation
 }
 
-// ClearCourse clears the "course" edge to the Course entity.
-func (uuo *UserUpdateOne) ClearCourse() *UserUpdateOne {
-	uuo.mutation.ClearCourse()
+// ClearDepartment clears the "department" edge to the Department entity.
+func (uuo *UserUpdateOne) ClearDepartment() *UserUpdateOne {
+	uuo.mutation.ClearDepartment()
 	return uuo
 }
 
@@ -1423,6 +1442,9 @@ func (uuo *UserUpdateOne) check() error {
 			return &ValidationError{Name: "points_awarded_count", err: fmt.Errorf(`ent: validator failed for field "User.points_awarded_count": %w`, err)}
 		}
 	}
+	if _, ok := uuo.mutation.DepartmentID(); uuo.mutation.DepartmentCleared() && !ok {
+		return errors.New(`ent: clearing a required unique edge "User.department"`)
+	}
 	return nil
 }
 
@@ -1488,28 +1510,28 @@ func (uuo *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) 
 	if value, ok := uuo.mutation.GodMode(); ok {
 		_spec.SetField(user.FieldGodMode, field.TypeBool, value)
 	}
-	if uuo.mutation.CourseCleared() {
+	if uuo.mutation.DepartmentCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
-			Table:   user.CourseTable,
-			Columns: []string{user.CourseColumn},
+			Table:   user.DepartmentTable,
+			Columns: []string{user.DepartmentColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(course.FieldID, field.TypeInt),
+				IDSpec: sqlgraph.NewFieldSpec(department.FieldID, field.TypeInt),
 			},
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := uuo.mutation.CourseIDs(); len(nodes) > 0 {
+	if nodes := uuo.mutation.DepartmentIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
-			Table:   user.CourseTable,
-			Columns: []string{user.CourseColumn},
+			Table:   user.DepartmentTable,
+			Columns: []string{user.DepartmentColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(course.FieldID, field.TypeInt),
+				IDSpec: sqlgraph.NewFieldSpec(department.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

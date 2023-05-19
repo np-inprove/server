@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 
+	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/np-inprove/server/internal/ent/forumpost"
@@ -19,6 +20,7 @@ type ForumPostCreate struct {
 	config
 	mutation *ForumPostMutation
 	hooks    []Hook
+	conflict []sql.ConflictOption
 }
 
 // SetTitle sets the "title" field.
@@ -195,6 +197,7 @@ func (fpc *ForumPostCreate) createSpec() (*ForumPost, *sqlgraph.CreateSpec) {
 		_node = &ForumPost{config: fpc.config}
 		_spec = sqlgraph.NewCreateSpec(forumpost.Table, sqlgraph.NewFieldSpec(forumpost.FieldID, field.TypeInt))
 	)
+	_spec.OnConflict = fpc.conflict
 	if value, ok := fpc.mutation.Title(); ok {
 		_spec.SetField(forumpost.FieldTitle, field.TypeString, value)
 		_node.Title = value
@@ -293,10 +296,211 @@ func (fpc *ForumPostCreate) createSpec() (*ForumPost, *sqlgraph.CreateSpec) {
 	return _node, _spec
 }
 
+// OnConflict allows configuring the `ON CONFLICT` / `ON DUPLICATE KEY` clause
+// of the `INSERT` statement. For example:
+//
+//	client.ForumPost.Create().
+//		SetTitle(v).
+//		OnConflict(
+//			// Update the row with the new values
+//			// the was proposed for insertion.
+//			sql.ResolveWithNewValues(),
+//		).
+//		// Override some of the fields with custom
+//		// update values.
+//		Update(func(u *ent.ForumPostUpsert) {
+//			SetTitle(v+v).
+//		}).
+//		Exec(ctx)
+func (fpc *ForumPostCreate) OnConflict(opts ...sql.ConflictOption) *ForumPostUpsertOne {
+	fpc.conflict = opts
+	return &ForumPostUpsertOne{
+		create: fpc,
+	}
+}
+
+// OnConflictColumns calls `OnConflict` and configures the columns
+// as conflict target. Using this option is equivalent to using:
+//
+//	client.ForumPost.Create().
+//		OnConflict(sql.ConflictColumns(columns...)).
+//		Exec(ctx)
+func (fpc *ForumPostCreate) OnConflictColumns(columns ...string) *ForumPostUpsertOne {
+	fpc.conflict = append(fpc.conflict, sql.ConflictColumns(columns...))
+	return &ForumPostUpsertOne{
+		create: fpc,
+	}
+}
+
+type (
+	// ForumPostUpsertOne is the builder for "upsert"-ing
+	//  one ForumPost node.
+	ForumPostUpsertOne struct {
+		create *ForumPostCreate
+	}
+
+	// ForumPostUpsert is the "OnConflict" setter.
+	ForumPostUpsert struct {
+		*sql.UpdateSet
+	}
+)
+
+// SetTitle sets the "title" field.
+func (u *ForumPostUpsert) SetTitle(v string) *ForumPostUpsert {
+	u.Set(forumpost.FieldTitle, v)
+	return u
+}
+
+// UpdateTitle sets the "title" field to the value that was provided on create.
+func (u *ForumPostUpsert) UpdateTitle() *ForumPostUpsert {
+	u.SetExcluded(forumpost.FieldTitle)
+	return u
+}
+
+// SetContent sets the "content" field.
+func (u *ForumPostUpsert) SetContent(v string) *ForumPostUpsert {
+	u.Set(forumpost.FieldContent, v)
+	return u
+}
+
+// UpdateContent sets the "content" field to the value that was provided on create.
+func (u *ForumPostUpsert) UpdateContent() *ForumPostUpsert {
+	u.SetExcluded(forumpost.FieldContent)
+	return u
+}
+
+// SetMentionedUsersJSON sets the "mentioned_users_json" field.
+func (u *ForumPostUpsert) SetMentionedUsersJSON(v []int) *ForumPostUpsert {
+	u.Set(forumpost.FieldMentionedUsersJSON, v)
+	return u
+}
+
+// UpdateMentionedUsersJSON sets the "mentioned_users_json" field to the value that was provided on create.
+func (u *ForumPostUpsert) UpdateMentionedUsersJSON() *ForumPostUpsert {
+	u.SetExcluded(forumpost.FieldMentionedUsersJSON)
+	return u
+}
+
+// UpdateNewValues updates the mutable fields using the new values that were set on create.
+// Using this option is equivalent to using:
+//
+//	client.ForumPost.Create().
+//		OnConflict(
+//			sql.ResolveWithNewValues(),
+//		).
+//		Exec(ctx)
+func (u *ForumPostUpsertOne) UpdateNewValues() *ForumPostUpsertOne {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWithNewValues())
+	return u
+}
+
+// Ignore sets each column to itself in case of conflict.
+// Using this option is equivalent to using:
+//
+//	client.ForumPost.Create().
+//	    OnConflict(sql.ResolveWithIgnore()).
+//	    Exec(ctx)
+func (u *ForumPostUpsertOne) Ignore() *ForumPostUpsertOne {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWithIgnore())
+	return u
+}
+
+// DoNothing configures the conflict_action to `DO NOTHING`.
+// Supported only by SQLite and PostgreSQL.
+func (u *ForumPostUpsertOne) DoNothing() *ForumPostUpsertOne {
+	u.create.conflict = append(u.create.conflict, sql.DoNothing())
+	return u
+}
+
+// Update allows overriding fields `UPDATE` values. See the ForumPostCreate.OnConflict
+// documentation for more info.
+func (u *ForumPostUpsertOne) Update(set func(*ForumPostUpsert)) *ForumPostUpsertOne {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWith(func(update *sql.UpdateSet) {
+		set(&ForumPostUpsert{UpdateSet: update})
+	}))
+	return u
+}
+
+// SetTitle sets the "title" field.
+func (u *ForumPostUpsertOne) SetTitle(v string) *ForumPostUpsertOne {
+	return u.Update(func(s *ForumPostUpsert) {
+		s.SetTitle(v)
+	})
+}
+
+// UpdateTitle sets the "title" field to the value that was provided on create.
+func (u *ForumPostUpsertOne) UpdateTitle() *ForumPostUpsertOne {
+	return u.Update(func(s *ForumPostUpsert) {
+		s.UpdateTitle()
+	})
+}
+
+// SetContent sets the "content" field.
+func (u *ForumPostUpsertOne) SetContent(v string) *ForumPostUpsertOne {
+	return u.Update(func(s *ForumPostUpsert) {
+		s.SetContent(v)
+	})
+}
+
+// UpdateContent sets the "content" field to the value that was provided on create.
+func (u *ForumPostUpsertOne) UpdateContent() *ForumPostUpsertOne {
+	return u.Update(func(s *ForumPostUpsert) {
+		s.UpdateContent()
+	})
+}
+
+// SetMentionedUsersJSON sets the "mentioned_users_json" field.
+func (u *ForumPostUpsertOne) SetMentionedUsersJSON(v []int) *ForumPostUpsertOne {
+	return u.Update(func(s *ForumPostUpsert) {
+		s.SetMentionedUsersJSON(v)
+	})
+}
+
+// UpdateMentionedUsersJSON sets the "mentioned_users_json" field to the value that was provided on create.
+func (u *ForumPostUpsertOne) UpdateMentionedUsersJSON() *ForumPostUpsertOne {
+	return u.Update(func(s *ForumPostUpsert) {
+		s.UpdateMentionedUsersJSON()
+	})
+}
+
+// Exec executes the query.
+func (u *ForumPostUpsertOne) Exec(ctx context.Context) error {
+	if len(u.create.conflict) == 0 {
+		return errors.New("ent: missing options for ForumPostCreate.OnConflict")
+	}
+	return u.create.Exec(ctx)
+}
+
+// ExecX is like Exec, but panics if an error occurs.
+func (u *ForumPostUpsertOne) ExecX(ctx context.Context) {
+	if err := u.create.Exec(ctx); err != nil {
+		panic(err)
+	}
+}
+
+// Exec executes the UPSERT query and returns the inserted/updated ID.
+func (u *ForumPostUpsertOne) ID(ctx context.Context) (id int, err error) {
+	node, err := u.create.Save(ctx)
+	if err != nil {
+		return id, err
+	}
+	return node.ID, nil
+}
+
+// IDX is like ID, but panics if an error occurs.
+func (u *ForumPostUpsertOne) IDX(ctx context.Context) int {
+	id, err := u.ID(ctx)
+	if err != nil {
+		panic(err)
+	}
+	return id
+}
+
 // ForumPostCreateBulk is the builder for creating many ForumPost entities in bulk.
 type ForumPostCreateBulk struct {
 	config
 	builders []*ForumPostCreate
+	conflict []sql.ConflictOption
 }
 
 // Save creates the ForumPost entities in the database.
@@ -322,6 +526,7 @@ func (fpcb *ForumPostCreateBulk) Save(ctx context.Context) ([]*ForumPost, error)
 					_, err = mutators[i+1].Mutate(root, fpcb.builders[i+1].mutation)
 				} else {
 					spec := &sqlgraph.BatchCreateSpec{Nodes: specs}
+					spec.OnConflict = fpcb.conflict
 					// Invoke the actual operation on the latest mutation in the chain.
 					if err = sqlgraph.BatchCreate(ctx, fpcb.driver, spec); err != nil {
 						if sqlgraph.IsConstraintError(err) {
@@ -372,6 +577,149 @@ func (fpcb *ForumPostCreateBulk) Exec(ctx context.Context) error {
 // ExecX is like Exec, but panics if an error occurs.
 func (fpcb *ForumPostCreateBulk) ExecX(ctx context.Context) {
 	if err := fpcb.Exec(ctx); err != nil {
+		panic(err)
+	}
+}
+
+// OnConflict allows configuring the `ON CONFLICT` / `ON DUPLICATE KEY` clause
+// of the `INSERT` statement. For example:
+//
+//	client.ForumPost.CreateBulk(builders...).
+//		OnConflict(
+//			// Update the row with the new values
+//			// the was proposed for insertion.
+//			sql.ResolveWithNewValues(),
+//		).
+//		// Override some of the fields with custom
+//		// update values.
+//		Update(func(u *ent.ForumPostUpsert) {
+//			SetTitle(v+v).
+//		}).
+//		Exec(ctx)
+func (fpcb *ForumPostCreateBulk) OnConflict(opts ...sql.ConflictOption) *ForumPostUpsertBulk {
+	fpcb.conflict = opts
+	return &ForumPostUpsertBulk{
+		create: fpcb,
+	}
+}
+
+// OnConflictColumns calls `OnConflict` and configures the columns
+// as conflict target. Using this option is equivalent to using:
+//
+//	client.ForumPost.Create().
+//		OnConflict(sql.ConflictColumns(columns...)).
+//		Exec(ctx)
+func (fpcb *ForumPostCreateBulk) OnConflictColumns(columns ...string) *ForumPostUpsertBulk {
+	fpcb.conflict = append(fpcb.conflict, sql.ConflictColumns(columns...))
+	return &ForumPostUpsertBulk{
+		create: fpcb,
+	}
+}
+
+// ForumPostUpsertBulk is the builder for "upsert"-ing
+// a bulk of ForumPost nodes.
+type ForumPostUpsertBulk struct {
+	create *ForumPostCreateBulk
+}
+
+// UpdateNewValues updates the mutable fields using the new values that
+// were set on create. Using this option is equivalent to using:
+//
+//	client.ForumPost.Create().
+//		OnConflict(
+//			sql.ResolveWithNewValues(),
+//		).
+//		Exec(ctx)
+func (u *ForumPostUpsertBulk) UpdateNewValues() *ForumPostUpsertBulk {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWithNewValues())
+	return u
+}
+
+// Ignore sets each column to itself in case of conflict.
+// Using this option is equivalent to using:
+//
+//	client.ForumPost.Create().
+//		OnConflict(sql.ResolveWithIgnore()).
+//		Exec(ctx)
+func (u *ForumPostUpsertBulk) Ignore() *ForumPostUpsertBulk {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWithIgnore())
+	return u
+}
+
+// DoNothing configures the conflict_action to `DO NOTHING`.
+// Supported only by SQLite and PostgreSQL.
+func (u *ForumPostUpsertBulk) DoNothing() *ForumPostUpsertBulk {
+	u.create.conflict = append(u.create.conflict, sql.DoNothing())
+	return u
+}
+
+// Update allows overriding fields `UPDATE` values. See the ForumPostCreateBulk.OnConflict
+// documentation for more info.
+func (u *ForumPostUpsertBulk) Update(set func(*ForumPostUpsert)) *ForumPostUpsertBulk {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWith(func(update *sql.UpdateSet) {
+		set(&ForumPostUpsert{UpdateSet: update})
+	}))
+	return u
+}
+
+// SetTitle sets the "title" field.
+func (u *ForumPostUpsertBulk) SetTitle(v string) *ForumPostUpsertBulk {
+	return u.Update(func(s *ForumPostUpsert) {
+		s.SetTitle(v)
+	})
+}
+
+// UpdateTitle sets the "title" field to the value that was provided on create.
+func (u *ForumPostUpsertBulk) UpdateTitle() *ForumPostUpsertBulk {
+	return u.Update(func(s *ForumPostUpsert) {
+		s.UpdateTitle()
+	})
+}
+
+// SetContent sets the "content" field.
+func (u *ForumPostUpsertBulk) SetContent(v string) *ForumPostUpsertBulk {
+	return u.Update(func(s *ForumPostUpsert) {
+		s.SetContent(v)
+	})
+}
+
+// UpdateContent sets the "content" field to the value that was provided on create.
+func (u *ForumPostUpsertBulk) UpdateContent() *ForumPostUpsertBulk {
+	return u.Update(func(s *ForumPostUpsert) {
+		s.UpdateContent()
+	})
+}
+
+// SetMentionedUsersJSON sets the "mentioned_users_json" field.
+func (u *ForumPostUpsertBulk) SetMentionedUsersJSON(v []int) *ForumPostUpsertBulk {
+	return u.Update(func(s *ForumPostUpsert) {
+		s.SetMentionedUsersJSON(v)
+	})
+}
+
+// UpdateMentionedUsersJSON sets the "mentioned_users_json" field to the value that was provided on create.
+func (u *ForumPostUpsertBulk) UpdateMentionedUsersJSON() *ForumPostUpsertBulk {
+	return u.Update(func(s *ForumPostUpsert) {
+		s.UpdateMentionedUsersJSON()
+	})
+}
+
+// Exec executes the query.
+func (u *ForumPostUpsertBulk) Exec(ctx context.Context) error {
+	for i, b := range u.create.builders {
+		if len(b.conflict) != 0 {
+			return fmt.Errorf("ent: OnConflict was set for builder %d. Set it on the ForumPostCreateBulk instead", i)
+		}
+	}
+	if len(u.create.conflict) == 0 {
+		return errors.New("ent: missing options for ForumPostCreateBulk.OnConflict")
+	}
+	return u.create.Exec(ctx)
+}
+
+// ExecX is like Exec, but panics if an error occurs.
+func (u *ForumPostUpsertBulk) ExecX(ctx context.Context) {
+	if err := u.create.Exec(ctx); err != nil {
 		panic(err)
 	}
 }

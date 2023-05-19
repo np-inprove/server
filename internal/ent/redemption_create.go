@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"time"
 
+	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/np-inprove/server/internal/ent/accessory"
@@ -21,6 +22,7 @@ type RedemptionCreate struct {
 	config
 	mutation *RedemptionMutation
 	hooks    []Hook
+	conflict []sql.ConflictOption
 }
 
 // SetRedeemedAt sets the "redeemed_at" field.
@@ -144,6 +146,7 @@ func (rc *RedemptionCreate) createSpec() (*Redemption, *sqlgraph.CreateSpec) {
 		_node = &Redemption{config: rc.config}
 		_spec = sqlgraph.NewCreateSpec(redemption.Table, sqlgraph.NewFieldSpec(redemption.FieldID, field.TypeInt))
 	)
+	_spec.OnConflict = rc.conflict
 	if value, ok := rc.mutation.RedeemedAt(); ok {
 		_spec.SetField(redemption.FieldRedeemedAt, field.TypeTime, value)
 		_node.RedeemedAt = value
@@ -202,10 +205,159 @@ func (rc *RedemptionCreate) createSpec() (*Redemption, *sqlgraph.CreateSpec) {
 	return _node, _spec
 }
 
+// OnConflict allows configuring the `ON CONFLICT` / `ON DUPLICATE KEY` clause
+// of the `INSERT` statement. For example:
+//
+//	client.Redemption.Create().
+//		SetRedeemedAt(v).
+//		OnConflict(
+//			// Update the row with the new values
+//			// the was proposed for insertion.
+//			sql.ResolveWithNewValues(),
+//		).
+//		// Override some of the fields with custom
+//		// update values.
+//		Update(func(u *ent.RedemptionUpsert) {
+//			SetRedeemedAt(v+v).
+//		}).
+//		Exec(ctx)
+func (rc *RedemptionCreate) OnConflict(opts ...sql.ConflictOption) *RedemptionUpsertOne {
+	rc.conflict = opts
+	return &RedemptionUpsertOne{
+		create: rc,
+	}
+}
+
+// OnConflictColumns calls `OnConflict` and configures the columns
+// as conflict target. Using this option is equivalent to using:
+//
+//	client.Redemption.Create().
+//		OnConflict(sql.ConflictColumns(columns...)).
+//		Exec(ctx)
+func (rc *RedemptionCreate) OnConflictColumns(columns ...string) *RedemptionUpsertOne {
+	rc.conflict = append(rc.conflict, sql.ConflictColumns(columns...))
+	return &RedemptionUpsertOne{
+		create: rc,
+	}
+}
+
+type (
+	// RedemptionUpsertOne is the builder for "upsert"-ing
+	//  one Redemption node.
+	RedemptionUpsertOne struct {
+		create *RedemptionCreate
+	}
+
+	// RedemptionUpsert is the "OnConflict" setter.
+	RedemptionUpsert struct {
+		*sql.UpdateSet
+	}
+)
+
+// SetRedeemedAt sets the "redeemed_at" field.
+func (u *RedemptionUpsert) SetRedeemedAt(v time.Time) *RedemptionUpsert {
+	u.Set(redemption.FieldRedeemedAt, v)
+	return u
+}
+
+// UpdateRedeemedAt sets the "redeemed_at" field to the value that was provided on create.
+func (u *RedemptionUpsert) UpdateRedeemedAt() *RedemptionUpsert {
+	u.SetExcluded(redemption.FieldRedeemedAt)
+	return u
+}
+
+// UpdateNewValues updates the mutable fields using the new values that were set on create.
+// Using this option is equivalent to using:
+//
+//	client.Redemption.Create().
+//		OnConflict(
+//			sql.ResolveWithNewValues(),
+//		).
+//		Exec(ctx)
+func (u *RedemptionUpsertOne) UpdateNewValues() *RedemptionUpsertOne {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWithNewValues())
+	return u
+}
+
+// Ignore sets each column to itself in case of conflict.
+// Using this option is equivalent to using:
+//
+//	client.Redemption.Create().
+//	    OnConflict(sql.ResolveWithIgnore()).
+//	    Exec(ctx)
+func (u *RedemptionUpsertOne) Ignore() *RedemptionUpsertOne {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWithIgnore())
+	return u
+}
+
+// DoNothing configures the conflict_action to `DO NOTHING`.
+// Supported only by SQLite and PostgreSQL.
+func (u *RedemptionUpsertOne) DoNothing() *RedemptionUpsertOne {
+	u.create.conflict = append(u.create.conflict, sql.DoNothing())
+	return u
+}
+
+// Update allows overriding fields `UPDATE` values. See the RedemptionCreate.OnConflict
+// documentation for more info.
+func (u *RedemptionUpsertOne) Update(set func(*RedemptionUpsert)) *RedemptionUpsertOne {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWith(func(update *sql.UpdateSet) {
+		set(&RedemptionUpsert{UpdateSet: update})
+	}))
+	return u
+}
+
+// SetRedeemedAt sets the "redeemed_at" field.
+func (u *RedemptionUpsertOne) SetRedeemedAt(v time.Time) *RedemptionUpsertOne {
+	return u.Update(func(s *RedemptionUpsert) {
+		s.SetRedeemedAt(v)
+	})
+}
+
+// UpdateRedeemedAt sets the "redeemed_at" field to the value that was provided on create.
+func (u *RedemptionUpsertOne) UpdateRedeemedAt() *RedemptionUpsertOne {
+	return u.Update(func(s *RedemptionUpsert) {
+		s.UpdateRedeemedAt()
+	})
+}
+
+// Exec executes the query.
+func (u *RedemptionUpsertOne) Exec(ctx context.Context) error {
+	if len(u.create.conflict) == 0 {
+		return errors.New("ent: missing options for RedemptionCreate.OnConflict")
+	}
+	return u.create.Exec(ctx)
+}
+
+// ExecX is like Exec, but panics if an error occurs.
+func (u *RedemptionUpsertOne) ExecX(ctx context.Context) {
+	if err := u.create.Exec(ctx); err != nil {
+		panic(err)
+	}
+}
+
+// Exec executes the UPSERT query and returns the inserted/updated ID.
+func (u *RedemptionUpsertOne) ID(ctx context.Context) (id int, err error) {
+	node, err := u.create.Save(ctx)
+	if err != nil {
+		return id, err
+	}
+	return node.ID, nil
+}
+
+// IDX is like ID, but panics if an error occurs.
+func (u *RedemptionUpsertOne) IDX(ctx context.Context) int {
+	id, err := u.ID(ctx)
+	if err != nil {
+		panic(err)
+	}
+	return id
+}
+
 // RedemptionCreateBulk is the builder for creating many Redemption entities in bulk.
 type RedemptionCreateBulk struct {
 	config
 	builders []*RedemptionCreate
+	conflict []sql.ConflictOption
 }
 
 // Save creates the Redemption entities in the database.
@@ -231,6 +383,7 @@ func (rcb *RedemptionCreateBulk) Save(ctx context.Context) ([]*Redemption, error
 					_, err = mutators[i+1].Mutate(root, rcb.builders[i+1].mutation)
 				} else {
 					spec := &sqlgraph.BatchCreateSpec{Nodes: specs}
+					spec.OnConflict = rcb.conflict
 					// Invoke the actual operation on the latest mutation in the chain.
 					if err = sqlgraph.BatchCreate(ctx, rcb.driver, spec); err != nil {
 						if sqlgraph.IsConstraintError(err) {
@@ -281,6 +434,121 @@ func (rcb *RedemptionCreateBulk) Exec(ctx context.Context) error {
 // ExecX is like Exec, but panics if an error occurs.
 func (rcb *RedemptionCreateBulk) ExecX(ctx context.Context) {
 	if err := rcb.Exec(ctx); err != nil {
+		panic(err)
+	}
+}
+
+// OnConflict allows configuring the `ON CONFLICT` / `ON DUPLICATE KEY` clause
+// of the `INSERT` statement. For example:
+//
+//	client.Redemption.CreateBulk(builders...).
+//		OnConflict(
+//			// Update the row with the new values
+//			// the was proposed for insertion.
+//			sql.ResolveWithNewValues(),
+//		).
+//		// Override some of the fields with custom
+//		// update values.
+//		Update(func(u *ent.RedemptionUpsert) {
+//			SetRedeemedAt(v+v).
+//		}).
+//		Exec(ctx)
+func (rcb *RedemptionCreateBulk) OnConflict(opts ...sql.ConflictOption) *RedemptionUpsertBulk {
+	rcb.conflict = opts
+	return &RedemptionUpsertBulk{
+		create: rcb,
+	}
+}
+
+// OnConflictColumns calls `OnConflict` and configures the columns
+// as conflict target. Using this option is equivalent to using:
+//
+//	client.Redemption.Create().
+//		OnConflict(sql.ConflictColumns(columns...)).
+//		Exec(ctx)
+func (rcb *RedemptionCreateBulk) OnConflictColumns(columns ...string) *RedemptionUpsertBulk {
+	rcb.conflict = append(rcb.conflict, sql.ConflictColumns(columns...))
+	return &RedemptionUpsertBulk{
+		create: rcb,
+	}
+}
+
+// RedemptionUpsertBulk is the builder for "upsert"-ing
+// a bulk of Redemption nodes.
+type RedemptionUpsertBulk struct {
+	create *RedemptionCreateBulk
+}
+
+// UpdateNewValues updates the mutable fields using the new values that
+// were set on create. Using this option is equivalent to using:
+//
+//	client.Redemption.Create().
+//		OnConflict(
+//			sql.ResolveWithNewValues(),
+//		).
+//		Exec(ctx)
+func (u *RedemptionUpsertBulk) UpdateNewValues() *RedemptionUpsertBulk {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWithNewValues())
+	return u
+}
+
+// Ignore sets each column to itself in case of conflict.
+// Using this option is equivalent to using:
+//
+//	client.Redemption.Create().
+//		OnConflict(sql.ResolveWithIgnore()).
+//		Exec(ctx)
+func (u *RedemptionUpsertBulk) Ignore() *RedemptionUpsertBulk {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWithIgnore())
+	return u
+}
+
+// DoNothing configures the conflict_action to `DO NOTHING`.
+// Supported only by SQLite and PostgreSQL.
+func (u *RedemptionUpsertBulk) DoNothing() *RedemptionUpsertBulk {
+	u.create.conflict = append(u.create.conflict, sql.DoNothing())
+	return u
+}
+
+// Update allows overriding fields `UPDATE` values. See the RedemptionCreateBulk.OnConflict
+// documentation for more info.
+func (u *RedemptionUpsertBulk) Update(set func(*RedemptionUpsert)) *RedemptionUpsertBulk {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWith(func(update *sql.UpdateSet) {
+		set(&RedemptionUpsert{UpdateSet: update})
+	}))
+	return u
+}
+
+// SetRedeemedAt sets the "redeemed_at" field.
+func (u *RedemptionUpsertBulk) SetRedeemedAt(v time.Time) *RedemptionUpsertBulk {
+	return u.Update(func(s *RedemptionUpsert) {
+		s.SetRedeemedAt(v)
+	})
+}
+
+// UpdateRedeemedAt sets the "redeemed_at" field to the value that was provided on create.
+func (u *RedemptionUpsertBulk) UpdateRedeemedAt() *RedemptionUpsertBulk {
+	return u.Update(func(s *RedemptionUpsert) {
+		s.UpdateRedeemedAt()
+	})
+}
+
+// Exec executes the query.
+func (u *RedemptionUpsertBulk) Exec(ctx context.Context) error {
+	for i, b := range u.create.builders {
+		if len(b.conflict) != 0 {
+			return fmt.Errorf("ent: OnConflict was set for builder %d. Set it on the RedemptionCreateBulk instead", i)
+		}
+	}
+	if len(u.create.conflict) == 0 {
+		return errors.New("ent: missing options for RedemptionCreateBulk.OnConflict")
+	}
+	return u.create.Exec(ctx)
+}
+
+// ExecX is like Exec, but panics if an error occurs.
+func (u *RedemptionUpsertBulk) ExecX(ctx context.Context) {
+	if err := u.create.Exec(ctx); err != nil {
 		panic(err)
 	}
 }

@@ -18,6 +18,8 @@ type Institution struct {
 	ID int `json:"id,omitempty"`
 	// Name of the institution
 	Name string `json:"name,omitempty"`
+	// Short name of the institution (example: np)
+	ShortName string `json:"short_name,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the InstitutionQuery when eager-loading is set.
 	Edges        InstitutionEdges `json:"edges"`
@@ -32,8 +34,8 @@ type InstitutionEdges struct {
 	Vouchers []*Voucher `json:"vouchers,omitempty"`
 	// Prizes (accessories) available to be redeemed by users of the institution
 	Accessories []*Accessory `json:"accessories,omitempty"`
-	// Academic schools of the institution
-	AcademicSchools []*AcademicSchool `json:"academic_schools,omitempty"`
+	// Departments of the institution
+	Departments []*Department `json:"departments,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
 	loadedTypes [4]bool
@@ -66,13 +68,13 @@ func (e InstitutionEdges) AccessoriesOrErr() ([]*Accessory, error) {
 	return nil, &NotLoadedError{edge: "accessories"}
 }
 
-// AcademicSchoolsOrErr returns the AcademicSchools value or an error if the edge
+// DepartmentsOrErr returns the Departments value or an error if the edge
 // was not loaded in eager-loading.
-func (e InstitutionEdges) AcademicSchoolsOrErr() ([]*AcademicSchool, error) {
+func (e InstitutionEdges) DepartmentsOrErr() ([]*Department, error) {
 	if e.loadedTypes[3] {
-		return e.AcademicSchools, nil
+		return e.Departments, nil
 	}
-	return nil, &NotLoadedError{edge: "academic_schools"}
+	return nil, &NotLoadedError{edge: "departments"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -82,7 +84,7 @@ func (*Institution) scanValues(columns []string) ([]any, error) {
 		switch columns[i] {
 		case institution.FieldID:
 			values[i] = new(sql.NullInt64)
-		case institution.FieldName:
+		case institution.FieldName, institution.FieldShortName:
 			values[i] = new(sql.NullString)
 		default:
 			values[i] = new(sql.UnknownType)
@@ -110,6 +112,12 @@ func (i *Institution) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field name", values[j])
 			} else if value.Valid {
 				i.Name = value.String
+			}
+		case institution.FieldShortName:
+			if value, ok := values[j].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field short_name", values[j])
+			} else if value.Valid {
+				i.ShortName = value.String
 			}
 		default:
 			i.selectValues.Set(columns[j], values[j])
@@ -139,9 +147,9 @@ func (i *Institution) QueryAccessories() *AccessoryQuery {
 	return NewInstitutionClient(i.config).QueryAccessories(i)
 }
 
-// QueryAcademicSchools queries the "academic_schools" edge of the Institution entity.
-func (i *Institution) QueryAcademicSchools() *AcademicSchoolQuery {
-	return NewInstitutionClient(i.config).QueryAcademicSchools(i)
+// QueryDepartments queries the "departments" edge of the Institution entity.
+func (i *Institution) QueryDepartments() *DepartmentQuery {
+	return NewInstitutionClient(i.config).QueryDepartments(i)
 }
 
 // Update returns a builder for updating this Institution.
@@ -169,6 +177,9 @@ func (i *Institution) String() string {
 	builder.WriteString(fmt.Sprintf("id=%v, ", i.ID))
 	builder.WriteString("name=")
 	builder.WriteString(i.Name)
+	builder.WriteString(", ")
+	builder.WriteString("short_name=")
+	builder.WriteString(i.ShortName)
 	builder.WriteByte(')')
 	return builder.String()
 }

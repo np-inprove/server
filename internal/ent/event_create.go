@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"time"
 
+	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/np-inprove/server/internal/ent/event"
@@ -19,6 +20,7 @@ type EventCreate struct {
 	config
 	mutation *EventMutation
 	hooks    []Hook
+	conflict []sql.ConflictOption
 }
 
 // SetName sets the "name" field.
@@ -160,6 +162,7 @@ func (ec *EventCreate) createSpec() (*Event, *sqlgraph.CreateSpec) {
 		_node = &Event{config: ec.config}
 		_spec = sqlgraph.NewCreateSpec(event.Table, sqlgraph.NewFieldSpec(event.FieldID, field.TypeInt))
 	)
+	_spec.OnConflict = ec.conflict
 	if value, ok := ec.mutation.Name(); ok {
 		_spec.SetField(event.FieldName, field.TypeString, value)
 		_node.Name = value
@@ -200,10 +203,302 @@ func (ec *EventCreate) createSpec() (*Event, *sqlgraph.CreateSpec) {
 	return _node, _spec
 }
 
+// OnConflict allows configuring the `ON CONFLICT` / `ON DUPLICATE KEY` clause
+// of the `INSERT` statement. For example:
+//
+//	client.Event.Create().
+//		SetName(v).
+//		OnConflict(
+//			// Update the row with the new values
+//			// the was proposed for insertion.
+//			sql.ResolveWithNewValues(),
+//		).
+//		// Override some of the fields with custom
+//		// update values.
+//		Update(func(u *ent.EventUpsert) {
+//			SetName(v+v).
+//		}).
+//		Exec(ctx)
+func (ec *EventCreate) OnConflict(opts ...sql.ConflictOption) *EventUpsertOne {
+	ec.conflict = opts
+	return &EventUpsertOne{
+		create: ec,
+	}
+}
+
+// OnConflictColumns calls `OnConflict` and configures the columns
+// as conflict target. Using this option is equivalent to using:
+//
+//	client.Event.Create().
+//		OnConflict(sql.ConflictColumns(columns...)).
+//		Exec(ctx)
+func (ec *EventCreate) OnConflictColumns(columns ...string) *EventUpsertOne {
+	ec.conflict = append(ec.conflict, sql.ConflictColumns(columns...))
+	return &EventUpsertOne{
+		create: ec,
+	}
+}
+
+type (
+	// EventUpsertOne is the builder for "upsert"-ing
+	//  one Event node.
+	EventUpsertOne struct {
+		create *EventCreate
+	}
+
+	// EventUpsert is the "OnConflict" setter.
+	EventUpsert struct {
+		*sql.UpdateSet
+	}
+)
+
+// SetName sets the "name" field.
+func (u *EventUpsert) SetName(v string) *EventUpsert {
+	u.Set(event.FieldName, v)
+	return u
+}
+
+// UpdateName sets the "name" field to the value that was provided on create.
+func (u *EventUpsert) UpdateName() *EventUpsert {
+	u.SetExcluded(event.FieldName)
+	return u
+}
+
+// SetStartTime sets the "start_time" field.
+func (u *EventUpsert) SetStartTime(v time.Time) *EventUpsert {
+	u.Set(event.FieldStartTime, v)
+	return u
+}
+
+// UpdateStartTime sets the "start_time" field to the value that was provided on create.
+func (u *EventUpsert) UpdateStartTime() *EventUpsert {
+	u.SetExcluded(event.FieldStartTime)
+	return u
+}
+
+// SetEndTime sets the "end_time" field.
+func (u *EventUpsert) SetEndTime(v time.Time) *EventUpsert {
+	u.Set(event.FieldEndTime, v)
+	return u
+}
+
+// UpdateEndTime sets the "end_time" field to the value that was provided on create.
+func (u *EventUpsert) UpdateEndTime() *EventUpsert {
+	u.SetExcluded(event.FieldEndTime)
+	return u
+}
+
+// ClearEndTime clears the value of the "end_time" field.
+func (u *EventUpsert) ClearEndTime() *EventUpsert {
+	u.SetNull(event.FieldEndTime)
+	return u
+}
+
+// SetLocation sets the "location" field.
+func (u *EventUpsert) SetLocation(v string) *EventUpsert {
+	u.Set(event.FieldLocation, v)
+	return u
+}
+
+// UpdateLocation sets the "location" field to the value that was provided on create.
+func (u *EventUpsert) UpdateLocation() *EventUpsert {
+	u.SetExcluded(event.FieldLocation)
+	return u
+}
+
+// ClearLocation clears the value of the "location" field.
+func (u *EventUpsert) ClearLocation() *EventUpsert {
+	u.SetNull(event.FieldLocation)
+	return u
+}
+
+// SetRepeatPattern sets the "repeat_pattern" field.
+func (u *EventUpsert) SetRepeatPattern(v string) *EventUpsert {
+	u.Set(event.FieldRepeatPattern, v)
+	return u
+}
+
+// UpdateRepeatPattern sets the "repeat_pattern" field to the value that was provided on create.
+func (u *EventUpsert) UpdateRepeatPattern() *EventUpsert {
+	u.SetExcluded(event.FieldRepeatPattern)
+	return u
+}
+
+// ClearRepeatPattern clears the value of the "repeat_pattern" field.
+func (u *EventUpsert) ClearRepeatPattern() *EventUpsert {
+	u.SetNull(event.FieldRepeatPattern)
+	return u
+}
+
+// UpdateNewValues updates the mutable fields using the new values that were set on create.
+// Using this option is equivalent to using:
+//
+//	client.Event.Create().
+//		OnConflict(
+//			sql.ResolveWithNewValues(),
+//		).
+//		Exec(ctx)
+func (u *EventUpsertOne) UpdateNewValues() *EventUpsertOne {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWithNewValues())
+	return u
+}
+
+// Ignore sets each column to itself in case of conflict.
+// Using this option is equivalent to using:
+//
+//	client.Event.Create().
+//	    OnConflict(sql.ResolveWithIgnore()).
+//	    Exec(ctx)
+func (u *EventUpsertOne) Ignore() *EventUpsertOne {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWithIgnore())
+	return u
+}
+
+// DoNothing configures the conflict_action to `DO NOTHING`.
+// Supported only by SQLite and PostgreSQL.
+func (u *EventUpsertOne) DoNothing() *EventUpsertOne {
+	u.create.conflict = append(u.create.conflict, sql.DoNothing())
+	return u
+}
+
+// Update allows overriding fields `UPDATE` values. See the EventCreate.OnConflict
+// documentation for more info.
+func (u *EventUpsertOne) Update(set func(*EventUpsert)) *EventUpsertOne {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWith(func(update *sql.UpdateSet) {
+		set(&EventUpsert{UpdateSet: update})
+	}))
+	return u
+}
+
+// SetName sets the "name" field.
+func (u *EventUpsertOne) SetName(v string) *EventUpsertOne {
+	return u.Update(func(s *EventUpsert) {
+		s.SetName(v)
+	})
+}
+
+// UpdateName sets the "name" field to the value that was provided on create.
+func (u *EventUpsertOne) UpdateName() *EventUpsertOne {
+	return u.Update(func(s *EventUpsert) {
+		s.UpdateName()
+	})
+}
+
+// SetStartTime sets the "start_time" field.
+func (u *EventUpsertOne) SetStartTime(v time.Time) *EventUpsertOne {
+	return u.Update(func(s *EventUpsert) {
+		s.SetStartTime(v)
+	})
+}
+
+// UpdateStartTime sets the "start_time" field to the value that was provided on create.
+func (u *EventUpsertOne) UpdateStartTime() *EventUpsertOne {
+	return u.Update(func(s *EventUpsert) {
+		s.UpdateStartTime()
+	})
+}
+
+// SetEndTime sets the "end_time" field.
+func (u *EventUpsertOne) SetEndTime(v time.Time) *EventUpsertOne {
+	return u.Update(func(s *EventUpsert) {
+		s.SetEndTime(v)
+	})
+}
+
+// UpdateEndTime sets the "end_time" field to the value that was provided on create.
+func (u *EventUpsertOne) UpdateEndTime() *EventUpsertOne {
+	return u.Update(func(s *EventUpsert) {
+		s.UpdateEndTime()
+	})
+}
+
+// ClearEndTime clears the value of the "end_time" field.
+func (u *EventUpsertOne) ClearEndTime() *EventUpsertOne {
+	return u.Update(func(s *EventUpsert) {
+		s.ClearEndTime()
+	})
+}
+
+// SetLocation sets the "location" field.
+func (u *EventUpsertOne) SetLocation(v string) *EventUpsertOne {
+	return u.Update(func(s *EventUpsert) {
+		s.SetLocation(v)
+	})
+}
+
+// UpdateLocation sets the "location" field to the value that was provided on create.
+func (u *EventUpsertOne) UpdateLocation() *EventUpsertOne {
+	return u.Update(func(s *EventUpsert) {
+		s.UpdateLocation()
+	})
+}
+
+// ClearLocation clears the value of the "location" field.
+func (u *EventUpsertOne) ClearLocation() *EventUpsertOne {
+	return u.Update(func(s *EventUpsert) {
+		s.ClearLocation()
+	})
+}
+
+// SetRepeatPattern sets the "repeat_pattern" field.
+func (u *EventUpsertOne) SetRepeatPattern(v string) *EventUpsertOne {
+	return u.Update(func(s *EventUpsert) {
+		s.SetRepeatPattern(v)
+	})
+}
+
+// UpdateRepeatPattern sets the "repeat_pattern" field to the value that was provided on create.
+func (u *EventUpsertOne) UpdateRepeatPattern() *EventUpsertOne {
+	return u.Update(func(s *EventUpsert) {
+		s.UpdateRepeatPattern()
+	})
+}
+
+// ClearRepeatPattern clears the value of the "repeat_pattern" field.
+func (u *EventUpsertOne) ClearRepeatPattern() *EventUpsertOne {
+	return u.Update(func(s *EventUpsert) {
+		s.ClearRepeatPattern()
+	})
+}
+
+// Exec executes the query.
+func (u *EventUpsertOne) Exec(ctx context.Context) error {
+	if len(u.create.conflict) == 0 {
+		return errors.New("ent: missing options for EventCreate.OnConflict")
+	}
+	return u.create.Exec(ctx)
+}
+
+// ExecX is like Exec, but panics if an error occurs.
+func (u *EventUpsertOne) ExecX(ctx context.Context) {
+	if err := u.create.Exec(ctx); err != nil {
+		panic(err)
+	}
+}
+
+// Exec executes the UPSERT query and returns the inserted/updated ID.
+func (u *EventUpsertOne) ID(ctx context.Context) (id int, err error) {
+	node, err := u.create.Save(ctx)
+	if err != nil {
+		return id, err
+	}
+	return node.ID, nil
+}
+
+// IDX is like ID, but panics if an error occurs.
+func (u *EventUpsertOne) IDX(ctx context.Context) int {
+	id, err := u.ID(ctx)
+	if err != nil {
+		panic(err)
+	}
+	return id
+}
+
 // EventCreateBulk is the builder for creating many Event entities in bulk.
 type EventCreateBulk struct {
 	config
 	builders []*EventCreate
+	conflict []sql.ConflictOption
 }
 
 // Save creates the Event entities in the database.
@@ -229,6 +524,7 @@ func (ecb *EventCreateBulk) Save(ctx context.Context) ([]*Event, error) {
 					_, err = mutators[i+1].Mutate(root, ecb.builders[i+1].mutation)
 				} else {
 					spec := &sqlgraph.BatchCreateSpec{Nodes: specs}
+					spec.OnConflict = ecb.conflict
 					// Invoke the actual operation on the latest mutation in the chain.
 					if err = sqlgraph.BatchCreate(ctx, ecb.driver, spec); err != nil {
 						if sqlgraph.IsConstraintError(err) {
@@ -279,6 +575,198 @@ func (ecb *EventCreateBulk) Exec(ctx context.Context) error {
 // ExecX is like Exec, but panics if an error occurs.
 func (ecb *EventCreateBulk) ExecX(ctx context.Context) {
 	if err := ecb.Exec(ctx); err != nil {
+		panic(err)
+	}
+}
+
+// OnConflict allows configuring the `ON CONFLICT` / `ON DUPLICATE KEY` clause
+// of the `INSERT` statement. For example:
+//
+//	client.Event.CreateBulk(builders...).
+//		OnConflict(
+//			// Update the row with the new values
+//			// the was proposed for insertion.
+//			sql.ResolveWithNewValues(),
+//		).
+//		// Override some of the fields with custom
+//		// update values.
+//		Update(func(u *ent.EventUpsert) {
+//			SetName(v+v).
+//		}).
+//		Exec(ctx)
+func (ecb *EventCreateBulk) OnConflict(opts ...sql.ConflictOption) *EventUpsertBulk {
+	ecb.conflict = opts
+	return &EventUpsertBulk{
+		create: ecb,
+	}
+}
+
+// OnConflictColumns calls `OnConflict` and configures the columns
+// as conflict target. Using this option is equivalent to using:
+//
+//	client.Event.Create().
+//		OnConflict(sql.ConflictColumns(columns...)).
+//		Exec(ctx)
+func (ecb *EventCreateBulk) OnConflictColumns(columns ...string) *EventUpsertBulk {
+	ecb.conflict = append(ecb.conflict, sql.ConflictColumns(columns...))
+	return &EventUpsertBulk{
+		create: ecb,
+	}
+}
+
+// EventUpsertBulk is the builder for "upsert"-ing
+// a bulk of Event nodes.
+type EventUpsertBulk struct {
+	create *EventCreateBulk
+}
+
+// UpdateNewValues updates the mutable fields using the new values that
+// were set on create. Using this option is equivalent to using:
+//
+//	client.Event.Create().
+//		OnConflict(
+//			sql.ResolveWithNewValues(),
+//		).
+//		Exec(ctx)
+func (u *EventUpsertBulk) UpdateNewValues() *EventUpsertBulk {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWithNewValues())
+	return u
+}
+
+// Ignore sets each column to itself in case of conflict.
+// Using this option is equivalent to using:
+//
+//	client.Event.Create().
+//		OnConflict(sql.ResolveWithIgnore()).
+//		Exec(ctx)
+func (u *EventUpsertBulk) Ignore() *EventUpsertBulk {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWithIgnore())
+	return u
+}
+
+// DoNothing configures the conflict_action to `DO NOTHING`.
+// Supported only by SQLite and PostgreSQL.
+func (u *EventUpsertBulk) DoNothing() *EventUpsertBulk {
+	u.create.conflict = append(u.create.conflict, sql.DoNothing())
+	return u
+}
+
+// Update allows overriding fields `UPDATE` values. See the EventCreateBulk.OnConflict
+// documentation for more info.
+func (u *EventUpsertBulk) Update(set func(*EventUpsert)) *EventUpsertBulk {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWith(func(update *sql.UpdateSet) {
+		set(&EventUpsert{UpdateSet: update})
+	}))
+	return u
+}
+
+// SetName sets the "name" field.
+func (u *EventUpsertBulk) SetName(v string) *EventUpsertBulk {
+	return u.Update(func(s *EventUpsert) {
+		s.SetName(v)
+	})
+}
+
+// UpdateName sets the "name" field to the value that was provided on create.
+func (u *EventUpsertBulk) UpdateName() *EventUpsertBulk {
+	return u.Update(func(s *EventUpsert) {
+		s.UpdateName()
+	})
+}
+
+// SetStartTime sets the "start_time" field.
+func (u *EventUpsertBulk) SetStartTime(v time.Time) *EventUpsertBulk {
+	return u.Update(func(s *EventUpsert) {
+		s.SetStartTime(v)
+	})
+}
+
+// UpdateStartTime sets the "start_time" field to the value that was provided on create.
+func (u *EventUpsertBulk) UpdateStartTime() *EventUpsertBulk {
+	return u.Update(func(s *EventUpsert) {
+		s.UpdateStartTime()
+	})
+}
+
+// SetEndTime sets the "end_time" field.
+func (u *EventUpsertBulk) SetEndTime(v time.Time) *EventUpsertBulk {
+	return u.Update(func(s *EventUpsert) {
+		s.SetEndTime(v)
+	})
+}
+
+// UpdateEndTime sets the "end_time" field to the value that was provided on create.
+func (u *EventUpsertBulk) UpdateEndTime() *EventUpsertBulk {
+	return u.Update(func(s *EventUpsert) {
+		s.UpdateEndTime()
+	})
+}
+
+// ClearEndTime clears the value of the "end_time" field.
+func (u *EventUpsertBulk) ClearEndTime() *EventUpsertBulk {
+	return u.Update(func(s *EventUpsert) {
+		s.ClearEndTime()
+	})
+}
+
+// SetLocation sets the "location" field.
+func (u *EventUpsertBulk) SetLocation(v string) *EventUpsertBulk {
+	return u.Update(func(s *EventUpsert) {
+		s.SetLocation(v)
+	})
+}
+
+// UpdateLocation sets the "location" field to the value that was provided on create.
+func (u *EventUpsertBulk) UpdateLocation() *EventUpsertBulk {
+	return u.Update(func(s *EventUpsert) {
+		s.UpdateLocation()
+	})
+}
+
+// ClearLocation clears the value of the "location" field.
+func (u *EventUpsertBulk) ClearLocation() *EventUpsertBulk {
+	return u.Update(func(s *EventUpsert) {
+		s.ClearLocation()
+	})
+}
+
+// SetRepeatPattern sets the "repeat_pattern" field.
+func (u *EventUpsertBulk) SetRepeatPattern(v string) *EventUpsertBulk {
+	return u.Update(func(s *EventUpsert) {
+		s.SetRepeatPattern(v)
+	})
+}
+
+// UpdateRepeatPattern sets the "repeat_pattern" field to the value that was provided on create.
+func (u *EventUpsertBulk) UpdateRepeatPattern() *EventUpsertBulk {
+	return u.Update(func(s *EventUpsert) {
+		s.UpdateRepeatPattern()
+	})
+}
+
+// ClearRepeatPattern clears the value of the "repeat_pattern" field.
+func (u *EventUpsertBulk) ClearRepeatPattern() *EventUpsertBulk {
+	return u.Update(func(s *EventUpsert) {
+		s.ClearRepeatPattern()
+	})
+}
+
+// Exec executes the query.
+func (u *EventUpsertBulk) Exec(ctx context.Context) error {
+	for i, b := range u.create.builders {
+		if len(b.conflict) != 0 {
+			return fmt.Errorf("ent: OnConflict was set for builder %d. Set it on the EventCreateBulk instead", i)
+		}
+	}
+	if len(u.create.conflict) == 0 {
+		return errors.New("ent: missing options for EventCreateBulk.OnConflict")
+	}
+	return u.create.Exec(ctx)
+}
+
+// ExecX is like Exec, but panics if an error occurs.
+func (u *EventUpsertBulk) ExecX(ctx context.Context) {
+	if err := u.create.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
