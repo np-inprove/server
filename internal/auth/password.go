@@ -2,6 +2,7 @@ package auth
 
 import (
 	"crypto/rand"
+	"encoding/hex
 	"fmt"
 	"golang.org/x/crypto/argon2"
 )
@@ -13,5 +14,5 @@ func HashPassword(password string) (string, error) {
 	}
 
 	hash := argon2.IDKey([]byte(password), salt, 1, 64*1024, 1, 32)
-	return string(hash), nil
+	return hex.EncodeToString(hash), nil
 }
