@@ -2,7 +2,7 @@ package auth
 
 import (
 	"crypto/rand"
-	"encoding/hex
+	"encoding/hex"
 	"fmt"
 	"golang.org/x/crypto/argon2"
 )
