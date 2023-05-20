@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+
 	"github.com/lestrrat-go/jwx/v2/jwk"
 	"github.com/lestrrat-go/jwx/v2/jwt"
 	"github.com/np-inprove/server/internal/apperror"
@@ -42,8 +43,7 @@ func (u usecase) WhoAmI(ctx context.Context, token jwt.Token) (User, error) {
 func (u usecase) tokenIsValid(ctx context.Context, jti string) error {
 	_, err := u.r.FindJWTRevocation(ctx, jti)
 	if err != nil {
-		var e apperror.ErrEntityNotFound
-		if errors.Is(err, &e) {
+		if errors.As(err, &apperror.ErrEntityNotFound) {
 			return nil
 		}
 	}

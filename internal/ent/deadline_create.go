@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"time"
 
+	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/np-inprove/server/internal/ent/deadline"
@@ -20,6 +21,7 @@ type DeadlineCreate struct {
 	config
 	mutation *DeadlineMutation
 	hooks    []Hook
+	conflict []sql.ConflictOption
 }
 
 // SetName sets the "name" field.
@@ -153,6 +155,7 @@ func (dc *DeadlineCreate) createSpec() (*Deadline, *sqlgraph.CreateSpec) {
 		_node = &Deadline{config: dc.config}
 		_spec = sqlgraph.NewCreateSpec(deadline.Table, sqlgraph.NewFieldSpec(deadline.FieldID, field.TypeInt))
 	)
+	_spec.OnConflict = dc.conflict
 	if value, ok := dc.mutation.Name(); ok {
 		_spec.SetField(deadline.FieldName, field.TypeString, value)
 		_node.Name = value
@@ -214,10 +217,198 @@ func (dc *DeadlineCreate) createSpec() (*Deadline, *sqlgraph.CreateSpec) {
 	return _node, _spec
 }
 
+// OnConflict allows configuring the `ON CONFLICT` / `ON DUPLICATE KEY` clause
+// of the `INSERT` statement. For example:
+//
+//	client.Deadline.Create().
+//		SetName(v).
+//		OnConflict(
+//			// Update the row with the new values
+//			// the was proposed for insertion.
+//			sql.ResolveWithNewValues(),
+//		).
+//		// Override some of the fields with custom
+//		// update values.
+//		Update(func(u *ent.DeadlineUpsert) {
+//			SetName(v+v).
+//		}).
+//		Exec(ctx)
+func (dc *DeadlineCreate) OnConflict(opts ...sql.ConflictOption) *DeadlineUpsertOne {
+	dc.conflict = opts
+	return &DeadlineUpsertOne{
+		create: dc,
+	}
+}
+
+// OnConflictColumns calls `OnConflict` and configures the columns
+// as conflict target. Using this option is equivalent to using:
+//
+//	client.Deadline.Create().
+//		OnConflict(sql.ConflictColumns(columns...)).
+//		Exec(ctx)
+func (dc *DeadlineCreate) OnConflictColumns(columns ...string) *DeadlineUpsertOne {
+	dc.conflict = append(dc.conflict, sql.ConflictColumns(columns...))
+	return &DeadlineUpsertOne{
+		create: dc,
+	}
+}
+
+type (
+	// DeadlineUpsertOne is the builder for "upsert"-ing
+	//  one Deadline node.
+	DeadlineUpsertOne struct {
+		create *DeadlineCreate
+	}
+
+	// DeadlineUpsert is the "OnConflict" setter.
+	DeadlineUpsert struct {
+		*sql.UpdateSet
+	}
+)
+
+// SetName sets the "name" field.
+func (u *DeadlineUpsert) SetName(v string) *DeadlineUpsert {
+	u.Set(deadline.FieldName, v)
+	return u
+}
+
+// UpdateName sets the "name" field to the value that was provided on create.
+func (u *DeadlineUpsert) UpdateName() *DeadlineUpsert {
+	u.SetExcluded(deadline.FieldName)
+	return u
+}
+
+// SetDueTime sets the "due_time" field.
+func (u *DeadlineUpsert) SetDueTime(v time.Time) *DeadlineUpsert {
+	u.Set(deadline.FieldDueTime, v)
+	return u
+}
+
+// UpdateDueTime sets the "due_time" field to the value that was provided on create.
+func (u *DeadlineUpsert) UpdateDueTime() *DeadlineUpsert {
+	u.SetExcluded(deadline.FieldDueTime)
+	return u
+}
+
+// ClearDueTime clears the value of the "due_time" field.
+func (u *DeadlineUpsert) ClearDueTime() *DeadlineUpsert {
+	u.SetNull(deadline.FieldDueTime)
+	return u
+}
+
+// UpdateNewValues updates the mutable fields using the new values that were set on create.
+// Using this option is equivalent to using:
+//
+//	client.Deadline.Create().
+//		OnConflict(
+//			sql.ResolveWithNewValues(),
+//		).
+//		Exec(ctx)
+func (u *DeadlineUpsertOne) UpdateNewValues() *DeadlineUpsertOne {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWithNewValues())
+	return u
+}
+
+// Ignore sets each column to itself in case of conflict.
+// Using this option is equivalent to using:
+//
+//	client.Deadline.Create().
+//	    OnConflict(sql.ResolveWithIgnore()).
+//	    Exec(ctx)
+func (u *DeadlineUpsertOne) Ignore() *DeadlineUpsertOne {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWithIgnore())
+	return u
+}
+
+// DoNothing configures the conflict_action to `DO NOTHING`.
+// Supported only by SQLite and PostgreSQL.
+func (u *DeadlineUpsertOne) DoNothing() *DeadlineUpsertOne {
+	u.create.conflict = append(u.create.conflict, sql.DoNothing())
+	return u
+}
+
+// Update allows overriding fields `UPDATE` values. See the DeadlineCreate.OnConflict
+// documentation for more info.
+func (u *DeadlineUpsertOne) Update(set func(*DeadlineUpsert)) *DeadlineUpsertOne {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWith(func(update *sql.UpdateSet) {
+		set(&DeadlineUpsert{UpdateSet: update})
+	}))
+	return u
+}
+
+// SetName sets the "name" field.
+func (u *DeadlineUpsertOne) SetName(v string) *DeadlineUpsertOne {
+	return u.Update(func(s *DeadlineUpsert) {
+		s.SetName(v)
+	})
+}
+
+// UpdateName sets the "name" field to the value that was provided on create.
+func (u *DeadlineUpsertOne) UpdateName() *DeadlineUpsertOne {
+	return u.Update(func(s *DeadlineUpsert) {
+		s.UpdateName()
+	})
+}
+
+// SetDueTime sets the "due_time" field.
+func (u *DeadlineUpsertOne) SetDueTime(v time.Time) *DeadlineUpsertOne {
+	return u.Update(func(s *DeadlineUpsert) {
+		s.SetDueTime(v)
+	})
+}
+
+// UpdateDueTime sets the "due_time" field to the value that was provided on create.
+func (u *DeadlineUpsertOne) UpdateDueTime() *DeadlineUpsertOne {
+	return u.Update(func(s *DeadlineUpsert) {
+		s.UpdateDueTime()
+	})
+}
+
+// ClearDueTime clears the value of the "due_time" field.
+func (u *DeadlineUpsertOne) ClearDueTime() *DeadlineUpsertOne {
+	return u.Update(func(s *DeadlineUpsert) {
+		s.ClearDueTime()
+	})
+}
+
+// Exec executes the query.
+func (u *DeadlineUpsertOne) Exec(ctx context.Context) error {
+	if len(u.create.conflict) == 0 {
+		return errors.New("ent: missing options for DeadlineCreate.OnConflict")
+	}
+	return u.create.Exec(ctx)
+}
+
+// ExecX is like Exec, but panics if an error occurs.
+func (u *DeadlineUpsertOne) ExecX(ctx context.Context) {
+	if err := u.create.Exec(ctx); err != nil {
+		panic(err)
+	}
+}
+
+// Exec executes the UPSERT query and returns the inserted/updated ID.
+func (u *DeadlineUpsertOne) ID(ctx context.Context) (id int, err error) {
+	node, err := u.create.Save(ctx)
+	if err != nil {
+		return id, err
+	}
+	return node.ID, nil
+}
+
+// IDX is like ID, but panics if an error occurs.
+func (u *DeadlineUpsertOne) IDX(ctx context.Context) int {
+	id, err := u.ID(ctx)
+	if err != nil {
+		panic(err)
+	}
+	return id
+}
+
 // DeadlineCreateBulk is the builder for creating many Deadline entities in bulk.
 type DeadlineCreateBulk struct {
 	config
 	builders []*DeadlineCreate
+	conflict []sql.ConflictOption
 }
 
 // Save creates the Deadline entities in the database.
@@ -243,6 +434,7 @@ func (dcb *DeadlineCreateBulk) Save(ctx context.Context) ([]*Deadline, error) {
 					_, err = mutators[i+1].Mutate(root, dcb.builders[i+1].mutation)
 				} else {
 					spec := &sqlgraph.BatchCreateSpec{Nodes: specs}
+					spec.OnConflict = dcb.conflict
 					// Invoke the actual operation on the latest mutation in the chain.
 					if err = sqlgraph.BatchCreate(ctx, dcb.driver, spec); err != nil {
 						if sqlgraph.IsConstraintError(err) {
@@ -293,6 +485,142 @@ func (dcb *DeadlineCreateBulk) Exec(ctx context.Context) error {
 // ExecX is like Exec, but panics if an error occurs.
 func (dcb *DeadlineCreateBulk) ExecX(ctx context.Context) {
 	if err := dcb.Exec(ctx); err != nil {
+		panic(err)
+	}
+}
+
+// OnConflict allows configuring the `ON CONFLICT` / `ON DUPLICATE KEY` clause
+// of the `INSERT` statement. For example:
+//
+//	client.Deadline.CreateBulk(builders...).
+//		OnConflict(
+//			// Update the row with the new values
+//			// the was proposed for insertion.
+//			sql.ResolveWithNewValues(),
+//		).
+//		// Override some of the fields with custom
+//		// update values.
+//		Update(func(u *ent.DeadlineUpsert) {
+//			SetName(v+v).
+//		}).
+//		Exec(ctx)
+func (dcb *DeadlineCreateBulk) OnConflict(opts ...sql.ConflictOption) *DeadlineUpsertBulk {
+	dcb.conflict = opts
+	return &DeadlineUpsertBulk{
+		create: dcb,
+	}
+}
+
+// OnConflictColumns calls `OnConflict` and configures the columns
+// as conflict target. Using this option is equivalent to using:
+//
+//	client.Deadline.Create().
+//		OnConflict(sql.ConflictColumns(columns...)).
+//		Exec(ctx)
+func (dcb *DeadlineCreateBulk) OnConflictColumns(columns ...string) *DeadlineUpsertBulk {
+	dcb.conflict = append(dcb.conflict, sql.ConflictColumns(columns...))
+	return &DeadlineUpsertBulk{
+		create: dcb,
+	}
+}
+
+// DeadlineUpsertBulk is the builder for "upsert"-ing
+// a bulk of Deadline nodes.
+type DeadlineUpsertBulk struct {
+	create *DeadlineCreateBulk
+}
+
+// UpdateNewValues updates the mutable fields using the new values that
+// were set on create. Using this option is equivalent to using:
+//
+//	client.Deadline.Create().
+//		OnConflict(
+//			sql.ResolveWithNewValues(),
+//		).
+//		Exec(ctx)
+func (u *DeadlineUpsertBulk) UpdateNewValues() *DeadlineUpsertBulk {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWithNewValues())
+	return u
+}
+
+// Ignore sets each column to itself in case of conflict.
+// Using this option is equivalent to using:
+//
+//	client.Deadline.Create().
+//		OnConflict(sql.ResolveWithIgnore()).
+//		Exec(ctx)
+func (u *DeadlineUpsertBulk) Ignore() *DeadlineUpsertBulk {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWithIgnore())
+	return u
+}
+
+// DoNothing configures the conflict_action to `DO NOTHING`.
+// Supported only by SQLite and PostgreSQL.
+func (u *DeadlineUpsertBulk) DoNothing() *DeadlineUpsertBulk {
+	u.create.conflict = append(u.create.conflict, sql.DoNothing())
+	return u
+}
+
+// Update allows overriding fields `UPDATE` values. See the DeadlineCreateBulk.OnConflict
+// documentation for more info.
+func (u *DeadlineUpsertBulk) Update(set func(*DeadlineUpsert)) *DeadlineUpsertBulk {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWith(func(update *sql.UpdateSet) {
+		set(&DeadlineUpsert{UpdateSet: update})
+	}))
+	return u
+}
+
+// SetName sets the "name" field.
+func (u *DeadlineUpsertBulk) SetName(v string) *DeadlineUpsertBulk {
+	return u.Update(func(s *DeadlineUpsert) {
+		s.SetName(v)
+	})
+}
+
+// UpdateName sets the "name" field to the value that was provided on create.
+func (u *DeadlineUpsertBulk) UpdateName() *DeadlineUpsertBulk {
+	return u.Update(func(s *DeadlineUpsert) {
+		s.UpdateName()
+	})
+}
+
+// SetDueTime sets the "due_time" field.
+func (u *DeadlineUpsertBulk) SetDueTime(v time.Time) *DeadlineUpsertBulk {
+	return u.Update(func(s *DeadlineUpsert) {
+		s.SetDueTime(v)
+	})
+}
+
+// UpdateDueTime sets the "due_time" field to the value that was provided on create.
+func (u *DeadlineUpsertBulk) UpdateDueTime() *DeadlineUpsertBulk {
+	return u.Update(func(s *DeadlineUpsert) {
+		s.UpdateDueTime()
+	})
+}
+
+// ClearDueTime clears the value of the "due_time" field.
+func (u *DeadlineUpsertBulk) ClearDueTime() *DeadlineUpsertBulk {
+	return u.Update(func(s *DeadlineUpsert) {
+		s.ClearDueTime()
+	})
+}
+
+// Exec executes the query.
+func (u *DeadlineUpsertBulk) Exec(ctx context.Context) error {
+	for i, b := range u.create.builders {
+		if len(b.conflict) != 0 {
+			return fmt.Errorf("ent: OnConflict was set for builder %d. Set it on the DeadlineCreateBulk instead", i)
+		}
+	}
+	if len(u.create.conflict) == 0 {
+		return errors.New("ent: missing options for DeadlineCreateBulk.OnConflict")
+	}
+	return u.create.Exec(ctx)
+}
+
+// ExecX is like Exec, but panics if an error occurs.
+func (u *DeadlineUpsertBulk) ExecX(ctx context.Context) {
+	if err := u.create.Exec(ctx); err != nil {
 		panic(err)
 	}
 }

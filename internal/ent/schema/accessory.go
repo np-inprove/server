@@ -10,7 +10,7 @@ type Accessory struct {
 	ent.Schema
 }
 
-// Mixins of the Accessory
+// Mixin included in the Accessory
 func (Accessory) Mixin() []ent.Mixin {
 	return []ent.Mixin{
 		PrizeMixin{},

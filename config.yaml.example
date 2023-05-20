@@ -8,6 +8,16 @@ database:
 
 app:
   production: false
-  jwtalgorithm: HS256
-  jwtsignkey: secret
-  jwtverifykey:
+  jwtalgorithm: ES256
+  jwk: >-
+    {
+        "kty": "EC",
+        "d": "2slJfcyFAjYrr35iw_rvZyxZlTiuS8cxtGfS26Luu8E",
+        "use": "sig",
+        "crv": "P-256",
+        "x": "BB-pvLVgLrIckMuoab8E2kRjJQTlwdPDCk4jPoYgwC8",
+        "y": "h2tpM_6jjTaV5F8-QpIo5b6HdNV2-xhgefd-lyR4kek",
+        "alg": "ES256"
+    }
+  jwtcookiehost: localhost
+  jwtcookiename: np-inprove

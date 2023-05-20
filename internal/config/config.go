@@ -2,16 +2,27 @@ package config
 
 import (
 	"fmt"
-	"github.com/knadh/koanf/parsers/yaml"
-	"github.com/knadh/koanf/providers/env"
-	"github.com/knadh/koanf/providers/file"
-	"github.com/lestrrat-go/jwx/v2/jwa"
+	"math/rand"
 	"strings"
 
+	"github.com/knadh/koanf/parsers/yaml"
+	"github.com/knadh/koanf/providers/confmap"
+	"github.com/knadh/koanf/providers/env"
+	"github.com/knadh/koanf/providers/file"
 	"github.com/knadh/koanf/v2"
+	"github.com/lestrrat-go/jwx/v2/jwa"
 )
 
-var k = koanf.New(".")
+var (
+	k             = koanf.New(".")
+	letters       = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890")
+	defaultConfig = map[string]interface{}{
+		"seed.rootemail":                "root@np-inprove.com",
+		"seed.rootpassword":             randPassword(),
+		"seed.rootinstitutionname":      "iNProve",
+		"seed.rootinstitutionshortname": "inprove",
+	}
+)
 
 const envPrefix = "INPROVE_"
 
@@ -66,7 +77,38 @@ func (Config) AppJWTCookieName() string {
 	return k.String("app.jwtcookiename")
 }
 
+// SeedRootEmail is the email to be used for the seeded root user.
+func (Config) SeedRootEmail() string {
+	return k.String("seed.rootemail")
+}
+
+// SeedRootPassword is the password to be used for the seeded root user.
+func (Config) SeedRootPassword() string {
+	return k.String("seed.rootpassword")
+}
+
+// SeedRootInstitutionName is the name of the institution
+// that the seeded root user is in. This value will
+// only be used if an institution with the short name
+// specified in SeedRootInstitutionShortName does not exist
+func (Config) SeedRootInstitutionName() string {
+	return k.String("seed.rootinstitutionname")
+}
+
+// SeedRootInstitutionShortName is the short name of the institution
+// that the seeded root user is in.
+func (Config) SeedRootInstitutionShortName() string {
+	return k.String("seed.rootinstitutionshortname")
+}
+
+// SeedForceCreate forces the root user to be recreated
+// even if it already exists.
+func (Config) SeedForceCreate() bool {
+	return k.Bool("seed.forcecreate")
+}
+
 func New() (*Config, error) {
+	_ = k.Load(confmap.Provider(defaultConfig, "."), nil)
 	_ = k.Load(file.Provider("./config.yaml"), yaml.Parser())
 
 	err := k.Load(env.Provider(envPrefix, ".", func(s string) string {
@@ -107,4 +149,12 @@ func NewTest() (*Config, error) {
 	}
 
 	return &Config{}, nil
+}
+
+func randPassword() string {
+	b := make([]rune, 12)
+	for i := range b {
+		b[i] = letters[rand.Intn(len(letters))]
+	}
+	return string(b)
 }

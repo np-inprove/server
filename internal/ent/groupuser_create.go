@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 
+	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/np-inprove/server/internal/ent/group"
@@ -19,6 +20,7 @@ type GroupUserCreate struct {
 	config
 	mutation *GroupUserMutation
 	hooks    []Hook
+	conflict []sql.ConflictOption
 }
 
 // SetGroupID sets the "group_id" field.
@@ -125,6 +127,7 @@ func (guc *GroupUserCreate) createSpec() (*GroupUser, *sqlgraph.CreateSpec) {
 		_node = &GroupUser{config: guc.config}
 		_spec = sqlgraph.NewCreateSpec(groupuser.Table, nil)
 	)
+	_spec.OnConflict = guc.conflict
 	if value, ok := guc.mutation.Role(); ok {
 		_spec.SetField(groupuser.FieldRole, field.TypeEnum, value)
 		_node.Role = value
@@ -166,10 +169,193 @@ func (guc *GroupUserCreate) createSpec() (*GroupUser, *sqlgraph.CreateSpec) {
 	return _node, _spec
 }
 
+// OnConflict allows configuring the `ON CONFLICT` / `ON DUPLICATE KEY` clause
+// of the `INSERT` statement. For example:
+//
+//	client.GroupUser.Create().
+//		SetGroupID(v).
+//		OnConflict(
+//			// Update the row with the new values
+//			// the was proposed for insertion.
+//			sql.ResolveWithNewValues(),
+//		).
+//		// Override some of the fields with custom
+//		// update values.
+//		Update(func(u *ent.GroupUserUpsert) {
+//			SetGroupID(v+v).
+//		}).
+//		Exec(ctx)
+func (guc *GroupUserCreate) OnConflict(opts ...sql.ConflictOption) *GroupUserUpsertOne {
+	guc.conflict = opts
+	return &GroupUserUpsertOne{
+		create: guc,
+	}
+}
+
+// OnConflictColumns calls `OnConflict` and configures the columns
+// as conflict target. Using this option is equivalent to using:
+//
+//	client.GroupUser.Create().
+//		OnConflict(sql.ConflictColumns(columns...)).
+//		Exec(ctx)
+func (guc *GroupUserCreate) OnConflictColumns(columns ...string) *GroupUserUpsertOne {
+	guc.conflict = append(guc.conflict, sql.ConflictColumns(columns...))
+	return &GroupUserUpsertOne{
+		create: guc,
+	}
+}
+
+type (
+	// GroupUserUpsertOne is the builder for "upsert"-ing
+	//  one GroupUser node.
+	GroupUserUpsertOne struct {
+		create *GroupUserCreate
+	}
+
+	// GroupUserUpsert is the "OnConflict" setter.
+	GroupUserUpsert struct {
+		*sql.UpdateSet
+	}
+)
+
+// SetGroupID sets the "group_id" field.
+func (u *GroupUserUpsert) SetGroupID(v int) *GroupUserUpsert {
+	u.Set(groupuser.FieldGroupID, v)
+	return u
+}
+
+// UpdateGroupID sets the "group_id" field to the value that was provided on create.
+func (u *GroupUserUpsert) UpdateGroupID() *GroupUserUpsert {
+	u.SetExcluded(groupuser.FieldGroupID)
+	return u
+}
+
+// SetUserID sets the "user_id" field.
+func (u *GroupUserUpsert) SetUserID(v int) *GroupUserUpsert {
+	u.Set(groupuser.FieldUserID, v)
+	return u
+}
+
+// UpdateUserID sets the "user_id" field to the value that was provided on create.
+func (u *GroupUserUpsert) UpdateUserID() *GroupUserUpsert {
+	u.SetExcluded(groupuser.FieldUserID)
+	return u
+}
+
+// SetRole sets the "role" field.
+func (u *GroupUserUpsert) SetRole(v groupuser.Role) *GroupUserUpsert {
+	u.Set(groupuser.FieldRole, v)
+	return u
+}
+
+// UpdateRole sets the "role" field to the value that was provided on create.
+func (u *GroupUserUpsert) UpdateRole() *GroupUserUpsert {
+	u.SetExcluded(groupuser.FieldRole)
+	return u
+}
+
+// UpdateNewValues updates the mutable fields using the new values that were set on create.
+// Using this option is equivalent to using:
+//
+//	client.GroupUser.Create().
+//		OnConflict(
+//			sql.ResolveWithNewValues(),
+//		).
+//		Exec(ctx)
+func (u *GroupUserUpsertOne) UpdateNewValues() *GroupUserUpsertOne {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWithNewValues())
+	return u
+}
+
+// Ignore sets each column to itself in case of conflict.
+// Using this option is equivalent to using:
+//
+//	client.GroupUser.Create().
+//	    OnConflict(sql.ResolveWithIgnore()).
+//	    Exec(ctx)
+func (u *GroupUserUpsertOne) Ignore() *GroupUserUpsertOne {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWithIgnore())
+	return u
+}
+
+// DoNothing configures the conflict_action to `DO NOTHING`.
+// Supported only by SQLite and PostgreSQL.
+func (u *GroupUserUpsertOne) DoNothing() *GroupUserUpsertOne {
+	u.create.conflict = append(u.create.conflict, sql.DoNothing())
+	return u
+}
+
+// Update allows overriding fields `UPDATE` values. See the GroupUserCreate.OnConflict
+// documentation for more info.
+func (u *GroupUserUpsertOne) Update(set func(*GroupUserUpsert)) *GroupUserUpsertOne {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWith(func(update *sql.UpdateSet) {
+		set(&GroupUserUpsert{UpdateSet: update})
+	}))
+	return u
+}
+
+// SetGroupID sets the "group_id" field.
+func (u *GroupUserUpsertOne) SetGroupID(v int) *GroupUserUpsertOne {
+	return u.Update(func(s *GroupUserUpsert) {
+		s.SetGroupID(v)
+	})
+}
+
+// UpdateGroupID sets the "group_id" field to the value that was provided on create.
+func (u *GroupUserUpsertOne) UpdateGroupID() *GroupUserUpsertOne {
+	return u.Update(func(s *GroupUserUpsert) {
+		s.UpdateGroupID()
+	})
+}
+
+// SetUserID sets the "user_id" field.
+func (u *GroupUserUpsertOne) SetUserID(v int) *GroupUserUpsertOne {
+	return u.Update(func(s *GroupUserUpsert) {
+		s.SetUserID(v)
+	})
+}
+
+// UpdateUserID sets the "user_id" field to the value that was provided on create.
+func (u *GroupUserUpsertOne) UpdateUserID() *GroupUserUpsertOne {
+	return u.Update(func(s *GroupUserUpsert) {
+		s.UpdateUserID()
+	})
+}
+
+// SetRole sets the "role" field.
+func (u *GroupUserUpsertOne) SetRole(v groupuser.Role) *GroupUserUpsertOne {
+	return u.Update(func(s *GroupUserUpsert) {
+		s.SetRole(v)
+	})
+}
+
+// UpdateRole sets the "role" field to the value that was provided on create.
+func (u *GroupUserUpsertOne) UpdateRole() *GroupUserUpsertOne {
+	return u.Update(func(s *GroupUserUpsert) {
+		s.UpdateRole()
+	})
+}
+
+// Exec executes the query.
+func (u *GroupUserUpsertOne) Exec(ctx context.Context) error {
+	if len(u.create.conflict) == 0 {
+		return errors.New("ent: missing options for GroupUserCreate.OnConflict")
+	}
+	return u.create.Exec(ctx)
+}
+
+// ExecX is like Exec, but panics if an error occurs.
+func (u *GroupUserUpsertOne) ExecX(ctx context.Context) {
+	if err := u.create.Exec(ctx); err != nil {
+		panic(err)
+	}
+}
+
 // GroupUserCreateBulk is the builder for creating many GroupUser entities in bulk.
 type GroupUserCreateBulk struct {
 	config
 	builders []*GroupUserCreate
+	conflict []sql.ConflictOption
 }
 
 // Save creates the GroupUser entities in the database.
@@ -195,6 +381,7 @@ func (gucb *GroupUserCreateBulk) Save(ctx context.Context) ([]*GroupUser, error)
 					_, err = mutators[i+1].Mutate(root, gucb.builders[i+1].mutation)
 				} else {
 					spec := &sqlgraph.BatchCreateSpec{Nodes: specs}
+					spec.OnConflict = gucb.conflict
 					// Invoke the actual operation on the latest mutation in the chain.
 					if err = sqlgraph.BatchCreate(ctx, gucb.driver, spec); err != nil {
 						if sqlgraph.IsConstraintError(err) {
@@ -240,6 +427,149 @@ func (gucb *GroupUserCreateBulk) Exec(ctx context.Context) error {
 // ExecX is like Exec, but panics if an error occurs.
 func (gucb *GroupUserCreateBulk) ExecX(ctx context.Context) {
 	if err := gucb.Exec(ctx); err != nil {
+		panic(err)
+	}
+}
+
+// OnConflict allows configuring the `ON CONFLICT` / `ON DUPLICATE KEY` clause
+// of the `INSERT` statement. For example:
+//
+//	client.GroupUser.CreateBulk(builders...).
+//		OnConflict(
+//			// Update the row with the new values
+//			// the was proposed for insertion.
+//			sql.ResolveWithNewValues(),
+//		).
+//		// Override some of the fields with custom
+//		// update values.
+//		Update(func(u *ent.GroupUserUpsert) {
+//			SetGroupID(v+v).
+//		}).
+//		Exec(ctx)
+func (gucb *GroupUserCreateBulk) OnConflict(opts ...sql.ConflictOption) *GroupUserUpsertBulk {
+	gucb.conflict = opts
+	return &GroupUserUpsertBulk{
+		create: gucb,
+	}
+}
+
+// OnConflictColumns calls `OnConflict` and configures the columns
+// as conflict target. Using this option is equivalent to using:
+//
+//	client.GroupUser.Create().
+//		OnConflict(sql.ConflictColumns(columns...)).
+//		Exec(ctx)
+func (gucb *GroupUserCreateBulk) OnConflictColumns(columns ...string) *GroupUserUpsertBulk {
+	gucb.conflict = append(gucb.conflict, sql.ConflictColumns(columns...))
+	return &GroupUserUpsertBulk{
+		create: gucb,
+	}
+}
+
+// GroupUserUpsertBulk is the builder for "upsert"-ing
+// a bulk of GroupUser nodes.
+type GroupUserUpsertBulk struct {
+	create *GroupUserCreateBulk
+}
+
+// UpdateNewValues updates the mutable fields using the new values that
+// were set on create. Using this option is equivalent to using:
+//
+//	client.GroupUser.Create().
+//		OnConflict(
+//			sql.ResolveWithNewValues(),
+//		).
+//		Exec(ctx)
+func (u *GroupUserUpsertBulk) UpdateNewValues() *GroupUserUpsertBulk {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWithNewValues())
+	return u
+}
+
+// Ignore sets each column to itself in case of conflict.
+// Using this option is equivalent to using:
+//
+//	client.GroupUser.Create().
+//		OnConflict(sql.ResolveWithIgnore()).
+//		Exec(ctx)
+func (u *GroupUserUpsertBulk) Ignore() *GroupUserUpsertBulk {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWithIgnore())
+	return u
+}
+
+// DoNothing configures the conflict_action to `DO NOTHING`.
+// Supported only by SQLite and PostgreSQL.
+func (u *GroupUserUpsertBulk) DoNothing() *GroupUserUpsertBulk {
+	u.create.conflict = append(u.create.conflict, sql.DoNothing())
+	return u
+}
+
+// Update allows overriding fields `UPDATE` values. See the GroupUserCreateBulk.OnConflict
+// documentation for more info.
+func (u *GroupUserUpsertBulk) Update(set func(*GroupUserUpsert)) *GroupUserUpsertBulk {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWith(func(update *sql.UpdateSet) {
+		set(&GroupUserUpsert{UpdateSet: update})
+	}))
+	return u
+}
+
+// SetGroupID sets the "group_id" field.
+func (u *GroupUserUpsertBulk) SetGroupID(v int) *GroupUserUpsertBulk {
+	return u.Update(func(s *GroupUserUpsert) {
+		s.SetGroupID(v)
+	})
+}
+
+// UpdateGroupID sets the "group_id" field to the value that was provided on create.
+func (u *GroupUserUpsertBulk) UpdateGroupID() *GroupUserUpsertBulk {
+	return u.Update(func(s *GroupUserUpsert) {
+		s.UpdateGroupID()
+	})
+}
+
+// SetUserID sets the "user_id" field.
+func (u *GroupUserUpsertBulk) SetUserID(v int) *GroupUserUpsertBulk {
+	return u.Update(func(s *GroupUserUpsert) {
+		s.SetUserID(v)
+	})
+}
+
+// UpdateUserID sets the "user_id" field to the value that was provided on create.
+func (u *GroupUserUpsertBulk) UpdateUserID() *GroupUserUpsertBulk {
+	return u.Update(func(s *GroupUserUpsert) {
+		s.UpdateUserID()
+	})
+}
+
+// SetRole sets the "role" field.
+func (u *GroupUserUpsertBulk) SetRole(v groupuser.Role) *GroupUserUpsertBulk {
+	return u.Update(func(s *GroupUserUpsert) {
+		s.SetRole(v)
+	})
+}
+
+// UpdateRole sets the "role" field to the value that was provided on create.
+func (u *GroupUserUpsertBulk) UpdateRole() *GroupUserUpsertBulk {
+	return u.Update(func(s *GroupUserUpsert) {
+		s.UpdateRole()
+	})
+}
+
+// Exec executes the query.
+func (u *GroupUserUpsertBulk) Exec(ctx context.Context) error {
+	for i, b := range u.create.builders {
+		if len(b.conflict) != 0 {
+			return fmt.Errorf("ent: OnConflict was set for builder %d. Set it on the GroupUserCreateBulk instead", i)
+		}
+	}
+	if len(u.create.conflict) == 0 {
+		return errors.New("ent: missing options for GroupUserCreateBulk.OnConflict")
+	}
+	return u.create.Exec(ctx)
+}
+
+// ExecX is like Exec, but panics if an error occurs.
+func (u *GroupUserUpsertBulk) ExecX(ctx context.Context) {
+	if err := u.create.Exec(ctx); err != nil {
 		panic(err)
 	}
 }

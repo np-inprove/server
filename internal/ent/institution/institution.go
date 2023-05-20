@@ -14,14 +14,16 @@ const (
 	FieldID = "id"
 	// FieldName holds the string denoting the name field in the database.
 	FieldName = "name"
+	// FieldShortName holds the string denoting the short_name field in the database.
+	FieldShortName = "short_name"
 	// EdgeAdmins holds the string denoting the admins edge name in mutations.
 	EdgeAdmins = "admins"
 	// EdgeVouchers holds the string denoting the vouchers edge name in mutations.
 	EdgeVouchers = "vouchers"
 	// EdgeAccessories holds the string denoting the accessories edge name in mutations.
 	EdgeAccessories = "accessories"
-	// EdgeAcademicSchools holds the string denoting the academic_schools edge name in mutations.
-	EdgeAcademicSchools = "academic_schools"
+	// EdgeDepartments holds the string denoting the departments edge name in mutations.
+	EdgeDepartments = "departments"
 	// Table holds the table name of the institution in the database.
 	Table = "institutions"
 	// AdminsTable is the table that holds the admins relation/edge. The primary key declared below.
@@ -43,19 +45,20 @@ const (
 	AccessoriesInverseTable = "accessories"
 	// AccessoriesColumn is the table column denoting the accessories relation/edge.
 	AccessoriesColumn = "institution_accessories"
-	// AcademicSchoolsTable is the table that holds the academic_schools relation/edge.
-	AcademicSchoolsTable = "academic_schools"
-	// AcademicSchoolsInverseTable is the table name for the AcademicSchool entity.
-	// It exists in this package in order to avoid circular dependency with the "academicschool" package.
-	AcademicSchoolsInverseTable = "academic_schools"
-	// AcademicSchoolsColumn is the table column denoting the academic_schools relation/edge.
-	AcademicSchoolsColumn = "institution_academic_schools"
+	// DepartmentsTable is the table that holds the departments relation/edge.
+	DepartmentsTable = "departments"
+	// DepartmentsInverseTable is the table name for the Department entity.
+	// It exists in this package in order to avoid circular dependency with the "department" package.
+	DepartmentsInverseTable = "departments"
+	// DepartmentsColumn is the table column denoting the departments relation/edge.
+	DepartmentsColumn = "institution_departments"
 )
 
 // Columns holds all SQL columns for institution fields.
 var Columns = []string{
 	FieldID,
 	FieldName,
+	FieldShortName,
 }
 
 var (
@@ -77,6 +80,8 @@ func ValidColumn(column string) bool {
 var (
 	// NameValidator is a validator for the "name" field. It is called by the builders before save.
 	NameValidator func(string) error
+	// ShortNameValidator is a validator for the "short_name" field. It is called by the builders before save.
+	ShortNameValidator func(string) error
 )
 
 // OrderOption defines the ordering options for the Institution queries.
@@ -90,6 +95,11 @@ func ByID(opts ...sql.OrderTermOption) OrderOption {
 // ByName orders the results by the name field.
 func ByName(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldName, opts...).ToFunc()
+}
+
+// ByShortName orders the results by the short_name field.
+func ByShortName(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldShortName, opts...).ToFunc()
 }
 
 // ByAdminsCount orders the results by admins count.
@@ -134,17 +144,17 @@ func ByAccessories(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 	}
 }
 
-// ByAcademicSchoolsCount orders the results by academic_schools count.
-func ByAcademicSchoolsCount(opts ...sql.OrderTermOption) OrderOption {
+// ByDepartmentsCount orders the results by departments count.
+func ByDepartmentsCount(opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborsCount(s, newAcademicSchoolsStep(), opts...)
+		sqlgraph.OrderByNeighborsCount(s, newDepartmentsStep(), opts...)
 	}
 }
 
-// ByAcademicSchools orders the results by academic_schools terms.
-func ByAcademicSchools(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+// ByDepartments orders the results by departments terms.
+func ByDepartments(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newAcademicSchoolsStep(), append([]sql.OrderTerm{term}, terms...)...)
+		sqlgraph.OrderByNeighborTerms(s, newDepartmentsStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
 func newAdminsStep() *sqlgraph.Step {
@@ -168,10 +178,10 @@ func newAccessoriesStep() *sqlgraph.Step {
 		sqlgraph.Edge(sqlgraph.O2M, false, AccessoriesTable, AccessoriesColumn),
 	)
 }
-func newAcademicSchoolsStep() *sqlgraph.Step {
+func newDepartmentsStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
-		sqlgraph.To(AcademicSchoolsInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.O2M, false, AcademicSchoolsTable, AcademicSchoolsColumn),
+		sqlgraph.To(DepartmentsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, DepartmentsTable, DepartmentsColumn),
 	)
 }

@@ -4,6 +4,7 @@ import (
 	"entgo.io/ent"
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
+	"github.com/np-inprove/server/internal/hash"
 )
 
 // User holds the schema definition for the User entity.
@@ -21,17 +22,19 @@ func (User) Fields() []ent.Field {
 			NotEmpty().
 			Comment("Last name of the user"),
 		field.String("email").
+			Unique().
 			NotEmpty().
 			Comment("Email of the user"),
-		field.String("password_hash").
-			NotEmpty().
+		field.JSON("password", hash.Encoded{}).
 			Sensitive().
-			Comment("Password hash of the user"),
+			Comment("Encoded password hash of the user"),
 		field.Int("points").
-			Positive().
+			Min(0).
+			Default(0).
 			Comment("Points of the user.\nMust always be positive"),
 		field.Int("points_awarded_count").
-			Positive().
+			Min(0).
+			Default(0).
 			Comment("Points awarded by the user after points_awarded_reset_time.\nMust always be positive"),
 		field.Time("points_awarded_reset_time").
 			Optional().
@@ -44,8 +47,9 @@ func (User) Fields() []ent.Field {
 // Edges of the User.
 func (User) Edges() []ent.Edge {
 	return []ent.Edge{
-		edge.From("course", Course.Type).
-			Ref("students").
+		edge.From("department", Department.Type).
+			Required().
+			Ref("users").
 			Unique(),
 		edge.From("institution", Institution.Type).
 			Ref("admins"),

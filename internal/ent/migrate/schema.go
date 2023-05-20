@@ -8,27 +8,6 @@ import (
 )
 
 var (
-	// AcademicSchoolsColumns holds the columns for the "academic_schools" table.
-	AcademicSchoolsColumns = []*schema.Column{
-		{Name: "id", Type: field.TypeInt, Increment: true},
-		{Name: "name", Type: field.TypeString},
-		{Name: "school_code", Type: field.TypeString},
-		{Name: "institution_academic_schools", Type: field.TypeInt, Nullable: true},
-	}
-	// AcademicSchoolsTable holds the schema information for the "academic_schools" table.
-	AcademicSchoolsTable = &schema.Table{
-		Name:       "academic_schools",
-		Columns:    AcademicSchoolsColumns,
-		PrimaryKey: []*schema.Column{AcademicSchoolsColumns[0]},
-		ForeignKeys: []*schema.ForeignKey{
-			{
-				Symbol:     "academic_schools_institutions_academic_schools",
-				Columns:    []*schema.Column{AcademicSchoolsColumns[3]},
-				RefColumns: []*schema.Column{InstitutionsColumns[0]},
-				OnDelete:   schema.SetNull,
-			},
-		},
-	}
 	// AccessoriesColumns holds the columns for the "accessories" table.
 	AccessoriesColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
@@ -48,27 +27,6 @@ var (
 				Columns:    []*schema.Column{AccessoriesColumns[4]},
 				RefColumns: []*schema.Column{InstitutionsColumns[0]},
 				OnDelete:   schema.NoAction,
-			},
-		},
-	}
-	// CoursesColumns holds the columns for the "courses" table.
-	CoursesColumns = []*schema.Column{
-		{Name: "id", Type: field.TypeInt, Increment: true},
-		{Name: "name", Type: field.TypeString},
-		{Name: "course_id", Type: field.TypeString},
-		{Name: "academic_school_courses", Type: field.TypeInt, Nullable: true},
-	}
-	// CoursesTable holds the schema information for the "courses" table.
-	CoursesTable = &schema.Table{
-		Name:       "courses",
-		Columns:    CoursesColumns,
-		PrimaryKey: []*schema.Column{CoursesColumns[0]},
-		ForeignKeys: []*schema.ForeignKey{
-			{
-				Symbol:     "courses_academic_schools_courses",
-				Columns:    []*schema.Column{CoursesColumns[3]},
-				RefColumns: []*schema.Column{AcademicSchoolsColumns[0]},
-				OnDelete:   schema.SetNull,
 			},
 		},
 	}
@@ -96,6 +54,34 @@ var (
 				Symbol:     "deadlines_groups_deadlines",
 				Columns:    []*schema.Column{DeadlinesColumns[4]},
 				RefColumns: []*schema.Column{GroupsColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+	}
+	// DepartmentsColumns holds the columns for the "departments" table.
+	DepartmentsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "name", Type: field.TypeString},
+		{Name: "short_name", Type: field.TypeString},
+		{Name: "department_children", Type: field.TypeInt, Nullable: true},
+		{Name: "institution_departments", Type: field.TypeInt},
+	}
+	// DepartmentsTable holds the schema information for the "departments" table.
+	DepartmentsTable = &schema.Table{
+		Name:       "departments",
+		Columns:    DepartmentsColumns,
+		PrimaryKey: []*schema.Column{DepartmentsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "departments_departments_children",
+				Columns:    []*schema.Column{DepartmentsColumns[3]},
+				RefColumns: []*schema.Column{DepartmentsColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+			{
+				Symbol:     "departments_institutions_departments",
+				Columns:    []*schema.Column{DepartmentsColumns[4]},
+				RefColumns: []*schema.Column{InstitutionsColumns[0]},
 				OnDelete:   schema.NoAction,
 			},
 		},
@@ -204,6 +190,7 @@ var (
 	InstitutionsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
 		{Name: "name", Type: field.TypeString},
+		{Name: "short_name", Type: field.TypeString, Unique: true},
 	}
 	// InstitutionsTable holds the schema information for the "institutions" table.
 	InstitutionsTable = &schema.Table{
@@ -342,13 +329,13 @@ var (
 		{Name: "id", Type: field.TypeInt, Increment: true},
 		{Name: "first_name", Type: field.TypeString},
 		{Name: "last_name", Type: field.TypeString},
-		{Name: "email", Type: field.TypeString},
-		{Name: "password_hash", Type: field.TypeString},
-		{Name: "points", Type: field.TypeInt},
-		{Name: "points_awarded_count", Type: field.TypeInt},
+		{Name: "email", Type: field.TypeString, Unique: true},
+		{Name: "password", Type: field.TypeJSON},
+		{Name: "points", Type: field.TypeInt, Default: 0},
+		{Name: "points_awarded_count", Type: field.TypeInt, Default: 0},
 		{Name: "points_awarded_reset_time", Type: field.TypeTime, Nullable: true},
 		{Name: "god_mode", Type: field.TypeBool},
-		{Name: "course_students", Type: field.TypeInt, Nullable: true},
+		{Name: "department_users", Type: field.TypeInt},
 	}
 	// UsersTable holds the schema information for the "users" table.
 	UsersTable = &schema.Table{
@@ -357,10 +344,10 @@ var (
 		PrimaryKey: []*schema.Column{UsersColumns[0]},
 		ForeignKeys: []*schema.ForeignKey{
 			{
-				Symbol:     "users_courses_students",
+				Symbol:     "users_departments_users",
 				Columns:    []*schema.Column{UsersColumns[9]},
-				RefColumns: []*schema.Column{CoursesColumns[0]},
-				OnDelete:   schema.SetNull,
+				RefColumns: []*schema.Column{DepartmentsColumns[0]},
+				OnDelete:   schema.NoAction,
 			},
 		},
 	}
@@ -465,10 +452,9 @@ var (
 	}
 	// Tables holds all the tables in the schema.
 	Tables = []*schema.Table{
-		AcademicSchoolsTable,
 		AccessoriesTable,
-		CoursesTable,
 		DeadlinesTable,
+		DepartmentsTable,
 		EventsTable,
 		ForumPostsTable,
 		GroupsTable,
@@ -489,11 +475,11 @@ var (
 )
 
 func init() {
-	AcademicSchoolsTable.ForeignKeys[0].RefTable = InstitutionsTable
 	AccessoriesTable.ForeignKeys[0].RefTable = InstitutionsTable
-	CoursesTable.ForeignKeys[0].RefTable = AcademicSchoolsTable
 	DeadlinesTable.ForeignKeys[0].RefTable = UsersTable
 	DeadlinesTable.ForeignKeys[1].RefTable = GroupsTable
+	DepartmentsTable.ForeignKeys[0].RefTable = DepartmentsTable
+	DepartmentsTable.ForeignKeys[1].RefTable = InstitutionsTable
 	EventsTable.ForeignKeys[0].RefTable = GroupsTable
 	ForumPostsTable.ForeignKeys[0].RefTable = UsersTable
 	ForumPostsTable.ForeignKeys[1].RefTable = ForumPostsTable
@@ -507,7 +493,7 @@ func init() {
 	RedemptionsTable.ForeignKeys[1].RefTable = UsersTable
 	RedemptionsTable.ForeignKeys[2].RefTable = VouchersTable
 	StudyPlansTable.ForeignKeys[0].RefTable = UsersTable
-	UsersTable.ForeignKeys[0].RefTable = CoursesTable
+	UsersTable.ForeignKeys[0].RefTable = DepartmentsTable
 	UserPetsTable.ForeignKeys[0].RefTable = PetsTable
 	UserPetsTable.ForeignKeys[1].RefTable = UsersTable
 	VouchersTable.ForeignKeys[0].RefTable = InstitutionsTable

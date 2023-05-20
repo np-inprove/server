@@ -17,6 +17,10 @@ func (Institution) Fields() []ent.Field {
 		field.String("name").
 			NotEmpty().
 			Comment("Name of the institution"),
+		field.String("short_name").
+			NotEmpty().
+			Unique().
+			Comment("Short name of the institution (example: np)"),
 	}
 }
 
@@ -29,7 +33,7 @@ func (Institution) Edges() []ent.Edge {
 			Comment("Prizes (vouchers) available to be redeemed by users of the institution"),
 		edge.To("accessories", Accessory.Type).
 			Comment("Prizes (accessories) available to be redeemed by users of the institution"),
-		edge.To("academic_schools", AcademicSchool.Type).
-			Comment("Academic schools of the institution"),
+		edge.To("departments", Department.Type).
+			Comment("Departments of the institution"),
 	}
 }

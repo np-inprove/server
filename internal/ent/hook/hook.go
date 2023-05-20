@@ -9,18 +9,6 @@ import (
 	"github.com/np-inprove/server/internal/ent"
 )
 
-// The AcademicSchoolFunc type is an adapter to allow the use of ordinary
-// function as AcademicSchool mutator.
-type AcademicSchoolFunc func(context.Context, *ent.AcademicSchoolMutation) (ent.Value, error)
-
-// Mutate calls f(ctx, m).
-func (f AcademicSchoolFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
-	if mv, ok := m.(*ent.AcademicSchoolMutation); ok {
-		return f(ctx, mv)
-	}
-	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.AcademicSchoolMutation", m)
-}
-
 // The AccessoryFunc type is an adapter to allow the use of ordinary
 // function as Accessory mutator.
 type AccessoryFunc func(context.Context, *ent.AccessoryMutation) (ent.Value, error)
@@ -33,18 +21,6 @@ func (f AccessoryFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, e
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.AccessoryMutation", m)
 }
 
-// The CourseFunc type is an adapter to allow the use of ordinary
-// function as Course mutator.
-type CourseFunc func(context.Context, *ent.CourseMutation) (ent.Value, error)
-
-// Mutate calls f(ctx, m).
-func (f CourseFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
-	if mv, ok := m.(*ent.CourseMutation); ok {
-		return f(ctx, mv)
-	}
-	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.CourseMutation", m)
-}
-
 // The DeadlineFunc type is an adapter to allow the use of ordinary
 // function as Deadline mutator.
 type DeadlineFunc func(context.Context, *ent.DeadlineMutation) (ent.Value, error)
@@ -55,6 +31,18 @@ func (f DeadlineFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, er
 		return f(ctx, mv)
 	}
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.DeadlineMutation", m)
+}
+
+// The DepartmentFunc type is an adapter to allow the use of ordinary
+// function as Department mutator.
+type DepartmentFunc func(context.Context, *ent.DepartmentMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f DepartmentFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.DepartmentMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.DepartmentMutation", m)
 }
 
 // The EventFunc type is an adapter to allow the use of ordinary

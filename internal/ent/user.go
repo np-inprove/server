@@ -3,14 +3,16 @@
 package ent
 
 import (
+	"encoding/json"
 	"fmt"
 	"strings"
 	"time"
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
-	"github.com/np-inprove/server/internal/ent/course"
+	"github.com/np-inprove/server/internal/ent/department"
 	"github.com/np-inprove/server/internal/ent/user"
+	"github.com/np-inprove/server/internal/hash"
 )
 
 // User is the model entity for the User schema.
@@ -24,8 +26,8 @@ type User struct {
 	LastName string `json:"last_name,omitempty"`
 	// Email of the user
 	Email string `json:"email,omitempty"`
-	// Password hash of the user
-	PasswordHash string `json:"-"`
+	// Encoded password hash of the user
+	Password hash.Encoded `json:"-"`
 	// Points of the user.
 	// Must always be positive
 	Points int `json:"points,omitempty"`
@@ -38,15 +40,15 @@ type User struct {
 	GodMode bool `json:"god_mode,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the UserQuery when eager-loading is set.
-	Edges           UserEdges `json:"edges"`
-	course_students *int
-	selectValues    sql.SelectValues
+	Edges            UserEdges `json:"edges"`
+	department_users *int
+	selectValues     sql.SelectValues
 }
 
 // UserEdges holds the relations/edges for other nodes in the graph.
 type UserEdges struct {
-	// Course holds the value of the course edge.
-	Course *Course `json:"course,omitempty"`
+	// Department holds the value of the department edge.
+	Department *Department `json:"department,omitempty"`
 	// Institution holds the value of the institution edge.
 	Institution []*Institution `json:"institution,omitempty"`
 	// Redemptions holds the value of the redemptions edge.
@@ -74,17 +76,17 @@ type UserEdges struct {
 	loadedTypes [12]bool
 }
 
-// CourseOrErr returns the Course value or an error if the edge
+// DepartmentOrErr returns the Department value or an error if the edge
 // was not loaded in eager-loading, or loaded but was not found.
-func (e UserEdges) CourseOrErr() (*Course, error) {
+func (e UserEdges) DepartmentOrErr() (*Department, error) {
 	if e.loadedTypes[0] {
-		if e.Course == nil {
+		if e.Department == nil {
 			// Edge was loaded but was not found.
-			return nil, &NotFoundError{label: course.Label}
+			return nil, &NotFoundError{label: department.Label}
 		}
-		return e.Course, nil
+		return e.Department, nil
 	}
-	return nil, &NotLoadedError{edge: "course"}
+	return nil, &NotLoadedError{edge: "department"}
 }
 
 // InstitutionOrErr returns the Institution value or an error if the edge
@@ -191,15 +193,17 @@ func (*User) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
+		case user.FieldPassword:
+			values[i] = new([]byte)
 		case user.FieldGodMode:
 			values[i] = new(sql.NullBool)
 		case user.FieldID, user.FieldPoints, user.FieldPointsAwardedCount:
 			values[i] = new(sql.NullInt64)
-		case user.FieldFirstName, user.FieldLastName, user.FieldEmail, user.FieldPasswordHash:
+		case user.FieldFirstName, user.FieldLastName, user.FieldEmail:
 			values[i] = new(sql.NullString)
 		case user.FieldPointsAwardedResetTime:
 			values[i] = new(sql.NullTime)
-		case user.ForeignKeys[0]: // course_students
+		case user.ForeignKeys[0]: // department_users
 			values[i] = new(sql.NullInt64)
 		default:
 			values[i] = new(sql.UnknownType)
@@ -240,11 +244,13 @@ func (u *User) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				u.Email = value.String
 			}
-		case user.FieldPasswordHash:
-			if value, ok := values[i].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field password_hash", values[i])
-			} else if value.Valid {
-				u.PasswordHash = value.String
+		case user.FieldPassword:
+			if value, ok := values[i].(*[]byte); !ok {
+				return fmt.Errorf("unexpected type %T for field password", values[i])
+			} else if value != nil && len(*value) > 0 {
+				if err := json.Unmarshal(*value, &u.Password); err != nil {
+					return fmt.Errorf("unmarshal field password: %w", err)
+				}
 			}
 		case user.FieldPoints:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
@@ -272,10 +278,10 @@ func (u *User) assignValues(columns []string, values []any) error {
 			}
 		case user.ForeignKeys[0]:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
-				return fmt.Errorf("unexpected type %T for edge-field course_students", value)
+				return fmt.Errorf("unexpected type %T for edge-field department_users", value)
 			} else if value.Valid {
-				u.course_students = new(int)
-				*u.course_students = int(value.Int64)
+				u.department_users = new(int)
+				*u.department_users = int(value.Int64)
 			}
 		default:
 			u.selectValues.Set(columns[i], values[i])
@@ -290,9 +296,9 @@ func (u *User) Value(name string) (ent.Value, error) {
 	return u.selectValues.Get(name)
 }
 
-// QueryCourse queries the "course" edge of the User entity.
-func (u *User) QueryCourse() *CourseQuery {
-	return NewUserClient(u.config).QueryCourse(u)
+// QueryDepartment queries the "department" edge of the User entity.
+func (u *User) QueryDepartment() *DepartmentQuery {
+	return NewUserClient(u.config).QueryDepartment(u)
 }
 
 // QueryInstitution queries the "institution" edge of the User entity.
@@ -382,7 +388,7 @@ func (u *User) String() string {
 	builder.WriteString("email=")
 	builder.WriteString(u.Email)
 	builder.WriteString(", ")
-	builder.WriteString("password_hash=<sensitive>")
+	builder.WriteString("password=<sensitive>")
 	builder.WriteString(", ")
 	builder.WriteString("points=")
 	builder.WriteString(fmt.Sprintf("%v", u.Points))

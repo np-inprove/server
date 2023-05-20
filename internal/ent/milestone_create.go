@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"time"
 
+	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/np-inprove/server/internal/ent/milestone"
@@ -19,6 +20,7 @@ type MilestoneCreate struct {
 	config
 	mutation *MilestoneMutation
 	hooks    []Hook
+	conflict []sql.ConflictOption
 }
 
 // SetName sets the "name" field.
@@ -118,6 +120,7 @@ func (mc *MilestoneCreate) createSpec() (*Milestone, *sqlgraph.CreateSpec) {
 		_node = &Milestone{config: mc.config}
 		_spec = sqlgraph.NewCreateSpec(milestone.Table, sqlgraph.NewFieldSpec(milestone.FieldID, field.TypeInt))
 	)
+	_spec.OnConflict = mc.conflict
 	if value, ok := mc.mutation.Name(); ok {
 		_spec.SetField(milestone.FieldName, field.TypeString, value)
 		_node.Name = value
@@ -146,10 +149,185 @@ func (mc *MilestoneCreate) createSpec() (*Milestone, *sqlgraph.CreateSpec) {
 	return _node, _spec
 }
 
+// OnConflict allows configuring the `ON CONFLICT` / `ON DUPLICATE KEY` clause
+// of the `INSERT` statement. For example:
+//
+//	client.Milestone.Create().
+//		SetName(v).
+//		OnConflict(
+//			// Update the row with the new values
+//			// the was proposed for insertion.
+//			sql.ResolveWithNewValues(),
+//		).
+//		// Override some of the fields with custom
+//		// update values.
+//		Update(func(u *ent.MilestoneUpsert) {
+//			SetName(v+v).
+//		}).
+//		Exec(ctx)
+func (mc *MilestoneCreate) OnConflict(opts ...sql.ConflictOption) *MilestoneUpsertOne {
+	mc.conflict = opts
+	return &MilestoneUpsertOne{
+		create: mc,
+	}
+}
+
+// OnConflictColumns calls `OnConflict` and configures the columns
+// as conflict target. Using this option is equivalent to using:
+//
+//	client.Milestone.Create().
+//		OnConflict(sql.ConflictColumns(columns...)).
+//		Exec(ctx)
+func (mc *MilestoneCreate) OnConflictColumns(columns ...string) *MilestoneUpsertOne {
+	mc.conflict = append(mc.conflict, sql.ConflictColumns(columns...))
+	return &MilestoneUpsertOne{
+		create: mc,
+	}
+}
+
+type (
+	// MilestoneUpsertOne is the builder for "upsert"-ing
+	//  one Milestone node.
+	MilestoneUpsertOne struct {
+		create *MilestoneCreate
+	}
+
+	// MilestoneUpsert is the "OnConflict" setter.
+	MilestoneUpsert struct {
+		*sql.UpdateSet
+	}
+)
+
+// SetName sets the "name" field.
+func (u *MilestoneUpsert) SetName(v string) *MilestoneUpsert {
+	u.Set(milestone.FieldName, v)
+	return u
+}
+
+// UpdateName sets the "name" field to the value that was provided on create.
+func (u *MilestoneUpsert) UpdateName() *MilestoneUpsert {
+	u.SetExcluded(milestone.FieldName)
+	return u
+}
+
+// SetTargetCompletionTime sets the "target_completion_time" field.
+func (u *MilestoneUpsert) SetTargetCompletionTime(v time.Time) *MilestoneUpsert {
+	u.Set(milestone.FieldTargetCompletionTime, v)
+	return u
+}
+
+// UpdateTargetCompletionTime sets the "target_completion_time" field to the value that was provided on create.
+func (u *MilestoneUpsert) UpdateTargetCompletionTime() *MilestoneUpsert {
+	u.SetExcluded(milestone.FieldTargetCompletionTime)
+	return u
+}
+
+// UpdateNewValues updates the mutable fields using the new values that were set on create.
+// Using this option is equivalent to using:
+//
+//	client.Milestone.Create().
+//		OnConflict(
+//			sql.ResolveWithNewValues(),
+//		).
+//		Exec(ctx)
+func (u *MilestoneUpsertOne) UpdateNewValues() *MilestoneUpsertOne {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWithNewValues())
+	return u
+}
+
+// Ignore sets each column to itself in case of conflict.
+// Using this option is equivalent to using:
+//
+//	client.Milestone.Create().
+//	    OnConflict(sql.ResolveWithIgnore()).
+//	    Exec(ctx)
+func (u *MilestoneUpsertOne) Ignore() *MilestoneUpsertOne {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWithIgnore())
+	return u
+}
+
+// DoNothing configures the conflict_action to `DO NOTHING`.
+// Supported only by SQLite and PostgreSQL.
+func (u *MilestoneUpsertOne) DoNothing() *MilestoneUpsertOne {
+	u.create.conflict = append(u.create.conflict, sql.DoNothing())
+	return u
+}
+
+// Update allows overriding fields `UPDATE` values. See the MilestoneCreate.OnConflict
+// documentation for more info.
+func (u *MilestoneUpsertOne) Update(set func(*MilestoneUpsert)) *MilestoneUpsertOne {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWith(func(update *sql.UpdateSet) {
+		set(&MilestoneUpsert{UpdateSet: update})
+	}))
+	return u
+}
+
+// SetName sets the "name" field.
+func (u *MilestoneUpsertOne) SetName(v string) *MilestoneUpsertOne {
+	return u.Update(func(s *MilestoneUpsert) {
+		s.SetName(v)
+	})
+}
+
+// UpdateName sets the "name" field to the value that was provided on create.
+func (u *MilestoneUpsertOne) UpdateName() *MilestoneUpsertOne {
+	return u.Update(func(s *MilestoneUpsert) {
+		s.UpdateName()
+	})
+}
+
+// SetTargetCompletionTime sets the "target_completion_time" field.
+func (u *MilestoneUpsertOne) SetTargetCompletionTime(v time.Time) *MilestoneUpsertOne {
+	return u.Update(func(s *MilestoneUpsert) {
+		s.SetTargetCompletionTime(v)
+	})
+}
+
+// UpdateTargetCompletionTime sets the "target_completion_time" field to the value that was provided on create.
+func (u *MilestoneUpsertOne) UpdateTargetCompletionTime() *MilestoneUpsertOne {
+	return u.Update(func(s *MilestoneUpsert) {
+		s.UpdateTargetCompletionTime()
+	})
+}
+
+// Exec executes the query.
+func (u *MilestoneUpsertOne) Exec(ctx context.Context) error {
+	if len(u.create.conflict) == 0 {
+		return errors.New("ent: missing options for MilestoneCreate.OnConflict")
+	}
+	return u.create.Exec(ctx)
+}
+
+// ExecX is like Exec, but panics if an error occurs.
+func (u *MilestoneUpsertOne) ExecX(ctx context.Context) {
+	if err := u.create.Exec(ctx); err != nil {
+		panic(err)
+	}
+}
+
+// Exec executes the UPSERT query and returns the inserted/updated ID.
+func (u *MilestoneUpsertOne) ID(ctx context.Context) (id int, err error) {
+	node, err := u.create.Save(ctx)
+	if err != nil {
+		return id, err
+	}
+	return node.ID, nil
+}
+
+// IDX is like ID, but panics if an error occurs.
+func (u *MilestoneUpsertOne) IDX(ctx context.Context) int {
+	id, err := u.ID(ctx)
+	if err != nil {
+		panic(err)
+	}
+	return id
+}
+
 // MilestoneCreateBulk is the builder for creating many Milestone entities in bulk.
 type MilestoneCreateBulk struct {
 	config
 	builders []*MilestoneCreate
+	conflict []sql.ConflictOption
 }
 
 // Save creates the Milestone entities in the database.
@@ -175,6 +353,7 @@ func (mcb *MilestoneCreateBulk) Save(ctx context.Context) ([]*Milestone, error) 
 					_, err = mutators[i+1].Mutate(root, mcb.builders[i+1].mutation)
 				} else {
 					spec := &sqlgraph.BatchCreateSpec{Nodes: specs}
+					spec.OnConflict = mcb.conflict
 					// Invoke the actual operation on the latest mutation in the chain.
 					if err = sqlgraph.BatchCreate(ctx, mcb.driver, spec); err != nil {
 						if sqlgraph.IsConstraintError(err) {
@@ -225,6 +404,135 @@ func (mcb *MilestoneCreateBulk) Exec(ctx context.Context) error {
 // ExecX is like Exec, but panics if an error occurs.
 func (mcb *MilestoneCreateBulk) ExecX(ctx context.Context) {
 	if err := mcb.Exec(ctx); err != nil {
+		panic(err)
+	}
+}
+
+// OnConflict allows configuring the `ON CONFLICT` / `ON DUPLICATE KEY` clause
+// of the `INSERT` statement. For example:
+//
+//	client.Milestone.CreateBulk(builders...).
+//		OnConflict(
+//			// Update the row with the new values
+//			// the was proposed for insertion.
+//			sql.ResolveWithNewValues(),
+//		).
+//		// Override some of the fields with custom
+//		// update values.
+//		Update(func(u *ent.MilestoneUpsert) {
+//			SetName(v+v).
+//		}).
+//		Exec(ctx)
+func (mcb *MilestoneCreateBulk) OnConflict(opts ...sql.ConflictOption) *MilestoneUpsertBulk {
+	mcb.conflict = opts
+	return &MilestoneUpsertBulk{
+		create: mcb,
+	}
+}
+
+// OnConflictColumns calls `OnConflict` and configures the columns
+// as conflict target. Using this option is equivalent to using:
+//
+//	client.Milestone.Create().
+//		OnConflict(sql.ConflictColumns(columns...)).
+//		Exec(ctx)
+func (mcb *MilestoneCreateBulk) OnConflictColumns(columns ...string) *MilestoneUpsertBulk {
+	mcb.conflict = append(mcb.conflict, sql.ConflictColumns(columns...))
+	return &MilestoneUpsertBulk{
+		create: mcb,
+	}
+}
+
+// MilestoneUpsertBulk is the builder for "upsert"-ing
+// a bulk of Milestone nodes.
+type MilestoneUpsertBulk struct {
+	create *MilestoneCreateBulk
+}
+
+// UpdateNewValues updates the mutable fields using the new values that
+// were set on create. Using this option is equivalent to using:
+//
+//	client.Milestone.Create().
+//		OnConflict(
+//			sql.ResolveWithNewValues(),
+//		).
+//		Exec(ctx)
+func (u *MilestoneUpsertBulk) UpdateNewValues() *MilestoneUpsertBulk {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWithNewValues())
+	return u
+}
+
+// Ignore sets each column to itself in case of conflict.
+// Using this option is equivalent to using:
+//
+//	client.Milestone.Create().
+//		OnConflict(sql.ResolveWithIgnore()).
+//		Exec(ctx)
+func (u *MilestoneUpsertBulk) Ignore() *MilestoneUpsertBulk {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWithIgnore())
+	return u
+}
+
+// DoNothing configures the conflict_action to `DO NOTHING`.
+// Supported only by SQLite and PostgreSQL.
+func (u *MilestoneUpsertBulk) DoNothing() *MilestoneUpsertBulk {
+	u.create.conflict = append(u.create.conflict, sql.DoNothing())
+	return u
+}
+
+// Update allows overriding fields `UPDATE` values. See the MilestoneCreateBulk.OnConflict
+// documentation for more info.
+func (u *MilestoneUpsertBulk) Update(set func(*MilestoneUpsert)) *MilestoneUpsertBulk {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWith(func(update *sql.UpdateSet) {
+		set(&MilestoneUpsert{UpdateSet: update})
+	}))
+	return u
+}
+
+// SetName sets the "name" field.
+func (u *MilestoneUpsertBulk) SetName(v string) *MilestoneUpsertBulk {
+	return u.Update(func(s *MilestoneUpsert) {
+		s.SetName(v)
+	})
+}
+
+// UpdateName sets the "name" field to the value that was provided on create.
+func (u *MilestoneUpsertBulk) UpdateName() *MilestoneUpsertBulk {
+	return u.Update(func(s *MilestoneUpsert) {
+		s.UpdateName()
+	})
+}
+
+// SetTargetCompletionTime sets the "target_completion_time" field.
+func (u *MilestoneUpsertBulk) SetTargetCompletionTime(v time.Time) *MilestoneUpsertBulk {
+	return u.Update(func(s *MilestoneUpsert) {
+		s.SetTargetCompletionTime(v)
+	})
+}
+
+// UpdateTargetCompletionTime sets the "target_completion_time" field to the value that was provided on create.
+func (u *MilestoneUpsertBulk) UpdateTargetCompletionTime() *MilestoneUpsertBulk {
+	return u.Update(func(s *MilestoneUpsert) {
+		s.UpdateTargetCompletionTime()
+	})
+}
+
+// Exec executes the query.
+func (u *MilestoneUpsertBulk) Exec(ctx context.Context) error {
+	for i, b := range u.create.builders {
+		if len(b.conflict) != 0 {
+			return fmt.Errorf("ent: OnConflict was set for builder %d. Set it on the MilestoneCreateBulk instead", i)
+		}
+	}
+	if len(u.create.conflict) == 0 {
+		return errors.New("ent: missing options for MilestoneCreateBulk.OnConflict")
+	}
+	return u.create.Exec(ctx)
+}
+
+// ExecX is like Exec, but panics if an error occurs.
+func (u *MilestoneUpsertBulk) ExecX(ctx context.Context) {
+	if err := u.create.Exec(ctx); err != nil {
 		panic(err)
 	}
 }

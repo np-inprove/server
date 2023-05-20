@@ -11,8 +11,8 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
-	"github.com/np-inprove/server/internal/ent/academicschool"
 	"github.com/np-inprove/server/internal/ent/accessory"
+	"github.com/np-inprove/server/internal/ent/department"
 	"github.com/np-inprove/server/internal/ent/institution"
 	"github.com/np-inprove/server/internal/ent/predicate"
 	"github.com/np-inprove/server/internal/ent/user"
@@ -22,14 +22,14 @@ import (
 // InstitutionQuery is the builder for querying Institution entities.
 type InstitutionQuery struct {
 	config
-	ctx                 *QueryContext
-	order               []institution.OrderOption
-	inters              []Interceptor
-	predicates          []predicate.Institution
-	withAdmins          *UserQuery
-	withVouchers        *VoucherQuery
-	withAccessories     *AccessoryQuery
-	withAcademicSchools *AcademicSchoolQuery
+	ctx             *QueryContext
+	order           []institution.OrderOption
+	inters          []Interceptor
+	predicates      []predicate.Institution
+	withAdmins      *UserQuery
+	withVouchers    *VoucherQuery
+	withAccessories *AccessoryQuery
+	withDepartments *DepartmentQuery
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -132,9 +132,9 @@ func (iq *InstitutionQuery) QueryAccessories() *AccessoryQuery {
 	return query
 }
 
-// QueryAcademicSchools chains the current query on the "academic_schools" edge.
-func (iq *InstitutionQuery) QueryAcademicSchools() *AcademicSchoolQuery {
-	query := (&AcademicSchoolClient{config: iq.config}).Query()
+// QueryDepartments chains the current query on the "departments" edge.
+func (iq *InstitutionQuery) QueryDepartments() *DepartmentQuery {
+	query := (&DepartmentClient{config: iq.config}).Query()
 	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
 		if err := iq.prepareQuery(ctx); err != nil {
 			return nil, err
@@ -145,8 +145,8 @@ func (iq *InstitutionQuery) QueryAcademicSchools() *AcademicSchoolQuery {
 		}
 		step := sqlgraph.NewStep(
 			sqlgraph.From(institution.Table, institution.FieldID, selector),
-			sqlgraph.To(academicschool.Table, academicschool.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, institution.AcademicSchoolsTable, institution.AcademicSchoolsColumn),
+			sqlgraph.To(department.Table, department.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, institution.DepartmentsTable, institution.DepartmentsColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(iq.driver.Dialect(), step)
 		return fromU, nil
@@ -341,15 +341,15 @@ func (iq *InstitutionQuery) Clone() *InstitutionQuery {
 		return nil
 	}
 	return &InstitutionQuery{
-		config:              iq.config,
-		ctx:                 iq.ctx.Clone(),
-		order:               append([]institution.OrderOption{}, iq.order...),
-		inters:              append([]Interceptor{}, iq.inters...),
-		predicates:          append([]predicate.Institution{}, iq.predicates...),
-		withAdmins:          iq.withAdmins.Clone(),
-		withVouchers:        iq.withVouchers.Clone(),
-		withAccessories:     iq.withAccessories.Clone(),
-		withAcademicSchools: iq.withAcademicSchools.Clone(),
+		config:          iq.config,
+		ctx:             iq.ctx.Clone(),
+		order:           append([]institution.OrderOption{}, iq.order...),
+		inters:          append([]Interceptor{}, iq.inters...),
+		predicates:      append([]predicate.Institution{}, iq.predicates...),
+		withAdmins:      iq.withAdmins.Clone(),
+		withVouchers:    iq.withVouchers.Clone(),
+		withAccessories: iq.withAccessories.Clone(),
+		withDepartments: iq.withDepartments.Clone(),
 		// clone intermediate query.
 		sql:  iq.sql.Clone(),
 		path: iq.path,
@@ -389,14 +389,14 @@ func (iq *InstitutionQuery) WithAccessories(opts ...func(*AccessoryQuery)) *Inst
 	return iq
 }
 
-// WithAcademicSchools tells the query-builder to eager-load the nodes that are connected to
-// the "academic_schools" edge. The optional arguments are used to configure the query builder of the edge.
-func (iq *InstitutionQuery) WithAcademicSchools(opts ...func(*AcademicSchoolQuery)) *InstitutionQuery {
-	query := (&AcademicSchoolClient{config: iq.config}).Query()
+// WithDepartments tells the query-builder to eager-load the nodes that are connected to
+// the "departments" edge. The optional arguments are used to configure the query builder of the edge.
+func (iq *InstitutionQuery) WithDepartments(opts ...func(*DepartmentQuery)) *InstitutionQuery {
+	query := (&DepartmentClient{config: iq.config}).Query()
 	for _, opt := range opts {
 		opt(query)
 	}
-	iq.withAcademicSchools = query
+	iq.withDepartments = query
 	return iq
 }
 
@@ -482,7 +482,7 @@ func (iq *InstitutionQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*
 			iq.withAdmins != nil,
 			iq.withVouchers != nil,
 			iq.withAccessories != nil,
-			iq.withAcademicSchools != nil,
+			iq.withDepartments != nil,
 		}
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
@@ -524,10 +524,10 @@ func (iq *InstitutionQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*
 			return nil, err
 		}
 	}
-	if query := iq.withAcademicSchools; query != nil {
-		if err := iq.loadAcademicSchools(ctx, query, nodes,
-			func(n *Institution) { n.Edges.AcademicSchools = []*AcademicSchool{} },
-			func(n *Institution, e *AcademicSchool) { n.Edges.AcademicSchools = append(n.Edges.AcademicSchools, e) }); err != nil {
+	if query := iq.withDepartments; query != nil {
+		if err := iq.loadDepartments(ctx, query, nodes,
+			func(n *Institution) { n.Edges.Departments = []*Department{} },
+			func(n *Institution, e *Department) { n.Edges.Departments = append(n.Edges.Departments, e) }); err != nil {
 			return nil, err
 		}
 	}
@@ -657,7 +657,7 @@ func (iq *InstitutionQuery) loadAccessories(ctx context.Context, query *Accessor
 	}
 	return nil
 }
-func (iq *InstitutionQuery) loadAcademicSchools(ctx context.Context, query *AcademicSchoolQuery, nodes []*Institution, init func(*Institution), assign func(*Institution, *AcademicSchool)) error {
+func (iq *InstitutionQuery) loadDepartments(ctx context.Context, query *DepartmentQuery, nodes []*Institution, init func(*Institution), assign func(*Institution, *Department)) error {
 	fks := make([]driver.Value, 0, len(nodes))
 	nodeids := make(map[int]*Institution)
 	for i := range nodes {
@@ -668,21 +668,21 @@ func (iq *InstitutionQuery) loadAcademicSchools(ctx context.Context, query *Acad
 		}
 	}
 	query.withFKs = true
-	query.Where(predicate.AcademicSchool(func(s *sql.Selector) {
-		s.Where(sql.InValues(s.C(institution.AcademicSchoolsColumn), fks...))
+	query.Where(predicate.Department(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(institution.DepartmentsColumn), fks...))
 	}))
 	neighbors, err := query.All(ctx)
 	if err != nil {
 		return err
 	}
 	for _, n := range neighbors {
-		fk := n.institution_academic_schools
+		fk := n.institution_departments
 		if fk == nil {
-			return fmt.Errorf(`foreign-key "institution_academic_schools" is nil for node %v`, n.ID)
+			return fmt.Errorf(`foreign-key "institution_departments" is nil for node %v`, n.ID)
 		}
 		node, ok := nodeids[*fk]
 		if !ok {
-			return fmt.Errorf(`unexpected referenced foreign-key "institution_academic_schools" returned %v for node %v`, *fk, n.ID)
+			return fmt.Errorf(`unexpected referenced foreign-key "institution_departments" returned %v for node %v`, *fk, n.ID)
 		}
 		assign(node, n)
 	}

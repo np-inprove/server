@@ -15,11 +15,13 @@ type PrizeMixin struct {
 // Fields of the PrizeMixin.
 func (PrizeMixin) Fields() []ent.Field {
 	return []ent.Field{
-		field.String("name").NotEmpty().
+		field.String("name").
+			NotEmpty().
 			Comment("Name of the prize"),
 		field.String("description").
 			Comment("Description of the prize"),
-		field.Int("points_required").Positive().
+		field.Int("points_required").
+			Min(0).
 			Comment("Points required to redeem the prize"),
 	}
 }

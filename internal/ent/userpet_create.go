@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 
+	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/np-inprove/server/internal/ent/pet"
@@ -19,6 +20,7 @@ type UserPetCreate struct {
 	config
 	mutation *UserPetMutation
 	hooks    []Hook
+	conflict []sql.ConflictOption
 }
 
 // SetHungerPercentage sets the "hunger_percentage" field.
@@ -143,6 +145,7 @@ func (upc *UserPetCreate) createSpec() (*UserPet, *sqlgraph.CreateSpec) {
 		_node = &UserPet{config: upc.config}
 		_spec = sqlgraph.NewCreateSpec(userpet.Table, nil)
 	)
+	_spec.OnConflict = upc.conflict
 	if value, ok := upc.mutation.HungerPercentage(); ok {
 		_spec.SetField(userpet.FieldHungerPercentage, field.TypeFloat64, value)
 		_node.HungerPercentage = value
@@ -188,10 +191,232 @@ func (upc *UserPetCreate) createSpec() (*UserPet, *sqlgraph.CreateSpec) {
 	return _node, _spec
 }
 
+// OnConflict allows configuring the `ON CONFLICT` / `ON DUPLICATE KEY` clause
+// of the `INSERT` statement. For example:
+//
+//	client.UserPet.Create().
+//		SetHungerPercentage(v).
+//		OnConflict(
+//			// Update the row with the new values
+//			// the was proposed for insertion.
+//			sql.ResolveWithNewValues(),
+//		).
+//		// Override some of the fields with custom
+//		// update values.
+//		Update(func(u *ent.UserPetUpsert) {
+//			SetHungerPercentage(v+v).
+//		}).
+//		Exec(ctx)
+func (upc *UserPetCreate) OnConflict(opts ...sql.ConflictOption) *UserPetUpsertOne {
+	upc.conflict = opts
+	return &UserPetUpsertOne{
+		create: upc,
+	}
+}
+
+// OnConflictColumns calls `OnConflict` and configures the columns
+// as conflict target. Using this option is equivalent to using:
+//
+//	client.UserPet.Create().
+//		OnConflict(sql.ConflictColumns(columns...)).
+//		Exec(ctx)
+func (upc *UserPetCreate) OnConflictColumns(columns ...string) *UserPetUpsertOne {
+	upc.conflict = append(upc.conflict, sql.ConflictColumns(columns...))
+	return &UserPetUpsertOne{
+		create: upc,
+	}
+}
+
+type (
+	// UserPetUpsertOne is the builder for "upsert"-ing
+	//  one UserPet node.
+	UserPetUpsertOne struct {
+		create *UserPetCreate
+	}
+
+	// UserPetUpsert is the "OnConflict" setter.
+	UserPetUpsert struct {
+		*sql.UpdateSet
+	}
+)
+
+// SetHungerPercentage sets the "hunger_percentage" field.
+func (u *UserPetUpsert) SetHungerPercentage(v float64) *UserPetUpsert {
+	u.Set(userpet.FieldHungerPercentage, v)
+	return u
+}
+
+// UpdateHungerPercentage sets the "hunger_percentage" field to the value that was provided on create.
+func (u *UserPetUpsert) UpdateHungerPercentage() *UserPetUpsert {
+	u.SetExcluded(userpet.FieldHungerPercentage)
+	return u
+}
+
+// AddHungerPercentage adds v to the "hunger_percentage" field.
+func (u *UserPetUpsert) AddHungerPercentage(v float64) *UserPetUpsert {
+	u.Add(userpet.FieldHungerPercentage, v)
+	return u
+}
+
+// SetEnabledSvgGroupElementIds sets the "enabled_svg_group_element_ids" field.
+func (u *UserPetUpsert) SetEnabledSvgGroupElementIds(v map[string]bool) *UserPetUpsert {
+	u.Set(userpet.FieldEnabledSvgGroupElementIds, v)
+	return u
+}
+
+// UpdateEnabledSvgGroupElementIds sets the "enabled_svg_group_element_ids" field to the value that was provided on create.
+func (u *UserPetUpsert) UpdateEnabledSvgGroupElementIds() *UserPetUpsert {
+	u.SetExcluded(userpet.FieldEnabledSvgGroupElementIds)
+	return u
+}
+
+// SetPetID sets the "pet_id" field.
+func (u *UserPetUpsert) SetPetID(v int) *UserPetUpsert {
+	u.Set(userpet.FieldPetID, v)
+	return u
+}
+
+// UpdatePetID sets the "pet_id" field to the value that was provided on create.
+func (u *UserPetUpsert) UpdatePetID() *UserPetUpsert {
+	u.SetExcluded(userpet.FieldPetID)
+	return u
+}
+
+// SetUserID sets the "user_id" field.
+func (u *UserPetUpsert) SetUserID(v int) *UserPetUpsert {
+	u.Set(userpet.FieldUserID, v)
+	return u
+}
+
+// UpdateUserID sets the "user_id" field to the value that was provided on create.
+func (u *UserPetUpsert) UpdateUserID() *UserPetUpsert {
+	u.SetExcluded(userpet.FieldUserID)
+	return u
+}
+
+// UpdateNewValues updates the mutable fields using the new values that were set on create.
+// Using this option is equivalent to using:
+//
+//	client.UserPet.Create().
+//		OnConflict(
+//			sql.ResolveWithNewValues(),
+//		).
+//		Exec(ctx)
+func (u *UserPetUpsertOne) UpdateNewValues() *UserPetUpsertOne {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWithNewValues())
+	return u
+}
+
+// Ignore sets each column to itself in case of conflict.
+// Using this option is equivalent to using:
+//
+//	client.UserPet.Create().
+//	    OnConflict(sql.ResolveWithIgnore()).
+//	    Exec(ctx)
+func (u *UserPetUpsertOne) Ignore() *UserPetUpsertOne {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWithIgnore())
+	return u
+}
+
+// DoNothing configures the conflict_action to `DO NOTHING`.
+// Supported only by SQLite and PostgreSQL.
+func (u *UserPetUpsertOne) DoNothing() *UserPetUpsertOne {
+	u.create.conflict = append(u.create.conflict, sql.DoNothing())
+	return u
+}
+
+// Update allows overriding fields `UPDATE` values. See the UserPetCreate.OnConflict
+// documentation for more info.
+func (u *UserPetUpsertOne) Update(set func(*UserPetUpsert)) *UserPetUpsertOne {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWith(func(update *sql.UpdateSet) {
+		set(&UserPetUpsert{UpdateSet: update})
+	}))
+	return u
+}
+
+// SetHungerPercentage sets the "hunger_percentage" field.
+func (u *UserPetUpsertOne) SetHungerPercentage(v float64) *UserPetUpsertOne {
+	return u.Update(func(s *UserPetUpsert) {
+		s.SetHungerPercentage(v)
+	})
+}
+
+// AddHungerPercentage adds v to the "hunger_percentage" field.
+func (u *UserPetUpsertOne) AddHungerPercentage(v float64) *UserPetUpsertOne {
+	return u.Update(func(s *UserPetUpsert) {
+		s.AddHungerPercentage(v)
+	})
+}
+
+// UpdateHungerPercentage sets the "hunger_percentage" field to the value that was provided on create.
+func (u *UserPetUpsertOne) UpdateHungerPercentage() *UserPetUpsertOne {
+	return u.Update(func(s *UserPetUpsert) {
+		s.UpdateHungerPercentage()
+	})
+}
+
+// SetEnabledSvgGroupElementIds sets the "enabled_svg_group_element_ids" field.
+func (u *UserPetUpsertOne) SetEnabledSvgGroupElementIds(v map[string]bool) *UserPetUpsertOne {
+	return u.Update(func(s *UserPetUpsert) {
+		s.SetEnabledSvgGroupElementIds(v)
+	})
+}
+
+// UpdateEnabledSvgGroupElementIds sets the "enabled_svg_group_element_ids" field to the value that was provided on create.
+func (u *UserPetUpsertOne) UpdateEnabledSvgGroupElementIds() *UserPetUpsertOne {
+	return u.Update(func(s *UserPetUpsert) {
+		s.UpdateEnabledSvgGroupElementIds()
+	})
+}
+
+// SetPetID sets the "pet_id" field.
+func (u *UserPetUpsertOne) SetPetID(v int) *UserPetUpsertOne {
+	return u.Update(func(s *UserPetUpsert) {
+		s.SetPetID(v)
+	})
+}
+
+// UpdatePetID sets the "pet_id" field to the value that was provided on create.
+func (u *UserPetUpsertOne) UpdatePetID() *UserPetUpsertOne {
+	return u.Update(func(s *UserPetUpsert) {
+		s.UpdatePetID()
+	})
+}
+
+// SetUserID sets the "user_id" field.
+func (u *UserPetUpsertOne) SetUserID(v int) *UserPetUpsertOne {
+	return u.Update(func(s *UserPetUpsert) {
+		s.SetUserID(v)
+	})
+}
+
+// UpdateUserID sets the "user_id" field to the value that was provided on create.
+func (u *UserPetUpsertOne) UpdateUserID() *UserPetUpsertOne {
+	return u.Update(func(s *UserPetUpsert) {
+		s.UpdateUserID()
+	})
+}
+
+// Exec executes the query.
+func (u *UserPetUpsertOne) Exec(ctx context.Context) error {
+	if len(u.create.conflict) == 0 {
+		return errors.New("ent: missing options for UserPetCreate.OnConflict")
+	}
+	return u.create.Exec(ctx)
+}
+
+// ExecX is like Exec, but panics if an error occurs.
+func (u *UserPetUpsertOne) ExecX(ctx context.Context) {
+	if err := u.create.Exec(ctx); err != nil {
+		panic(err)
+	}
+}
+
 // UserPetCreateBulk is the builder for creating many UserPet entities in bulk.
 type UserPetCreateBulk struct {
 	config
 	builders []*UserPetCreate
+	conflict []sql.ConflictOption
 }
 
 // Save creates the UserPet entities in the database.
@@ -218,6 +443,7 @@ func (upcb *UserPetCreateBulk) Save(ctx context.Context) ([]*UserPet, error) {
 					_, err = mutators[i+1].Mutate(root, upcb.builders[i+1].mutation)
 				} else {
 					spec := &sqlgraph.BatchCreateSpec{Nodes: specs}
+					spec.OnConflict = upcb.conflict
 					// Invoke the actual operation on the latest mutation in the chain.
 					if err = sqlgraph.BatchCreate(ctx, upcb.driver, spec); err != nil {
 						if sqlgraph.IsConstraintError(err) {
@@ -263,6 +489,170 @@ func (upcb *UserPetCreateBulk) Exec(ctx context.Context) error {
 // ExecX is like Exec, but panics if an error occurs.
 func (upcb *UserPetCreateBulk) ExecX(ctx context.Context) {
 	if err := upcb.Exec(ctx); err != nil {
+		panic(err)
+	}
+}
+
+// OnConflict allows configuring the `ON CONFLICT` / `ON DUPLICATE KEY` clause
+// of the `INSERT` statement. For example:
+//
+//	client.UserPet.CreateBulk(builders...).
+//		OnConflict(
+//			// Update the row with the new values
+//			// the was proposed for insertion.
+//			sql.ResolveWithNewValues(),
+//		).
+//		// Override some of the fields with custom
+//		// update values.
+//		Update(func(u *ent.UserPetUpsert) {
+//			SetHungerPercentage(v+v).
+//		}).
+//		Exec(ctx)
+func (upcb *UserPetCreateBulk) OnConflict(opts ...sql.ConflictOption) *UserPetUpsertBulk {
+	upcb.conflict = opts
+	return &UserPetUpsertBulk{
+		create: upcb,
+	}
+}
+
+// OnConflictColumns calls `OnConflict` and configures the columns
+// as conflict target. Using this option is equivalent to using:
+//
+//	client.UserPet.Create().
+//		OnConflict(sql.ConflictColumns(columns...)).
+//		Exec(ctx)
+func (upcb *UserPetCreateBulk) OnConflictColumns(columns ...string) *UserPetUpsertBulk {
+	upcb.conflict = append(upcb.conflict, sql.ConflictColumns(columns...))
+	return &UserPetUpsertBulk{
+		create: upcb,
+	}
+}
+
+// UserPetUpsertBulk is the builder for "upsert"-ing
+// a bulk of UserPet nodes.
+type UserPetUpsertBulk struct {
+	create *UserPetCreateBulk
+}
+
+// UpdateNewValues updates the mutable fields using the new values that
+// were set on create. Using this option is equivalent to using:
+//
+//	client.UserPet.Create().
+//		OnConflict(
+//			sql.ResolveWithNewValues(),
+//		).
+//		Exec(ctx)
+func (u *UserPetUpsertBulk) UpdateNewValues() *UserPetUpsertBulk {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWithNewValues())
+	return u
+}
+
+// Ignore sets each column to itself in case of conflict.
+// Using this option is equivalent to using:
+//
+//	client.UserPet.Create().
+//		OnConflict(sql.ResolveWithIgnore()).
+//		Exec(ctx)
+func (u *UserPetUpsertBulk) Ignore() *UserPetUpsertBulk {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWithIgnore())
+	return u
+}
+
+// DoNothing configures the conflict_action to `DO NOTHING`.
+// Supported only by SQLite and PostgreSQL.
+func (u *UserPetUpsertBulk) DoNothing() *UserPetUpsertBulk {
+	u.create.conflict = append(u.create.conflict, sql.DoNothing())
+	return u
+}
+
+// Update allows overriding fields `UPDATE` values. See the UserPetCreateBulk.OnConflict
+// documentation for more info.
+func (u *UserPetUpsertBulk) Update(set func(*UserPetUpsert)) *UserPetUpsertBulk {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWith(func(update *sql.UpdateSet) {
+		set(&UserPetUpsert{UpdateSet: update})
+	}))
+	return u
+}
+
+// SetHungerPercentage sets the "hunger_percentage" field.
+func (u *UserPetUpsertBulk) SetHungerPercentage(v float64) *UserPetUpsertBulk {
+	return u.Update(func(s *UserPetUpsert) {
+		s.SetHungerPercentage(v)
+	})
+}
+
+// AddHungerPercentage adds v to the "hunger_percentage" field.
+func (u *UserPetUpsertBulk) AddHungerPercentage(v float64) *UserPetUpsertBulk {
+	return u.Update(func(s *UserPetUpsert) {
+		s.AddHungerPercentage(v)
+	})
+}
+
+// UpdateHungerPercentage sets the "hunger_percentage" field to the value that was provided on create.
+func (u *UserPetUpsertBulk) UpdateHungerPercentage() *UserPetUpsertBulk {
+	return u.Update(func(s *UserPetUpsert) {
+		s.UpdateHungerPercentage()
+	})
+}
+
+// SetEnabledSvgGroupElementIds sets the "enabled_svg_group_element_ids" field.
+func (u *UserPetUpsertBulk) SetEnabledSvgGroupElementIds(v map[string]bool) *UserPetUpsertBulk {
+	return u.Update(func(s *UserPetUpsert) {
+		s.SetEnabledSvgGroupElementIds(v)
+	})
+}
+
+// UpdateEnabledSvgGroupElementIds sets the "enabled_svg_group_element_ids" field to the value that was provided on create.
+func (u *UserPetUpsertBulk) UpdateEnabledSvgGroupElementIds() *UserPetUpsertBulk {
+	return u.Update(func(s *UserPetUpsert) {
+		s.UpdateEnabledSvgGroupElementIds()
+	})
+}
+
+// SetPetID sets the "pet_id" field.
+func (u *UserPetUpsertBulk) SetPetID(v int) *UserPetUpsertBulk {
+	return u.Update(func(s *UserPetUpsert) {
+		s.SetPetID(v)
+	})
+}
+
+// UpdatePetID sets the "pet_id" field to the value that was provided on create.
+func (u *UserPetUpsertBulk) UpdatePetID() *UserPetUpsertBulk {
+	return u.Update(func(s *UserPetUpsert) {
+		s.UpdatePetID()
+	})
+}
+
+// SetUserID sets the "user_id" field.
+func (u *UserPetUpsertBulk) SetUserID(v int) *UserPetUpsertBulk {
+	return u.Update(func(s *UserPetUpsert) {
+		s.SetUserID(v)
+	})
+}
+
+// UpdateUserID sets the "user_id" field to the value that was provided on create.
+func (u *UserPetUpsertBulk) UpdateUserID() *UserPetUpsertBulk {
+	return u.Update(func(s *UserPetUpsert) {
+		s.UpdateUserID()
+	})
+}
+
+// Exec executes the query.
+func (u *UserPetUpsertBulk) Exec(ctx context.Context) error {
+	for i, b := range u.create.builders {
+		if len(b.conflict) != 0 {
+			return fmt.Errorf("ent: OnConflict was set for builder %d. Set it on the UserPetCreateBulk instead", i)
+		}
+	}
+	if len(u.create.conflict) == 0 {
+		return errors.New("ent: missing options for UserPetCreateBulk.OnConflict")
+	}
+	return u.create.Exec(ctx)
+}
+
+// ExecX is like Exec, but panics if an error occurs.
+func (u *UserPetUpsertBulk) ExecX(ctx context.Context) {
+	if err := u.create.Exec(ctx); err != nil {
 		panic(err)
 	}
 }

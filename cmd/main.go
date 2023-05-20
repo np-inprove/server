@@ -10,11 +10,11 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/np-inprove/server/internal/auth"
 	"github.com/np-inprove/server/internal/config"
 	"github.com/np-inprove/server/internal/ent"
 	"github.com/np-inprove/server/internal/logger"
-
-	"github.com/np-inprove/server/internal/auth"
+	"github.com/np-inprove/server/internal/seed"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
@@ -46,7 +46,7 @@ func main() {
 	appLogger.Info("initializing server: hello, world!")
 	appLogger.Info("opening connection",
 		logger.String("area", "database"),
-		logger.String("driverName", cfg.DatabaseDriverName()),
+		logger.String("driver_name", cfg.DatabaseDriverName()),
 	)
 
 	client, err := ent.Open(cfg.DatabaseDriverName(), cfg.DatabaseDataSourceName())
@@ -59,7 +59,7 @@ func main() {
 
 	appLogger.Info("successfully opened connection",
 		logger.String("area", "database"),
-		logger.String("driverName", cfg.DatabaseDriverName()),
+		logger.String("driver_name", cfg.DatabaseDriverName()),
 	)
 
 	defer func(client *ent.Client) {
@@ -69,7 +69,7 @@ func main() {
 	if cfg.DatabaseAutoMigration() {
 		appLogger.Info("running auto migration",
 			logger.String("area", "database"),
-			logger.String("driverName", cfg.DatabaseDriverName()),
+			logger.String("driver_name", cfg.DatabaseDriverName()),
 		)
 
 		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
@@ -79,13 +79,13 @@ func main() {
 			appLogger.Fatal("failed creating schema resources",
 				logger.String("err", err.Error()),
 				logger.String("area", "database"),
-				logger.String("driverName", cfg.DatabaseDriverName()),
+				logger.String("driver_name", cfg.DatabaseDriverName()),
 			)
 		}
 
 		appLogger.Info("completed auto migration",
 			logger.String("area", "database"),
-			logger.String("driverName", cfg.DatabaseDriverName()),
+			logger.String("driver_name", cfg.DatabaseDriverName()),
 		)
 	}
 
@@ -97,6 +97,27 @@ func main() {
 	publicKey, err := privateKey.PublicKey()
 	if err != nil {
 		appLogger.Warn("failed to get jwk public key, if the jwt algorithm requires a public key, it will not work", logger.String("err", err.Error()))
+	}
+
+	ar := auth.NewEntRepository(client)
+	auc, err := auth.NewUseCase(ar, cfg, publicKey, privateKey)
+	if err != nil {
+		appLogger.Fatal("failed to initialize auth use case",
+			logger.String("err", err.Error()),
+		)
+	}
+
+	appLogger.Info("seeding database",
+		logger.String("area", "database"),
+		logger.String("driver_name", cfg.DatabaseDriverName()),
+	)
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	err = seed.Exec(ctx, appLogger, cfg, client)
+	if err != nil {
+		appLogger.Fatal("failed to seed data", logger.String("err", err.Error()))
 	}
 
 	appLogger.Info("creating http server",
@@ -122,13 +143,6 @@ func main() {
 	r.Use(middleware.URLFormat)
 	r.Use(loggerMiddleware.Request)
 
-	ar := auth.NewEntRepository(client)
-	auc, err := auth.NewUseCase(ar, cfg, publicKey, privateKey)
-	if err != nil {
-		appLogger.Fatal("failed to initialize auth use case",
-			logger.String("err", err.Error()),
-		)
-	}
 	authHandler := auth.NewHTTPHandler(auc, cfg, tokenAuth)
 
 	r.Get("/healthz", func(w http.ResponseWriter, r *http.Request) {

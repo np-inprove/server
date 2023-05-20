@@ -12,10 +12,9 @@ import (
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
-	"github.com/np-inprove/server/internal/ent/academicschool"
 	"github.com/np-inprove/server/internal/ent/accessory"
-	"github.com/np-inprove/server/internal/ent/course"
 	"github.com/np-inprove/server/internal/ent/deadline"
+	"github.com/np-inprove/server/internal/ent/department"
 	"github.com/np-inprove/server/internal/ent/event"
 	"github.com/np-inprove/server/internal/ent/forumpost"
 	"github.com/np-inprove/server/internal/ent/group"
@@ -90,24 +89,23 @@ var (
 func checkColumn(table, column string) error {
 	initCheck.Do(func() {
 		columnCheck = sql.NewColumnCheck(map[string]func(string) bool{
-			academicschool.Table: academicschool.ValidColumn,
-			accessory.Table:      accessory.ValidColumn,
-			course.Table:         course.ValidColumn,
-			deadline.Table:       deadline.ValidColumn,
-			event.Table:          event.ValidColumn,
-			forumpost.Table:      forumpost.ValidColumn,
-			group.Table:          group.ValidColumn,
-			groupuser.Table:      groupuser.ValidColumn,
-			institution.Table:    institution.ValidColumn,
-			jwtrevocation.Table:  jwtrevocation.ValidColumn,
-			milestone.Table:      milestone.ValidColumn,
-			pet.Table:            pet.ValidColumn,
-			reaction.Table:       reaction.ValidColumn,
-			redemption.Table:     redemption.ValidColumn,
-			studyplan.Table:      studyplan.ValidColumn,
-			user.Table:           user.ValidColumn,
-			userpet.Table:        userpet.ValidColumn,
-			voucher.Table:        voucher.ValidColumn,
+			accessory.Table:     accessory.ValidColumn,
+			deadline.Table:      deadline.ValidColumn,
+			department.Table:    department.ValidColumn,
+			event.Table:         event.ValidColumn,
+			forumpost.Table:     forumpost.ValidColumn,
+			group.Table:         group.ValidColumn,
+			groupuser.Table:     groupuser.ValidColumn,
+			institution.Table:   institution.ValidColumn,
+			jwtrevocation.Table: jwtrevocation.ValidColumn,
+			milestone.Table:     milestone.ValidColumn,
+			pet.Table:           pet.ValidColumn,
+			reaction.Table:      reaction.ValidColumn,
+			redemption.Table:    redemption.ValidColumn,
+			studyplan.Table:     studyplan.ValidColumn,
+			user.Table:          user.ValidColumn,
+			userpet.Table:       userpet.ValidColumn,
+			voucher.Table:       voucher.ValidColumn,
 		})
 	})
 	return columnCheck(table, column)

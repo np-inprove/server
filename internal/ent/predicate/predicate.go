@@ -6,17 +6,14 @@ import (
 	"entgo.io/ent/dialect/sql"
 )
 
-// AcademicSchool is the predicate function for academicschool builders.
-type AcademicSchool func(*sql.Selector)
-
 // Accessory is the predicate function for accessory builders.
 type Accessory func(*sql.Selector)
 
-// Course is the predicate function for course builders.
-type Course func(*sql.Selector)
-
 // Deadline is the predicate function for deadline builders.
 type Deadline func(*sql.Selector)
+
+// Department is the predicate function for department builders.
+type Department func(*sql.Selector)
 
 // Event is the predicate function for event builders.
 type Event func(*sql.Selector)

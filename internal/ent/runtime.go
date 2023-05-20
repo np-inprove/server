@@ -3,10 +3,9 @@
 package ent
 
 import (
-	"github.com/np-inprove/server/internal/ent/academicschool"
 	"github.com/np-inprove/server/internal/ent/accessory"
-	"github.com/np-inprove/server/internal/ent/course"
 	"github.com/np-inprove/server/internal/ent/deadline"
+	"github.com/np-inprove/server/internal/ent/department"
 	"github.com/np-inprove/server/internal/ent/event"
 	"github.com/np-inprove/server/internal/ent/forumpost"
 	"github.com/np-inprove/server/internal/ent/group"
@@ -25,16 +24,6 @@ import (
 // (default values, validators, hooks and policies) and stitches it
 // to their package variables.
 func init() {
-	academicschoolFields := schema.AcademicSchool{}.Fields()
-	_ = academicschoolFields
-	// academicschoolDescName is the schema descriptor for name field.
-	academicschoolDescName := academicschoolFields[0].Descriptor()
-	// academicschool.NameValidator is a validator for the "name" field. It is called by the builders before save.
-	academicschool.NameValidator = academicschoolDescName.Validators[0].(func(string) error)
-	// academicschoolDescSchoolCode is the schema descriptor for school_code field.
-	academicschoolDescSchoolCode := academicschoolFields[1].Descriptor()
-	// academicschool.SchoolCodeValidator is a validator for the "school_code" field. It is called by the builders before save.
-	academicschool.SchoolCodeValidator = academicschoolDescSchoolCode.Validators[0].(func(string) error)
 	accessoryMixin := schema.Accessory{}.Mixin()
 	accessoryMixinFields0 := accessoryMixin[0].Fields()
 	_ = accessoryMixinFields0
@@ -48,22 +37,22 @@ func init() {
 	accessoryDescPointsRequired := accessoryMixinFields0[2].Descriptor()
 	// accessory.PointsRequiredValidator is a validator for the "points_required" field. It is called by the builders before save.
 	accessory.PointsRequiredValidator = accessoryDescPointsRequired.Validators[0].(func(int) error)
-	courseFields := schema.Course{}.Fields()
-	_ = courseFields
-	// courseDescName is the schema descriptor for name field.
-	courseDescName := courseFields[0].Descriptor()
-	// course.NameValidator is a validator for the "name" field. It is called by the builders before save.
-	course.NameValidator = courseDescName.Validators[0].(func(string) error)
-	// courseDescCourseID is the schema descriptor for course_id field.
-	courseDescCourseID := courseFields[1].Descriptor()
-	// course.CourseIDValidator is a validator for the "course_id" field. It is called by the builders before save.
-	course.CourseIDValidator = courseDescCourseID.Validators[0].(func(string) error)
 	deadlineFields := schema.Deadline{}.Fields()
 	_ = deadlineFields
 	// deadlineDescName is the schema descriptor for name field.
 	deadlineDescName := deadlineFields[0].Descriptor()
 	// deadline.NameValidator is a validator for the "name" field. It is called by the builders before save.
 	deadline.NameValidator = deadlineDescName.Validators[0].(func(string) error)
+	departmentFields := schema.Department{}.Fields()
+	_ = departmentFields
+	// departmentDescName is the schema descriptor for name field.
+	departmentDescName := departmentFields[0].Descriptor()
+	// department.NameValidator is a validator for the "name" field. It is called by the builders before save.
+	department.NameValidator = departmentDescName.Validators[0].(func(string) error)
+	// departmentDescShortName is the schema descriptor for short_name field.
+	departmentDescShortName := departmentFields[1].Descriptor()
+	// department.ShortNameValidator is a validator for the "short_name" field. It is called by the builders before save.
+	department.ShortNameValidator = departmentDescShortName.Validators[0].(func(string) error)
 	eventFields := schema.Event{}.Fields()
 	_ = eventFields
 	// eventDescName is the schema descriptor for name field.
@@ -96,6 +85,10 @@ func init() {
 	institutionDescName := institutionFields[0].Descriptor()
 	// institution.NameValidator is a validator for the "name" field. It is called by the builders before save.
 	institution.NameValidator = institutionDescName.Validators[0].(func(string) error)
+	// institutionDescShortName is the schema descriptor for short_name field.
+	institutionDescShortName := institutionFields[1].Descriptor()
+	// institution.ShortNameValidator is a validator for the "short_name" field. It is called by the builders before save.
+	institution.ShortNameValidator = institutionDescShortName.Validators[0].(func(string) error)
 	jwtrevocationFields := schema.JWTRevocation{}.Fields()
 	_ = jwtrevocationFields
 	// jwtrevocationDescJti is the schema descriptor for jti field.
@@ -134,16 +127,16 @@ func init() {
 	userDescEmail := userFields[2].Descriptor()
 	// user.EmailValidator is a validator for the "email" field. It is called by the builders before save.
 	user.EmailValidator = userDescEmail.Validators[0].(func(string) error)
-	// userDescPasswordHash is the schema descriptor for password_hash field.
-	userDescPasswordHash := userFields[3].Descriptor()
-	// user.PasswordHashValidator is a validator for the "password_hash" field. It is called by the builders before save.
-	user.PasswordHashValidator = userDescPasswordHash.Validators[0].(func(string) error)
 	// userDescPoints is the schema descriptor for points field.
 	userDescPoints := userFields[4].Descriptor()
+	// user.DefaultPoints holds the default value on creation for the points field.
+	user.DefaultPoints = userDescPoints.Default.(int)
 	// user.PointsValidator is a validator for the "points" field. It is called by the builders before save.
 	user.PointsValidator = userDescPoints.Validators[0].(func(int) error)
 	// userDescPointsAwardedCount is the schema descriptor for points_awarded_count field.
 	userDescPointsAwardedCount := userFields[5].Descriptor()
+	// user.DefaultPointsAwardedCount holds the default value on creation for the points_awarded_count field.
+	user.DefaultPointsAwardedCount = userDescPointsAwardedCount.Default.(int)
 	// user.PointsAwardedCountValidator is a validator for the "points_awarded_count" field. It is called by the builders before save.
 	user.PointsAwardedCountValidator = userDescPointsAwardedCount.Validators[0].(func(int) error)
 	userpetFields := schema.UserPet{}.Fields()

@@ -12,14 +12,12 @@ import (
 // Tx is a transactional client that is created by calling Client.Tx().
 type Tx struct {
 	config
-	// AcademicSchool is the client for interacting with the AcademicSchool builders.
-	AcademicSchool *AcademicSchoolClient
 	// Accessory is the client for interacting with the Accessory builders.
 	Accessory *AccessoryClient
-	// Course is the client for interacting with the Course builders.
-	Course *CourseClient
 	// Deadline is the client for interacting with the Deadline builders.
 	Deadline *DeadlineClient
+	// Department is the client for interacting with the Department builders.
+	Department *DepartmentClient
 	// Event is the client for interacting with the Event builders.
 	Event *EventClient
 	// ForumPost is the client for interacting with the ForumPost builders.
@@ -179,10 +177,9 @@ func (tx *Tx) Client() *Client {
 }
 
 func (tx *Tx) init() {
-	tx.AcademicSchool = NewAcademicSchoolClient(tx.config)
 	tx.Accessory = NewAccessoryClient(tx.config)
-	tx.Course = NewCourseClient(tx.config)
 	tx.Deadline = NewDeadlineClient(tx.config)
+	tx.Department = NewDepartmentClient(tx.config)
 	tx.Event = NewEventClient(tx.config)
 	tx.ForumPost = NewForumPostClient(tx.config)
 	tx.Group = NewGroupClient(tx.config)
@@ -206,7 +203,7 @@ func (tx *Tx) init() {
 // of them in order to commit or rollback the transaction.
 //
 // If a closed transaction is embedded in one of the generated entities, and the entity
-// applies a query, for example: AcademicSchool.QueryXXX(), the query will be executed
+// applies a query, for example: Accessory.QueryXXX(), the query will be executed
 // through the driver which created this transaction.
 //
 // Note that txDriver is not goroutine safe.
