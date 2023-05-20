@@ -18,8 +18,8 @@ const (
 	FieldLastName = "last_name"
 	// FieldEmail holds the string denoting the email field in the database.
 	FieldEmail = "email"
-	// FieldPasswordHash holds the string denoting the password_hash field in the database.
-	FieldPasswordHash = "password_hash"
+	// FieldPassword holds the string denoting the password field in the database.
+	FieldPassword = "password"
 	// FieldPoints holds the string denoting the points field in the database.
 	FieldPoints = "points"
 	// FieldPointsAwardedCount holds the string denoting the points_awarded_count field in the database.
@@ -136,7 +136,7 @@ var Columns = []string{
 	FieldFirstName,
 	FieldLastName,
 	FieldEmail,
-	FieldPasswordHash,
+	FieldPassword,
 	FieldPoints,
 	FieldPointsAwardedCount,
 	FieldPointsAwardedResetTime,
@@ -189,8 +189,6 @@ var (
 	LastNameValidator func(string) error
 	// EmailValidator is a validator for the "email" field. It is called by the builders before save.
 	EmailValidator func(string) error
-	// PasswordHashValidator is a validator for the "password_hash" field. It is called by the builders before save.
-	PasswordHashValidator func(string) error
 	// DefaultPoints holds the default value on creation for the "points" field.
 	DefaultPoints int
 	// PointsValidator is a validator for the "points" field. It is called by the builders before save.
@@ -222,11 +220,6 @@ func ByLastName(opts ...sql.OrderTermOption) OrderOption {
 // ByEmail orders the results by the email field.
 func ByEmail(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldEmail, opts...).ToFunc()
-}
-
-// ByPasswordHash orders the results by the password_hash field.
-func ByPasswordHash(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldPasswordHash, opts...).ToFunc()
 }
 
 // ByPoints orders the results by the points field.

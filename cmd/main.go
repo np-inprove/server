@@ -46,7 +46,7 @@ func main() {
 	appLogger.Info("initializing server: hello, world!")
 	appLogger.Info("opening connection",
 		logger.String("area", "database"),
-		logger.String("driverName", cfg.DatabaseDriverName()),
+		logger.String("driver_name", cfg.DatabaseDriverName()),
 	)
 
 	client, err := ent.Open(cfg.DatabaseDriverName(), cfg.DatabaseDataSourceName())
@@ -59,7 +59,7 @@ func main() {
 
 	appLogger.Info("successfully opened connection",
 		logger.String("area", "database"),
-		logger.String("driverName", cfg.DatabaseDriverName()),
+		logger.String("driver_name", cfg.DatabaseDriverName()),
 	)
 
 	defer func(client *ent.Client) {
@@ -69,7 +69,7 @@ func main() {
 	if cfg.DatabaseAutoMigration() {
 		appLogger.Info("running auto migration",
 			logger.String("area", "database"),
-			logger.String("driverName", cfg.DatabaseDriverName()),
+			logger.String("driver_name", cfg.DatabaseDriverName()),
 		)
 
 		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
@@ -79,13 +79,13 @@ func main() {
 			appLogger.Fatal("failed creating schema resources",
 				logger.String("err", err.Error()),
 				logger.String("area", "database"),
-				logger.String("driverName", cfg.DatabaseDriverName()),
+				logger.String("driver_name", cfg.DatabaseDriverName()),
 			)
 		}
 
 		appLogger.Info("completed auto migration",
 			logger.String("area", "database"),
-			logger.String("driverName", cfg.DatabaseDriverName()),
+			logger.String("driver_name", cfg.DatabaseDriverName()),
 		)
 	}
 
@@ -109,13 +109,13 @@ func main() {
 
 	appLogger.Info("seeding database",
 		logger.String("area", "database"),
-		logger.String("driverName", cfg.DatabaseDriverName()),
+		logger.String("driver_name", cfg.DatabaseDriverName()),
 	)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	err = seed.Exec(ctx, cfg, client)
+	err = seed.Exec(ctx, appLogger, cfg, client)
 	if err != nil {
 		appLogger.Fatal("failed to seed data", logger.String("err", err.Error()))
 	}

@@ -20,6 +20,7 @@ import (
 	"github.com/np-inprove/server/internal/ent/predicate"
 	"github.com/np-inprove/server/internal/ent/redemption"
 	"github.com/np-inprove/server/internal/ent/user"
+	"github.com/np-inprove/server/internal/hash"
 )
 
 // UserUpdate is the builder for updating User entities.
@@ -53,9 +54,9 @@ func (uu *UserUpdate) SetEmail(s string) *UserUpdate {
 	return uu
 }
 
-// SetPasswordHash sets the "password_hash" field.
-func (uu *UserUpdate) SetPasswordHash(s string) *UserUpdate {
-	uu.mutation.SetPasswordHash(s)
+// SetPassword sets the "password" field.
+func (uu *UserUpdate) SetPassword(h hash.Encoded) *UserUpdate {
+	uu.mutation.SetPassword(h)
 	return uu
 }
 
@@ -481,11 +482,6 @@ func (uu *UserUpdate) check() error {
 			return &ValidationError{Name: "email", err: fmt.Errorf(`ent: validator failed for field "User.email": %w`, err)}
 		}
 	}
-	if v, ok := uu.mutation.PasswordHash(); ok {
-		if err := user.PasswordHashValidator(v); err != nil {
-			return &ValidationError{Name: "password_hash", err: fmt.Errorf(`ent: validator failed for field "User.password_hash": %w`, err)}
-		}
-	}
 	if v, ok := uu.mutation.Points(); ok {
 		if err := user.PointsValidator(v); err != nil {
 			return &ValidationError{Name: "points", err: fmt.Errorf(`ent: validator failed for field "User.points": %w`, err)}
@@ -523,8 +519,8 @@ func (uu *UserUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if value, ok := uu.mutation.Email(); ok {
 		_spec.SetField(user.FieldEmail, field.TypeString, value)
 	}
-	if value, ok := uu.mutation.PasswordHash(); ok {
-		_spec.SetField(user.FieldPasswordHash, field.TypeString, value)
+	if value, ok := uu.mutation.Password(); ok {
+		_spec.SetField(user.FieldPassword, field.TypeJSON, value)
 	}
 	if value, ok := uu.mutation.Points(); ok {
 		_spec.SetField(user.FieldPoints, field.TypeInt, value)
@@ -986,9 +982,9 @@ func (uuo *UserUpdateOne) SetEmail(s string) *UserUpdateOne {
 	return uuo
 }
 
-// SetPasswordHash sets the "password_hash" field.
-func (uuo *UserUpdateOne) SetPasswordHash(s string) *UserUpdateOne {
-	uuo.mutation.SetPasswordHash(s)
+// SetPassword sets the "password" field.
+func (uuo *UserUpdateOne) SetPassword(h hash.Encoded) *UserUpdateOne {
+	uuo.mutation.SetPassword(h)
 	return uuo
 }
 
@@ -1427,11 +1423,6 @@ func (uuo *UserUpdateOne) check() error {
 			return &ValidationError{Name: "email", err: fmt.Errorf(`ent: validator failed for field "User.email": %w`, err)}
 		}
 	}
-	if v, ok := uuo.mutation.PasswordHash(); ok {
-		if err := user.PasswordHashValidator(v); err != nil {
-			return &ValidationError{Name: "password_hash", err: fmt.Errorf(`ent: validator failed for field "User.password_hash": %w`, err)}
-		}
-	}
 	if v, ok := uuo.mutation.Points(); ok {
 		if err := user.PointsValidator(v); err != nil {
 			return &ValidationError{Name: "points", err: fmt.Errorf(`ent: validator failed for field "User.points": %w`, err)}
@@ -1486,8 +1477,8 @@ func (uuo *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) 
 	if value, ok := uuo.mutation.Email(); ok {
 		_spec.SetField(user.FieldEmail, field.TypeString, value)
 	}
-	if value, ok := uuo.mutation.PasswordHash(); ok {
-		_spec.SetField(user.FieldPasswordHash, field.TypeString, value)
+	if value, ok := uuo.mutation.Password(); ok {
+		_spec.SetField(user.FieldPassword, field.TypeJSON, value)
 	}
 	if value, ok := uuo.mutation.Points(); ok {
 		_spec.SetField(user.FieldPoints, field.TypeInt, value)

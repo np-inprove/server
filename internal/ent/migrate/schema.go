@@ -330,7 +330,7 @@ var (
 		{Name: "first_name", Type: field.TypeString},
 		{Name: "last_name", Type: field.TypeString},
 		{Name: "email", Type: field.TypeString, Unique: true},
-		{Name: "password_hash", Type: field.TypeString},
+		{Name: "password", Type: field.TypeJSON},
 		{Name: "points", Type: field.TypeInt, Default: 0},
 		{Name: "points_awarded_count", Type: field.TypeInt, Default: 0},
 		{Name: "points_awarded_reset_time", Type: field.TypeTime, Nullable: true},

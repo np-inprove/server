@@ -29,6 +29,7 @@ import (
 	"github.com/np-inprove/server/internal/ent/user"
 	"github.com/np-inprove/server/internal/ent/userpet"
 	"github.com/np-inprove/server/internal/ent/voucher"
+	"github.com/np-inprove/server/internal/hash"
 )
 
 const (
@@ -8196,7 +8197,7 @@ type UserMutation struct {
 	first_name                *string
 	last_name                 *string
 	email                     *string
-	password_hash             *string
+	password                  *hash.Encoded
 	points                    *int
 	addpoints                 *int
 	points_awarded_count      *int
@@ -8441,40 +8442,40 @@ func (m *UserMutation) ResetEmail() {
 	m.email = nil
 }
 
-// SetPasswordHash sets the "password_hash" field.
-func (m *UserMutation) SetPasswordHash(s string) {
-	m.password_hash = &s
+// SetPassword sets the "password" field.
+func (m *UserMutation) SetPassword(h hash.Encoded) {
+	m.password = &h
 }
 
-// PasswordHash returns the value of the "password_hash" field in the mutation.
-func (m *UserMutation) PasswordHash() (r string, exists bool) {
-	v := m.password_hash
+// Password returns the value of the "password" field in the mutation.
+func (m *UserMutation) Password() (r hash.Encoded, exists bool) {
+	v := m.password
 	if v == nil {
 		return
 	}
 	return *v, true
 }
 
-// OldPasswordHash returns the old "password_hash" field's value of the User entity.
+// OldPassword returns the old "password" field's value of the User entity.
 // If the User object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *UserMutation) OldPasswordHash(ctx context.Context) (v string, err error) {
+func (m *UserMutation) OldPassword(ctx context.Context) (v hash.Encoded, err error) {
 	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldPasswordHash is only allowed on UpdateOne operations")
+		return v, errors.New("OldPassword is only allowed on UpdateOne operations")
 	}
 	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldPasswordHash requires an ID field in the mutation")
+		return v, errors.New("OldPassword requires an ID field in the mutation")
 	}
 	oldValue, err := m.oldValue(ctx)
 	if err != nil {
-		return v, fmt.Errorf("querying old value for OldPasswordHash: %w", err)
+		return v, fmt.Errorf("querying old value for OldPassword: %w", err)
 	}
-	return oldValue.PasswordHash, nil
+	return oldValue.Password, nil
 }
 
-// ResetPasswordHash resets all changes to the "password_hash" field.
-func (m *UserMutation) ResetPasswordHash() {
-	m.password_hash = nil
+// ResetPassword resets all changes to the "password" field.
+func (m *UserMutation) ResetPassword() {
+	m.password = nil
 }
 
 // SetPoints sets the "points" field.
@@ -9189,8 +9190,8 @@ func (m *UserMutation) Fields() []string {
 	if m.email != nil {
 		fields = append(fields, user.FieldEmail)
 	}
-	if m.password_hash != nil {
-		fields = append(fields, user.FieldPasswordHash)
+	if m.password != nil {
+		fields = append(fields, user.FieldPassword)
 	}
 	if m.points != nil {
 		fields = append(fields, user.FieldPoints)
@@ -9218,8 +9219,8 @@ func (m *UserMutation) Field(name string) (ent.Value, bool) {
 		return m.LastName()
 	case user.FieldEmail:
 		return m.Email()
-	case user.FieldPasswordHash:
-		return m.PasswordHash()
+	case user.FieldPassword:
+		return m.Password()
 	case user.FieldPoints:
 		return m.Points()
 	case user.FieldPointsAwardedCount:
@@ -9243,8 +9244,8 @@ func (m *UserMutation) OldField(ctx context.Context, name string) (ent.Value, er
 		return m.OldLastName(ctx)
 	case user.FieldEmail:
 		return m.OldEmail(ctx)
-	case user.FieldPasswordHash:
-		return m.OldPasswordHash(ctx)
+	case user.FieldPassword:
+		return m.OldPassword(ctx)
 	case user.FieldPoints:
 		return m.OldPoints(ctx)
 	case user.FieldPointsAwardedCount:
@@ -9283,12 +9284,12 @@ func (m *UserMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetEmail(v)
 		return nil
-	case user.FieldPasswordHash:
-		v, ok := value.(string)
+	case user.FieldPassword:
+		v, ok := value.(hash.Encoded)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
-		m.SetPasswordHash(v)
+		m.SetPassword(v)
 		return nil
 	case user.FieldPoints:
 		v, ok := value.(int)
@@ -9412,8 +9413,8 @@ func (m *UserMutation) ResetField(name string) error {
 	case user.FieldEmail:
 		m.ResetEmail()
 		return nil
-	case user.FieldPasswordHash:
-		m.ResetPasswordHash()
+	case user.FieldPassword:
+		m.ResetPassword()
 		return nil
 	case user.FieldPoints:
 		m.ResetPoints()

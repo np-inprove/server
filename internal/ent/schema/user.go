@@ -4,6 +4,7 @@ import (
 	"entgo.io/ent"
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
+	"github.com/np-inprove/server/internal/hash"
 )
 
 // User holds the schema definition for the User entity.
@@ -24,10 +25,9 @@ func (User) Fields() []ent.Field {
 			Unique().
 			NotEmpty().
 			Comment("Email of the user"),
-		field.String("password_hash").
-			NotEmpty().
+		field.JSON("password", hash.Encoded{}).
 			Sensitive().
-			Comment("Password hash of the user"),
+			Comment("Encoded password hash of the user"),
 		field.Int("points").
 			Min(0).
 			Default(0).

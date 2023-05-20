@@ -19,6 +19,7 @@ import (
 	"github.com/np-inprove/server/internal/ent/pet"
 	"github.com/np-inprove/server/internal/ent/redemption"
 	"github.com/np-inprove/server/internal/ent/user"
+	"github.com/np-inprove/server/internal/hash"
 )
 
 // UserCreate is the builder for creating a User entity.
@@ -47,9 +48,9 @@ func (uc *UserCreate) SetEmail(s string) *UserCreate {
 	return uc
 }
 
-// SetPasswordHash sets the "password_hash" field.
-func (uc *UserCreate) SetPasswordHash(s string) *UserCreate {
-	uc.mutation.SetPasswordHash(s)
+// SetPassword sets the "password" field.
+func (uc *UserCreate) SetPassword(h hash.Encoded) *UserCreate {
+	uc.mutation.SetPassword(h)
 	return uc
 }
 
@@ -303,13 +304,8 @@ func (uc *UserCreate) check() error {
 			return &ValidationError{Name: "email", err: fmt.Errorf(`ent: validator failed for field "User.email": %w`, err)}
 		}
 	}
-	if _, ok := uc.mutation.PasswordHash(); !ok {
-		return &ValidationError{Name: "password_hash", err: errors.New(`ent: missing required field "User.password_hash"`)}
-	}
-	if v, ok := uc.mutation.PasswordHash(); ok {
-		if err := user.PasswordHashValidator(v); err != nil {
-			return &ValidationError{Name: "password_hash", err: fmt.Errorf(`ent: validator failed for field "User.password_hash": %w`, err)}
-		}
+	if _, ok := uc.mutation.Password(); !ok {
+		return &ValidationError{Name: "password", err: errors.New(`ent: missing required field "User.password"`)}
 	}
 	if _, ok := uc.mutation.Points(); !ok {
 		return &ValidationError{Name: "points", err: errors.New(`ent: missing required field "User.points"`)}
@@ -372,9 +368,9 @@ func (uc *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 		_spec.SetField(user.FieldEmail, field.TypeString, value)
 		_node.Email = value
 	}
-	if value, ok := uc.mutation.PasswordHash(); ok {
-		_spec.SetField(user.FieldPasswordHash, field.TypeString, value)
-		_node.PasswordHash = value
+	if value, ok := uc.mutation.Password(); ok {
+		_spec.SetField(user.FieldPassword, field.TypeJSON, value)
+		_node.Password = value
 	}
 	if value, ok := uc.mutation.Points(); ok {
 		_spec.SetField(user.FieldPoints, field.TypeInt, value)
@@ -629,15 +625,15 @@ func (u *UserUpsert) UpdateEmail() *UserUpsert {
 	return u
 }
 
-// SetPasswordHash sets the "password_hash" field.
-func (u *UserUpsert) SetPasswordHash(v string) *UserUpsert {
-	u.Set(user.FieldPasswordHash, v)
+// SetPassword sets the "password" field.
+func (u *UserUpsert) SetPassword(v hash.Encoded) *UserUpsert {
+	u.Set(user.FieldPassword, v)
 	return u
 }
 
-// UpdatePasswordHash sets the "password_hash" field to the value that was provided on create.
-func (u *UserUpsert) UpdatePasswordHash() *UserUpsert {
-	u.SetExcluded(user.FieldPasswordHash)
+// UpdatePassword sets the "password" field to the value that was provided on create.
+func (u *UserUpsert) UpdatePassword() *UserUpsert {
+	u.SetExcluded(user.FieldPassword)
 	return u
 }
 
@@ -789,17 +785,17 @@ func (u *UserUpsertOne) UpdateEmail() *UserUpsertOne {
 	})
 }
 
-// SetPasswordHash sets the "password_hash" field.
-func (u *UserUpsertOne) SetPasswordHash(v string) *UserUpsertOne {
+// SetPassword sets the "password" field.
+func (u *UserUpsertOne) SetPassword(v hash.Encoded) *UserUpsertOne {
 	return u.Update(func(s *UserUpsert) {
-		s.SetPasswordHash(v)
+		s.SetPassword(v)
 	})
 }
 
-// UpdatePasswordHash sets the "password_hash" field to the value that was provided on create.
-func (u *UserUpsertOne) UpdatePasswordHash() *UserUpsertOne {
+// UpdatePassword sets the "password" field to the value that was provided on create.
+func (u *UserUpsertOne) UpdatePassword() *UserUpsertOne {
 	return u.Update(func(s *UserUpsert) {
-		s.UpdatePasswordHash()
+		s.UpdatePassword()
 	})
 }
 
@@ -1122,17 +1118,17 @@ func (u *UserUpsertBulk) UpdateEmail() *UserUpsertBulk {
 	})
 }
 
-// SetPasswordHash sets the "password_hash" field.
-func (u *UserUpsertBulk) SetPasswordHash(v string) *UserUpsertBulk {
+// SetPassword sets the "password" field.
+func (u *UserUpsertBulk) SetPassword(v hash.Encoded) *UserUpsertBulk {
 	return u.Update(func(s *UserUpsert) {
-		s.SetPasswordHash(v)
+		s.SetPassword(v)
 	})
 }
 
-// UpdatePasswordHash sets the "password_hash" field to the value that was provided on create.
-func (u *UserUpsertBulk) UpdatePasswordHash() *UserUpsertBulk {
+// UpdatePassword sets the "password" field to the value that was provided on create.
+func (u *UserUpsertBulk) UpdatePassword() *UserUpsertBulk {
 	return u.Update(func(s *UserUpsert) {
-		s.UpdatePasswordHash()
+		s.UpdatePassword()
 	})
 }
 

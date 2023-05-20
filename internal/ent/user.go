@@ -3,6 +3,7 @@
 package ent
 
 import (
+	"encoding/json"
 	"fmt"
 	"strings"
 	"time"
@@ -11,6 +12,7 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"github.com/np-inprove/server/internal/ent/department"
 	"github.com/np-inprove/server/internal/ent/user"
+	"github.com/np-inprove/server/internal/hash"
 )
 
 // User is the model entity for the User schema.
@@ -24,8 +26,8 @@ type User struct {
 	LastName string `json:"last_name,omitempty"`
 	// Email of the user
 	Email string `json:"email,omitempty"`
-	// Password hash of the user
-	PasswordHash string `json:"-"`
+	// Encoded password hash of the user
+	Password hash.Encoded `json:"-"`
 	// Points of the user.
 	// Must always be positive
 	Points int `json:"points,omitempty"`
@@ -191,11 +193,13 @@ func (*User) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
+		case user.FieldPassword:
+			values[i] = new([]byte)
 		case user.FieldGodMode:
 			values[i] = new(sql.NullBool)
 		case user.FieldID, user.FieldPoints, user.FieldPointsAwardedCount:
 			values[i] = new(sql.NullInt64)
-		case user.FieldFirstName, user.FieldLastName, user.FieldEmail, user.FieldPasswordHash:
+		case user.FieldFirstName, user.FieldLastName, user.FieldEmail:
 			values[i] = new(sql.NullString)
 		case user.FieldPointsAwardedResetTime:
 			values[i] = new(sql.NullTime)
@@ -240,11 +244,13 @@ func (u *User) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				u.Email = value.String
 			}
-		case user.FieldPasswordHash:
-			if value, ok := values[i].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field password_hash", values[i])
-			} else if value.Valid {
-				u.PasswordHash = value.String
+		case user.FieldPassword:
+			if value, ok := values[i].(*[]byte); !ok {
+				return fmt.Errorf("unexpected type %T for field password", values[i])
+			} else if value != nil && len(*value) > 0 {
+				if err := json.Unmarshal(*value, &u.Password); err != nil {
+					return fmt.Errorf("unmarshal field password: %w", err)
+				}
 			}
 		case user.FieldPoints:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
@@ -382,7 +388,7 @@ func (u *User) String() string {
 	builder.WriteString("email=")
 	builder.WriteString(u.Email)
 	builder.WriteString(", ")
-	builder.WriteString("password_hash=<sensitive>")
+	builder.WriteString("password=<sensitive>")
 	builder.WriteString(", ")
 	builder.WriteString("points=")
 	builder.WriteString(fmt.Sprintf("%v", u.Points))
