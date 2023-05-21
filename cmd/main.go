@@ -19,7 +19,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
-	"github.com/go-chi/jwtauth"
+	"github.com/go-chi/jwtauth/v5"
 	"github.com/go-chi/render"
 	"github.com/lestrrat-go/jwx/v2/jwk"
 	_ "github.com/lib/pq"
@@ -127,7 +127,7 @@ func main() {
 	r := chi.NewRouter()
 	loggerMiddleware := logger.NewMiddleware(appLogger)
 
-	tokenAuth := jwtauth.New(cfg.AppJWTAlgorithm().String(), publicKey, privateKey)
+	tokenAuth := jwtauth.New(cfg.AppJWTAlgorithm().String(), privateKey, publicKey)
 
 	r.Use(cors.Handler(cors.Options{
 		AllowOriginFunc:  func(r *http.Request, origin string) bool { return true },

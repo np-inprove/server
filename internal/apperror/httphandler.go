@@ -2,15 +2,16 @@ package apperror
 
 import (
 	"github.com/go-chi/render"
+	"github.com/gookit/validate"
 	"net/http"
 )
 
 type ErrResponse struct {
-	Err            error  `json:"-"`
-	HTTPStatusCode int    `json:"-"`
-	AppErrCode     int    `json:"code"`
-	AppErrMessage  string `json:"message"`
-	Fields         string `json:"fields,omitempty"`
+	Err            error           `json:"-"`
+	HTTPStatusCode int             `json:"-"`
+	AppErrCode     int             `json:"code"`
+	AppErrMessage  string          `json:"message"`
+	Fields         validate.Errors `json:"fields,omitempty"`
 }
 
 func (e ErrResponse) Render(w http.ResponseWriter, r *http.Request) error {
@@ -23,7 +24,17 @@ func ErrBadRequest(err error) render.Renderer {
 		Err:            err,
 		HTTPStatusCode: http.StatusBadRequest,
 		AppErrCode:     http.StatusBadRequest,
-		AppErrMessage:  http.StatusText(http.StatusBadGateway),
+		AppErrMessage:  http.StatusText(http.StatusBadRequest),
+	}
+}
+
+func ErrValidation(fields validate.Errors) render.Renderer {
+	return &ErrResponse{
+		Err:            nil,
+		HTTPStatusCode: http.StatusBadRequest,
+		AppErrCode:     http.StatusBadRequest,
+		AppErrMessage:  http.StatusText(http.StatusBadRequest),
+		Fields:         fields,
 	}
 }
 

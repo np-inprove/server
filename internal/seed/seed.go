@@ -2,7 +2,6 @@ package seed
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"github.com/np-inprove/server/internal/apperror"
 	"github.com/np-inprove/server/internal/config"
@@ -24,12 +23,12 @@ func Exec(ctx context.Context, log logger.AppLogger, cfg *config.Config, client 
 	instID, err := client.Institution.Query().
 		Where(institution.ShortName(cfg.SeedRootInstitutionShortName())).
 		FirstID(ctx)
-	if err != nil && !errors.As(err, &apperror.ErrEntityNotFound) {
-		return fmt.Errorf("failed to query for root institution: %v", err)
+	if err != nil && !apperror.IsEntityNotFound(err) {
+		return fmt.Errorf("failed to query for root institution: %w", err)
 	}
 
 	// TODO this feels... inefficient
-	if errors.As(err, &apperror.ErrEntityNotFound) || cfg.SeedForceCreate() {
+	if apperror.IsEntityNotFound(err) || cfg.SeedForceCreate() {
 		log.Info("seeding root institution",
 			logger.String("area", "seed"),
 			logger.String("institution_name", cfg.SeedRootInstitutionName()),
@@ -43,7 +42,7 @@ func Exec(ctx context.Context, log logger.AppLogger, cfg *config.Config, client 
 			UpdateNewValues().
 			ID(ctx)
 		if err != nil {
-			return fmt.Errorf("failed to upsert root institution: %v", err)
+			return fmt.Errorf("failed to upsert root institution: %w", err)
 		}
 	}
 
@@ -55,12 +54,12 @@ func Exec(ctx context.Context, log logger.AppLogger, cfg *config.Config, client 
 			),
 		).
 		FirstID(ctx)
-	if err != nil && !errors.As(err, &apperror.ErrEntityNotFound) {
-		return fmt.Errorf("failed to query for root department: %v", err)
+	if err != nil && !apperror.IsEntityNotFound(err) {
+		return fmt.Errorf("failed to query for root department: %w", err)
 	}
 
 	// TODO implement cfg.SeedForceCreate() by checking whether Department exists within Institution
-	if errors.As(err, &apperror.ErrEntityNotFound) {
+	if apperror.IsEntityNotFound(err) {
 		log.Info("seeding root department",
 			logger.String("area", "seed"),
 			logger.String("department_name", rootDepartmentName),
@@ -73,21 +72,21 @@ func Exec(ctx context.Context, log logger.AppLogger, cfg *config.Config, client 
 			SetInstitutionID(instID).
 			Save(ctx)
 		if err != nil {
-			return fmt.Errorf("failed to upsert root department: %v", err)
+			return fmt.Errorf("failed to upsert root department: %w", err)
 		}
 
 		deptID = dept.ID
 	}
 
 	_, err = client.User.Query().Where(user.Email(cfg.SeedRootEmail())).FirstID(ctx)
-	if err != nil && !errors.As(err, &apperror.ErrEntityNotFound) {
-		return fmt.Errorf("failed to query for root user: %v", err)
+	if err != nil && !apperror.IsEntityNotFound(err) {
+		return fmt.Errorf("failed to query for root user: %w", err)
 	}
 
-	if errors.As(err, &apperror.ErrEntityNotFound) || cfg.SeedForceCreate() {
+	if apperror.IsEntityNotFound(err) || cfg.SeedForceCreate() {
 		p, err := hash.CreateEncoded(cfg.SeedRootPassword())
 		if err != nil {
-			return fmt.Errorf("failed to hash root user password: %v", err)
+			return fmt.Errorf("failed to hash root user password: %w", err)
 		}
 
 		var (
@@ -115,7 +114,7 @@ func Exec(ctx context.Context, log logger.AppLogger, cfg *config.Config, client 
 			UpdateNewValues().
 			Exec(ctx)
 		if err != nil {
-			return fmt.Errorf("failed to upsert root user: %v", err)
+			return fmt.Errorf("failed to upsert root user: %w", err)
 		}
 
 		log.Info("root user created",

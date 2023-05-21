@@ -2,7 +2,7 @@ package middleware
 
 import (
 	"context"
-	"github.com/go-chi/jwtauth"
+	"github.com/go-chi/jwtauth/v5"
 	"github.com/go-chi/render"
 	"github.com/np-inprove/server/internal/apperror"
 	"net/http"

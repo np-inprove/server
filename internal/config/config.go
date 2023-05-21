@@ -117,14 +117,14 @@ func New() (*Config, error) {
 		)
 	}), nil)
 	if err != nil {
-		return nil, fmt.Errorf("failed to load environment variables: %v", err)
+		return nil, fmt.Errorf("failed to load environment variables: %w", err)
 	}
 
 	c := &Config{}
 
 	var a jwa.SignatureAlgorithm
 	if err := a.Accept(c.AppJWTAlgorithm()); err != nil {
-		return nil, fmt.Errorf("failed to parse jwt algorithm: %v", err)
+		return nil, fmt.Errorf("failed to parse jwt algorithm: %w", err)
 	}
 
 	return c, nil
@@ -139,7 +139,7 @@ func NewTest() (*Config, error) {
 		)
 	}), nil)
 	if err != nil {
-		return nil, fmt.Errorf("failed to load environment variables: %v", err)
+		return nil, fmt.Errorf("failed to load environment variables: %w", err)
 	}
 
 	c := &Config{}

@@ -15,7 +15,7 @@ func (l LoginRequest) Validate() *validate.Validation {
 	return validate.Struct(l)
 }
 
-type WhoAmIResponse struct {
+type LoginResponse struct {
 	FirstName              string    `json:"first_name,omitempty"`
 	LastName               string    `json:"last_name,omitempty"`
 	Email                  string    `json:"email,omitempty"`
@@ -25,6 +25,8 @@ type WhoAmIResponse struct {
 	GodMode                bool      `json:"god_mode,omitempty"`
 }
 
-func (wai WhoAmIResponse) Render(w http.ResponseWriter, r *http.Request) error {
+func (l LoginResponse) Render(_ http.ResponseWriter, _ *http.Request) error {
 	return nil
 }
+
+type WhoAmIResponse = LoginResponse

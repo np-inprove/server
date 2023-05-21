@@ -2,24 +2,18 @@ package auth
 
 import (
 	"context"
+	"github.com/np-inprove/server/internal/hash"
 	"time"
 )
 
 type Reader interface {
-	FindUser(ctx context.Context, opts ...UserOption) (User, error)
-	FindJWTRevocation(ctx context.Context, jti string) (JWTRevocation, error)
+	FindUserByEmail(ctx context.Context, email string) (*User, error)
+	FindJWTRevocation(ctx context.Context, jti string) (*JWTRevocation, error)
 }
 
 type Writer interface {
-	CreateUser(
-		ctx context.Context,
-		firstName string,
-		lastName string,
-		email string,
-		passwordHash string,
-		opts ...UserOption,
-	) (User, error)
-	CreateJWTRevocation(ctx context.Context, jti string, expiry time.Time) (JWTRevocation, error)
+	CreateUser(ctx context.Context, firstName string, lastName string, email string, password hash.Encoded, deptID int, opts ...CreateUserOption) (*User, error)
+	CreateJWTRevocation(ctx context.Context, jti string, expiry time.Time) (*JWTRevocation, error)
 }
 
 type Repository interface {
@@ -27,42 +21,35 @@ type Repository interface {
 	Writer
 }
 
-type userOptions struct {
-	email                  string
+type createUserOptions struct {
 	points                 int
 	pointsAwardedCount     int
 	pointsAwardedResetTime time.Time
 	godMode                bool
 }
 
-type UserOption func(*userOptions)
+type CreateUserOption func(*createUserOptions)
 
-func Email(email string) UserOption {
-	return func(opts *userOptions) {
-		opts.email = email
-	}
-}
-
-func Points(points int) UserOption {
-	return func(opts *userOptions) {
+func Points(points int) CreateUserOption {
+	return func(opts *createUserOptions) {
 		opts.points = points
 	}
 }
 
-func PointsAwardedCount(c int) UserOption {
-	return func(opts *userOptions) {
+func PointsAwardedCount(c int) CreateUserOption {
+	return func(opts *createUserOptions) {
 		opts.pointsAwardedCount = c
 	}
 }
 
-func PointsAwardedResetTime(t time.Time) UserOption {
-	return func(opts *userOptions) {
+func PointsAwardedResetTime(t time.Time) CreateUserOption {
+	return func(opts *createUserOptions) {
 		opts.pointsAwardedResetTime = t
 	}
 }
 
-func GodMode(gm bool) UserOption {
-	return func(opts *userOptions) {
+func GodMode(gm bool) CreateUserOption {
+	return func(opts *createUserOptions) {
 		opts.godMode = gm
 	}
 }

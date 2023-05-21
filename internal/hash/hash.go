@@ -29,7 +29,7 @@ type Encoded struct {
 func CreateEncoded(password string) (Encoded, error) {
 	salt := make([]byte, saltLen)
 	if _, err := rand.Read(salt); err != nil {
-		return Encoded{}, fmt.Errorf("failed to generate salt: %v", err)
+		return Encoded{}, fmt.Errorf("failed to generate salt: %w", err)
 	}
 
 	h := argon2.IDKey([]byte(password), salt, time, memory, threads, keyLen)
