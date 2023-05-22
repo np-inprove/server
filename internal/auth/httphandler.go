@@ -75,7 +75,6 @@ func (h httpHandler) Login(w http.ResponseWriter, r *http.Request) {
 	http.SetCookie(w, &http.Cookie{
 		Name:     h.c.AppJWTCookieName(),
 		Value:    s.token,
-		Domain:   "np-inprove.qinguan.me",
 		Path:     "/",
 		Expires:  time.Now().Add(30 * time.Minute),
 		MaxAge:   int(30 * time.Minute.Seconds()),
