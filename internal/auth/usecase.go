@@ -60,6 +60,9 @@ func (u usecase) WhoAmI(ctx context.Context, token jwt.Token) (*User, error) {
 func (u usecase) Login(ctx context.Context, email string, password string) (*session, error) {
 	user, err := u.r.FindUserByEmail(ctx, email)
 	if err != nil {
+		if apperror.IsEntityNotFound(err) {
+			return nil, ErrUserNotFound
+		}
 		return nil, fmt.Errorf("failed to find user: %w", err)
 	}
 

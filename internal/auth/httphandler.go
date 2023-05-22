@@ -1,7 +1,6 @@
 package auth
 
 import (
-	"errors"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/jwtauth/v5"
 	"github.com/go-chi/render"
@@ -10,7 +9,7 @@ import (
 	"github.com/np-inprove/server/internal/apperror"
 	"github.com/np-inprove/server/internal/config"
 	"github.com/np-inprove/server/internal/middleware"
-	"github.com/np-inprove/server/payload"
+	"github.com/np-inprove/server/internal/payload"
 	"net/http"
 	"time"
 )
@@ -60,16 +59,7 @@ func (h httpHandler) Login(w http.ResponseWriter, r *http.Request) {
 
 	s, err := h.u.Login(r.Context(), p.Email, p.Password)
 	if err != nil {
-		// TODO something better to map from domain to HTTP error
-		if apperror.IsEntityNotFound(err) {
-			_ = render.Render(w, r, apperror.ErrUserNotFound)
-			return
-		}
-		if errors.Is(err, ErrInvalidPassword) {
-			_ = render.Render(w, r, apperror.ErrInvalidPassword)
-			return
-		}
-		_ = render.Render(w, r, apperror.ErrBadRequest(err))
+		_ = render.Render(w, r, mapDomainErr(err))
 		return
 	}
 
