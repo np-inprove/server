@@ -85,12 +85,16 @@ func (h httpHandler) Login(w http.ResponseWriter, r *http.Request) {
 		SameSite: http.SameSiteDefaultMode,
 	})
 
+	b := "human"
+	if s.user.GodMode {
+		b = "god"
+	}
 	// Cookie for the client to know that it's authenticated
 	// This must be the same as specified in https://github.com/np-inprove/app/blob/main/middleware
 	http.SetCookie(w, &http.Cookie{
 		Name:     "b",
 		Domain:   h.c.AppJWTCookieDomain(),
-		Value:    "true",
+		Value:    b,
 		Path:     "/",
 		Expires:  time.Now().Add(30 * time.Minute),
 		MaxAge:   int(30 * time.Minute.Seconds()),
