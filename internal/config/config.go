@@ -64,8 +64,9 @@ func (Config) AppJWTCookieDomain() string {
 	return k.String("app.jwtcookiedomain")
 }
 
+// AppJWTCookieName cannot be user-specified, but is a method for consistency across usages in code
 func (Config) AppJWTCookieName() string {
-	return k.String("app.jwtcookiename")
+	return "t"
 }
 
 // SeedRootEmail is the email to be used for the seeded root user.

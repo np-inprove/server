@@ -72,6 +72,7 @@ func (h httpHandler) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// JWT cookie for the server to use
 	http.SetCookie(w, &http.Cookie{
 		Name:     h.c.AppJWTCookieName(),
 		Domain:   h.c.AppJWTCookieDomain(),
@@ -81,6 +82,19 @@ func (h httpHandler) Login(w http.ResponseWriter, r *http.Request) {
 		MaxAge:   int(30 * time.Minute.Seconds()),
 		Secure:   true,
 		HttpOnly: true,
+		SameSite: http.SameSiteDefaultMode,
+	})
+
+	// Cookie for the client to know that it's authenticated
+	// This must be the same as specified in https://github.com/np-inprove/app/blob/main/middleware
+	http.SetCookie(w, &http.Cookie{
+		Name:     "t_c",
+		Domain:   h.c.AppJWTCookieDomain(),
+		Value:    s.token,
+		Path:     "/",
+		Expires:  time.Now().Add(30 * time.Minute),
+		MaxAge:   int(30 * time.Minute.Seconds()),
+		Secure:   true,
 		SameSite: http.SameSiteDefaultMode,
 	})
 
