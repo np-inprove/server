@@ -88,7 +88,7 @@ func (h httpHandler) Login(w http.ResponseWriter, r *http.Request) {
 	// Cookie for the client to know that it's authenticated
 	// This must be the same as specified in https://github.com/np-inprove/app/blob/main/middleware
 	http.SetCookie(w, &http.Cookie{
-		Name:     "t_c",
+		Name:     "b",
 		Domain:   h.c.AppJWTCookieDomain(),
 		Value:    s.token,
 		Path:     "/",
