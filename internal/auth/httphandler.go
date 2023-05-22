@@ -74,6 +74,7 @@ func (h httpHandler) Login(w http.ResponseWriter, r *http.Request) {
 
 	http.SetCookie(w, &http.Cookie{
 		Name:     h.c.AppJWTCookieName(),
+		Domain:   h.c.AppJWTCookieDomain(),
 		Value:    s.token,
 		Path:     "/",
 		Expires:  time.Now().Add(30 * time.Minute),

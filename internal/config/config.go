@@ -10,7 +10,6 @@ import (
 	"github.com/knadh/koanf/providers/env"
 	"github.com/knadh/koanf/providers/file"
 	"github.com/knadh/koanf/v2"
-	"github.com/lestrrat-go/jwx/v2/jwa"
 )
 
 var (
@@ -56,21 +55,13 @@ func (Config) AppProduction() bool {
 	return k.Bool("app.production")
 }
 
-// AppJWTAlgorithm specifies the algorithm to use for signing the JWT used for auth
-func (Config) AppJWTAlgorithm() jwa.SignatureAlgorithm {
-	var a jwa.SignatureAlgorithm
-	// This should not be error as the value must be checked when creating Config
-	_ = a.Accept(k.String("app.jwtalgorithm"))
-	return a
-}
-
 // AppJWK is the key used in AppJWTAlgorithm. The same algorithm must be used for both.
 func (Config) AppJWK() string {
 	return k.String("app.jwk")
 }
 
-func (Config) AppJWTCookieHost() string {
-	return k.String("app.jwtcookiehost")
+func (Config) AppJWTCookieDomain() string {
+	return k.String("app.jwtcookiedomain")
 }
 
 func (Config) AppJWTCookieName() string {
@@ -121,11 +112,6 @@ func New() (*Config, error) {
 	}
 
 	c := &Config{}
-
-	var a jwa.SignatureAlgorithm
-	if err := a.Accept(c.AppJWTAlgorithm()); err != nil {
-		return nil, fmt.Errorf("failed to parse jwt algorithm: %w", err)
-	}
 
 	return c, nil
 }

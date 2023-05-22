@@ -127,7 +127,7 @@ func main() {
 	r := chi.NewRouter()
 	loggerMiddleware := logger.NewMiddleware(appLogger)
 
-	tokenAuth := jwtauth.New(cfg.AppJWTAlgorithm().String(), privateKey, publicKey)
+	tokenAuth := jwtauth.New(privateKey.Algorithm().String(), privateKey, publicKey)
 
 	r.Use(cors.Handler(cors.Options{
 		AllowOriginFunc:  func(r *http.Request, origin string) bool { return true },
