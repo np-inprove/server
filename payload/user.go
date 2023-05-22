@@ -1,4 +1,4 @@
-package auth
+package payload
 
 import (
 	"github.com/gookit/validate"
@@ -6,16 +6,8 @@ import (
 	"time"
 )
 
-type LoginRequest struct {
-	Email    string `json:"email" validate:"required|email"`
-	Password string `json:"password"`
-}
-
-func (l LoginRequest) Validate() *validate.Validation {
-	return validate.Struct(l)
-}
-
-type LoginResponse struct {
+type User struct {
+	ID                     int       `json:"id,omitempty"`
 	FirstName              string    `json:"first_name,omitempty"`
 	LastName               string    `json:"last_name,omitempty"`
 	Email                  string    `json:"email,omitempty"`
@@ -25,8 +17,15 @@ type LoginResponse struct {
 	GodMode                bool      `json:"god_mode,omitempty"`
 }
 
-func (l LoginResponse) Render(_ http.ResponseWriter, _ *http.Request) error {
+func (u User) Render(_ http.ResponseWriter, _ *http.Request) error {
 	return nil
 }
 
-type WhoAmIResponse = LoginResponse
+type LoginRequest struct {
+	Email    string `json:"email" validate:"required|email"`
+	Password string `json:"password"`
+}
+
+func (l LoginRequest) Validate() *validate.Validation {
+	return validate.Struct(l)
+}

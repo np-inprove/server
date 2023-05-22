@@ -10,6 +10,7 @@ import (
 	"github.com/np-inprove/server/internal/apperror"
 	"github.com/np-inprove/server/internal/config"
 	"github.com/np-inprove/server/internal/middleware"
+	"github.com/np-inprove/server/payload"
 	"net/http"
 	"time"
 )
@@ -45,7 +46,7 @@ func NewHTTPHandler(u UseCase, c *config.Config, j *jwtauth.JWTAuth) chi.Router 
 }
 
 func (h httpHandler) Login(w http.ResponseWriter, r *http.Request) {
-	p := &LoginRequest{}
+	p := &payload.LoginRequest{}
 	if err := render.Decode(r, p); err != nil {
 		_ = render.Render(w, r, apperror.ErrBadRequest(err))
 		return
@@ -102,7 +103,7 @@ func (h httpHandler) Login(w http.ResponseWriter, r *http.Request) {
 		SameSite: http.SameSiteDefaultMode,
 	})
 
-	_ = render.Render(w, r, LoginResponse{
+	_ = render.Render(w, r, payload.User{
 		FirstName:              s.user.FirstName,
 		LastName:               s.user.LastName,
 		Email:                  s.user.Email,
@@ -122,7 +123,7 @@ func (h httpHandler) WhoAmI(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_ = render.Render(w, r, WhoAmIResponse{
+	_ = render.Render(w, r, payload.User{
 		FirstName:              user.FirstName,
 		LastName:               user.LastName,
 		Email:                  user.Email,
