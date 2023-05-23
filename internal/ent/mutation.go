@@ -4694,6 +4694,8 @@ type InstitutionMutation struct {
 	id                 *int
 	name               *string
 	short_name         *string
+	admin_domain       *string
+	student_domain     *string
 	clearedFields      map[string]struct{}
 	admins             map[int]struct{}
 	removedadmins      map[int]struct{}
@@ -4880,6 +4882,78 @@ func (m *InstitutionMutation) OldShortName(ctx context.Context) (v string, err e
 // ResetShortName resets all changes to the "short_name" field.
 func (m *InstitutionMutation) ResetShortName() {
 	m.short_name = nil
+}
+
+// SetAdminDomain sets the "admin_domain" field.
+func (m *InstitutionMutation) SetAdminDomain(s string) {
+	m.admin_domain = &s
+}
+
+// AdminDomain returns the value of the "admin_domain" field in the mutation.
+func (m *InstitutionMutation) AdminDomain() (r string, exists bool) {
+	v := m.admin_domain
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldAdminDomain returns the old "admin_domain" field's value of the Institution entity.
+// If the Institution object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *InstitutionMutation) OldAdminDomain(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldAdminDomain is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldAdminDomain requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldAdminDomain: %w", err)
+	}
+	return oldValue.AdminDomain, nil
+}
+
+// ResetAdminDomain resets all changes to the "admin_domain" field.
+func (m *InstitutionMutation) ResetAdminDomain() {
+	m.admin_domain = nil
+}
+
+// SetStudentDomain sets the "student_domain" field.
+func (m *InstitutionMutation) SetStudentDomain(s string) {
+	m.student_domain = &s
+}
+
+// StudentDomain returns the value of the "student_domain" field in the mutation.
+func (m *InstitutionMutation) StudentDomain() (r string, exists bool) {
+	v := m.student_domain
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldStudentDomain returns the old "student_domain" field's value of the Institution entity.
+// If the Institution object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *InstitutionMutation) OldStudentDomain(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldStudentDomain is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldStudentDomain requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldStudentDomain: %w", err)
+	}
+	return oldValue.StudentDomain, nil
+}
+
+// ResetStudentDomain resets all changes to the "student_domain" field.
+func (m *InstitutionMutation) ResetStudentDomain() {
+	m.student_domain = nil
 }
 
 // AddAdminIDs adds the "admins" edge to the User entity by ids.
@@ -5132,12 +5206,18 @@ func (m *InstitutionMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *InstitutionMutation) Fields() []string {
-	fields := make([]string, 0, 2)
+	fields := make([]string, 0, 4)
 	if m.name != nil {
 		fields = append(fields, institution.FieldName)
 	}
 	if m.short_name != nil {
 		fields = append(fields, institution.FieldShortName)
+	}
+	if m.admin_domain != nil {
+		fields = append(fields, institution.FieldAdminDomain)
+	}
+	if m.student_domain != nil {
+		fields = append(fields, institution.FieldStudentDomain)
 	}
 	return fields
 }
@@ -5151,6 +5231,10 @@ func (m *InstitutionMutation) Field(name string) (ent.Value, bool) {
 		return m.Name()
 	case institution.FieldShortName:
 		return m.ShortName()
+	case institution.FieldAdminDomain:
+		return m.AdminDomain()
+	case institution.FieldStudentDomain:
+		return m.StudentDomain()
 	}
 	return nil, false
 }
@@ -5164,6 +5248,10 @@ func (m *InstitutionMutation) OldField(ctx context.Context, name string) (ent.Va
 		return m.OldName(ctx)
 	case institution.FieldShortName:
 		return m.OldShortName(ctx)
+	case institution.FieldAdminDomain:
+		return m.OldAdminDomain(ctx)
+	case institution.FieldStudentDomain:
+		return m.OldStudentDomain(ctx)
 	}
 	return nil, fmt.Errorf("unknown Institution field %s", name)
 }
@@ -5186,6 +5274,20 @@ func (m *InstitutionMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetShortName(v)
+		return nil
+	case institution.FieldAdminDomain:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetAdminDomain(v)
+		return nil
+	case institution.FieldStudentDomain:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetStudentDomain(v)
 		return nil
 	}
 	return fmt.Errorf("unknown Institution field %s", name)
@@ -5241,6 +5343,12 @@ func (m *InstitutionMutation) ResetField(name string) error {
 		return nil
 	case institution.FieldShortName:
 		m.ResetShortName()
+		return nil
+	case institution.FieldAdminDomain:
+		m.ResetAdminDomain()
+		return nil
+	case institution.FieldStudentDomain:
+		m.ResetStudentDomain()
 		return nil
 	}
 	return fmt.Errorf("unknown Institution field %s", name)

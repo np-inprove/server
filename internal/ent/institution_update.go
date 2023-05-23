@@ -43,6 +43,18 @@ func (iu *InstitutionUpdate) SetShortName(s string) *InstitutionUpdate {
 	return iu
 }
 
+// SetAdminDomain sets the "admin_domain" field.
+func (iu *InstitutionUpdate) SetAdminDomain(s string) *InstitutionUpdate {
+	iu.mutation.SetAdminDomain(s)
+	return iu
+}
+
+// SetStudentDomain sets the "student_domain" field.
+func (iu *InstitutionUpdate) SetStudentDomain(s string) *InstitutionUpdate {
+	iu.mutation.SetStudentDomain(s)
+	return iu
+}
+
 // AddAdminIDs adds the "admins" edge to the User entity by IDs.
 func (iu *InstitutionUpdate) AddAdminIDs(ids ...int) *InstitutionUpdate {
 	iu.mutation.AddAdminIDs(ids...)
@@ -231,6 +243,16 @@ func (iu *InstitutionUpdate) check() error {
 			return &ValidationError{Name: "short_name", err: fmt.Errorf(`ent: validator failed for field "Institution.short_name": %w`, err)}
 		}
 	}
+	if v, ok := iu.mutation.AdminDomain(); ok {
+		if err := institution.AdminDomainValidator(v); err != nil {
+			return &ValidationError{Name: "admin_domain", err: fmt.Errorf(`ent: validator failed for field "Institution.admin_domain": %w`, err)}
+		}
+	}
+	if v, ok := iu.mutation.StudentDomain(); ok {
+		if err := institution.StudentDomainValidator(v); err != nil {
+			return &ValidationError{Name: "student_domain", err: fmt.Errorf(`ent: validator failed for field "Institution.student_domain": %w`, err)}
+		}
+	}
 	return nil
 }
 
@@ -251,6 +273,12 @@ func (iu *InstitutionUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if value, ok := iu.mutation.ShortName(); ok {
 		_spec.SetField(institution.FieldShortName, field.TypeString, value)
+	}
+	if value, ok := iu.mutation.AdminDomain(); ok {
+		_spec.SetField(institution.FieldAdminDomain, field.TypeString, value)
+	}
+	if value, ok := iu.mutation.StudentDomain(); ok {
+		_spec.SetField(institution.FieldStudentDomain, field.TypeString, value)
 	}
 	if iu.mutation.AdminsCleared() {
 		edge := &sqlgraph.EdgeSpec{
@@ -464,6 +492,18 @@ func (iuo *InstitutionUpdateOne) SetShortName(s string) *InstitutionUpdateOne {
 	return iuo
 }
 
+// SetAdminDomain sets the "admin_domain" field.
+func (iuo *InstitutionUpdateOne) SetAdminDomain(s string) *InstitutionUpdateOne {
+	iuo.mutation.SetAdminDomain(s)
+	return iuo
+}
+
+// SetStudentDomain sets the "student_domain" field.
+func (iuo *InstitutionUpdateOne) SetStudentDomain(s string) *InstitutionUpdateOne {
+	iuo.mutation.SetStudentDomain(s)
+	return iuo
+}
+
 // AddAdminIDs adds the "admins" edge to the User entity by IDs.
 func (iuo *InstitutionUpdateOne) AddAdminIDs(ids ...int) *InstitutionUpdateOne {
 	iuo.mutation.AddAdminIDs(ids...)
@@ -665,6 +705,16 @@ func (iuo *InstitutionUpdateOne) check() error {
 			return &ValidationError{Name: "short_name", err: fmt.Errorf(`ent: validator failed for field "Institution.short_name": %w`, err)}
 		}
 	}
+	if v, ok := iuo.mutation.AdminDomain(); ok {
+		if err := institution.AdminDomainValidator(v); err != nil {
+			return &ValidationError{Name: "admin_domain", err: fmt.Errorf(`ent: validator failed for field "Institution.admin_domain": %w`, err)}
+		}
+	}
+	if v, ok := iuo.mutation.StudentDomain(); ok {
+		if err := institution.StudentDomainValidator(v); err != nil {
+			return &ValidationError{Name: "student_domain", err: fmt.Errorf(`ent: validator failed for field "Institution.student_domain": %w`, err)}
+		}
+	}
 	return nil
 }
 
@@ -702,6 +752,12 @@ func (iuo *InstitutionUpdateOne) sqlSave(ctx context.Context) (_node *Institutio
 	}
 	if value, ok := iuo.mutation.ShortName(); ok {
 		_spec.SetField(institution.FieldShortName, field.TypeString, value)
+	}
+	if value, ok := iuo.mutation.AdminDomain(); ok {
+		_spec.SetField(institution.FieldAdminDomain, field.TypeString, value)
+	}
+	if value, ok := iuo.mutation.StudentDomain(); ok {
+		_spec.SetField(institution.FieldStudentDomain, field.TypeString, value)
 	}
 	if iuo.mutation.AdminsCleared() {
 		edge := &sqlgraph.EdgeSpec{

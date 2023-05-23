@@ -108,6 +108,14 @@ func (uc *UserCreate) SetDepartmentID(id int) *UserCreate {
 	return uc
 }
 
+// SetNillableDepartmentID sets the "department" edge to the Department entity by ID if the given value is not nil.
+func (uc *UserCreate) SetNillableDepartmentID(id *int) *UserCreate {
+	if id != nil {
+		uc = uc.SetDepartmentID(*id)
+	}
+	return uc
+}
+
 // SetDepartment sets the "department" edge to the Department entity.
 func (uc *UserCreate) SetDepartment(d *Department) *UserCreate {
 	return uc.SetDepartmentID(d.ID)
@@ -325,9 +333,6 @@ func (uc *UserCreate) check() error {
 	}
 	if _, ok := uc.mutation.GodMode(); !ok {
 		return &ValidationError{Name: "god_mode", err: errors.New(`ent: missing required field "User.god_mode"`)}
-	}
-	if _, ok := uc.mutation.DepartmentID(); !ok {
-		return &ValidationError{Name: "department", err: errors.New(`ent: missing required edge "User.department"`)}
 	}
 	return nil
 }

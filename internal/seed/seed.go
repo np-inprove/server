@@ -38,6 +38,8 @@ func Exec(ctx context.Context, log logger.AppLogger, cfg *config.Config, client 
 		instID, err = client.Institution.Create().
 			SetName(cfg.SeedRootInstitutionName()).
 			SetShortName(cfg.SeedRootInstitutionShortName()).
+			SetAdminDomain("np-inprove.com").
+			SetStudentDomain("s.np-inprove.com").
 			OnConflictColumns(institution.FieldShortName).
 			UpdateNewValues().
 			ID(ctx)

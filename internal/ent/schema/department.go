@@ -2,6 +2,7 @@ package schema
 
 import (
 	"entgo.io/ent"
+	"entgo.io/ent/dialect/entsql"
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
 )
@@ -34,6 +35,7 @@ func (Department) Edges() []ent.Edge {
 			From("parent").
 			Unique(),
 		edge.To("users", User.Type).
+			Annotations(entsql.OnDelete(entsql.SetNull)).
 			Comment("Users in this department"),
 	}
 }

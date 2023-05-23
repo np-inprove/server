@@ -26,7 +26,7 @@ var (
 				Symbol:     "accessories_institutions_accessories",
 				Columns:    []*schema.Column{AccessoriesColumns[4]},
 				RefColumns: []*schema.Column{InstitutionsColumns[0]},
-				OnDelete:   schema.NoAction,
+				OnDelete:   schema.Cascade,
 			},
 		},
 	}
@@ -82,7 +82,7 @@ var (
 				Symbol:     "departments_institutions_departments",
 				Columns:    []*schema.Column{DepartmentsColumns[4]},
 				RefColumns: []*schema.Column{InstitutionsColumns[0]},
-				OnDelete:   schema.NoAction,
+				OnDelete:   schema.Cascade,
 			},
 		},
 	}
@@ -191,6 +191,8 @@ var (
 		{Name: "id", Type: field.TypeInt, Increment: true},
 		{Name: "name", Type: field.TypeString},
 		{Name: "short_name", Type: field.TypeString, Unique: true},
+		{Name: "admin_domain", Type: field.TypeString, Unique: true},
+		{Name: "student_domain", Type: field.TypeString, Unique: true},
 	}
 	// InstitutionsTable holds the schema information for the "institutions" table.
 	InstitutionsTable = &schema.Table{
@@ -335,7 +337,7 @@ var (
 		{Name: "points_awarded_count", Type: field.TypeInt, Default: 0},
 		{Name: "points_awarded_reset_time", Type: field.TypeTime, Nullable: true},
 		{Name: "god_mode", Type: field.TypeBool},
-		{Name: "department_users", Type: field.TypeInt},
+		{Name: "department_users", Type: field.TypeInt, Nullable: true},
 	}
 	// UsersTable holds the schema information for the "users" table.
 	UsersTable = &schema.Table{
@@ -347,7 +349,7 @@ var (
 				Symbol:     "users_departments_users",
 				Columns:    []*schema.Column{UsersColumns[9]},
 				RefColumns: []*schema.Column{DepartmentsColumns[0]},
-				OnDelete:   schema.NoAction,
+				OnDelete:   schema.SetNull,
 			},
 		},
 	}
@@ -396,7 +398,7 @@ var (
 				Symbol:     "vouchers_institutions_vouchers",
 				Columns:    []*schema.Column{VouchersColumns[4]},
 				RefColumns: []*schema.Column{InstitutionsColumns[0]},
-				OnDelete:   schema.NoAction,
+				OnDelete:   schema.Cascade,
 			},
 		},
 	}

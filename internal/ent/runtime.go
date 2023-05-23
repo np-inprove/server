@@ -89,6 +89,14 @@ func init() {
 	institutionDescShortName := institutionFields[1].Descriptor()
 	// institution.ShortNameValidator is a validator for the "short_name" field. It is called by the builders before save.
 	institution.ShortNameValidator = institutionDescShortName.Validators[0].(func(string) error)
+	// institutionDescAdminDomain is the schema descriptor for admin_domain field.
+	institutionDescAdminDomain := institutionFields[2].Descriptor()
+	// institution.AdminDomainValidator is a validator for the "admin_domain" field. It is called by the builders before save.
+	institution.AdminDomainValidator = institutionDescAdminDomain.Validators[0].(func(string) error)
+	// institutionDescStudentDomain is the schema descriptor for student_domain field.
+	institutionDescStudentDomain := institutionFields[3].Descriptor()
+	// institution.StudentDomainValidator is a validator for the "student_domain" field. It is called by the builders before save.
+	institution.StudentDomainValidator = institutionDescStudentDomain.Validators[0].(func(string) error)
 	jwtrevocationFields := schema.JWTRevocation{}.Fields()
 	_ = jwtrevocationFields
 	// jwtrevocationDescJti is the schema descriptor for jti field.

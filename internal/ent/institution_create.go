@@ -37,6 +37,18 @@ func (ic *InstitutionCreate) SetShortName(s string) *InstitutionCreate {
 	return ic
 }
 
+// SetAdminDomain sets the "admin_domain" field.
+func (ic *InstitutionCreate) SetAdminDomain(s string) *InstitutionCreate {
+	ic.mutation.SetAdminDomain(s)
+	return ic
+}
+
+// SetStudentDomain sets the "student_domain" field.
+func (ic *InstitutionCreate) SetStudentDomain(s string) *InstitutionCreate {
+	ic.mutation.SetStudentDomain(s)
+	return ic
+}
+
 // AddAdminIDs adds the "admins" edge to the User entity by IDs.
 func (ic *InstitutionCreate) AddAdminIDs(ids ...int) *InstitutionCreate {
 	ic.mutation.AddAdminIDs(ids...)
@@ -147,6 +159,22 @@ func (ic *InstitutionCreate) check() error {
 			return &ValidationError{Name: "short_name", err: fmt.Errorf(`ent: validator failed for field "Institution.short_name": %w`, err)}
 		}
 	}
+	if _, ok := ic.mutation.AdminDomain(); !ok {
+		return &ValidationError{Name: "admin_domain", err: errors.New(`ent: missing required field "Institution.admin_domain"`)}
+	}
+	if v, ok := ic.mutation.AdminDomain(); ok {
+		if err := institution.AdminDomainValidator(v); err != nil {
+			return &ValidationError{Name: "admin_domain", err: fmt.Errorf(`ent: validator failed for field "Institution.admin_domain": %w`, err)}
+		}
+	}
+	if _, ok := ic.mutation.StudentDomain(); !ok {
+		return &ValidationError{Name: "student_domain", err: errors.New(`ent: missing required field "Institution.student_domain"`)}
+	}
+	if v, ok := ic.mutation.StudentDomain(); ok {
+		if err := institution.StudentDomainValidator(v); err != nil {
+			return &ValidationError{Name: "student_domain", err: fmt.Errorf(`ent: validator failed for field "Institution.student_domain": %w`, err)}
+		}
+	}
 	return nil
 }
 
@@ -181,6 +209,14 @@ func (ic *InstitutionCreate) createSpec() (*Institution, *sqlgraph.CreateSpec) {
 	if value, ok := ic.mutation.ShortName(); ok {
 		_spec.SetField(institution.FieldShortName, field.TypeString, value)
 		_node.ShortName = value
+	}
+	if value, ok := ic.mutation.AdminDomain(); ok {
+		_spec.SetField(institution.FieldAdminDomain, field.TypeString, value)
+		_node.AdminDomain = value
+	}
+	if value, ok := ic.mutation.StudentDomain(); ok {
+		_spec.SetField(institution.FieldStudentDomain, field.TypeString, value)
+		_node.StudentDomain = value
 	}
 	if nodes := ic.mutation.AdminsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
@@ -322,6 +358,30 @@ func (u *InstitutionUpsert) UpdateShortName() *InstitutionUpsert {
 	return u
 }
 
+// SetAdminDomain sets the "admin_domain" field.
+func (u *InstitutionUpsert) SetAdminDomain(v string) *InstitutionUpsert {
+	u.Set(institution.FieldAdminDomain, v)
+	return u
+}
+
+// UpdateAdminDomain sets the "admin_domain" field to the value that was provided on create.
+func (u *InstitutionUpsert) UpdateAdminDomain() *InstitutionUpsert {
+	u.SetExcluded(institution.FieldAdminDomain)
+	return u
+}
+
+// SetStudentDomain sets the "student_domain" field.
+func (u *InstitutionUpsert) SetStudentDomain(v string) *InstitutionUpsert {
+	u.Set(institution.FieldStudentDomain, v)
+	return u
+}
+
+// UpdateStudentDomain sets the "student_domain" field to the value that was provided on create.
+func (u *InstitutionUpsert) UpdateStudentDomain() *InstitutionUpsert {
+	u.SetExcluded(institution.FieldStudentDomain)
+	return u
+}
+
 // UpdateNewValues updates the mutable fields using the new values that were set on create.
 // Using this option is equivalent to using:
 //
@@ -387,6 +447,34 @@ func (u *InstitutionUpsertOne) SetShortName(v string) *InstitutionUpsertOne {
 func (u *InstitutionUpsertOne) UpdateShortName() *InstitutionUpsertOne {
 	return u.Update(func(s *InstitutionUpsert) {
 		s.UpdateShortName()
+	})
+}
+
+// SetAdminDomain sets the "admin_domain" field.
+func (u *InstitutionUpsertOne) SetAdminDomain(v string) *InstitutionUpsertOne {
+	return u.Update(func(s *InstitutionUpsert) {
+		s.SetAdminDomain(v)
+	})
+}
+
+// UpdateAdminDomain sets the "admin_domain" field to the value that was provided on create.
+func (u *InstitutionUpsertOne) UpdateAdminDomain() *InstitutionUpsertOne {
+	return u.Update(func(s *InstitutionUpsert) {
+		s.UpdateAdminDomain()
+	})
+}
+
+// SetStudentDomain sets the "student_domain" field.
+func (u *InstitutionUpsertOne) SetStudentDomain(v string) *InstitutionUpsertOne {
+	return u.Update(func(s *InstitutionUpsert) {
+		s.SetStudentDomain(v)
+	})
+}
+
+// UpdateStudentDomain sets the "student_domain" field to the value that was provided on create.
+func (u *InstitutionUpsertOne) UpdateStudentDomain() *InstitutionUpsertOne {
+	return u.Update(func(s *InstitutionUpsert) {
+		s.UpdateStudentDomain()
 	})
 }
 
@@ -614,6 +702,34 @@ func (u *InstitutionUpsertBulk) SetShortName(v string) *InstitutionUpsertBulk {
 func (u *InstitutionUpsertBulk) UpdateShortName() *InstitutionUpsertBulk {
 	return u.Update(func(s *InstitutionUpsert) {
 		s.UpdateShortName()
+	})
+}
+
+// SetAdminDomain sets the "admin_domain" field.
+func (u *InstitutionUpsertBulk) SetAdminDomain(v string) *InstitutionUpsertBulk {
+	return u.Update(func(s *InstitutionUpsert) {
+		s.SetAdminDomain(v)
+	})
+}
+
+// UpdateAdminDomain sets the "admin_domain" field to the value that was provided on create.
+func (u *InstitutionUpsertBulk) UpdateAdminDomain() *InstitutionUpsertBulk {
+	return u.Update(func(s *InstitutionUpsert) {
+		s.UpdateAdminDomain()
+	})
+}
+
+// SetStudentDomain sets the "student_domain" field.
+func (u *InstitutionUpsertBulk) SetStudentDomain(v string) *InstitutionUpsertBulk {
+	return u.Update(func(s *InstitutionUpsert) {
+		s.SetStudentDomain(v)
+	})
+}
+
+// UpdateStudentDomain sets the "student_domain" field to the value that was provided on create.
+func (u *InstitutionUpsertBulk) UpdateStudentDomain() *InstitutionUpsertBulk {
+	return u.Update(func(s *InstitutionUpsert) {
+		s.UpdateStudentDomain()
 	})
 }
 

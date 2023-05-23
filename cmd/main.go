@@ -13,6 +13,7 @@ import (
 	"github.com/np-inprove/server/internal/auth"
 	"github.com/np-inprove/server/internal/config"
 	"github.com/np-inprove/server/internal/ent"
+	"github.com/np-inprove/server/internal/god"
 	"github.com/np-inprove/server/internal/logger"
 	"github.com/np-inprove/server/internal/seed"
 
@@ -22,6 +23,7 @@ import (
 	"github.com/go-chi/jwtauth/v5"
 	"github.com/go-chi/render"
 	"github.com/lestrrat-go/jwx/v2/jwk"
+
 	_ "github.com/lib/pq"
 	_ "github.com/mattn/go-sqlite3"
 )
@@ -57,11 +59,6 @@ func main() {
 		)
 	}
 
-	appLogger.Info("successfully opened connection",
-		logger.String("area", "database"),
-		logger.String("driver_name", cfg.DatabaseDriverName()),
-	)
-
 	defer func(client *ent.Client) {
 		_ = client.Close()
 	}(client)
@@ -82,11 +79,6 @@ func main() {
 				logger.String("driver_name", cfg.DatabaseDriverName()),
 			)
 		}
-
-		appLogger.Info("completed auto migration",
-			logger.String("area", "database"),
-			logger.String("driver_name", cfg.DatabaseDriverName()),
-		)
 	}
 
 	privateKey, err := jwk.ParseKey([]byte(cfg.AppJWK()))
@@ -97,14 +89,6 @@ func main() {
 	publicKey, err := privateKey.PublicKey()
 	if err != nil {
 		appLogger.Warn("failed to get jwk public key, if the jwt algorithm requires a public key, it will not work", logger.String("err", err.Error()))
-	}
-
-	ar := auth.NewEntRepository(client)
-	auc, err := auth.NewUseCase(ar, cfg, publicKey, privateKey)
-	if err != nil {
-		appLogger.Fatal("failed to initialize auth use case",
-			logger.String("err", err.Error()),
-		)
 	}
 
 	appLogger.Info("seeding database",
@@ -143,20 +127,36 @@ func main() {
 	r.Use(middleware.URLFormat)
 	r.Use(loggerMiddleware.Request)
 
-	authHandler := auth.NewHTTPHandler(auc, cfg, tokenAuth)
-
 	r.Get("/healthz", func(w http.ResponseWriter, r *http.Request) {
 		render.DefaultResponder(w, r, render.M{"ok": true})
 	})
 
-	r.Mount("/auth", authHandler)
-
 	server := http.Server{Addr: cfg.HTTPAddr(), Handler: r}
 
-	appLogger.Info("created http server",
-		logger.String("area", "http"),
-		logger.String("addr", cfg.HTTPAddr()),
+	appLogger.Info("registering auth services",
+		logger.String("area", "auth"),
 	)
+
+	ar := auth.NewEntRepository(client)
+	auc, err := auth.NewUseCase(ar, cfg, publicKey, privateKey)
+	if err != nil {
+		appLogger.Fatal("failed to initialize auth use case",
+			logger.String("err", err.Error()),
+		)
+	}
+	authHandler := auth.NewHTTPHandler(auc, cfg, tokenAuth)
+
+	r.Mount("/auth", authHandler)
+
+	appLogger.Info("registering god-mode services",
+		logger.String("area", "auth"),
+	)
+
+	gr := god.NewEntRepository(appLogger, client)
+	guc := god.NewUseCase(gr)
+	godHandler := god.NewHTTPHandler(guc, cfg, tokenAuth)
+
+	r.Mount("/god", godHandler)
 
 	interrupt := make(chan os.Signal, 1)
 	signal.Notify(interrupt, syscall.SIGTERM, syscall.SIGINT)
@@ -215,8 +215,4 @@ func main() {
 	wg.Wait()
 
 	appLogger.Info("completed graceful shutdown, bye!")
-
-	//r.Use(jwtauth.Verifier(tokenAuth))
-	//r.Use(jwtauth.Authenticator)
-
 }

@@ -29,6 +29,29 @@ func Authenticator(next http.Handler) http.Handler {
 	})
 }
 
+func GodAuthenticator(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		token, _, err := FromContext(r.Context())
+
+		if err != nil {
+			_ = render.Render(w, r, apperror.ErrLoggedOut)
+			return
+		}
+
+		if token == nil || jwt.Validate(token) != nil {
+			_ = render.Render(w, r, apperror.ErrLoggedOut)
+			return
+		}
+
+		if v, ok := token.Get("god"); !ok || !v.(bool) {
+			_ = render.Render(w, r, apperror.ErrLoggedOut)
+		}
+
+		// Token is authenticated, pass it through
+		next.ServeHTTP(w, r)
+	})
+}
+
 func FromContext(ctx context.Context) (jwt.Token, map[string]interface{}, error) {
 	token, _ := ctx.Value(jwtauth.TokenCtxKey).(jwt.Token)
 

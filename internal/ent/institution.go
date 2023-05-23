@@ -20,6 +20,10 @@ type Institution struct {
 	Name string `json:"name,omitempty"`
 	// Short name of the institution (example: np)
 	ShortName string `json:"short_name,omitempty"`
+	// Email domain associated with admins of this institution
+	AdminDomain string `json:"admin_domain,omitempty"`
+	// Email domain associated with students of this institution
+	StudentDomain string `json:"student_domain,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the InstitutionQuery when eager-loading is set.
 	Edges        InstitutionEdges `json:"edges"`
@@ -84,7 +88,7 @@ func (*Institution) scanValues(columns []string) ([]any, error) {
 		switch columns[i] {
 		case institution.FieldID:
 			values[i] = new(sql.NullInt64)
-		case institution.FieldName, institution.FieldShortName:
+		case institution.FieldName, institution.FieldShortName, institution.FieldAdminDomain, institution.FieldStudentDomain:
 			values[i] = new(sql.NullString)
 		default:
 			values[i] = new(sql.UnknownType)
@@ -118,6 +122,18 @@ func (i *Institution) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field short_name", values[j])
 			} else if value.Valid {
 				i.ShortName = value.String
+			}
+		case institution.FieldAdminDomain:
+			if value, ok := values[j].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field admin_domain", values[j])
+			} else if value.Valid {
+				i.AdminDomain = value.String
+			}
+		case institution.FieldStudentDomain:
+			if value, ok := values[j].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field student_domain", values[j])
+			} else if value.Valid {
+				i.StudentDomain = value.String
 			}
 		default:
 			i.selectValues.Set(columns[j], values[j])
@@ -180,6 +196,12 @@ func (i *Institution) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("short_name=")
 	builder.WriteString(i.ShortName)
+	builder.WriteString(", ")
+	builder.WriteString("admin_domain=")
+	builder.WriteString(i.AdminDomain)
+	builder.WriteString(", ")
+	builder.WriteString("student_domain=")
+	builder.WriteString(i.StudentDomain)
 	builder.WriteByte(')')
 	return builder.String()
 }

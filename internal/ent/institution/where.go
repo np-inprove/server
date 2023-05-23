@@ -63,6 +63,16 @@ func ShortName(v string) predicate.Institution {
 	return predicate.Institution(sql.FieldEQ(FieldShortName, v))
 }
 
+// AdminDomain applies equality check predicate on the "admin_domain" field. It's identical to AdminDomainEQ.
+func AdminDomain(v string) predicate.Institution {
+	return predicate.Institution(sql.FieldEQ(FieldAdminDomain, v))
+}
+
+// StudentDomain applies equality check predicate on the "student_domain" field. It's identical to StudentDomainEQ.
+func StudentDomain(v string) predicate.Institution {
+	return predicate.Institution(sql.FieldEQ(FieldStudentDomain, v))
+}
+
 // NameEQ applies the EQ predicate on the "name" field.
 func NameEQ(v string) predicate.Institution {
 	return predicate.Institution(sql.FieldEQ(FieldName, v))
@@ -191,6 +201,136 @@ func ShortNameEqualFold(v string) predicate.Institution {
 // ShortNameContainsFold applies the ContainsFold predicate on the "short_name" field.
 func ShortNameContainsFold(v string) predicate.Institution {
 	return predicate.Institution(sql.FieldContainsFold(FieldShortName, v))
+}
+
+// AdminDomainEQ applies the EQ predicate on the "admin_domain" field.
+func AdminDomainEQ(v string) predicate.Institution {
+	return predicate.Institution(sql.FieldEQ(FieldAdminDomain, v))
+}
+
+// AdminDomainNEQ applies the NEQ predicate on the "admin_domain" field.
+func AdminDomainNEQ(v string) predicate.Institution {
+	return predicate.Institution(sql.FieldNEQ(FieldAdminDomain, v))
+}
+
+// AdminDomainIn applies the In predicate on the "admin_domain" field.
+func AdminDomainIn(vs ...string) predicate.Institution {
+	return predicate.Institution(sql.FieldIn(FieldAdminDomain, vs...))
+}
+
+// AdminDomainNotIn applies the NotIn predicate on the "admin_domain" field.
+func AdminDomainNotIn(vs ...string) predicate.Institution {
+	return predicate.Institution(sql.FieldNotIn(FieldAdminDomain, vs...))
+}
+
+// AdminDomainGT applies the GT predicate on the "admin_domain" field.
+func AdminDomainGT(v string) predicate.Institution {
+	return predicate.Institution(sql.FieldGT(FieldAdminDomain, v))
+}
+
+// AdminDomainGTE applies the GTE predicate on the "admin_domain" field.
+func AdminDomainGTE(v string) predicate.Institution {
+	return predicate.Institution(sql.FieldGTE(FieldAdminDomain, v))
+}
+
+// AdminDomainLT applies the LT predicate on the "admin_domain" field.
+func AdminDomainLT(v string) predicate.Institution {
+	return predicate.Institution(sql.FieldLT(FieldAdminDomain, v))
+}
+
+// AdminDomainLTE applies the LTE predicate on the "admin_domain" field.
+func AdminDomainLTE(v string) predicate.Institution {
+	return predicate.Institution(sql.FieldLTE(FieldAdminDomain, v))
+}
+
+// AdminDomainContains applies the Contains predicate on the "admin_domain" field.
+func AdminDomainContains(v string) predicate.Institution {
+	return predicate.Institution(sql.FieldContains(FieldAdminDomain, v))
+}
+
+// AdminDomainHasPrefix applies the HasPrefix predicate on the "admin_domain" field.
+func AdminDomainHasPrefix(v string) predicate.Institution {
+	return predicate.Institution(sql.FieldHasPrefix(FieldAdminDomain, v))
+}
+
+// AdminDomainHasSuffix applies the HasSuffix predicate on the "admin_domain" field.
+func AdminDomainHasSuffix(v string) predicate.Institution {
+	return predicate.Institution(sql.FieldHasSuffix(FieldAdminDomain, v))
+}
+
+// AdminDomainEqualFold applies the EqualFold predicate on the "admin_domain" field.
+func AdminDomainEqualFold(v string) predicate.Institution {
+	return predicate.Institution(sql.FieldEqualFold(FieldAdminDomain, v))
+}
+
+// AdminDomainContainsFold applies the ContainsFold predicate on the "admin_domain" field.
+func AdminDomainContainsFold(v string) predicate.Institution {
+	return predicate.Institution(sql.FieldContainsFold(FieldAdminDomain, v))
+}
+
+// StudentDomainEQ applies the EQ predicate on the "student_domain" field.
+func StudentDomainEQ(v string) predicate.Institution {
+	return predicate.Institution(sql.FieldEQ(FieldStudentDomain, v))
+}
+
+// StudentDomainNEQ applies the NEQ predicate on the "student_domain" field.
+func StudentDomainNEQ(v string) predicate.Institution {
+	return predicate.Institution(sql.FieldNEQ(FieldStudentDomain, v))
+}
+
+// StudentDomainIn applies the In predicate on the "student_domain" field.
+func StudentDomainIn(vs ...string) predicate.Institution {
+	return predicate.Institution(sql.FieldIn(FieldStudentDomain, vs...))
+}
+
+// StudentDomainNotIn applies the NotIn predicate on the "student_domain" field.
+func StudentDomainNotIn(vs ...string) predicate.Institution {
+	return predicate.Institution(sql.FieldNotIn(FieldStudentDomain, vs...))
+}
+
+// StudentDomainGT applies the GT predicate on the "student_domain" field.
+func StudentDomainGT(v string) predicate.Institution {
+	return predicate.Institution(sql.FieldGT(FieldStudentDomain, v))
+}
+
+// StudentDomainGTE applies the GTE predicate on the "student_domain" field.
+func StudentDomainGTE(v string) predicate.Institution {
+	return predicate.Institution(sql.FieldGTE(FieldStudentDomain, v))
+}
+
+// StudentDomainLT applies the LT predicate on the "student_domain" field.
+func StudentDomainLT(v string) predicate.Institution {
+	return predicate.Institution(sql.FieldLT(FieldStudentDomain, v))
+}
+
+// StudentDomainLTE applies the LTE predicate on the "student_domain" field.
+func StudentDomainLTE(v string) predicate.Institution {
+	return predicate.Institution(sql.FieldLTE(FieldStudentDomain, v))
+}
+
+// StudentDomainContains applies the Contains predicate on the "student_domain" field.
+func StudentDomainContains(v string) predicate.Institution {
+	return predicate.Institution(sql.FieldContains(FieldStudentDomain, v))
+}
+
+// StudentDomainHasPrefix applies the HasPrefix predicate on the "student_domain" field.
+func StudentDomainHasPrefix(v string) predicate.Institution {
+	return predicate.Institution(sql.FieldHasPrefix(FieldStudentDomain, v))
+}
+
+// StudentDomainHasSuffix applies the HasSuffix predicate on the "student_domain" field.
+func StudentDomainHasSuffix(v string) predicate.Institution {
+	return predicate.Institution(sql.FieldHasSuffix(FieldStudentDomain, v))
+}
+
+// StudentDomainEqualFold applies the EqualFold predicate on the "student_domain" field.
+func StudentDomainEqualFold(v string) predicate.Institution {
+	return predicate.Institution(sql.FieldEqualFold(FieldStudentDomain, v))
+}
+
+// StudentDomainContainsFold applies the ContainsFold predicate on the "student_domain" field.
+func StudentDomainContainsFold(v string) predicate.Institution {
+	return predicate.Institution(sql.FieldContainsFold(FieldStudentDomain, v))
 }
 
 // HasAdmins applies the HasEdge predicate on the "admins" edge.

@@ -16,6 +16,10 @@ const (
 	FieldName = "name"
 	// FieldShortName holds the string denoting the short_name field in the database.
 	FieldShortName = "short_name"
+	// FieldAdminDomain holds the string denoting the admin_domain field in the database.
+	FieldAdminDomain = "admin_domain"
+	// FieldStudentDomain holds the string denoting the student_domain field in the database.
+	FieldStudentDomain = "student_domain"
 	// EdgeAdmins holds the string denoting the admins edge name in mutations.
 	EdgeAdmins = "admins"
 	// EdgeVouchers holds the string denoting the vouchers edge name in mutations.
@@ -59,6 +63,8 @@ var Columns = []string{
 	FieldID,
 	FieldName,
 	FieldShortName,
+	FieldAdminDomain,
+	FieldStudentDomain,
 }
 
 var (
@@ -82,6 +88,10 @@ var (
 	NameValidator func(string) error
 	// ShortNameValidator is a validator for the "short_name" field. It is called by the builders before save.
 	ShortNameValidator func(string) error
+	// AdminDomainValidator is a validator for the "admin_domain" field. It is called by the builders before save.
+	AdminDomainValidator func(string) error
+	// StudentDomainValidator is a validator for the "student_domain" field. It is called by the builders before save.
+	StudentDomainValidator func(string) error
 )
 
 // OrderOption defines the ordering options for the Institution queries.
@@ -100,6 +110,16 @@ func ByName(opts ...sql.OrderTermOption) OrderOption {
 // ByShortName orders the results by the short_name field.
 func ByShortName(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldShortName, opts...).ToFunc()
+}
+
+// ByAdminDomain orders the results by the admin_domain field.
+func ByAdminDomain(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldAdminDomain, opts...).ToFunc()
+}
+
+// ByStudentDomain orders the results by the student_domain field.
+func ByStudentDomain(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldStudentDomain, opts...).ToFunc()
 }
 
 // ByAdminsCount orders the results by admins count.

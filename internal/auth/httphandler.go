@@ -4,7 +4,6 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/jwtauth/v5"
 	"github.com/go-chi/render"
-	"github.com/gookit/validate"
 	"github.com/lestrrat-go/jwx/v2/jwt"
 	"github.com/np-inprove/server/internal/apperror"
 	"github.com/np-inprove/server/internal/config"
@@ -51,8 +50,7 @@ func (h httpHandler) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	v := validate.Struct(p)
-	if !v.Validate() {
+	if v := p.Validate(); !v.Validate() {
 		_ = render.Render(w, r, apperror.ErrValidation(v.Errors))
 		return
 	}
@@ -73,8 +71,7 @@ func (h httpHandler) Login(w http.ResponseWriter, r *http.Request) {
 		MaxAge:   int(30 * time.Minute.Seconds()),
 		Secure:   true,
 		HttpOnly: true,
-		// TODO change to strict
-		SameSite: http.SameSiteNoneMode,
+		SameSite: http.SameSiteDefaultMode,
 	})
 
 	b := "human"
@@ -91,7 +88,7 @@ func (h httpHandler) Login(w http.ResponseWriter, r *http.Request) {
 		Expires:  time.Now().Add(30 * time.Minute),
 		MaxAge:   int(30 * time.Minute.Seconds()),
 		Secure:   true,
-		SameSite: http.SameSiteNoneMode,
+		SameSite: http.SameSiteDefaultMode,
 	})
 
 	_ = render.Render(w, r, payload.User{

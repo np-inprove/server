@@ -134,6 +134,14 @@ func (uu *UserUpdate) SetDepartmentID(id int) *UserUpdate {
 	return uu
 }
 
+// SetNillableDepartmentID sets the "department" edge to the Department entity by ID if the given value is not nil.
+func (uu *UserUpdate) SetNillableDepartmentID(id *int) *UserUpdate {
+	if id != nil {
+		uu = uu.SetDepartmentID(*id)
+	}
+	return uu
+}
+
 // SetDepartment sets the "department" edge to the Department entity.
 func (uu *UserUpdate) SetDepartment(d *Department) *UserUpdate {
 	return uu.SetDepartmentID(d.ID)
@@ -491,9 +499,6 @@ func (uu *UserUpdate) check() error {
 		if err := user.PointsAwardedCountValidator(v); err != nil {
 			return &ValidationError{Name: "points_awarded_count", err: fmt.Errorf(`ent: validator failed for field "User.points_awarded_count": %w`, err)}
 		}
-	}
-	if _, ok := uu.mutation.DepartmentID(); uu.mutation.DepartmentCleared() && !ok {
-		return errors.New(`ent: clearing a required unique edge "User.department"`)
 	}
 	return nil
 }
@@ -1062,6 +1067,14 @@ func (uuo *UserUpdateOne) SetDepartmentID(id int) *UserUpdateOne {
 	return uuo
 }
 
+// SetNillableDepartmentID sets the "department" edge to the Department entity by ID if the given value is not nil.
+func (uuo *UserUpdateOne) SetNillableDepartmentID(id *int) *UserUpdateOne {
+	if id != nil {
+		uuo = uuo.SetDepartmentID(*id)
+	}
+	return uuo
+}
+
 // SetDepartment sets the "department" edge to the Department entity.
 func (uuo *UserUpdateOne) SetDepartment(d *Department) *UserUpdateOne {
 	return uuo.SetDepartmentID(d.ID)
@@ -1432,9 +1445,6 @@ func (uuo *UserUpdateOne) check() error {
 		if err := user.PointsAwardedCountValidator(v); err != nil {
 			return &ValidationError{Name: "points_awarded_count", err: fmt.Errorf(`ent: validator failed for field "User.points_awarded_count": %w`, err)}
 		}
-	}
-	if _, ok := uuo.mutation.DepartmentID(); uuo.mutation.DepartmentCleared() && !ok {
-		return errors.New(`ent: clearing a required unique edge "User.department"`)
 	}
 	return nil
 }
