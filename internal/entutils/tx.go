@@ -5,8 +5,14 @@ import (
 	"github.com/np-inprove/server/internal/ent"
 )
 
-func ExtractTx(ctx context.Context, key string) (*ent.Client, bool) {
-	v := ctx.Value(key)
+type CtxKey int
+
+const (
+	EntTxCtxKey = iota
+)
+
+func ExtractTx(ctx context.Context) (*ent.Client, bool) {
+	v := ctx.Value(EntTxCtxKey)
 
 	if v == nil {
 		return nil, false

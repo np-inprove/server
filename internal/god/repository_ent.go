@@ -10,10 +10,6 @@ import (
 	"github.com/np-inprove/server/internal/logger"
 )
 
-var (
-	txCtxKey = "tx"
-)
-
 type entRepository struct {
 	l logger.AppLogger
 	c *ent.Client
@@ -35,7 +31,7 @@ func (e entRepository) FindUsersWithoutAdmin(ctx context.Context) ([]User, error
 
 func (e entRepository) CreateInstitution(ctx context.Context, name string, shortName string, adminDomain string, studentDomain string) (*Institution, error) {
 	c := e.c
-	if cc, ok := entutils.ExtractTx(ctx, txCtxKey); ok {
+	if cc, ok := entutils.ExtractTx(ctx); ok {
 		c = cc
 	}
 
@@ -57,7 +53,7 @@ func (e entRepository) CreateInstitution(ctx context.Context, name string, short
 
 func (e entRepository) DeleteInstitution(ctx context.Context, shortName string) error {
 	c := e.c
-	if cc, ok := entutils.ExtractTx(ctx, txCtxKey); ok {
+	if cc, ok := entutils.ExtractTx(ctx); ok {
 		c = cc
 	}
 
@@ -81,7 +77,7 @@ func (e entRepository) WithTx(ctx context.Context, f func(ctx context.Context) e
 	}
 
 	txc := tx.Client()
-	ctx = context.WithValue(ctx, txCtxKey, txc)
+	ctx = context.WithValue(ctx, entutils.EntTxCtxKey, txc)
 
 	if err := f(ctx); err != nil {
 		e.l.Warn("failed database query during ent transaction",
