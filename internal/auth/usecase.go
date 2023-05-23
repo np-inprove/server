@@ -87,7 +87,10 @@ func (u usecase) Login(ctx context.Context, email string, password string) (*ses
 		JwtID(jti.String()).
 		IssuedAt(time.Now()).
 		NotBefore(time.Now()).
-		Expiration(time.Now().Add(30 * time.Minute)).
+		Expiration(time.Now().Add(30*time.Minute)).
+		// The Claim for god mode which is checked when calling god mode endpoints.
+		// Ensure it is the same as used in middleware/middleware.go
+		Claim("god", user.GodMode).
 		Build()
 	if err != nil {
 		return nil, fmt.Errorf("failed to build jwt: %w", err)

@@ -73,7 +73,8 @@ func (h httpHandler) Login(w http.ResponseWriter, r *http.Request) {
 		MaxAge:   int(30 * time.Minute.Seconds()),
 		Secure:   true,
 		HttpOnly: true,
-		SameSite: http.SameSiteDefaultMode,
+		// TODO change to strict
+		SameSite: http.SameSiteNoneMode,
 	})
 
 	b := "human"
@@ -90,7 +91,7 @@ func (h httpHandler) Login(w http.ResponseWriter, r *http.Request) {
 		Expires:  time.Now().Add(30 * time.Minute),
 		MaxAge:   int(30 * time.Minute.Seconds()),
 		Secure:   true,
-		SameSite: http.SameSiteDefaultMode,
+		SameSite: http.SameSiteNoneMode,
 	})
 
 	_ = render.Render(w, r, payload.User{
