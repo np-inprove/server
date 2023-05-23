@@ -3,7 +3,9 @@ package auth
 import (
 	"context"
 	"fmt"
+	"github.com/np-inprove/server/internal/apperror"
 	"github.com/np-inprove/server/internal/ent"
+	"github.com/np-inprove/server/internal/ent/institution"
 	"github.com/np-inprove/server/internal/ent/jwtrevocation"
 	"github.com/np-inprove/server/internal/ent/user"
 	"github.com/np-inprove/server/internal/hash"
@@ -36,7 +38,16 @@ func (e entRepository) FindJWTRevocation(ctx context.Context, jti string) (*JWTR
 	return r, nil
 }
 
-func (e entRepository) CreateUser(ctx context.Context, firstName string, lastName string, email string, password hash.Encoded, deptID int, opts ...CreateUserOption) (*User, error) {
+func (e entRepository) FindInstitutionByDomains(ctx context.Context, domain string) (*Institution, error) {
+	i, err := e.ent.Institution.Query().Where(institution.Or(institution.StudentDomain(domain), institution.AdminDomain(domain))).First(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to find institution by domains: %w", err)
+	}
+
+	return i, nil
+}
+
+func (e entRepository) CreateUser(ctx context.Context, firstName string, lastName string, email string, password hash.Encoded, opts ...CreateUserOption) (*User, error) {
 	var options createUserOptions
 	for _, opt := range opts {
 		opt(&options)
@@ -47,13 +58,15 @@ func (e entRepository) CreateUser(ctx context.Context, firstName string, lastNam
 		SetLastName(lastName).
 		SetEmail(email).
 		SetPassword(password).
-		SetDepartmentID(deptID).
 		SetPoints(options.points).
 		SetPointsAwardedCount(options.pointsAwardedCount).
 		SetPointsAwardedResetTime(options.pointsAwardedResetTime).
 		SetGodMode(options.godMode).
 		Save(ctx)
 	if err != nil {
+		if apperror.IsConflict(err) {
+			return nil, ErrUserConflict
+		}
 		return nil, fmt.Errorf("failed to create user: %w", err)
 	}
 

@@ -6,3 +6,4 @@ import (
 
 type User = ent.User
 type JWTRevocation = ent.JWTRevocation
+type Institution = ent.Institution

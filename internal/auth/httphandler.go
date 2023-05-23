@@ -24,6 +24,7 @@ func NewHTTPHandler(u UseCase, c *config.Config, j *jwtauth.JWTAuth) chi.Router 
 	r := chi.NewRouter()
 
 	r.Post("/login", a.Login)
+	r.Post("/register", a.Register)
 
 	// Authenticated routes
 	r.Group(func(r chi.Router) {
@@ -61,35 +62,38 @@ func (h httpHandler) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// JWT cookie for the server to use
-	http.SetCookie(w, &http.Cookie{
-		Name:     h.c.AppJWTCookieName(),
-		Domain:   h.c.AppJWTCookieDomain(),
-		Value:    s.token,
-		Path:     "/",
-		Expires:  time.Now().Add(30 * time.Minute),
-		MaxAge:   int(30 * time.Minute.Seconds()),
-		Secure:   true,
-		HttpOnly: true,
-		SameSite: http.SameSiteDefaultMode,
-	})
+	h.setAuthCookies(w, s)
 
-	b := "human"
-	if s.user.GodMode {
-		b = "god"
-	}
-	// Cookie for the client to know that it's authenticated
-	// This must be the same as specified in https://github.com/np-inprove/app/blob/main/middleware
-	http.SetCookie(w, &http.Cookie{
-		Name:     "b",
-		Domain:   h.c.AppJWTCookieDomain(),
-		Value:    b,
-		Path:     "/",
-		Expires:  time.Now().Add(30 * time.Minute),
-		MaxAge:   int(30 * time.Minute.Seconds()),
-		Secure:   true,
-		SameSite: http.SameSiteDefaultMode,
+	_ = render.Render(w, r, payload.User{
+		FirstName:              s.user.FirstName,
+		LastName:               s.user.LastName,
+		Email:                  s.user.Email,
+		Points:                 s.user.Points,
+		PointsAwardedCount:     s.user.PointsAwardedCount,
+		PointsAwardedResetTime: s.user.PointsAwardedResetTime,
+		GodMode:                s.user.GodMode,
 	})
+}
+
+func (h httpHandler) Register(w http.ResponseWriter, r *http.Request) {
+	p := &payload.RegisterRequest{}
+	if err := render.Decode(r, p); err != nil {
+		_ = render.Render(w, r, apperror.ErrBadRequest(err))
+		return
+	}
+
+	if v := p.Validate(); !v.Validate() {
+		_ = render.Render(w, r, apperror.ErrValidation(v.Errors))
+		return
+	}
+
+	s, err := h.u.Register(r.Context(), p.FirstName, p.LastName, p.Email, p.Password)
+	if err != nil {
+		_ = render.Render(w, r, mapDomainErr(err))
+		return
+	}
+
+	h.setAuthCookies(w, s)
 
 	_ = render.Render(w, r, payload.User{
 		FirstName:              s.user.FirstName,
@@ -119,5 +123,37 @@ func (h httpHandler) WhoAmI(w http.ResponseWriter, r *http.Request) {
 		PointsAwardedCount:     user.PointsAwardedCount,
 		PointsAwardedResetTime: user.PointsAwardedResetTime,
 		GodMode:                user.GodMode,
+	})
+}
+
+func (h httpHandler) setAuthCookies(w http.ResponseWriter, s *session) {
+	// JWT cookie for the server to use
+	http.SetCookie(w, &http.Cookie{
+		Name:     h.c.AppJWTCookieName(),
+		Domain:   h.c.AppJWTCookieDomain(),
+		Value:    s.token,
+		Path:     "/",
+		Expires:  time.Now().Add(30 * time.Minute),
+		MaxAge:   int(30 * time.Minute.Seconds()),
+		Secure:   true,
+		HttpOnly: true,
+		SameSite: http.SameSiteDefaultMode,
+	})
+
+	b := "human"
+	if s.user.GodMode {
+		b = "god"
+	}
+	// Cookie for the client to know that it's authenticated
+	// This must be the same as specified in https://github.com/np-inprove/app/blob/main/middleware
+	http.SetCookie(w, &http.Cookie{
+		Name:     "b",
+		Domain:   h.c.AppJWTCookieDomain(),
+		Value:    b,
+		Path:     "/",
+		Expires:  time.Now().Add(30 * time.Minute),
+		MaxAge:   int(30 * time.Minute.Seconds()),
+		Secure:   true,
+		SameSite: http.SameSiteDefaultMode,
 	})
 }
