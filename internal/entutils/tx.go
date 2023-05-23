@@ -8,7 +8,7 @@ import (
 type CtxKey int
 
 const (
-	EntTxCtxKey = iota
+	EntTxCtxKey CtxKey = iota
 )
 
 func ExtractTx(ctx context.Context) (*ent.Client, bool) {
