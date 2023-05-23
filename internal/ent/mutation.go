@@ -4697,9 +4697,6 @@ type InstitutionMutation struct {
 	admin_domain       *string
 	student_domain     *string
 	clearedFields      map[string]struct{}
-	admins             map[int]struct{}
-	removedadmins      map[int]struct{}
-	clearedadmins      bool
 	vouchers           map[int]struct{}
 	removedvouchers    map[int]struct{}
 	clearedvouchers    bool
@@ -4954,60 +4951,6 @@ func (m *InstitutionMutation) OldStudentDomain(ctx context.Context) (v string, e
 // ResetStudentDomain resets all changes to the "student_domain" field.
 func (m *InstitutionMutation) ResetStudentDomain() {
 	m.student_domain = nil
-}
-
-// AddAdminIDs adds the "admins" edge to the User entity by ids.
-func (m *InstitutionMutation) AddAdminIDs(ids ...int) {
-	if m.admins == nil {
-		m.admins = make(map[int]struct{})
-	}
-	for i := range ids {
-		m.admins[ids[i]] = struct{}{}
-	}
-}
-
-// ClearAdmins clears the "admins" edge to the User entity.
-func (m *InstitutionMutation) ClearAdmins() {
-	m.clearedadmins = true
-}
-
-// AdminsCleared reports if the "admins" edge to the User entity was cleared.
-func (m *InstitutionMutation) AdminsCleared() bool {
-	return m.clearedadmins
-}
-
-// RemoveAdminIDs removes the "admins" edge to the User entity by IDs.
-func (m *InstitutionMutation) RemoveAdminIDs(ids ...int) {
-	if m.removedadmins == nil {
-		m.removedadmins = make(map[int]struct{})
-	}
-	for i := range ids {
-		delete(m.admins, ids[i])
-		m.removedadmins[ids[i]] = struct{}{}
-	}
-}
-
-// RemovedAdmins returns the removed IDs of the "admins" edge to the User entity.
-func (m *InstitutionMutation) RemovedAdminsIDs() (ids []int) {
-	for id := range m.removedadmins {
-		ids = append(ids, id)
-	}
-	return
-}
-
-// AdminsIDs returns the "admins" edge IDs in the mutation.
-func (m *InstitutionMutation) AdminsIDs() (ids []int) {
-	for id := range m.admins {
-		ids = append(ids, id)
-	}
-	return
-}
-
-// ResetAdmins resets all changes to the "admins" edge.
-func (m *InstitutionMutation) ResetAdmins() {
-	m.admins = nil
-	m.clearedadmins = false
-	m.removedadmins = nil
 }
 
 // AddVoucherIDs adds the "vouchers" edge to the Voucher entity by ids.
@@ -5356,10 +5299,7 @@ func (m *InstitutionMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *InstitutionMutation) AddedEdges() []string {
-	edges := make([]string, 0, 4)
-	if m.admins != nil {
-		edges = append(edges, institution.EdgeAdmins)
-	}
+	edges := make([]string, 0, 3)
 	if m.vouchers != nil {
 		edges = append(edges, institution.EdgeVouchers)
 	}
@@ -5376,12 +5316,6 @@ func (m *InstitutionMutation) AddedEdges() []string {
 // name in this mutation.
 func (m *InstitutionMutation) AddedIDs(name string) []ent.Value {
 	switch name {
-	case institution.EdgeAdmins:
-		ids := make([]ent.Value, 0, len(m.admins))
-		for id := range m.admins {
-			ids = append(ids, id)
-		}
-		return ids
 	case institution.EdgeVouchers:
 		ids := make([]ent.Value, 0, len(m.vouchers))
 		for id := range m.vouchers {
@@ -5406,10 +5340,7 @@ func (m *InstitutionMutation) AddedIDs(name string) []ent.Value {
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *InstitutionMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 4)
-	if m.removedadmins != nil {
-		edges = append(edges, institution.EdgeAdmins)
-	}
+	edges := make([]string, 0, 3)
 	if m.removedvouchers != nil {
 		edges = append(edges, institution.EdgeVouchers)
 	}
@@ -5426,12 +5357,6 @@ func (m *InstitutionMutation) RemovedEdges() []string {
 // the given name in this mutation.
 func (m *InstitutionMutation) RemovedIDs(name string) []ent.Value {
 	switch name {
-	case institution.EdgeAdmins:
-		ids := make([]ent.Value, 0, len(m.removedadmins))
-		for id := range m.removedadmins {
-			ids = append(ids, id)
-		}
-		return ids
 	case institution.EdgeVouchers:
 		ids := make([]ent.Value, 0, len(m.removedvouchers))
 		for id := range m.removedvouchers {
@@ -5456,10 +5381,7 @@ func (m *InstitutionMutation) RemovedIDs(name string) []ent.Value {
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *InstitutionMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 4)
-	if m.clearedadmins {
-		edges = append(edges, institution.EdgeAdmins)
-	}
+	edges := make([]string, 0, 3)
 	if m.clearedvouchers {
 		edges = append(edges, institution.EdgeVouchers)
 	}
@@ -5476,8 +5398,6 @@ func (m *InstitutionMutation) ClearedEdges() []string {
 // was cleared in this mutation.
 func (m *InstitutionMutation) EdgeCleared(name string) bool {
 	switch name {
-	case institution.EdgeAdmins:
-		return m.clearedadmins
 	case institution.EdgeVouchers:
 		return m.clearedvouchers
 	case institution.EdgeAccessories:
@@ -5500,9 +5420,6 @@ func (m *InstitutionMutation) ClearEdge(name string) error {
 // It returns an error if the edge is not defined in the schema.
 func (m *InstitutionMutation) ResetEdge(name string) error {
 	switch name {
-	case institution.EdgeAdmins:
-		m.ResetAdmins()
-		return nil
 	case institution.EdgeVouchers:
 		m.ResetVouchers()
 		return nil
@@ -8315,9 +8232,6 @@ type UserMutation struct {
 	clearedFields             map[string]struct{}
 	department                *int
 	cleareddepartment         bool
-	institution               map[int]struct{}
-	removedinstitution        map[int]struct{}
-	clearedinstitution        bool
 	redemptions               map[int]struct{}
 	removedredemptions        map[int]struct{}
 	clearedredemptions        bool
@@ -8820,60 +8734,6 @@ func (m *UserMutation) DepartmentIDs() (ids []int) {
 func (m *UserMutation) ResetDepartment() {
 	m.department = nil
 	m.cleareddepartment = false
-}
-
-// AddInstitutionIDs adds the "institution" edge to the Institution entity by ids.
-func (m *UserMutation) AddInstitutionIDs(ids ...int) {
-	if m.institution == nil {
-		m.institution = make(map[int]struct{})
-	}
-	for i := range ids {
-		m.institution[ids[i]] = struct{}{}
-	}
-}
-
-// ClearInstitution clears the "institution" edge to the Institution entity.
-func (m *UserMutation) ClearInstitution() {
-	m.clearedinstitution = true
-}
-
-// InstitutionCleared reports if the "institution" edge to the Institution entity was cleared.
-func (m *UserMutation) InstitutionCleared() bool {
-	return m.clearedinstitution
-}
-
-// RemoveInstitutionIDs removes the "institution" edge to the Institution entity by IDs.
-func (m *UserMutation) RemoveInstitutionIDs(ids ...int) {
-	if m.removedinstitution == nil {
-		m.removedinstitution = make(map[int]struct{})
-	}
-	for i := range ids {
-		delete(m.institution, ids[i])
-		m.removedinstitution[ids[i]] = struct{}{}
-	}
-}
-
-// RemovedInstitution returns the removed IDs of the "institution" edge to the Institution entity.
-func (m *UserMutation) RemovedInstitutionIDs() (ids []int) {
-	for id := range m.removedinstitution {
-		ids = append(ids, id)
-	}
-	return
-}
-
-// InstitutionIDs returns the "institution" edge IDs in the mutation.
-func (m *UserMutation) InstitutionIDs() (ids []int) {
-	for id := range m.institution {
-		ids = append(ids, id)
-	}
-	return
-}
-
-// ResetInstitution resets all changes to the "institution" edge.
-func (m *UserMutation) ResetInstitution() {
-	m.institution = nil
-	m.clearedinstitution = false
-	m.removedinstitution = nil
 }
 
 // AddRedemptionIDs adds the "redemptions" edge to the Redemption entity by ids.
@@ -9542,12 +9402,9 @@ func (m *UserMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *UserMutation) AddedEdges() []string {
-	edges := make([]string, 0, 9)
+	edges := make([]string, 0, 8)
 	if m.department != nil {
 		edges = append(edges, user.EdgeDepartment)
-	}
-	if m.institution != nil {
-		edges = append(edges, user.EdgeInstitution)
 	}
 	if m.redemptions != nil {
 		edges = append(edges, user.EdgeRedemptions)
@@ -9581,12 +9438,6 @@ func (m *UserMutation) AddedIDs(name string) []ent.Value {
 		if id := m.department; id != nil {
 			return []ent.Value{*id}
 		}
-	case user.EdgeInstitution:
-		ids := make([]ent.Value, 0, len(m.institution))
-		for id := range m.institution {
-			ids = append(ids, id)
-		}
-		return ids
 	case user.EdgeRedemptions:
 		ids := make([]ent.Value, 0, len(m.redemptions))
 		for id := range m.redemptions {
@@ -9635,10 +9486,7 @@ func (m *UserMutation) AddedIDs(name string) []ent.Value {
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *UserMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 9)
-	if m.removedinstitution != nil {
-		edges = append(edges, user.EdgeInstitution)
-	}
+	edges := make([]string, 0, 8)
 	if m.removedredemptions != nil {
 		edges = append(edges, user.EdgeRedemptions)
 	}
@@ -9667,12 +9515,6 @@ func (m *UserMutation) RemovedEdges() []string {
 // the given name in this mutation.
 func (m *UserMutation) RemovedIDs(name string) []ent.Value {
 	switch name {
-	case user.EdgeInstitution:
-		ids := make([]ent.Value, 0, len(m.removedinstitution))
-		for id := range m.removedinstitution {
-			ids = append(ids, id)
-		}
-		return ids
 	case user.EdgeRedemptions:
 		ids := make([]ent.Value, 0, len(m.removedredemptions))
 		for id := range m.removedredemptions {
@@ -9721,12 +9563,9 @@ func (m *UserMutation) RemovedIDs(name string) []ent.Value {
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *UserMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 9)
+	edges := make([]string, 0, 8)
 	if m.cleareddepartment {
 		edges = append(edges, user.EdgeDepartment)
-	}
-	if m.clearedinstitution {
-		edges = append(edges, user.EdgeInstitution)
 	}
 	if m.clearedredemptions {
 		edges = append(edges, user.EdgeRedemptions)
@@ -9758,8 +9597,6 @@ func (m *UserMutation) EdgeCleared(name string) bool {
 	switch name {
 	case user.EdgeDepartment:
 		return m.cleareddepartment
-	case user.EdgeInstitution:
-		return m.clearedinstitution
 	case user.EdgeRedemptions:
 		return m.clearedredemptions
 	case user.EdgeForumPosts:
@@ -9795,9 +9632,6 @@ func (m *UserMutation) ResetEdge(name string) error {
 	switch name {
 	case user.EdgeDepartment:
 		m.ResetDepartment()
-		return nil
-	case user.EdgeInstitution:
-		m.ResetInstitution()
 		return nil
 	case user.EdgeRedemptions:
 		m.ResetRedemptions()

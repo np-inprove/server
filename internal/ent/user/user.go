@@ -30,8 +30,6 @@ const (
 	FieldGodMode = "god_mode"
 	// EdgeDepartment holds the string denoting the department edge name in mutations.
 	EdgeDepartment = "department"
-	// EdgeInstitution holds the string denoting the institution edge name in mutations.
-	EdgeInstitution = "institution"
 	// EdgeRedemptions holds the string denoting the redemptions edge name in mutations.
 	EdgeRedemptions = "redemptions"
 	// EdgeForumPosts holds the string denoting the forum_posts edge name in mutations.
@@ -61,11 +59,6 @@ const (
 	DepartmentInverseTable = "departments"
 	// DepartmentColumn is the table column denoting the department relation/edge.
 	DepartmentColumn = "department_users"
-	// InstitutionTable is the table that holds the institution relation/edge. The primary key declared below.
-	InstitutionTable = "institution_admins"
-	// InstitutionInverseTable is the table name for the Institution entity.
-	// It exists in this package in order to avoid circular dependency with the "institution" package.
-	InstitutionInverseTable = "institutions"
 	// RedemptionsTable is the table that holds the redemptions relation/edge.
 	RedemptionsTable = "redemptions"
 	// RedemptionsInverseTable is the table name for the Redemption entity.
@@ -150,9 +143,6 @@ var ForeignKeys = []string{
 }
 
 var (
-	// InstitutionPrimaryKey and InstitutionColumn2 are the table columns denoting the
-	// primary key for the institution relation (M2M).
-	InstitutionPrimaryKey = []string{"institution_id", "user_id"}
 	// PetPrimaryKey and PetColumn2 are the table columns denoting the
 	// primary key for the pet relation (M2M).
 	PetPrimaryKey = []string{"pet_id", "user_id"}
@@ -246,20 +236,6 @@ func ByGodMode(opts ...sql.OrderTermOption) OrderOption {
 func ByDepartmentField(field string, opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
 		sqlgraph.OrderByNeighborTerms(s, newDepartmentStep(), sql.OrderByField(field, opts...))
-	}
-}
-
-// ByInstitutionCount orders the results by institution count.
-func ByInstitutionCount(opts ...sql.OrderTermOption) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborsCount(s, newInstitutionStep(), opts...)
-	}
-}
-
-// ByInstitution orders the results by institution terms.
-func ByInstitution(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newInstitutionStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
 
@@ -407,13 +383,6 @@ func newDepartmentStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(DepartmentInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.M2O, true, DepartmentTable, DepartmentColumn),
-	)
-}
-func newInstitutionStep() *sqlgraph.Step {
-	return sqlgraph.NewStep(
-		sqlgraph.From(Table, FieldID),
-		sqlgraph.To(InstitutionInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.M2M, true, InstitutionTable, InstitutionPrimaryKey...),
 	)
 }
 func newRedemptionsStep() *sqlgraph.Step {

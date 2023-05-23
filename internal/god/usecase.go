@@ -7,7 +7,7 @@ import (
 )
 
 type UseCase interface {
-	ListInstitutions(ctx context.Context) ([]Institution, error)
+	ListInstitutions(ctx context.Context) ([]*Institution, error)
 	CreateInstitution(
 		ctx context.Context,
 		name string,
@@ -26,7 +26,7 @@ func NewUseCase(r Repository) UseCase {
 	return &useCase{r: r}
 }
 
-func (u useCase) ListInstitutions(ctx context.Context) ([]Institution, error) {
+func (u useCase) ListInstitutions(ctx context.Context) ([]*Institution, error) {
 	insts, err := u.r.FindInstitutions(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find institutions: %w", err)
@@ -64,7 +64,7 @@ func (u useCase) CreateInstitution(
 	var inst *Institution
 	for _, i := range insts {
 		if i.ShortName == shortName {
-			inst = &i
+			inst = i
 			break
 		}
 	}

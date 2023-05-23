@@ -19,14 +19,12 @@ func NewEntRepository(l logger.AppLogger, c *ent.Client) Repository {
 	return entRepository{l, c}
 }
 
-func (e entRepository) FindInstitutions(ctx context.Context) ([]Institution, error) {
-	//TODO implement me
-	panic("implement me")
-}
-
-func (e entRepository) FindUsersWithoutAdmin(ctx context.Context) ([]User, error) {
-	//TODO implement me
-	panic("implement me")
+func (e entRepository) FindInstitutions(ctx context.Context) ([]*Institution, error) {
+	i, err := e.c.Institution.Query().All(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to find all institutions: %w", err)
+	}
+	return i, nil
 }
 
 func (e entRepository) CreateInstitution(ctx context.Context, name string, shortName string, adminDomain string, studentDomain string) (*Institution, error) {

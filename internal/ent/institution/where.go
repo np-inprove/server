@@ -333,29 +333,6 @@ func StudentDomainContainsFold(v string) predicate.Institution {
 	return predicate.Institution(sql.FieldContainsFold(FieldStudentDomain, v))
 }
 
-// HasAdmins applies the HasEdge predicate on the "admins" edge.
-func HasAdmins() predicate.Institution {
-	return predicate.Institution(func(s *sql.Selector) {
-		step := sqlgraph.NewStep(
-			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, false, AdminsTable, AdminsPrimaryKey...),
-		)
-		sqlgraph.HasNeighbors(s, step)
-	})
-}
-
-// HasAdminsWith applies the HasEdge predicate on the "admins" edge with a given conditions (other predicates).
-func HasAdminsWith(preds ...predicate.User) predicate.Institution {
-	return predicate.Institution(func(s *sql.Selector) {
-		step := newAdminsStep()
-		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
-			for _, p := range preds {
-				p(s)
-			}
-		})
-	})
-}
-
 // HasVouchers applies the HasEdge predicate on the "vouchers" edge.
 func HasVouchers() predicate.Institution {
 	return predicate.Institution(func(s *sql.Selector) {

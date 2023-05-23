@@ -36,9 +36,6 @@ func (Institution) Fields() []ent.Field {
 // Edges of the Institution.
 func (Institution) Edges() []ent.Edge {
 	return []ent.Edge{
-		edge.To("admins", User.Type).
-			Annotations(entsql.OnDelete(entsql.SetNull)).
-			Comment("Admins of the institution"),
 		edge.To("vouchers", Voucher.Type).
 			Annotations(entsql.OnDelete(entsql.Cascade)).
 			Comment("Prizes (vouchers) available to be redeemed by users of the institution"),

@@ -50,8 +50,6 @@ func (User) Edges() []ent.Edge {
 		edge.From("department", Department.Type).
 			Ref("users").
 			Unique(),
-		edge.From("institution", Institution.Type).
-			Ref("admins"),
 		edge.From("redemptions", Redemption.Type).
 			Ref("user"),
 		edge.From("forum_posts", ForumPost.Type).

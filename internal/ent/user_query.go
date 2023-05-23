@@ -16,7 +16,6 @@ import (
 	"github.com/np-inprove/server/internal/ent/forumpost"
 	"github.com/np-inprove/server/internal/ent/group"
 	"github.com/np-inprove/server/internal/ent/groupuser"
-	"github.com/np-inprove/server/internal/ent/institution"
 	"github.com/np-inprove/server/internal/ent/pet"
 	"github.com/np-inprove/server/internal/ent/predicate"
 	"github.com/np-inprove/server/internal/ent/reaction"
@@ -33,7 +32,6 @@ type UserQuery struct {
 	inters                []Interceptor
 	predicates            []predicate.User
 	withDepartment        *DepartmentQuery
-	withInstitution       *InstitutionQuery
 	withRedemptions       *RedemptionQuery
 	withForumPosts        *ForumPostQuery
 	withPet               *PetQuery
@@ -96,28 +94,6 @@ func (uq *UserQuery) QueryDepartment() *DepartmentQuery {
 			sqlgraph.From(user.Table, user.FieldID, selector),
 			sqlgraph.To(department.Table, department.FieldID),
 			sqlgraph.Edge(sqlgraph.M2O, true, user.DepartmentTable, user.DepartmentColumn),
-		)
-		fromU = sqlgraph.SetNeighbors(uq.driver.Dialect(), step)
-		return fromU, nil
-	}
-	return query
-}
-
-// QueryInstitution chains the current query on the "institution" edge.
-func (uq *UserQuery) QueryInstitution() *InstitutionQuery {
-	query := (&InstitutionClient{config: uq.config}).Query()
-	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
-		if err := uq.prepareQuery(ctx); err != nil {
-			return nil, err
-		}
-		selector := uq.sqlQuery(ctx)
-		if err := selector.Err(); err != nil {
-			return nil, err
-		}
-		step := sqlgraph.NewStep(
-			sqlgraph.From(user.Table, user.FieldID, selector),
-			sqlgraph.To(institution.Table, institution.FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, true, user.InstitutionTable, user.InstitutionPrimaryKey...),
 		)
 		fromU = sqlgraph.SetNeighbors(uq.driver.Dialect(), step)
 		return fromU, nil
@@ -538,7 +514,6 @@ func (uq *UserQuery) Clone() *UserQuery {
 		inters:                append([]Interceptor{}, uq.inters...),
 		predicates:            append([]predicate.User{}, uq.predicates...),
 		withDepartment:        uq.withDepartment.Clone(),
-		withInstitution:       uq.withInstitution.Clone(),
 		withRedemptions:       uq.withRedemptions.Clone(),
 		withForumPosts:        uq.withForumPosts.Clone(),
 		withPet:               uq.withPet.Clone(),
@@ -563,17 +538,6 @@ func (uq *UserQuery) WithDepartment(opts ...func(*DepartmentQuery)) *UserQuery {
 		opt(query)
 	}
 	uq.withDepartment = query
-	return uq
-}
-
-// WithInstitution tells the query-builder to eager-load the nodes that are connected to
-// the "institution" edge. The optional arguments are used to configure the query builder of the edge.
-func (uq *UserQuery) WithInstitution(opts ...func(*InstitutionQuery)) *UserQuery {
-	query := (&InstitutionClient{config: uq.config}).Query()
-	for _, opt := range opts {
-		opt(query)
-	}
-	uq.withInstitution = query
 	return uq
 }
 
@@ -766,9 +730,8 @@ func (uq *UserQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*User, e
 		nodes       = []*User{}
 		withFKs     = uq.withFKs
 		_spec       = uq.querySpec()
-		loadedTypes = [12]bool{
+		loadedTypes = [11]bool{
 			uq.withDepartment != nil,
-			uq.withInstitution != nil,
 			uq.withRedemptions != nil,
 			uq.withForumPosts != nil,
 			uq.withPet != nil,
@@ -808,13 +771,6 @@ func (uq *UserQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*User, e
 	if query := uq.withDepartment; query != nil {
 		if err := uq.loadDepartment(ctx, query, nodes, nil,
 			func(n *User, e *Department) { n.Edges.Department = e }); err != nil {
-			return nil, err
-		}
-	}
-	if query := uq.withInstitution; query != nil {
-		if err := uq.loadInstitution(ctx, query, nodes,
-			func(n *User) { n.Edges.Institution = []*Institution{} },
-			func(n *User, e *Institution) { n.Edges.Institution = append(n.Edges.Institution, e) }); err != nil {
 			return nil, err
 		}
 	}
@@ -919,67 +875,6 @@ func (uq *UserQuery) loadDepartment(ctx context.Context, query *DepartmentQuery,
 		}
 		for i := range nodes {
 			assign(nodes[i], n)
-		}
-	}
-	return nil
-}
-func (uq *UserQuery) loadInstitution(ctx context.Context, query *InstitutionQuery, nodes []*User, init func(*User), assign func(*User, *Institution)) error {
-	edgeIDs := make([]driver.Value, len(nodes))
-	byID := make(map[int]*User)
-	nids := make(map[int]map[*User]struct{})
-	for i, node := range nodes {
-		edgeIDs[i] = node.ID
-		byID[node.ID] = node
-		if init != nil {
-			init(node)
-		}
-	}
-	query.Where(func(s *sql.Selector) {
-		joinT := sql.Table(user.InstitutionTable)
-		s.Join(joinT).On(s.C(institution.FieldID), joinT.C(user.InstitutionPrimaryKey[0]))
-		s.Where(sql.InValues(joinT.C(user.InstitutionPrimaryKey[1]), edgeIDs...))
-		columns := s.SelectedColumns()
-		s.Select(joinT.C(user.InstitutionPrimaryKey[1]))
-		s.AppendSelect(columns...)
-		s.SetDistinct(false)
-	})
-	if err := query.prepareQuery(ctx); err != nil {
-		return err
-	}
-	qr := QuerierFunc(func(ctx context.Context, q Query) (Value, error) {
-		return query.sqlAll(ctx, func(_ context.Context, spec *sqlgraph.QuerySpec) {
-			assign := spec.Assign
-			values := spec.ScanValues
-			spec.ScanValues = func(columns []string) ([]any, error) {
-				values, err := values(columns[1:])
-				if err != nil {
-					return nil, err
-				}
-				return append([]any{new(sql.NullInt64)}, values...), nil
-			}
-			spec.Assign = func(columns []string, values []any) error {
-				outValue := int(values[0].(*sql.NullInt64).Int64)
-				inValue := int(values[1].(*sql.NullInt64).Int64)
-				if nids[inValue] == nil {
-					nids[inValue] = map[*User]struct{}{byID[outValue]: {}}
-					return assign(columns[1:], values[1:])
-				}
-				nids[inValue][byID[outValue]] = struct{}{}
-				return nil
-			}
-		})
-	})
-	neighbors, err := withInterceptors[[]*Institution](ctx, query, qr, query.inters)
-	if err != nil {
-		return err
-	}
-	for _, n := range neighbors {
-		nodes, ok := nids[n.ID]
-		if !ok {
-			return fmt.Errorf(`unexpected "institution" node returned %v`, n.ID)
-		}
-		for kn := range nodes {
-			assign(kn, n)
 		}
 	}
 	return nil

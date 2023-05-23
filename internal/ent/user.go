@@ -49,8 +49,6 @@ type User struct {
 type UserEdges struct {
 	// Department holds the value of the department edge.
 	Department *Department `json:"department,omitempty"`
-	// Institution holds the value of the institution edge.
-	Institution []*Institution `json:"institution,omitempty"`
 	// Redemptions holds the value of the redemptions edge.
 	Redemptions []*Redemption `json:"redemptions,omitempty"`
 	// ForumPosts holds the value of the forum_posts edge.
@@ -73,7 +71,7 @@ type UserEdges struct {
 	Reactions []*Reaction `json:"reactions,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [12]bool
+	loadedTypes [11]bool
 }
 
 // DepartmentOrErr returns the Department value or an error if the edge
@@ -89,19 +87,10 @@ func (e UserEdges) DepartmentOrErr() (*Department, error) {
 	return nil, &NotLoadedError{edge: "department"}
 }
 
-// InstitutionOrErr returns the Institution value or an error if the edge
-// was not loaded in eager-loading.
-func (e UserEdges) InstitutionOrErr() ([]*Institution, error) {
-	if e.loadedTypes[1] {
-		return e.Institution, nil
-	}
-	return nil, &NotLoadedError{edge: "institution"}
-}
-
 // RedemptionsOrErr returns the Redemptions value or an error if the edge
 // was not loaded in eager-loading.
 func (e UserEdges) RedemptionsOrErr() ([]*Redemption, error) {
-	if e.loadedTypes[2] {
+	if e.loadedTypes[1] {
 		return e.Redemptions, nil
 	}
 	return nil, &NotLoadedError{edge: "redemptions"}
@@ -110,7 +99,7 @@ func (e UserEdges) RedemptionsOrErr() ([]*Redemption, error) {
 // ForumPostsOrErr returns the ForumPosts value or an error if the edge
 // was not loaded in eager-loading.
 func (e UserEdges) ForumPostsOrErr() ([]*ForumPost, error) {
-	if e.loadedTypes[3] {
+	if e.loadedTypes[2] {
 		return e.ForumPosts, nil
 	}
 	return nil, &NotLoadedError{edge: "forum_posts"}
@@ -119,7 +108,7 @@ func (e UserEdges) ForumPostsOrErr() ([]*ForumPost, error) {
 // PetOrErr returns the Pet value or an error if the edge
 // was not loaded in eager-loading.
 func (e UserEdges) PetOrErr() ([]*Pet, error) {
-	if e.loadedTypes[4] {
+	if e.loadedTypes[3] {
 		return e.Pet, nil
 	}
 	return nil, &NotLoadedError{edge: "pet"}
@@ -128,7 +117,7 @@ func (e UserEdges) PetOrErr() ([]*Pet, error) {
 // GroupsOrErr returns the Groups value or an error if the edge
 // was not loaded in eager-loading.
 func (e UserEdges) GroupsOrErr() ([]*Group, error) {
-	if e.loadedTypes[5] {
+	if e.loadedTypes[4] {
 		return e.Groups, nil
 	}
 	return nil, &NotLoadedError{edge: "groups"}
@@ -137,7 +126,7 @@ func (e UserEdges) GroupsOrErr() ([]*Group, error) {
 // ReactedPostsOrErr returns the ReactedPosts value or an error if the edge
 // was not loaded in eager-loading.
 func (e UserEdges) ReactedPostsOrErr() ([]*ForumPost, error) {
-	if e.loadedTypes[6] {
+	if e.loadedTypes[5] {
 		return e.ReactedPosts, nil
 	}
 	return nil, &NotLoadedError{edge: "reacted_posts"}
@@ -146,7 +135,7 @@ func (e UserEdges) ReactedPostsOrErr() ([]*ForumPost, error) {
 // VotedDeadlinesOrErr returns the VotedDeadlines value or an error if the edge
 // was not loaded in eager-loading.
 func (e UserEdges) VotedDeadlinesOrErr() ([]*Deadline, error) {
-	if e.loadedTypes[7] {
+	if e.loadedTypes[6] {
 		return e.VotedDeadlines, nil
 	}
 	return nil, &NotLoadedError{edge: "voted_deadlines"}
@@ -155,7 +144,7 @@ func (e UserEdges) VotedDeadlinesOrErr() ([]*Deadline, error) {
 // AuthoredDeadlinesOrErr returns the AuthoredDeadlines value or an error if the edge
 // was not loaded in eager-loading.
 func (e UserEdges) AuthoredDeadlinesOrErr() ([]*Deadline, error) {
-	if e.loadedTypes[8] {
+	if e.loadedTypes[7] {
 		return e.AuthoredDeadlines, nil
 	}
 	return nil, &NotLoadedError{edge: "authored_deadlines"}
@@ -164,7 +153,7 @@ func (e UserEdges) AuthoredDeadlinesOrErr() ([]*Deadline, error) {
 // UserPetsOrErr returns the UserPets value or an error if the edge
 // was not loaded in eager-loading.
 func (e UserEdges) UserPetsOrErr() ([]*UserPet, error) {
-	if e.loadedTypes[9] {
+	if e.loadedTypes[8] {
 		return e.UserPets, nil
 	}
 	return nil, &NotLoadedError{edge: "user_pets"}
@@ -173,7 +162,7 @@ func (e UserEdges) UserPetsOrErr() ([]*UserPet, error) {
 // GroupUsersOrErr returns the GroupUsers value or an error if the edge
 // was not loaded in eager-loading.
 func (e UserEdges) GroupUsersOrErr() ([]*GroupUser, error) {
-	if e.loadedTypes[10] {
+	if e.loadedTypes[9] {
 		return e.GroupUsers, nil
 	}
 	return nil, &NotLoadedError{edge: "group_users"}
@@ -182,7 +171,7 @@ func (e UserEdges) GroupUsersOrErr() ([]*GroupUser, error) {
 // ReactionsOrErr returns the Reactions value or an error if the edge
 // was not loaded in eager-loading.
 func (e UserEdges) ReactionsOrErr() ([]*Reaction, error) {
-	if e.loadedTypes[11] {
+	if e.loadedTypes[10] {
 		return e.Reactions, nil
 	}
 	return nil, &NotLoadedError{edge: "reactions"}
@@ -299,11 +288,6 @@ func (u *User) Value(name string) (ent.Value, error) {
 // QueryDepartment queries the "department" edge of the User entity.
 func (u *User) QueryDepartment() *DepartmentQuery {
 	return NewUserClient(u.config).QueryDepartment(u)
-}
-
-// QueryInstitution queries the "institution" edge of the User entity.
-func (u *User) QueryInstitution() *InstitutionQuery {
-	return NewUserClient(u.config).QueryInstitution(u)
 }
 
 // QueryRedemptions queries the "redemptions" edge of the User entity.

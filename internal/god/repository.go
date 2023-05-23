@@ -6,8 +6,7 @@ import (
 )
 
 type Reader interface {
-	FindInstitutions(ctx context.Context) ([]Institution, error)
-	FindUsersWithoutAdmin(ctx context.Context) ([]User, error)
+	FindInstitutions(ctx context.Context) ([]*Institution, error)
 }
 
 type Writer interface {

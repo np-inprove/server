@@ -49,14 +49,14 @@ func (h httpHandler) ListInstitutions(w http.ResponseWriter, r *http.Request) {
 	}
 
 	l := make([]render.Renderer, len(insts))
-	for _, inst := range insts {
-		l = append(l, payload.Institution{
+	for i, inst := range insts {
+		l[i] = payload.Institution{
 			ID:            inst.ID,
 			Name:          inst.Name,
 			ShortName:     inst.ShortName,
 			AdminDomain:   inst.AdminDomain,
 			StudentDomain: inst.StudentDomain,
-		})
+		}
 	}
 
 	_ = render.RenderList(w, r, l)

@@ -13,7 +13,6 @@ import (
 	"github.com/np-inprove/server/internal/ent/accessory"
 	"github.com/np-inprove/server/internal/ent/department"
 	"github.com/np-inprove/server/internal/ent/institution"
-	"github.com/np-inprove/server/internal/ent/user"
 	"github.com/np-inprove/server/internal/ent/voucher"
 )
 
@@ -47,21 +46,6 @@ func (ic *InstitutionCreate) SetAdminDomain(s string) *InstitutionCreate {
 func (ic *InstitutionCreate) SetStudentDomain(s string) *InstitutionCreate {
 	ic.mutation.SetStudentDomain(s)
 	return ic
-}
-
-// AddAdminIDs adds the "admins" edge to the User entity by IDs.
-func (ic *InstitutionCreate) AddAdminIDs(ids ...int) *InstitutionCreate {
-	ic.mutation.AddAdminIDs(ids...)
-	return ic
-}
-
-// AddAdmins adds the "admins" edges to the User entity.
-func (ic *InstitutionCreate) AddAdmins(u ...*User) *InstitutionCreate {
-	ids := make([]int, len(u))
-	for i := range u {
-		ids[i] = u[i].ID
-	}
-	return ic.AddAdminIDs(ids...)
 }
 
 // AddVoucherIDs adds the "vouchers" edge to the Voucher entity by IDs.
@@ -217,22 +201,6 @@ func (ic *InstitutionCreate) createSpec() (*Institution, *sqlgraph.CreateSpec) {
 	if value, ok := ic.mutation.StudentDomain(); ok {
 		_spec.SetField(institution.FieldStudentDomain, field.TypeString, value)
 		_node.StudentDomain = value
-	}
-	if nodes := ic.mutation.AdminsIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
-			Inverse: false,
-			Table:   institution.AdminsTable,
-			Columns: institution.AdminsPrimaryKey,
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges = append(_spec.Edges, edge)
 	}
 	if nodes := ic.mutation.VouchersIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{

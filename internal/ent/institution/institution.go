@@ -20,8 +20,6 @@ const (
 	FieldAdminDomain = "admin_domain"
 	// FieldStudentDomain holds the string denoting the student_domain field in the database.
 	FieldStudentDomain = "student_domain"
-	// EdgeAdmins holds the string denoting the admins edge name in mutations.
-	EdgeAdmins = "admins"
 	// EdgeVouchers holds the string denoting the vouchers edge name in mutations.
 	EdgeVouchers = "vouchers"
 	// EdgeAccessories holds the string denoting the accessories edge name in mutations.
@@ -30,11 +28,6 @@ const (
 	EdgeDepartments = "departments"
 	// Table holds the table name of the institution in the database.
 	Table = "institutions"
-	// AdminsTable is the table that holds the admins relation/edge. The primary key declared below.
-	AdminsTable = "institution_admins"
-	// AdminsInverseTable is the table name for the User entity.
-	// It exists in this package in order to avoid circular dependency with the "user" package.
-	AdminsInverseTable = "users"
 	// VouchersTable is the table that holds the vouchers relation/edge.
 	VouchersTable = "vouchers"
 	// VouchersInverseTable is the table name for the Voucher entity.
@@ -66,12 +59,6 @@ var Columns = []string{
 	FieldAdminDomain,
 	FieldStudentDomain,
 }
-
-var (
-	// AdminsPrimaryKey and AdminsColumn2 are the table columns denoting the
-	// primary key for the admins relation (M2M).
-	AdminsPrimaryKey = []string{"institution_id", "user_id"}
-)
 
 // ValidColumn reports if the column name is valid (part of the table columns).
 func ValidColumn(column string) bool {
@@ -122,20 +109,6 @@ func ByStudentDomain(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldStudentDomain, opts...).ToFunc()
 }
 
-// ByAdminsCount orders the results by admins count.
-func ByAdminsCount(opts ...sql.OrderTermOption) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborsCount(s, newAdminsStep(), opts...)
-	}
-}
-
-// ByAdmins orders the results by admins terms.
-func ByAdmins(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newAdminsStep(), append([]sql.OrderTerm{term}, terms...)...)
-	}
-}
-
 // ByVouchersCount orders the results by vouchers count.
 func ByVouchersCount(opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
@@ -176,13 +149,6 @@ func ByDepartments(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 	return func(s *sql.Selector) {
 		sqlgraph.OrderByNeighborTerms(s, newDepartmentsStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
-}
-func newAdminsStep() *sqlgraph.Step {
-	return sqlgraph.NewStep(
-		sqlgraph.From(Table, FieldID),
-		sqlgraph.To(AdminsInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.M2M, false, AdminsTable, AdminsPrimaryKey...),
-	)
 }
 func newVouchersStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(

@@ -427,31 +427,6 @@ var (
 			},
 		},
 	}
-	// InstitutionAdminsColumns holds the columns for the "institution_admins" table.
-	InstitutionAdminsColumns = []*schema.Column{
-		{Name: "institution_id", Type: field.TypeInt},
-		{Name: "user_id", Type: field.TypeInt},
-	}
-	// InstitutionAdminsTable holds the schema information for the "institution_admins" table.
-	InstitutionAdminsTable = &schema.Table{
-		Name:       "institution_admins",
-		Columns:    InstitutionAdminsColumns,
-		PrimaryKey: []*schema.Column{InstitutionAdminsColumns[0], InstitutionAdminsColumns[1]},
-		ForeignKeys: []*schema.ForeignKey{
-			{
-				Symbol:     "institution_admins_institution_id",
-				Columns:    []*schema.Column{InstitutionAdminsColumns[0]},
-				RefColumns: []*schema.Column{InstitutionsColumns[0]},
-				OnDelete:   schema.Cascade,
-			},
-			{
-				Symbol:     "institution_admins_user_id",
-				Columns:    []*schema.Column{InstitutionAdminsColumns[1]},
-				RefColumns: []*schema.Column{UsersColumns[0]},
-				OnDelete:   schema.Cascade,
-			},
-		},
-	}
 	// Tables holds all the tables in the schema.
 	Tables = []*schema.Table{
 		AccessoriesTable,
@@ -472,7 +447,6 @@ var (
 		UserPetsTable,
 		VouchersTable,
 		DeadlineVotedUsersTable,
-		InstitutionAdminsTable,
 	}
 )
 
@@ -501,6 +475,4 @@ func init() {
 	VouchersTable.ForeignKeys[0].RefTable = InstitutionsTable
 	DeadlineVotedUsersTable.ForeignKeys[0].RefTable = DeadlinesTable
 	DeadlineVotedUsersTable.ForeignKeys[1].RefTable = UsersTable
-	InstitutionAdminsTable.ForeignKeys[0].RefTable = InstitutionsTable
-	InstitutionAdminsTable.ForeignKeys[1].RefTable = UsersTable
 }

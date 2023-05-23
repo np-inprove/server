@@ -32,8 +32,6 @@ type Institution struct {
 
 // InstitutionEdges holds the relations/edges for other nodes in the graph.
 type InstitutionEdges struct {
-	// Admins of the institution
-	Admins []*User `json:"admins,omitempty"`
 	// Prizes (vouchers) available to be redeemed by users of the institution
 	Vouchers []*Voucher `json:"vouchers,omitempty"`
 	// Prizes (accessories) available to be redeemed by users of the institution
@@ -42,22 +40,13 @@ type InstitutionEdges struct {
 	Departments []*Department `json:"departments,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [4]bool
-}
-
-// AdminsOrErr returns the Admins value or an error if the edge
-// was not loaded in eager-loading.
-func (e InstitutionEdges) AdminsOrErr() ([]*User, error) {
-	if e.loadedTypes[0] {
-		return e.Admins, nil
-	}
-	return nil, &NotLoadedError{edge: "admins"}
+	loadedTypes [3]bool
 }
 
 // VouchersOrErr returns the Vouchers value or an error if the edge
 // was not loaded in eager-loading.
 func (e InstitutionEdges) VouchersOrErr() ([]*Voucher, error) {
-	if e.loadedTypes[1] {
+	if e.loadedTypes[0] {
 		return e.Vouchers, nil
 	}
 	return nil, &NotLoadedError{edge: "vouchers"}
@@ -66,7 +55,7 @@ func (e InstitutionEdges) VouchersOrErr() ([]*Voucher, error) {
 // AccessoriesOrErr returns the Accessories value or an error if the edge
 // was not loaded in eager-loading.
 func (e InstitutionEdges) AccessoriesOrErr() ([]*Accessory, error) {
-	if e.loadedTypes[2] {
+	if e.loadedTypes[1] {
 		return e.Accessories, nil
 	}
 	return nil, &NotLoadedError{edge: "accessories"}
@@ -75,7 +64,7 @@ func (e InstitutionEdges) AccessoriesOrErr() ([]*Accessory, error) {
 // DepartmentsOrErr returns the Departments value or an error if the edge
 // was not loaded in eager-loading.
 func (e InstitutionEdges) DepartmentsOrErr() ([]*Department, error) {
-	if e.loadedTypes[3] {
+	if e.loadedTypes[2] {
 		return e.Departments, nil
 	}
 	return nil, &NotLoadedError{edge: "departments"}
@@ -146,11 +135,6 @@ func (i *Institution) assignValues(columns []string, values []any) error {
 // This includes values selected through modifiers, order, etc.
 func (i *Institution) Value(name string) (ent.Value, error) {
 	return i.selectValues.Get(name)
-}
-
-// QueryAdmins queries the "admins" edge of the Institution entity.
-func (i *Institution) QueryAdmins() *UserQuery {
-	return NewInstitutionClient(i.config).QueryAdmins(i)
 }
 
 // QueryVouchers queries the "vouchers" edge of the Institution entity.

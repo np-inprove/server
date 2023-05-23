@@ -448,29 +448,6 @@ func HasDepartmentWith(preds ...predicate.Department) predicate.User {
 	})
 }
 
-// HasInstitution applies the HasEdge predicate on the "institution" edge.
-func HasInstitution() predicate.User {
-	return predicate.User(func(s *sql.Selector) {
-		step := sqlgraph.NewStep(
-			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, true, InstitutionTable, InstitutionPrimaryKey...),
-		)
-		sqlgraph.HasNeighbors(s, step)
-	})
-}
-
-// HasInstitutionWith applies the HasEdge predicate on the "institution" edge with a given conditions (other predicates).
-func HasInstitutionWith(preds ...predicate.Institution) predicate.User {
-	return predicate.User(func(s *sql.Selector) {
-		step := newInstitutionStep()
-		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
-			for _, p := range preds {
-				p(s)
-			}
-		})
-	})
-}
-
 // HasRedemptions applies the HasEdge predicate on the "redemptions" edge.
 func HasRedemptions() predicate.User {
 	return predicate.User(func(s *sql.Selector) {

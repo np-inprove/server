@@ -1566,22 +1566,6 @@ func (c *InstitutionClient) GetX(ctx context.Context, id int) *Institution {
 	return obj
 }
 
-// QueryAdmins queries the admins edge of a Institution.
-func (c *InstitutionClient) QueryAdmins(i *Institution) *UserQuery {
-	query := (&UserClient{config: c.config}).Query()
-	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := i.ID
-		step := sqlgraph.NewStep(
-			sqlgraph.From(institution.Table, institution.FieldID, id),
-			sqlgraph.To(user.Table, user.FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, false, institution.AdminsTable, institution.AdminsPrimaryKey...),
-		)
-		fromV = sqlgraph.Neighbors(i.driver.Dialect(), step)
-		return fromV, nil
-	}
-	return query
-}
-
 // QueryVouchers queries the vouchers edge of a Institution.
 func (c *InstitutionClient) QueryVouchers(i *Institution) *VoucherQuery {
 	query := (&VoucherClient{config: c.config}).Query()
@@ -2576,22 +2560,6 @@ func (c *UserClient) QueryDepartment(u *User) *DepartmentQuery {
 			sqlgraph.From(user.Table, user.FieldID, id),
 			sqlgraph.To(department.Table, department.FieldID),
 			sqlgraph.Edge(sqlgraph.M2O, true, user.DepartmentTable, user.DepartmentColumn),
-		)
-		fromV = sqlgraph.Neighbors(u.driver.Dialect(), step)
-		return fromV, nil
-	}
-	return query
-}
-
-// QueryInstitution queries the institution edge of a User.
-func (c *UserClient) QueryInstitution(u *User) *InstitutionQuery {
-	query := (&InstitutionClient{config: c.config}).Query()
-	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := u.ID
-		step := sqlgraph.NewStep(
-			sqlgraph.From(user.Table, user.FieldID, id),
-			sqlgraph.To(institution.Table, institution.FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, true, user.InstitutionTable, user.InstitutionPrimaryKey...),
 		)
 		fromV = sqlgraph.Neighbors(u.driver.Dialect(), step)
 		return fromV, nil

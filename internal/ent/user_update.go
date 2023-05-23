@@ -15,7 +15,6 @@ import (
 	"github.com/np-inprove/server/internal/ent/department"
 	"github.com/np-inprove/server/internal/ent/forumpost"
 	"github.com/np-inprove/server/internal/ent/group"
-	"github.com/np-inprove/server/internal/ent/institution"
 	"github.com/np-inprove/server/internal/ent/pet"
 	"github.com/np-inprove/server/internal/ent/predicate"
 	"github.com/np-inprove/server/internal/ent/redemption"
@@ -147,21 +146,6 @@ func (uu *UserUpdate) SetDepartment(d *Department) *UserUpdate {
 	return uu.SetDepartmentID(d.ID)
 }
 
-// AddInstitutionIDs adds the "institution" edge to the Institution entity by IDs.
-func (uu *UserUpdate) AddInstitutionIDs(ids ...int) *UserUpdate {
-	uu.mutation.AddInstitutionIDs(ids...)
-	return uu
-}
-
-// AddInstitution adds the "institution" edges to the Institution entity.
-func (uu *UserUpdate) AddInstitution(i ...*Institution) *UserUpdate {
-	ids := make([]int, len(i))
-	for j := range i {
-		ids[j] = i[j].ID
-	}
-	return uu.AddInstitutionIDs(ids...)
-}
-
 // AddRedemptionIDs adds the "redemptions" edge to the Redemption entity by IDs.
 func (uu *UserUpdate) AddRedemptionIDs(ids ...int) *UserUpdate {
 	uu.mutation.AddRedemptionIDs(ids...)
@@ -276,27 +260,6 @@ func (uu *UserUpdate) Mutation() *UserMutation {
 func (uu *UserUpdate) ClearDepartment() *UserUpdate {
 	uu.mutation.ClearDepartment()
 	return uu
-}
-
-// ClearInstitution clears all "institution" edges to the Institution entity.
-func (uu *UserUpdate) ClearInstitution() *UserUpdate {
-	uu.mutation.ClearInstitution()
-	return uu
-}
-
-// RemoveInstitutionIDs removes the "institution" edge to Institution entities by IDs.
-func (uu *UserUpdate) RemoveInstitutionIDs(ids ...int) *UserUpdate {
-	uu.mutation.RemoveInstitutionIDs(ids...)
-	return uu
-}
-
-// RemoveInstitution removes "institution" edges to Institution entities.
-func (uu *UserUpdate) RemoveInstitution(i ...*Institution) *UserUpdate {
-	ids := make([]int, len(i))
-	for j := range i {
-		ids[j] = i[j].ID
-	}
-	return uu.RemoveInstitutionIDs(ids...)
 }
 
 // ClearRedemptions clears all "redemptions" edges to the Redemption entity.
@@ -570,51 +533,6 @@ func (uu *UserUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(department.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
-	}
-	if uu.mutation.InstitutionCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
-			Inverse: true,
-			Table:   user.InstitutionTable,
-			Columns: user.InstitutionPrimaryKey,
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(institution.FieldID, field.TypeInt),
-			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := uu.mutation.RemovedInstitutionIDs(); len(nodes) > 0 && !uu.mutation.InstitutionCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
-			Inverse: true,
-			Table:   user.InstitutionTable,
-			Columns: user.InstitutionPrimaryKey,
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(institution.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := uu.mutation.InstitutionIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
-			Inverse: true,
-			Table:   user.InstitutionTable,
-			Columns: user.InstitutionPrimaryKey,
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(institution.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -1080,21 +998,6 @@ func (uuo *UserUpdateOne) SetDepartment(d *Department) *UserUpdateOne {
 	return uuo.SetDepartmentID(d.ID)
 }
 
-// AddInstitutionIDs adds the "institution" edge to the Institution entity by IDs.
-func (uuo *UserUpdateOne) AddInstitutionIDs(ids ...int) *UserUpdateOne {
-	uuo.mutation.AddInstitutionIDs(ids...)
-	return uuo
-}
-
-// AddInstitution adds the "institution" edges to the Institution entity.
-func (uuo *UserUpdateOne) AddInstitution(i ...*Institution) *UserUpdateOne {
-	ids := make([]int, len(i))
-	for j := range i {
-		ids[j] = i[j].ID
-	}
-	return uuo.AddInstitutionIDs(ids...)
-}
-
 // AddRedemptionIDs adds the "redemptions" edge to the Redemption entity by IDs.
 func (uuo *UserUpdateOne) AddRedemptionIDs(ids ...int) *UserUpdateOne {
 	uuo.mutation.AddRedemptionIDs(ids...)
@@ -1209,27 +1112,6 @@ func (uuo *UserUpdateOne) Mutation() *UserMutation {
 func (uuo *UserUpdateOne) ClearDepartment() *UserUpdateOne {
 	uuo.mutation.ClearDepartment()
 	return uuo
-}
-
-// ClearInstitution clears all "institution" edges to the Institution entity.
-func (uuo *UserUpdateOne) ClearInstitution() *UserUpdateOne {
-	uuo.mutation.ClearInstitution()
-	return uuo
-}
-
-// RemoveInstitutionIDs removes the "institution" edge to Institution entities by IDs.
-func (uuo *UserUpdateOne) RemoveInstitutionIDs(ids ...int) *UserUpdateOne {
-	uuo.mutation.RemoveInstitutionIDs(ids...)
-	return uuo
-}
-
-// RemoveInstitution removes "institution" edges to Institution entities.
-func (uuo *UserUpdateOne) RemoveInstitution(i ...*Institution) *UserUpdateOne {
-	ids := make([]int, len(i))
-	for j := range i {
-		ids[j] = i[j].ID
-	}
-	return uuo.RemoveInstitutionIDs(ids...)
 }
 
 // ClearRedemptions clears all "redemptions" edges to the Redemption entity.
@@ -1533,51 +1415,6 @@ func (uuo *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) 
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(department.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
-	}
-	if uuo.mutation.InstitutionCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
-			Inverse: true,
-			Table:   user.InstitutionTable,
-			Columns: user.InstitutionPrimaryKey,
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(institution.FieldID, field.TypeInt),
-			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := uuo.mutation.RemovedInstitutionIDs(); len(nodes) > 0 && !uuo.mutation.InstitutionCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
-			Inverse: true,
-			Table:   user.InstitutionTable,
-			Columns: user.InstitutionPrimaryKey,
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(institution.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := uuo.mutation.InstitutionIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
-			Inverse: true,
-			Table:   user.InstitutionTable,
-			Columns: user.InstitutionPrimaryKey,
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(institution.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

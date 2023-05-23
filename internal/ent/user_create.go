@@ -15,7 +15,6 @@ import (
 	"github.com/np-inprove/server/internal/ent/department"
 	"github.com/np-inprove/server/internal/ent/forumpost"
 	"github.com/np-inprove/server/internal/ent/group"
-	"github.com/np-inprove/server/internal/ent/institution"
 	"github.com/np-inprove/server/internal/ent/pet"
 	"github.com/np-inprove/server/internal/ent/redemption"
 	"github.com/np-inprove/server/internal/ent/user"
@@ -119,21 +118,6 @@ func (uc *UserCreate) SetNillableDepartmentID(id *int) *UserCreate {
 // SetDepartment sets the "department" edge to the Department entity.
 func (uc *UserCreate) SetDepartment(d *Department) *UserCreate {
 	return uc.SetDepartmentID(d.ID)
-}
-
-// AddInstitutionIDs adds the "institution" edge to the Institution entity by IDs.
-func (uc *UserCreate) AddInstitutionIDs(ids ...int) *UserCreate {
-	uc.mutation.AddInstitutionIDs(ids...)
-	return uc
-}
-
-// AddInstitution adds the "institution" edges to the Institution entity.
-func (uc *UserCreate) AddInstitution(i ...*Institution) *UserCreate {
-	ids := make([]int, len(i))
-	for j := range i {
-		ids[j] = i[j].ID
-	}
-	return uc.AddInstitutionIDs(ids...)
 }
 
 // AddRedemptionIDs adds the "redemptions" edge to the Redemption entity by IDs.
@@ -408,22 +392,6 @@ func (uc *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
 		_node.department_users = &nodes[0]
-		_spec.Edges = append(_spec.Edges, edge)
-	}
-	if nodes := uc.mutation.InstitutionIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
-			Inverse: true,
-			Table:   user.InstitutionTable,
-			Columns: user.InstitutionPrimaryKey,
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(institution.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	if nodes := uc.mutation.RedemptionsIDs(); len(nodes) > 0 {
