@@ -39,7 +39,7 @@ func main() {
 	if cfg.AppProduction() {
 		appLogger, err = logger.NewZapProduction()
 	} else {
-		appLogger, err = logger.NewZapDevelopment()
+		appLogger = logger.NewCharm()
 	}
 
 	if err != nil {

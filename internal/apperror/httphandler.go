@@ -1,8 +1,11 @@
 package apperror
 
 import (
+	"context"
+	"fmt"
 	"github.com/go-chi/render"
 	"github.com/gookit/validate"
+	"github.com/np-inprove/server/internal/logger"
 	"net/http"
 )
 
@@ -15,11 +18,21 @@ type ErrResponse struct {
 }
 
 func (e ErrResponse) Render(w http.ResponseWriter, r *http.Request) error {
-	render.Status(r, e.HTTPStatusCode)
+	if !e.Fields.Empty() {
+		ctx := context.WithValue(r.Context(), logger.ErrValidationCtxKey, e.Fields.String())
+		r = r.WithContext(ctx)
+	}
+
+	if e.Err != nil {
+		ctx := context.WithValue(r.Context(), logger.ErrCtxKey, e.Err.Error())
+		r = r.WithContext(ctx)
+	}
+
 	return nil
 }
 
 func ErrBadRequest(err error) render.Renderer {
+	fmt.Println(err)
 	return &ErrResponse{
 		Err:            err,
 		HTTPStatusCode: http.StatusBadRequest,
