@@ -79,6 +79,9 @@ func mapDomainErr(err error) *apperror.ErrResponse {
 			AppErrCode:     http.StatusBadRequest,
 			AppErrMessage:  "The passwords provided does not match. Please retype the passwords",
 			Fields: validate.Errors{
+				"password": map[string]string{
+					"invalid": "Password fields do not match",
+				},
 				"confirmPassword": map[string]string{
 					"invalid": "Password fields do not match",
 				},
