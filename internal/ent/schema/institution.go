@@ -45,5 +45,8 @@ func (Institution) Edges() []ent.Edge {
 		edge.To("departments", Department.Type).
 			Annotations(entsql.OnDelete(entsql.Cascade)).
 			Comment("Departments of the institution"),
+		edge.To("groups", Group.Type).
+			Annotations(entsql.OnDelete(entsql.Cascade)).
+			Comment("Groups under the institution"),
 	}
 }

@@ -2,6 +2,7 @@ package god
 
 import (
 	"errors"
+	"github.com/gookit/validate"
 	"github.com/np-inprove/server/internal/apperror"
 	"net/http"
 )
@@ -16,7 +17,12 @@ func mapDomainErr(err error) *apperror.ErrResponse {
 			Err:            err,
 			HTTPStatusCode: http.StatusConflict,
 			AppErrCode:     http.StatusConflict,
-			AppErrMessage:  http.StatusText(http.StatusContinue),
+			AppErrMessage:  "Short name already in use",
+			Fields: validate.Errors{
+				"short_name": map[string]string{
+					"conflict": "Short name already in use",
+				},
+			},
 		}
 	}
 

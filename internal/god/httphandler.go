@@ -63,7 +63,7 @@ func (h httpHandler) ListInstitutions(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h httpHandler) CreateInstitution(w http.ResponseWriter, r *http.Request) {
-	p := payload.CreateInstitutionRequest{}
+	p := &payload.CreateInstitutionRequest{}
 	if err := render.Decode(r, p); err != nil {
 		_ = render.Render(w, r, apperror.ErrBadRequest(err))
 		return

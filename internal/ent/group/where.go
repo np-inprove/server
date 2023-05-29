@@ -375,6 +375,29 @@ func HasDeadlinesWith(preds ...predicate.Deadline) predicate.Group {
 	})
 }
 
+// HasInstitution applies the HasEdge predicate on the "institution" edge.
+func HasInstitution() predicate.Group {
+	return predicate.Group(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, InstitutionTable, InstitutionColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasInstitutionWith applies the HasEdge predicate on the "institution" edge with a given conditions (other predicates).
+func HasInstitutionWith(preds ...predicate.Institution) predicate.Group {
+	return predicate.Group(func(s *sql.Selector) {
+		step := newInstitutionStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
 // HasGroupUsers applies the HasEdge predicate on the "group_users" edge.
 func HasGroupUsers() predicate.Group {
 	return predicate.Group(func(s *sql.Selector) {

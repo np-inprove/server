@@ -12,6 +12,7 @@ import (
 	"entgo.io/ent/schema/field"
 	"github.com/np-inprove/server/internal/ent/accessory"
 	"github.com/np-inprove/server/internal/ent/department"
+	"github.com/np-inprove/server/internal/ent/group"
 	"github.com/np-inprove/server/internal/ent/institution"
 	"github.com/np-inprove/server/internal/ent/predicate"
 	"github.com/np-inprove/server/internal/ent/voucher"
@@ -99,6 +100,21 @@ func (iu *InstitutionUpdate) AddDepartments(d ...*Department) *InstitutionUpdate
 	return iu.AddDepartmentIDs(ids...)
 }
 
+// AddGroupIDs adds the "groups" edge to the Group entity by IDs.
+func (iu *InstitutionUpdate) AddGroupIDs(ids ...int) *InstitutionUpdate {
+	iu.mutation.AddGroupIDs(ids...)
+	return iu
+}
+
+// AddGroups adds the "groups" edges to the Group entity.
+func (iu *InstitutionUpdate) AddGroups(g ...*Group) *InstitutionUpdate {
+	ids := make([]int, len(g))
+	for i := range g {
+		ids[i] = g[i].ID
+	}
+	return iu.AddGroupIDs(ids...)
+}
+
 // Mutation returns the InstitutionMutation object of the builder.
 func (iu *InstitutionUpdate) Mutation() *InstitutionMutation {
 	return iu.mutation
@@ -165,6 +181,27 @@ func (iu *InstitutionUpdate) RemoveDepartments(d ...*Department) *InstitutionUpd
 		ids[i] = d[i].ID
 	}
 	return iu.RemoveDepartmentIDs(ids...)
+}
+
+// ClearGroups clears all "groups" edges to the Group entity.
+func (iu *InstitutionUpdate) ClearGroups() *InstitutionUpdate {
+	iu.mutation.ClearGroups()
+	return iu
+}
+
+// RemoveGroupIDs removes the "groups" edge to Group entities by IDs.
+func (iu *InstitutionUpdate) RemoveGroupIDs(ids ...int) *InstitutionUpdate {
+	iu.mutation.RemoveGroupIDs(ids...)
+	return iu
+}
+
+// RemoveGroups removes "groups" edges to Group entities.
+func (iu *InstitutionUpdate) RemoveGroups(g ...*Group) *InstitutionUpdate {
+	ids := make([]int, len(g))
+	for i := range g {
+		ids[i] = g[i].ID
+	}
+	return iu.RemoveGroupIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -378,6 +415,51 @@ func (iu *InstitutionUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
+	if iu.mutation.GroupsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   institution.GroupsTable,
+			Columns: []string{institution.GroupsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(group.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := iu.mutation.RemovedGroupsIDs(); len(nodes) > 0 && !iu.mutation.GroupsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   institution.GroupsTable,
+			Columns: []string{institution.GroupsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(group.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := iu.mutation.GroupsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   institution.GroupsTable,
+			Columns: []string{institution.GroupsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(group.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
 	if n, err = sqlgraph.UpdateNodes(ctx, iu.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{institution.Label}
@@ -467,6 +549,21 @@ func (iuo *InstitutionUpdateOne) AddDepartments(d ...*Department) *InstitutionUp
 	return iuo.AddDepartmentIDs(ids...)
 }
 
+// AddGroupIDs adds the "groups" edge to the Group entity by IDs.
+func (iuo *InstitutionUpdateOne) AddGroupIDs(ids ...int) *InstitutionUpdateOne {
+	iuo.mutation.AddGroupIDs(ids...)
+	return iuo
+}
+
+// AddGroups adds the "groups" edges to the Group entity.
+func (iuo *InstitutionUpdateOne) AddGroups(g ...*Group) *InstitutionUpdateOne {
+	ids := make([]int, len(g))
+	for i := range g {
+		ids[i] = g[i].ID
+	}
+	return iuo.AddGroupIDs(ids...)
+}
+
 // Mutation returns the InstitutionMutation object of the builder.
 func (iuo *InstitutionUpdateOne) Mutation() *InstitutionMutation {
 	return iuo.mutation
@@ -533,6 +630,27 @@ func (iuo *InstitutionUpdateOne) RemoveDepartments(d ...*Department) *Institutio
 		ids[i] = d[i].ID
 	}
 	return iuo.RemoveDepartmentIDs(ids...)
+}
+
+// ClearGroups clears all "groups" edges to the Group entity.
+func (iuo *InstitutionUpdateOne) ClearGroups() *InstitutionUpdateOne {
+	iuo.mutation.ClearGroups()
+	return iuo
+}
+
+// RemoveGroupIDs removes the "groups" edge to Group entities by IDs.
+func (iuo *InstitutionUpdateOne) RemoveGroupIDs(ids ...int) *InstitutionUpdateOne {
+	iuo.mutation.RemoveGroupIDs(ids...)
+	return iuo
+}
+
+// RemoveGroups removes "groups" edges to Group entities.
+func (iuo *InstitutionUpdateOne) RemoveGroups(g ...*Group) *InstitutionUpdateOne {
+	ids := make([]int, len(g))
+	for i := range g {
+		ids[i] = g[i].ID
+	}
+	return iuo.RemoveGroupIDs(ids...)
 }
 
 // Where appends a list predicates to the InstitutionUpdate builder.
@@ -769,6 +887,51 @@ func (iuo *InstitutionUpdateOne) sqlSave(ctx context.Context) (_node *Institutio
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(department.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if iuo.mutation.GroupsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   institution.GroupsTable,
+			Columns: []string{institution.GroupsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(group.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := iuo.mutation.RemovedGroupsIDs(); len(nodes) > 0 && !iuo.mutation.GroupsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   institution.GroupsTable,
+			Columns: []string{institution.GroupsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(group.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := iuo.mutation.GroupsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   institution.GroupsTable,
+			Columns: []string{institution.GroupsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(group.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

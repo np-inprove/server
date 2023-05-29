@@ -6,6 +6,13 @@ import (
 	"time"
 )
 
+type ctxKey int
+
+const (
+	ErrCtxKey ctxKey = iota
+	ErrValidationCtxKey
+)
+
 type Middleware struct {
 	logger AppLogger
 }
@@ -22,14 +29,29 @@ func (m *Middleware) Request(next http.Handler) http.Handler {
 
 		start := time.Now()
 		defer func() {
-			end := time.Now()
 			go func() {
-				m.logger.Info("handled http request",
+				fields := []Field{
+					String("area", "http"),
 					String("method", r.Method),
 					String("url", r.URL.String()),
 					Int("status", ww.Status()),
-					Int("bytesWritten", ww.BytesWritten()),
-					Duration("duration", end.Sub(start)))
+					Int("bytes_written", ww.BytesWritten()),
+					Duration("duration", time.Since(start)),
+				}
+
+				v := r.Context().Value(ErrCtxKey)
+				if v != nil {
+					fields = append(fields, String("err", v.(error).Error()))
+				}
+
+				v = r.Context().Value(ErrValidationCtxKey)
+				if v != nil {
+					fields = append(fields, String("err_validation", v.(string)))
+				}
+
+				m.logger.Info("handled http request",
+					fields...,
+				)
 			}()
 		}()
 

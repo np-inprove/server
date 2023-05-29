@@ -153,12 +153,21 @@ var (
 		{Name: "name", Type: field.TypeString},
 		{Name: "description", Type: field.TypeString},
 		{Name: "group_type", Type: field.TypeEnum, Enums: []string{"special_interest_group", "module_group", "cca", "mentor_class"}},
+		{Name: "institution_groups", Type: field.TypeInt},
 	}
 	// GroupsTable holds the schema information for the "groups" table.
 	GroupsTable = &schema.Table{
 		Name:       "groups",
 		Columns:    GroupsColumns,
 		PrimaryKey: []*schema.Column{GroupsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "groups_institutions_groups",
+				Columns:    []*schema.Column{GroupsColumns[5]},
+				RefColumns: []*schema.Column{InstitutionsColumns[0]},
+				OnDelete:   schema.Cascade,
+			},
+		},
 	}
 	// GroupUsersColumns holds the columns for the "group_users" table.
 	GroupUsersColumns = []*schema.Column{
@@ -460,6 +469,7 @@ func init() {
 	ForumPostsTable.ForeignKeys[0].RefTable = UsersTable
 	ForumPostsTable.ForeignKeys[1].RefTable = ForumPostsTable
 	ForumPostsTable.ForeignKeys[2].RefTable = GroupsTable
+	GroupsTable.ForeignKeys[0].RefTable = InstitutionsTable
 	GroupUsersTable.ForeignKeys[0].RefTable = GroupsTable
 	GroupUsersTable.ForeignKeys[1].RefTable = UsersTable
 	MilestonesTable.ForeignKeys[0].RefTable = StudyPlansTable
