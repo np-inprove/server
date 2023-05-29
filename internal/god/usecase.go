@@ -74,6 +74,6 @@ func (u useCase) CreateInstitution(
 
 func (u useCase) DeleteInstitution(ctx context.Context, shortName string) error {
 	return u.r.WithTx(ctx, func(ctx context.Context) error {
-		return u.DeleteInstitution(ctx, shortName)
+		return u.r.DeleteInstitution(ctx, shortName)
 	})
 }
