@@ -12,6 +12,7 @@ import (
 	"entgo.io/ent/schema/field"
 	"github.com/np-inprove/server/internal/ent/accessory"
 	"github.com/np-inprove/server/internal/ent/department"
+	"github.com/np-inprove/server/internal/ent/group"
 	"github.com/np-inprove/server/internal/ent/institution"
 	"github.com/np-inprove/server/internal/ent/voucher"
 )
@@ -91,6 +92,21 @@ func (ic *InstitutionCreate) AddDepartments(d ...*Department) *InstitutionCreate
 		ids[i] = d[i].ID
 	}
 	return ic.AddDepartmentIDs(ids...)
+}
+
+// AddGroupIDs adds the "groups" edge to the Group entity by IDs.
+func (ic *InstitutionCreate) AddGroupIDs(ids ...int) *InstitutionCreate {
+	ic.mutation.AddGroupIDs(ids...)
+	return ic
+}
+
+// AddGroups adds the "groups" edges to the Group entity.
+func (ic *InstitutionCreate) AddGroups(g ...*Group) *InstitutionCreate {
+	ids := make([]int, len(g))
+	for i := range g {
+		ids[i] = g[i].ID
+	}
+	return ic.AddGroupIDs(ids...)
 }
 
 // Mutation returns the InstitutionMutation object of the builder.
@@ -243,6 +259,22 @@ func (ic *InstitutionCreate) createSpec() (*Institution, *sqlgraph.CreateSpec) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(department.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := ic.mutation.GroupsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   institution.GroupsTable,
+			Columns: []string{institution.GroupsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(group.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

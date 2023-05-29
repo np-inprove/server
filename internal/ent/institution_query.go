@@ -13,6 +13,7 @@ import (
 	"entgo.io/ent/schema/field"
 	"github.com/np-inprove/server/internal/ent/accessory"
 	"github.com/np-inprove/server/internal/ent/department"
+	"github.com/np-inprove/server/internal/ent/group"
 	"github.com/np-inprove/server/internal/ent/institution"
 	"github.com/np-inprove/server/internal/ent/predicate"
 	"github.com/np-inprove/server/internal/ent/voucher"
@@ -28,6 +29,7 @@ type InstitutionQuery struct {
 	withVouchers    *VoucherQuery
 	withAccessories *AccessoryQuery
 	withDepartments *DepartmentQuery
+	withGroups      *GroupQuery
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -123,6 +125,28 @@ func (iq *InstitutionQuery) QueryDepartments() *DepartmentQuery {
 			sqlgraph.From(institution.Table, institution.FieldID, selector),
 			sqlgraph.To(department.Table, department.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, institution.DepartmentsTable, institution.DepartmentsColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(iq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryGroups chains the current query on the "groups" edge.
+func (iq *InstitutionQuery) QueryGroups() *GroupQuery {
+	query := (&GroupClient{config: iq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := iq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := iq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(institution.Table, institution.FieldID, selector),
+			sqlgraph.To(group.Table, group.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, institution.GroupsTable, institution.GroupsColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(iq.driver.Dialect(), step)
 		return fromU, nil
@@ -325,6 +349,7 @@ func (iq *InstitutionQuery) Clone() *InstitutionQuery {
 		withVouchers:    iq.withVouchers.Clone(),
 		withAccessories: iq.withAccessories.Clone(),
 		withDepartments: iq.withDepartments.Clone(),
+		withGroups:      iq.withGroups.Clone(),
 		// clone intermediate query.
 		sql:  iq.sql.Clone(),
 		path: iq.path,
@@ -361,6 +386,17 @@ func (iq *InstitutionQuery) WithDepartments(opts ...func(*DepartmentQuery)) *Ins
 		opt(query)
 	}
 	iq.withDepartments = query
+	return iq
+}
+
+// WithGroups tells the query-builder to eager-load the nodes that are connected to
+// the "groups" edge. The optional arguments are used to configure the query builder of the edge.
+func (iq *InstitutionQuery) WithGroups(opts ...func(*GroupQuery)) *InstitutionQuery {
+	query := (&GroupClient{config: iq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	iq.withGroups = query
 	return iq
 }
 
@@ -442,10 +478,11 @@ func (iq *InstitutionQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*
 	var (
 		nodes       = []*Institution{}
 		_spec       = iq.querySpec()
-		loadedTypes = [3]bool{
+		loadedTypes = [4]bool{
 			iq.withVouchers != nil,
 			iq.withAccessories != nil,
 			iq.withDepartments != nil,
+			iq.withGroups != nil,
 		}
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
@@ -484,6 +521,13 @@ func (iq *InstitutionQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*
 		if err := iq.loadDepartments(ctx, query, nodes,
 			func(n *Institution) { n.Edges.Departments = []*Department{} },
 			func(n *Institution, e *Department) { n.Edges.Departments = append(n.Edges.Departments, e) }); err != nil {
+			return nil, err
+		}
+	}
+	if query := iq.withGroups; query != nil {
+		if err := iq.loadGroups(ctx, query, nodes,
+			func(n *Institution) { n.Edges.Groups = []*Group{} },
+			func(n *Institution, e *Group) { n.Edges.Groups = append(n.Edges.Groups, e) }); err != nil {
 			return nil, err
 		}
 	}
@@ -578,6 +622,37 @@ func (iq *InstitutionQuery) loadDepartments(ctx context.Context, query *Departme
 		node, ok := nodeids[*fk]
 		if !ok {
 			return fmt.Errorf(`unexpected referenced foreign-key "institution_departments" returned %v for node %v`, *fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
+func (iq *InstitutionQuery) loadGroups(ctx context.Context, query *GroupQuery, nodes []*Institution, init func(*Institution), assign func(*Institution, *Group)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int]*Institution)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	query.withFKs = true
+	query.Where(predicate.Group(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(institution.GroupsColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.institution_groups
+		if fk == nil {
+			return fmt.Errorf(`foreign-key "institution_groups" is nil for node %v`, n.ID)
+		}
+		node, ok := nodeids[*fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "institution_groups" returned %v for node %v`, *fk, n.ID)
 		}
 		assign(node, n)
 	}

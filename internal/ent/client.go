@@ -1331,6 +1331,22 @@ func (c *GroupClient) QueryDeadlines(gr *Group) *DeadlineQuery {
 	return query
 }
 
+// QueryInstitution queries the institution edge of a Group.
+func (c *GroupClient) QueryInstitution(gr *Group) *InstitutionQuery {
+	query := (&InstitutionClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := gr.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(group.Table, group.FieldID, id),
+			sqlgraph.To(institution.Table, institution.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, group.InstitutionTable, group.InstitutionColumn),
+		)
+		fromV = sqlgraph.Neighbors(gr.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
 // QueryGroupUsers queries the group_users edge of a Group.
 func (c *GroupClient) QueryGroupUsers(gr *Group) *GroupUserQuery {
 	query := (&GroupUserClient{config: c.config}).Query()
@@ -1607,6 +1623,22 @@ func (c *InstitutionClient) QueryDepartments(i *Institution) *DepartmentQuery {
 			sqlgraph.From(institution.Table, institution.FieldID, id),
 			sqlgraph.To(department.Table, department.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, institution.DepartmentsTable, institution.DepartmentsColumn),
+		)
+		fromV = sqlgraph.Neighbors(i.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryGroups queries the groups edge of a Institution.
+func (c *InstitutionClient) QueryGroups(i *Institution) *GroupQuery {
+	query := (&GroupClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := i.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(institution.Table, institution.FieldID, id),
+			sqlgraph.To(group.Table, group.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, institution.GroupsTable, institution.GroupsColumn),
 		)
 		fromV = sqlgraph.Neighbors(i.driver.Dialect(), step)
 		return fromV, nil

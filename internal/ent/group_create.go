@@ -14,6 +14,7 @@ import (
 	"github.com/np-inprove/server/internal/ent/event"
 	"github.com/np-inprove/server/internal/ent/forumpost"
 	"github.com/np-inprove/server/internal/ent/group"
+	"github.com/np-inprove/server/internal/ent/institution"
 	"github.com/np-inprove/server/internal/ent/user"
 )
 
@@ -109,6 +110,17 @@ func (gc *GroupCreate) AddDeadlines(d ...*Deadline) *GroupCreate {
 	return gc.AddDeadlineIDs(ids...)
 }
 
+// SetInstitutionID sets the "institution" edge to the Institution entity by ID.
+func (gc *GroupCreate) SetInstitutionID(id int) *GroupCreate {
+	gc.mutation.SetInstitutionID(id)
+	return gc
+}
+
+// SetInstitution sets the "institution" edge to the Institution entity.
+func (gc *GroupCreate) SetInstitution(i *Institution) *GroupCreate {
+	return gc.SetInstitutionID(i.ID)
+}
+
 // Mutation returns the GroupMutation object of the builder.
 func (gc *GroupCreate) Mutation() *GroupMutation {
 	return gc.mutation
@@ -169,6 +181,9 @@ func (gc *GroupCreate) check() error {
 		if err := group.GroupTypeValidator(v); err != nil {
 			return &ValidationError{Name: "group_type", err: fmt.Errorf(`ent: validator failed for field "Group.group_type": %w`, err)}
 		}
+	}
+	if _, ok := gc.mutation.InstitutionID(); !ok {
+		return &ValidationError{Name: "institution", err: errors.New(`ent: missing required edge "Group.institution"`)}
 	}
 	return nil
 }
@@ -275,6 +290,23 @@ func (gc *GroupCreate) createSpec() (*Group, *sqlgraph.CreateSpec) {
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := gc.mutation.InstitutionIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   group.InstitutionTable,
+			Columns: []string{group.InstitutionColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(institution.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_node.institution_groups = &nodes[0]
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec

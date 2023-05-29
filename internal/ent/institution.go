@@ -38,9 +38,11 @@ type InstitutionEdges struct {
 	Accessories []*Accessory `json:"accessories,omitempty"`
 	// Departments of the institution
 	Departments []*Department `json:"departments,omitempty"`
+	// Groups under the institution
+	Groups []*Group `json:"groups,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [3]bool
+	loadedTypes [4]bool
 }
 
 // VouchersOrErr returns the Vouchers value or an error if the edge
@@ -68,6 +70,15 @@ func (e InstitutionEdges) DepartmentsOrErr() ([]*Department, error) {
 		return e.Departments, nil
 	}
 	return nil, &NotLoadedError{edge: "departments"}
+}
+
+// GroupsOrErr returns the Groups value or an error if the edge
+// was not loaded in eager-loading.
+func (e InstitutionEdges) GroupsOrErr() ([]*Group, error) {
+	if e.loadedTypes[3] {
+		return e.Groups, nil
+	}
+	return nil, &NotLoadedError{edge: "groups"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -150,6 +161,11 @@ func (i *Institution) QueryAccessories() *AccessoryQuery {
 // QueryDepartments queries the "departments" edge of the Institution entity.
 func (i *Institution) QueryDepartments() *DepartmentQuery {
 	return NewInstitutionClient(i.config).QueryDepartments(i)
+}
+
+// QueryGroups queries the "groups" edge of the Institution entity.
+func (i *Institution) QueryGroups() *GroupQuery {
+	return NewInstitutionClient(i.config).QueryGroups(i)
 }
 
 // Update returns a builder for updating this Institution.

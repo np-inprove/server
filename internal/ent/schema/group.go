@@ -40,5 +40,10 @@ func (Group) Edges() []ent.Edge {
 			Comment("Forum posts from the group"),
 		edge.To("deadlines", Deadline.Type).
 			Comment("Deadlines created by users from the group"),
+		edge.From("institution", Institution.Type).
+			Ref("groups").
+			Unique().
+			Required().
+			Comment("Institution owning this group"),
 	}
 }

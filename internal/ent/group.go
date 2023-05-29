@@ -9,6 +9,7 @@ import (
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
 	"github.com/np-inprove/server/internal/ent/group"
+	"github.com/np-inprove/server/internal/ent/institution"
 )
 
 // Group is the model entity for the Group schema.
@@ -26,8 +27,9 @@ type Group struct {
 	GroupType group.GroupType `json:"group_type,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the GroupQuery when eager-loading is set.
-	Edges        GroupEdges `json:"edges"`
-	selectValues sql.SelectValues
+	Edges              GroupEdges `json:"edges"`
+	institution_groups *int
+	selectValues       sql.SelectValues
 }
 
 // GroupEdges holds the relations/edges for other nodes in the graph.
@@ -40,11 +42,13 @@ type GroupEdges struct {
 	ForumPosts []*ForumPost `json:"forum_posts,omitempty"`
 	// Deadlines created by users from the group
 	Deadlines []*Deadline `json:"deadlines,omitempty"`
+	// Institution owning this group
+	Institution *Institution `json:"institution,omitempty"`
 	// GroupUsers holds the value of the group_users edge.
 	GroupUsers []*GroupUser `json:"group_users,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [5]bool
+	loadedTypes [6]bool
 }
 
 // UsersOrErr returns the Users value or an error if the edge
@@ -83,10 +87,23 @@ func (e GroupEdges) DeadlinesOrErr() ([]*Deadline, error) {
 	return nil, &NotLoadedError{edge: "deadlines"}
 }
 
+// InstitutionOrErr returns the Institution value or an error if the edge
+// was not loaded in eager-loading, or loaded but was not found.
+func (e GroupEdges) InstitutionOrErr() (*Institution, error) {
+	if e.loadedTypes[4] {
+		if e.Institution == nil {
+			// Edge was loaded but was not found.
+			return nil, &NotFoundError{label: institution.Label}
+		}
+		return e.Institution, nil
+	}
+	return nil, &NotLoadedError{edge: "institution"}
+}
+
 // GroupUsersOrErr returns the GroupUsers value or an error if the edge
 // was not loaded in eager-loading.
 func (e GroupEdges) GroupUsersOrErr() ([]*GroupUser, error) {
-	if e.loadedTypes[4] {
+	if e.loadedTypes[5] {
 		return e.GroupUsers, nil
 	}
 	return nil, &NotLoadedError{edge: "group_users"}
@@ -101,6 +118,8 @@ func (*Group) scanValues(columns []string) ([]any, error) {
 			values[i] = new(sql.NullInt64)
 		case group.FieldPath, group.FieldName, group.FieldDescription, group.FieldGroupType:
 			values[i] = new(sql.NullString)
+		case group.ForeignKeys[0]: // institution_groups
+			values[i] = new(sql.NullInt64)
 		default:
 			values[i] = new(sql.UnknownType)
 		}
@@ -146,6 +165,13 @@ func (gr *Group) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				gr.GroupType = group.GroupType(value.String)
 			}
+		case group.ForeignKeys[0]:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for edge-field institution_groups", value)
+			} else if value.Valid {
+				gr.institution_groups = new(int)
+				*gr.institution_groups = int(value.Int64)
+			}
 		default:
 			gr.selectValues.Set(columns[i], values[i])
 		}
@@ -177,6 +203,11 @@ func (gr *Group) QueryForumPosts() *ForumPostQuery {
 // QueryDeadlines queries the "deadlines" edge of the Group entity.
 func (gr *Group) QueryDeadlines() *DeadlineQuery {
 	return NewGroupClient(gr.config).QueryDeadlines(gr)
+}
+
+// QueryInstitution queries the "institution" edge of the Group entity.
+func (gr *Group) QueryInstitution() *InstitutionQuery {
+	return NewGroupClient(gr.config).QueryInstitution(gr)
 }
 
 // QueryGroupUsers queries the "group_users" edge of the Group entity.

@@ -16,6 +16,7 @@ import (
 	"github.com/np-inprove/server/internal/ent/forumpost"
 	"github.com/np-inprove/server/internal/ent/group"
 	"github.com/np-inprove/server/internal/ent/groupuser"
+	"github.com/np-inprove/server/internal/ent/institution"
 	"github.com/np-inprove/server/internal/ent/predicate"
 	"github.com/np-inprove/server/internal/ent/user"
 )
@@ -23,15 +24,17 @@ import (
 // GroupQuery is the builder for querying Group entities.
 type GroupQuery struct {
 	config
-	ctx            *QueryContext
-	order          []group.OrderOption
-	inters         []Interceptor
-	predicates     []predicate.Group
-	withUsers      *UserQuery
-	withEvents     *EventQuery
-	withForumPosts *ForumPostQuery
-	withDeadlines  *DeadlineQuery
-	withGroupUsers *GroupUserQuery
+	ctx             *QueryContext
+	order           []group.OrderOption
+	inters          []Interceptor
+	predicates      []predicate.Group
+	withUsers       *UserQuery
+	withEvents      *EventQuery
+	withForumPosts  *ForumPostQuery
+	withDeadlines   *DeadlineQuery
+	withInstitution *InstitutionQuery
+	withGroupUsers  *GroupUserQuery
+	withFKs         bool
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -149,6 +152,28 @@ func (gq *GroupQuery) QueryDeadlines() *DeadlineQuery {
 			sqlgraph.From(group.Table, group.FieldID, selector),
 			sqlgraph.To(deadline.Table, deadline.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, group.DeadlinesTable, group.DeadlinesColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(gq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryInstitution chains the current query on the "institution" edge.
+func (gq *GroupQuery) QueryInstitution() *InstitutionQuery {
+	query := (&InstitutionClient{config: gq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := gq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := gq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(group.Table, group.FieldID, selector),
+			sqlgraph.To(institution.Table, institution.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, group.InstitutionTable, group.InstitutionColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(gq.driver.Dialect(), step)
 		return fromU, nil
@@ -365,16 +390,17 @@ func (gq *GroupQuery) Clone() *GroupQuery {
 		return nil
 	}
 	return &GroupQuery{
-		config:         gq.config,
-		ctx:            gq.ctx.Clone(),
-		order:          append([]group.OrderOption{}, gq.order...),
-		inters:         append([]Interceptor{}, gq.inters...),
-		predicates:     append([]predicate.Group{}, gq.predicates...),
-		withUsers:      gq.withUsers.Clone(),
-		withEvents:     gq.withEvents.Clone(),
-		withForumPosts: gq.withForumPosts.Clone(),
-		withDeadlines:  gq.withDeadlines.Clone(),
-		withGroupUsers: gq.withGroupUsers.Clone(),
+		config:          gq.config,
+		ctx:             gq.ctx.Clone(),
+		order:           append([]group.OrderOption{}, gq.order...),
+		inters:          append([]Interceptor{}, gq.inters...),
+		predicates:      append([]predicate.Group{}, gq.predicates...),
+		withUsers:       gq.withUsers.Clone(),
+		withEvents:      gq.withEvents.Clone(),
+		withForumPosts:  gq.withForumPosts.Clone(),
+		withDeadlines:   gq.withDeadlines.Clone(),
+		withInstitution: gq.withInstitution.Clone(),
+		withGroupUsers:  gq.withGroupUsers.Clone(),
 		// clone intermediate query.
 		sql:  gq.sql.Clone(),
 		path: gq.path,
@@ -422,6 +448,17 @@ func (gq *GroupQuery) WithDeadlines(opts ...func(*DeadlineQuery)) *GroupQuery {
 		opt(query)
 	}
 	gq.withDeadlines = query
+	return gq
+}
+
+// WithInstitution tells the query-builder to eager-load the nodes that are connected to
+// the "institution" edge. The optional arguments are used to configure the query builder of the edge.
+func (gq *GroupQuery) WithInstitution(opts ...func(*InstitutionQuery)) *GroupQuery {
+	query := (&InstitutionClient{config: gq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	gq.withInstitution = query
 	return gq
 }
 
@@ -513,15 +550,23 @@ func (gq *GroupQuery) prepareQuery(ctx context.Context) error {
 func (gq *GroupQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Group, error) {
 	var (
 		nodes       = []*Group{}
+		withFKs     = gq.withFKs
 		_spec       = gq.querySpec()
-		loadedTypes = [5]bool{
+		loadedTypes = [6]bool{
 			gq.withUsers != nil,
 			gq.withEvents != nil,
 			gq.withForumPosts != nil,
 			gq.withDeadlines != nil,
+			gq.withInstitution != nil,
 			gq.withGroupUsers != nil,
 		}
 	)
+	if gq.withInstitution != nil {
+		withFKs = true
+	}
+	if withFKs {
+		_spec.Node.Columns = append(_spec.Node.Columns, group.ForeignKeys...)
+	}
 	_spec.ScanValues = func(columns []string) ([]any, error) {
 		return (*Group).scanValues(nil, columns)
 	}
@@ -565,6 +610,12 @@ func (gq *GroupQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Group,
 		if err := gq.loadDeadlines(ctx, query, nodes,
 			func(n *Group) { n.Edges.Deadlines = []*Deadline{} },
 			func(n *Group, e *Deadline) { n.Edges.Deadlines = append(n.Edges.Deadlines, e) }); err != nil {
+			return nil, err
+		}
+	}
+	if query := gq.withInstitution; query != nil {
+		if err := gq.loadInstitution(ctx, query, nodes, nil,
+			func(n *Group, e *Institution) { n.Edges.Institution = e }); err != nil {
 			return nil, err
 		}
 	}
@@ -729,6 +780,38 @@ func (gq *GroupQuery) loadDeadlines(ctx context.Context, query *DeadlineQuery, n
 			return fmt.Errorf(`unexpected referenced foreign-key "group_deadlines" returned %v for node %v`, *fk, n.ID)
 		}
 		assign(node, n)
+	}
+	return nil
+}
+func (gq *GroupQuery) loadInstitution(ctx context.Context, query *InstitutionQuery, nodes []*Group, init func(*Group), assign func(*Group, *Institution)) error {
+	ids := make([]int, 0, len(nodes))
+	nodeids := make(map[int][]*Group)
+	for i := range nodes {
+		if nodes[i].institution_groups == nil {
+			continue
+		}
+		fk := *nodes[i].institution_groups
+		if _, ok := nodeids[fk]; !ok {
+			ids = append(ids, fk)
+		}
+		nodeids[fk] = append(nodeids[fk], nodes[i])
+	}
+	if len(ids) == 0 {
+		return nil
+	}
+	query.Where(institution.IDIn(ids...))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		nodes, ok := nodeids[n.ID]
+		if !ok {
+			return fmt.Errorf(`unexpected foreign-key "institution_groups" returned %v`, n.ID)
+		}
+		for i := range nodes {
+			assign(nodes[i], n)
+		}
 	}
 	return nil
 }

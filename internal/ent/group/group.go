@@ -30,6 +30,8 @@ const (
 	EdgeForumPosts = "forum_posts"
 	// EdgeDeadlines holds the string denoting the deadlines edge name in mutations.
 	EdgeDeadlines = "deadlines"
+	// EdgeInstitution holds the string denoting the institution edge name in mutations.
+	EdgeInstitution = "institution"
 	// EdgeGroupUsers holds the string denoting the group_users edge name in mutations.
 	EdgeGroupUsers = "group_users"
 	// Table holds the table name of the group in the database.
@@ -60,6 +62,13 @@ const (
 	DeadlinesInverseTable = "deadlines"
 	// DeadlinesColumn is the table column denoting the deadlines relation/edge.
 	DeadlinesColumn = "group_deadlines"
+	// InstitutionTable is the table that holds the institution relation/edge.
+	InstitutionTable = "groups"
+	// InstitutionInverseTable is the table name for the Institution entity.
+	// It exists in this package in order to avoid circular dependency with the "institution" package.
+	InstitutionInverseTable = "institutions"
+	// InstitutionColumn is the table column denoting the institution relation/edge.
+	InstitutionColumn = "institution_groups"
 	// GroupUsersTable is the table that holds the group_users relation/edge.
 	GroupUsersTable = "group_users"
 	// GroupUsersInverseTable is the table name for the GroupUser entity.
@@ -78,6 +87,12 @@ var Columns = []string{
 	FieldGroupType,
 }
 
+// ForeignKeys holds the SQL foreign-keys that are owned by the "groups"
+// table and are not defined as standalone fields in the schema.
+var ForeignKeys = []string{
+	"institution_groups",
+}
+
 var (
 	// UsersPrimaryKey and UsersColumn2 are the table columns denoting the
 	// primary key for the users relation (M2M).
@@ -88,6 +103,11 @@ var (
 func ValidColumn(column string) bool {
 	for i := range Columns {
 		if column == Columns[i] {
+			return true
+		}
+	}
+	for i := range ForeignKeys {
+		if column == ForeignKeys[i] {
 			return true
 		}
 	}
@@ -210,6 +230,13 @@ func ByDeadlines(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 	}
 }
 
+// ByInstitutionField orders the results by institution field.
+func ByInstitutionField(field string, opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newInstitutionStep(), sql.OrderByField(field, opts...))
+	}
+}
+
 // ByGroupUsersCount orders the results by group_users count.
 func ByGroupUsersCount(opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
@@ -249,6 +276,13 @@ func newDeadlinesStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(DeadlinesInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.O2M, false, DeadlinesTable, DeadlinesColumn),
+	)
+}
+func newInstitutionStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(InstitutionInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.M2O, true, InstitutionTable, InstitutionColumn),
 	)
 }
 func newGroupUsersStep() *sqlgraph.Step {

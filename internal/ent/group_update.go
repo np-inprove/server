@@ -14,6 +14,7 @@ import (
 	"github.com/np-inprove/server/internal/ent/event"
 	"github.com/np-inprove/server/internal/ent/forumpost"
 	"github.com/np-inprove/server/internal/ent/group"
+	"github.com/np-inprove/server/internal/ent/institution"
 	"github.com/np-inprove/server/internal/ent/predicate"
 	"github.com/np-inprove/server/internal/ent/user"
 )
@@ -115,6 +116,17 @@ func (gu *GroupUpdate) AddDeadlines(d ...*Deadline) *GroupUpdate {
 	return gu.AddDeadlineIDs(ids...)
 }
 
+// SetInstitutionID sets the "institution" edge to the Institution entity by ID.
+func (gu *GroupUpdate) SetInstitutionID(id int) *GroupUpdate {
+	gu.mutation.SetInstitutionID(id)
+	return gu
+}
+
+// SetInstitution sets the "institution" edge to the Institution entity.
+func (gu *GroupUpdate) SetInstitution(i *Institution) *GroupUpdate {
+	return gu.SetInstitutionID(i.ID)
+}
+
 // Mutation returns the GroupMutation object of the builder.
 func (gu *GroupUpdate) Mutation() *GroupMutation {
 	return gu.mutation
@@ -204,6 +216,12 @@ func (gu *GroupUpdate) RemoveDeadlines(d ...*Deadline) *GroupUpdate {
 	return gu.RemoveDeadlineIDs(ids...)
 }
 
+// ClearInstitution clears the "institution" edge to the Institution entity.
+func (gu *GroupUpdate) ClearInstitution() *GroupUpdate {
+	gu.mutation.ClearInstitution()
+	return gu
+}
+
 // Save executes the query and returns the number of nodes affected by the update operation.
 func (gu *GroupUpdate) Save(ctx context.Context) (int, error) {
 	return withHooks(ctx, gu.sqlSave, gu.mutation, gu.hooks)
@@ -247,6 +265,9 @@ func (gu *GroupUpdate) check() error {
 		if err := group.GroupTypeValidator(v); err != nil {
 			return &ValidationError{Name: "group_type", err: fmt.Errorf(`ent: validator failed for field "Group.group_type": %w`, err)}
 		}
+	}
+	if _, ok := gu.mutation.InstitutionID(); gu.mutation.InstitutionCleared() && !ok {
+		return errors.New(`ent: clearing a required unique edge "Group.institution"`)
 	}
 	return nil
 }
@@ -455,6 +476,35 @@ func (gu *GroupUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
+	if gu.mutation.InstitutionCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   group.InstitutionTable,
+			Columns: []string{group.InstitutionColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(institution.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := gu.mutation.InstitutionIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   group.InstitutionTable,
+			Columns: []string{group.InstitutionColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(institution.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
 	if n, err = sqlgraph.UpdateNodes(ctx, gu.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{group.Label}
@@ -559,6 +609,17 @@ func (guo *GroupUpdateOne) AddDeadlines(d ...*Deadline) *GroupUpdateOne {
 	return guo.AddDeadlineIDs(ids...)
 }
 
+// SetInstitutionID sets the "institution" edge to the Institution entity by ID.
+func (guo *GroupUpdateOne) SetInstitutionID(id int) *GroupUpdateOne {
+	guo.mutation.SetInstitutionID(id)
+	return guo
+}
+
+// SetInstitution sets the "institution" edge to the Institution entity.
+func (guo *GroupUpdateOne) SetInstitution(i *Institution) *GroupUpdateOne {
+	return guo.SetInstitutionID(i.ID)
+}
+
 // Mutation returns the GroupMutation object of the builder.
 func (guo *GroupUpdateOne) Mutation() *GroupMutation {
 	return guo.mutation
@@ -648,6 +709,12 @@ func (guo *GroupUpdateOne) RemoveDeadlines(d ...*Deadline) *GroupUpdateOne {
 	return guo.RemoveDeadlineIDs(ids...)
 }
 
+// ClearInstitution clears the "institution" edge to the Institution entity.
+func (guo *GroupUpdateOne) ClearInstitution() *GroupUpdateOne {
+	guo.mutation.ClearInstitution()
+	return guo
+}
+
 // Where appends a list predicates to the GroupUpdate builder.
 func (guo *GroupUpdateOne) Where(ps ...predicate.Group) *GroupUpdateOne {
 	guo.mutation.Where(ps...)
@@ -704,6 +771,9 @@ func (guo *GroupUpdateOne) check() error {
 		if err := group.GroupTypeValidator(v); err != nil {
 			return &ValidationError{Name: "group_type", err: fmt.Errorf(`ent: validator failed for field "Group.group_type": %w`, err)}
 		}
+	}
+	if _, ok := guo.mutation.InstitutionID(); guo.mutation.InstitutionCleared() && !ok {
+		return errors.New(`ent: clearing a required unique edge "Group.institution"`)
 	}
 	return nil
 }
@@ -922,6 +992,35 @@ func (guo *GroupUpdateOne) sqlSave(ctx context.Context) (_node *Group, err error
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(deadline.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if guo.mutation.InstitutionCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   group.InstitutionTable,
+			Columns: []string{group.InstitutionColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(institution.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := guo.mutation.InstitutionIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   group.InstitutionTable,
+			Columns: []string{group.InstitutionColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(institution.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

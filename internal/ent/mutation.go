@@ -3464,6 +3464,8 @@ type GroupMutation struct {
 	deadlines          map[int]struct{}
 	removeddeadlines   map[int]struct{}
 	cleareddeadlines   bool
+	institution        *int
+	clearedinstitution bool
 	done               bool
 	oldValue           func(context.Context) (*Group, error)
 	predicates         []predicate.Group
@@ -3927,6 +3929,45 @@ func (m *GroupMutation) ResetDeadlines() {
 	m.removeddeadlines = nil
 }
 
+// SetInstitutionID sets the "institution" edge to the Institution entity by id.
+func (m *GroupMutation) SetInstitutionID(id int) {
+	m.institution = &id
+}
+
+// ClearInstitution clears the "institution" edge to the Institution entity.
+func (m *GroupMutation) ClearInstitution() {
+	m.clearedinstitution = true
+}
+
+// InstitutionCleared reports if the "institution" edge to the Institution entity was cleared.
+func (m *GroupMutation) InstitutionCleared() bool {
+	return m.clearedinstitution
+}
+
+// InstitutionID returns the "institution" edge ID in the mutation.
+func (m *GroupMutation) InstitutionID() (id int, exists bool) {
+	if m.institution != nil {
+		return *m.institution, true
+	}
+	return
+}
+
+// InstitutionIDs returns the "institution" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// InstitutionID instead. It exists only for internal usage by the builders.
+func (m *GroupMutation) InstitutionIDs() (ids []int) {
+	if id := m.institution; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetInstitution resets all changes to the "institution" edge.
+func (m *GroupMutation) ResetInstitution() {
+	m.institution = nil
+	m.clearedinstitution = false
+}
+
 // Where appends a list predicates to the GroupMutation builder.
 func (m *GroupMutation) Where(ps ...predicate.Group) {
 	m.predicates = append(m.predicates, ps...)
@@ -4111,7 +4152,7 @@ func (m *GroupMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *GroupMutation) AddedEdges() []string {
-	edges := make([]string, 0, 4)
+	edges := make([]string, 0, 5)
 	if m.users != nil {
 		edges = append(edges, group.EdgeUsers)
 	}
@@ -4123,6 +4164,9 @@ func (m *GroupMutation) AddedEdges() []string {
 	}
 	if m.deadlines != nil {
 		edges = append(edges, group.EdgeDeadlines)
+	}
+	if m.institution != nil {
+		edges = append(edges, group.EdgeInstitution)
 	}
 	return edges
 }
@@ -4155,13 +4199,17 @@ func (m *GroupMutation) AddedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case group.EdgeInstitution:
+		if id := m.institution; id != nil {
+			return []ent.Value{*id}
+		}
 	}
 	return nil
 }
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *GroupMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 4)
+	edges := make([]string, 0, 5)
 	if m.removedusers != nil {
 		edges = append(edges, group.EdgeUsers)
 	}
@@ -4211,7 +4259,7 @@ func (m *GroupMutation) RemovedIDs(name string) []ent.Value {
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *GroupMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 4)
+	edges := make([]string, 0, 5)
 	if m.clearedusers {
 		edges = append(edges, group.EdgeUsers)
 	}
@@ -4223,6 +4271,9 @@ func (m *GroupMutation) ClearedEdges() []string {
 	}
 	if m.cleareddeadlines {
 		edges = append(edges, group.EdgeDeadlines)
+	}
+	if m.clearedinstitution {
+		edges = append(edges, group.EdgeInstitution)
 	}
 	return edges
 }
@@ -4239,6 +4290,8 @@ func (m *GroupMutation) EdgeCleared(name string) bool {
 		return m.clearedforum_posts
 	case group.EdgeDeadlines:
 		return m.cleareddeadlines
+	case group.EdgeInstitution:
+		return m.clearedinstitution
 	}
 	return false
 }
@@ -4247,6 +4300,9 @@ func (m *GroupMutation) EdgeCleared(name string) bool {
 // if that edge is not defined in the schema.
 func (m *GroupMutation) ClearEdge(name string) error {
 	switch name {
+	case group.EdgeInstitution:
+		m.ClearInstitution()
+		return nil
 	}
 	return fmt.Errorf("unknown Group unique edge %s", name)
 }
@@ -4266,6 +4322,9 @@ func (m *GroupMutation) ResetEdge(name string) error {
 		return nil
 	case group.EdgeDeadlines:
 		m.ResetDeadlines()
+		return nil
+	case group.EdgeInstitution:
+		m.ResetInstitution()
 		return nil
 	}
 	return fmt.Errorf("unknown Group edge %s", name)
@@ -4706,6 +4765,9 @@ type InstitutionMutation struct {
 	departments        map[int]struct{}
 	removeddepartments map[int]struct{}
 	cleareddepartments bool
+	groups             map[int]struct{}
+	removedgroups      map[int]struct{}
+	clearedgroups      bool
 	done               bool
 	oldValue           func(context.Context) (*Institution, error)
 	predicates         []predicate.Institution
@@ -5115,6 +5177,60 @@ func (m *InstitutionMutation) ResetDepartments() {
 	m.removeddepartments = nil
 }
 
+// AddGroupIDs adds the "groups" edge to the Group entity by ids.
+func (m *InstitutionMutation) AddGroupIDs(ids ...int) {
+	if m.groups == nil {
+		m.groups = make(map[int]struct{})
+	}
+	for i := range ids {
+		m.groups[ids[i]] = struct{}{}
+	}
+}
+
+// ClearGroups clears the "groups" edge to the Group entity.
+func (m *InstitutionMutation) ClearGroups() {
+	m.clearedgroups = true
+}
+
+// GroupsCleared reports if the "groups" edge to the Group entity was cleared.
+func (m *InstitutionMutation) GroupsCleared() bool {
+	return m.clearedgroups
+}
+
+// RemoveGroupIDs removes the "groups" edge to the Group entity by IDs.
+func (m *InstitutionMutation) RemoveGroupIDs(ids ...int) {
+	if m.removedgroups == nil {
+		m.removedgroups = make(map[int]struct{})
+	}
+	for i := range ids {
+		delete(m.groups, ids[i])
+		m.removedgroups[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedGroups returns the removed IDs of the "groups" edge to the Group entity.
+func (m *InstitutionMutation) RemovedGroupsIDs() (ids []int) {
+	for id := range m.removedgroups {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// GroupsIDs returns the "groups" edge IDs in the mutation.
+func (m *InstitutionMutation) GroupsIDs() (ids []int) {
+	for id := range m.groups {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetGroups resets all changes to the "groups" edge.
+func (m *InstitutionMutation) ResetGroups() {
+	m.groups = nil
+	m.clearedgroups = false
+	m.removedgroups = nil
+}
+
 // Where appends a list predicates to the InstitutionMutation builder.
 func (m *InstitutionMutation) Where(ps ...predicate.Institution) {
 	m.predicates = append(m.predicates, ps...)
@@ -5299,7 +5415,7 @@ func (m *InstitutionMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *InstitutionMutation) AddedEdges() []string {
-	edges := make([]string, 0, 3)
+	edges := make([]string, 0, 4)
 	if m.vouchers != nil {
 		edges = append(edges, institution.EdgeVouchers)
 	}
@@ -5308,6 +5424,9 @@ func (m *InstitutionMutation) AddedEdges() []string {
 	}
 	if m.departments != nil {
 		edges = append(edges, institution.EdgeDepartments)
+	}
+	if m.groups != nil {
+		edges = append(edges, institution.EdgeGroups)
 	}
 	return edges
 }
@@ -5334,13 +5453,19 @@ func (m *InstitutionMutation) AddedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case institution.EdgeGroups:
+		ids := make([]ent.Value, 0, len(m.groups))
+		for id := range m.groups {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *InstitutionMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 3)
+	edges := make([]string, 0, 4)
 	if m.removedvouchers != nil {
 		edges = append(edges, institution.EdgeVouchers)
 	}
@@ -5349,6 +5474,9 @@ func (m *InstitutionMutation) RemovedEdges() []string {
 	}
 	if m.removeddepartments != nil {
 		edges = append(edges, institution.EdgeDepartments)
+	}
+	if m.removedgroups != nil {
+		edges = append(edges, institution.EdgeGroups)
 	}
 	return edges
 }
@@ -5375,13 +5503,19 @@ func (m *InstitutionMutation) RemovedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case institution.EdgeGroups:
+		ids := make([]ent.Value, 0, len(m.removedgroups))
+		for id := range m.removedgroups {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *InstitutionMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 3)
+	edges := make([]string, 0, 4)
 	if m.clearedvouchers {
 		edges = append(edges, institution.EdgeVouchers)
 	}
@@ -5390,6 +5524,9 @@ func (m *InstitutionMutation) ClearedEdges() []string {
 	}
 	if m.cleareddepartments {
 		edges = append(edges, institution.EdgeDepartments)
+	}
+	if m.clearedgroups {
+		edges = append(edges, institution.EdgeGroups)
 	}
 	return edges
 }
@@ -5404,6 +5541,8 @@ func (m *InstitutionMutation) EdgeCleared(name string) bool {
 		return m.clearedaccessories
 	case institution.EdgeDepartments:
 		return m.cleareddepartments
+	case institution.EdgeGroups:
+		return m.clearedgroups
 	}
 	return false
 }
@@ -5428,6 +5567,9 @@ func (m *InstitutionMutation) ResetEdge(name string) error {
 		return nil
 	case institution.EdgeDepartments:
 		m.ResetDepartments()
+		return nil
+	case institution.EdgeGroups:
+		m.ResetGroups()
 		return nil
 	}
 	return fmt.Errorf("unknown Institution edge %s", name)

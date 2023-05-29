@@ -12,6 +12,7 @@ import (
 
 	"github.com/np-inprove/server/internal/auth"
 	"github.com/np-inprove/server/internal/config"
+	"github.com/np-inprove/server/internal/dash"
 	"github.com/np-inprove/server/internal/ent"
 	"github.com/np-inprove/server/internal/god"
 	"github.com/np-inprove/server/internal/logger"
@@ -149,7 +150,7 @@ func main() {
 	r.Mount("/auth", authHandler)
 
 	appLogger.Info("registering god-mode services",
-		logger.String("area", "auth"),
+		logger.String("area", "god"),
 	)
 
 	gr := god.NewEntRepository(appLogger, client)
@@ -158,6 +159,16 @@ func main() {
 
 	r.Mount("/god", godHandler)
 
+	appLogger.Info("registering dashboard services",
+		logger.String("area", "dashboard"),
+	)
+
+	dr := dash.NewEntRepository(client)
+	duc := dash.NewUseCase(dr)
+	dashHandler := dash.NewHTTPHandler(duc, cfg, tokenAuth)
+
+	r.Mount("/dash", dashHandler)
+
 	interrupt := make(chan os.Signal, 1)
 	signal.Notify(interrupt, syscall.SIGTERM, syscall.SIGINT)
 
@@ -165,6 +176,10 @@ func main() {
 	wg.Add(1)
 
 	go func() {
+		appLogger.Info("ready to handle requests",
+			logger.String("area", "http"),
+			logger.String("addr", cfg.HTTPAddr()),
+		)
 		err = server.ListenAndServe()
 		if err != nil && err != http.ErrServerClosed {
 			appLogger.Fatal("failed to listen",

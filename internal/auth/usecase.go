@@ -62,7 +62,7 @@ func (u usecase) WhoAmI(ctx context.Context, token jwt.Token) (*User, error) {
 func (u usecase) Login(ctx context.Context, email string, password string) (*session, error) {
 	user, err := u.r.FindUserByEmail(ctx, email)
 	if err != nil {
-		if apperror.IsEntityNotFound(err) {
+		if apperror.IsNotFound(err) {
 			return nil, ErrUserNotFound
 		}
 		return nil, fmt.Errorf("failed to find user: %w", err)
@@ -91,7 +91,7 @@ func (u usecase) Login(ctx context.Context, email string, password string) (*ses
 func (u usecase) Register(ctx context.Context, firstName string, lastName string, email string, password string) (*session, error) {
 	domain := strings.Split(email, "@")[1] // This should not panic
 	if _, err := u.r.FindInstitutionByDomains(ctx, domain); err != nil {
-		if apperror.IsEntityNotFound(err) {
+		if apperror.IsNotFound(err) {
 			return nil, ErrDomainNotFound
 		}
 		return nil, err
@@ -150,7 +150,7 @@ func (u usecase) createJWT(email string, godMode bool) ([]byte, error) {
 
 func (u usecase) tokenIsValid(ctx context.Context, jti string) error {
 	_, err := u.r.FindJWTRevocation(ctx, jti)
-	if err != nil && apperror.IsEntityNotFound(err) {
+	if err != nil && apperror.IsNotFound(err) {
 		return nil
 	}
 	return err
