@@ -97,6 +97,6 @@ func (h httpHandler) DeleteInstitution(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.WriteHeader(http.StatusNoContent)
+	render.Status(r, http.StatusNoContent)
 	render.NoContent(w, r)
 }
