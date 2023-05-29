@@ -83,7 +83,7 @@ func (h httpHandler) ListGroupTypes(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h httpHandler) CreateGroup(w http.ResponseWriter, r *http.Request) {
-	p := payload.CreateGroupRequest{}
+	p := &payload.CreateGroupRequest{}
 	if err := render.Decode(r, p); err != nil {
 		_ = render.Render(w, r, apperror.ErrBadRequest(err))
 		return
