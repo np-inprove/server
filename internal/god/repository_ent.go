@@ -28,12 +28,12 @@ func (e entRepository) FindInstitutions(ctx context.Context) ([]*Institution, er
 }
 
 func (e entRepository) CreateInstitution(ctx context.Context, name string, shortName string, adminDomain string, studentDomain string) (*Institution, error) {
-	client := e.c
+	c := e.c
 	if cc, ok := entutils.ExtractTx(ctx); ok {
-		*client = *cc
+		c = cc
 	}
 
-	inst, err := client.Institution.Create().
+	inst, err := c.Institution.Create().
 		SetName(name).
 		SetShortName(shortName).
 		SetAdminDomain(adminDomain).
@@ -50,17 +50,17 @@ func (e entRepository) CreateInstitution(ctx context.Context, name string, short
 }
 
 func (e entRepository) DeleteInstitution(ctx context.Context, shortName string) error {
-	client := e.c
+	c := e.c
 	if cc, ok := entutils.ExtractTx(ctx); ok {
-		*client = *cc
+		c = cc
 	}
 
-	id, err := client.Institution.Query().Where(institution.ShortName(shortName)).OnlyID(ctx)
+	id, err := c.Institution.Query().Where(institution.ShortName(shortName)).OnlyID(ctx)
 	if err != nil {
 		return fmt.Errorf("failed to delete institution as it does not exist: %w", err)
 	}
 
-	err = client.Institution.DeleteOneID(id).Exec(ctx)
+	err = c.Institution.DeleteOneID(id).Exec(ctx)
 	if err != nil {
 		return fmt.Errorf("failed to delete institution: %w", err)
 	}
@@ -68,7 +68,7 @@ func (e entRepository) DeleteInstitution(ctx context.Context, shortName string) 
 	return nil
 }
 
-func (e entRepository) WithTx(ctx context.Context, fn func(ctx context.Context) error) error {
+func (e entRepository) WithTx(ctx context.Context, f func(ctx context.Context) error) error {
 	tx, err := e.c.Tx(ctx)
 	if err != nil {
 		return fmt.Errorf("failed to start ent transaction: %w", err)
@@ -77,7 +77,7 @@ func (e entRepository) WithTx(ctx context.Context, fn func(ctx context.Context) 
 	txc := tx.Client()
 	ctx = context.WithValue(ctx, entutils.EntTxCtxKey, txc)
 
-	if err := fn(ctx); err != nil {
+	if err := f(ctx); err != nil {
 		e.l.Warn("failed database query during ent transaction",
 			logger.String("err", err.Error()),
 			logger.String("area", "god"),
