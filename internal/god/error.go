@@ -8,7 +8,8 @@ import (
 )
 
 var (
-	ErrShortNameConflict = errors.New("short name conflicts with existing institution")
+	ErrShortNameConflict   = errors.New("short name conflicts with existing institution")
+	ErrInstitutionNotFound = errors.New("institution does not exist")
 )
 
 func mapDomainErr(err error) *apperror.ErrResponse {
@@ -21,6 +22,20 @@ func mapDomainErr(err error) *apperror.ErrResponse {
 			Fields: validate.Errors{
 				"short_name": map[string]string{
 					"conflict": "Short name already in use",
+				},
+			},
+		}
+	}
+
+	if errors.Is(err, ErrInstitutionNotFound) {
+		return &apperror.ErrResponse{
+			Err:            err,
+			HTTPStatusCode: http.StatusNotFound,
+			AppErrCode:     http.StatusNotFound,
+			AppErrMessage:  "Institution does not exist",
+			Fields: validate.Errors{
+				"short_name": map[string]string{
+					"notFound": "Institution does not exist",
 				},
 			},
 		}
