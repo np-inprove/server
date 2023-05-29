@@ -39,7 +39,7 @@ type usecase struct {
 type UseCase interface {
 	WhoAmI(ctx context.Context, token jwt.Token) (*User, error)
 	Login(ctx context.Context, email string, password string) (*session, error)
-	Register(ctx context.Context, firstName string, lastName string, email string, password string) (*session, error)
+	Register(ctx context.Context, firstName string, lastName string, email string, password string, confirmPassword string) (*session, error)
 }
 
 func NewUseCase(r Repository, c *config.Config, publicKey jwk.Key, privateKey jwk.Key) (UseCase, error) {
@@ -88,13 +88,17 @@ func (u usecase) Login(ctx context.Context, email string, password string) (*ses
 	}, nil
 }
 
-func (u usecase) Register(ctx context.Context, firstName string, lastName string, email string, password string) (*session, error) {
+func (u usecase) Register(ctx context.Context, firstName string, lastName string, email string, password string, confirmPassword string) (*session, error) {
 	domain := strings.Split(email, "@")[1] // This should not panic
 	if _, err := u.r.FindInstitutionByDomains(ctx, domain); err != nil {
 		if apperror.IsNotFound(err) {
 			return nil, ErrDomainNotFound
 		}
 		return nil, err
+	}
+
+	if password != confirmPassword {
+		return nil, ErrPasswordConflict
 	}
 
 	h, err := hash.CreateEncoded(password)

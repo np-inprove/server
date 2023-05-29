@@ -8,10 +8,11 @@ import (
 )
 
 var (
-	ErrInvalidPassword = errors.New("password provided did not match hash")
-	ErrUserNotFound    = errors.New("failed to find user")
-	ErrUserConflict    = errors.New("failed to register new user as email already used")
-	ErrDomainNotFound  = errors.New("no institution is registered with provided domain")
+	ErrInvalidPassword  = errors.New("password provided did not match hash")
+	ErrUserNotFound     = errors.New("failed to find user")
+	ErrUserConflict     = errors.New("failed to register new user as email already used")
+	ErrDomainNotFound   = errors.New("no institution is registered with provided domain")
+	ErrPasswordConflict = errors.New("passwords provided does not match")
 )
 
 func mapDomainErr(err error) *apperror.ErrResponse {
@@ -62,10 +63,24 @@ func mapDomainErr(err error) *apperror.ErrResponse {
 			Err:            nil,
 			HTTPStatusCode: http.StatusBadRequest,
 			AppErrCode:     http.StatusBadRequest,
-			AppErrMessage:  "An institution does not exist for this domain. Please get your institution adminstrator to register first.",
+			AppErrMessage:  "An institution does not exist for this domain. Please get your institution administrator to register first.",
 			Fields: validate.Errors{
 				"email": map[string]string{
 					"domain": "Email domain not found",
+				},
+			},
+		}
+	}
+
+	if errors.Is(err, ErrPasswordConflict) {
+		return &apperror.ErrResponse{
+			Err:            nil,
+			HTTPStatusCode: http.StatusBadRequest,
+			AppErrCode:     http.StatusBadRequest,
+			AppErrMessage:  "The passwords provided does not match. Please retype the passwords",
+			Fields: validate.Errors{
+				"confirmPassword": map[string]string{
+					"invalid": "Password fields do not match",
 				},
 			},
 		}
