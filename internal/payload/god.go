@@ -47,4 +47,5 @@ func (c CreateInstitutionRequest) Validate() *validate.Validation {
 
 		return fqdnRegexRFC1123.MatchString(s)
 	})
+	return v
 }
