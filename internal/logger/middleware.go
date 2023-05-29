@@ -29,29 +29,30 @@ func (m *Middleware) Request(next http.Handler) http.Handler {
 
 		start := time.Now()
 		defer func() {
-			// TODO this does not work
-			fields := []Field{
-				String("area", "http"),
-				String("method", r.Method),
-				String("url", r.URL.String()),
-				Int("status", ww.Status()),
-				Int("bytes_written", ww.BytesWritten()),
-				Duration("duration", time.Since(start)),
-			}
+			go func() {
+				fields := []Field{
+					String("area", "http"),
+					String("method", r.Method),
+					String("url", r.URL.String()),
+					Int("status", ww.Status()),
+					Int("bytes_written", ww.BytesWritten()),
+					Duration("duration", time.Since(start)),
+				}
 
-			v := r.Context().Value(ErrCtxKey)
-			if v != nil {
-				fields = append(fields, String("err", v.(error).Error()))
-			}
+				v := r.Context().Value(ErrCtxKey)
+				if v != nil {
+					fields = append(fields, String("err", v.(error).Error()))
+				}
 
-			v = r.Context().Value(ErrValidationCtxKey)
-			if v != nil {
-				fields = append(fields, String("err_validation", v.(string)))
-			}
+				v = r.Context().Value(ErrValidationCtxKey)
+				if v != nil {
+					fields = append(fields, String("err_validation", v.(string)))
+				}
 
-			m.logger.Info("handled http request",
-				fields...,
-			)
+				m.logger.Info("handled http request",
+					fields...,
+				)
+			}()
 		}()
 
 		next.ServeHTTP(ww, r)
