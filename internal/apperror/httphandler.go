@@ -20,12 +20,12 @@ type ErrResponse struct {
 func (e ErrResponse) Render(w http.ResponseWriter, r *http.Request) error {
 	if !e.Fields.Empty() {
 		ctx := context.WithValue(r.Context(), logger.ErrValidationCtxKey, e.Fields.String())
-		*r = *r.WithContext(ctx)
+		*r = *r.Clone(ctx)
 	}
 
 	if e.Err != nil {
 		ctx := context.WithValue(r.Context(), logger.ErrCtxKey, e.Err.Error())
-		*r = *r.WithContext(ctx)
+		*r = *r.Clone(ctx)
 	}
 
 	return nil
