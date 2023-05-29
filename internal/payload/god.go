@@ -47,5 +47,8 @@ func (c CreateInstitutionRequest) Validate() *validate.Validation {
 
 		return fqdnRegexRFC1123.MatchString(s)
 	})
+	v.AddMessages(map[string]string{
+		"fqdn": "value is not a fully qualified domain name",
+	})
 	return v
 }
