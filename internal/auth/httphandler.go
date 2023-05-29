@@ -52,12 +52,14 @@ func (h httpHandler) Login(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if v := p.Validate(); !v.Validate() {
+		render.Status(r, http.StatusBadRequest)
 		_ = render.Render(w, r, apperror.ErrValidation(v.Errors))
 		return
 	}
 
 	s, err := h.u.Login(r.Context(), p.Email, p.Password)
 	if err != nil {
+		render.Status(r, http.StatusBadRequest)
 		_ = render.Render(w, r, mapDomainErr(err))
 		return
 	}
@@ -78,17 +80,20 @@ func (h httpHandler) Login(w http.ResponseWriter, r *http.Request) {
 func (h httpHandler) Register(w http.ResponseWriter, r *http.Request) {
 	p := &payload.RegisterRequest{}
 	if err := render.Decode(r, p); err != nil {
+		render.Status(r, http.StatusBadRequest)
 		_ = render.Render(w, r, apperror.ErrBadRequest(err))
 		return
 	}
 
 	if v := p.Validate(); !v.Validate() {
+		render.Status(r, http.StatusBadRequest)
 		_ = render.Render(w, r, apperror.ErrValidation(v.Errors))
 		return
 	}
 
 	s, err := h.u.Register(r.Context(), p.FirstName, p.LastName, p.Email, p.Password, p.ConfirmPassword)
 	if err != nil {
+		render.Status(r, http.StatusBadRequest)
 		_ = render.Render(w, r, mapDomainErr(err))
 		return
 	}
