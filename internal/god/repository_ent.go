@@ -11,8 +11,8 @@ import (
 )
 
 type entRepository struct {
-	l logger.AppLogger
-	c *ent.Client
+	log    logger.AppLogger
+	client *ent.Client
 }
 
 func NewEntRepository(l logger.AppLogger, c *ent.Client) Repository {
@@ -20,7 +20,7 @@ func NewEntRepository(l logger.AppLogger, c *ent.Client) Repository {
 }
 
 func (e entRepository) FindInstitutions(ctx context.Context) ([]*Institution, error) {
-	i, err := e.c.Institution.Query().All(ctx)
+	i, err := e.client.Institution.Query().All(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find all institutions: %w", err)
 	}
@@ -28,7 +28,7 @@ func (e entRepository) FindInstitutions(ctx context.Context) ([]*Institution, er
 }
 
 func (e entRepository) CreateInstitution(ctx context.Context, name string, shortName string, adminDomain string, studentDomain string) (*Institution, error) {
-	c := e.c
+	c := e.client
 	if cc, ok := entutils.ExtractTx(ctx); ok {
 		c = cc
 	}
@@ -50,7 +50,7 @@ func (e entRepository) CreateInstitution(ctx context.Context, name string, short
 }
 
 func (e entRepository) DeleteInstitution(ctx context.Context, shortName string) error {
-	c := e.c
+	c := e.client
 	if cc, ok := entutils.ExtractTx(ctx); ok {
 		c = cc
 	}
@@ -69,7 +69,7 @@ func (e entRepository) DeleteInstitution(ctx context.Context, shortName string) 
 }
 
 func (e entRepository) WithTx(ctx context.Context, f func(ctx context.Context) error) error {
-	tx, err := e.c.Tx(ctx)
+	tx, err := e.client.Tx(ctx)
 	if err != nil {
 		return fmt.Errorf("failed to start ent transaction: %w", err)
 	}
@@ -78,12 +78,12 @@ func (e entRepository) WithTx(ctx context.Context, f func(ctx context.Context) e
 	ctx = context.WithValue(ctx, entutils.EntTxCtxKey, txc)
 
 	if err := f(ctx); err != nil {
-		e.l.Warn("failed database query during ent transaction",
+		e.log.Warn("failed database query during ent transaction",
 			logger.String("err", err.Error()),
 			logger.String("area", "god"),
 		)
 		if err2 := tx.Rollback(); err2 != nil {
-			e.l.Error("failed ent transaction rollback",
+			e.log.Error("failed ent transaction rollback",
 				logger.String("err", err.Error()),
 				logger.String("causer", err.Error()),
 				logger.String("area", "god"),

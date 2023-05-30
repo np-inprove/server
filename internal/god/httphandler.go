@@ -12,9 +12,9 @@ import (
 )
 
 type httpHandler struct {
-	u UseCase
-	c *config.Config
-	j *jwtauth.JWTAuth
+	service UseCase
+	cfg     *config.Config
+	jwt     *jwtauth.JWTAuth
 }
 
 func NewHTTPHandler(u UseCase, c *config.Config, j *jwtauth.JWTAuth) chi.Router {
@@ -35,14 +35,14 @@ func NewHTTPHandler(u UseCase, c *config.Config, j *jwtauth.JWTAuth) chi.Router 
 
 		r.Get("/institutions", h.ListInstitutions)
 		r.Post("/institutions", h.CreateInstitution)
-		r.Delete("/institutions/{institutionShortName}", h.DeleteInstitution)
+		r.Delete("/institutions/{shortName}", h.DeleteInstitution)
 	})
 
 	return r
 }
 
 func (h httpHandler) ListInstitutions(w http.ResponseWriter, r *http.Request) {
-	insts, err := h.u.ListInstitutions(r.Context())
+	insts, err := h.service.ListInstitutions(r.Context())
 	if err != nil {
 		_ = render.Render(w, r, mapDomainErr(err))
 		return
@@ -74,7 +74,7 @@ func (h httpHandler) CreateInstitution(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	inst, err := h.u.CreateInstitution(r.Context(), p.Name, p.ShortName, p.AdminDomain, p.StudentDomain)
+	inst, err := h.service.CreateInstitution(r.Context(), p.Name, p.ShortName, p.AdminDomain, p.StudentDomain)
 	if err != nil {
 		_ = render.Render(w, r, mapDomainErr(err))
 		return
@@ -90,8 +90,8 @@ func (h httpHandler) CreateInstitution(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h httpHandler) DeleteInstitution(w http.ResponseWriter, r *http.Request) {
-	shortName := chi.URLParam(r, "institutionShortName")
-	err := h.u.DeleteInstitution(r.Context(), shortName)
+	shortName := chi.URLParam(r, "shortName")
+	err := h.service.DeleteInstitution(r.Context(), shortName)
 	if err != nil {
 		_ = render.Render(w, r, mapDomainErr(err))
 		return

@@ -29,8 +29,8 @@ type session struct {
 }
 
 type usecase struct {
-	r Repository
-	c *config.Config
+	repo Repository
+	cfg  *config.Config
 
 	publicKey  jwk.Key
 	privateKey jwk.Key
@@ -51,7 +51,7 @@ func (u usecase) WhoAmI(ctx context.Context, token jwt.Token) (*User, error) {
 		return nil, fmt.Errorf("failed to find jwt revocation: %w", err)
 	}
 
-	user, err := u.r.FindUserByEmail(ctx, token.Subject())
+	user, err := u.repo.FindUserByEmail(ctx, token.Subject())
 	if err != nil {
 		return nil, fmt.Errorf("failed to find user: %w", err)
 	}
@@ -60,7 +60,7 @@ func (u usecase) WhoAmI(ctx context.Context, token jwt.Token) (*User, error) {
 }
 
 func (u usecase) Login(ctx context.Context, email string, password string) (*session, error) {
-	user, err := u.r.FindUserByEmail(ctx, email)
+	user, err := u.repo.FindUserByEmail(ctx, email)
 	if err != nil {
 		if apperror.IsNotFound(err) {
 			return nil, ErrUserNotFound
@@ -90,7 +90,7 @@ func (u usecase) Login(ctx context.Context, email string, password string) (*ses
 
 func (u usecase) Register(ctx context.Context, firstName string, lastName string, email string, password string) (*session, error) {
 	domain := strings.Split(email, "@")[1] // This should not panic
-	if _, err := u.r.FindInstitutionByDomains(ctx, domain); err != nil {
+	if _, err := u.repo.FindInstitutionByDomains(ctx, domain); err != nil {
 		if apperror.IsNotFound(err) {
 			return nil, ErrDomainNotFound
 		}
@@ -102,7 +102,7 @@ func (u usecase) Register(ctx context.Context, firstName string, lastName string
 		return nil, fmt.Errorf("failed to create encoded password: %w", err)
 	}
 
-	user, err := u.r.CreateUser(ctx, firstName, lastName, email, h)
+	user, err := u.repo.CreateUser(ctx, firstName, lastName, email, h)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create user: %w", err)
 	}
@@ -149,7 +149,7 @@ func (u usecase) createJWT(email string, godMode bool) ([]byte, error) {
 }
 
 func (u usecase) tokenIsValid(ctx context.Context, jti string) error {
-	_, err := u.r.FindJWTRevocation(ctx, jti)
+	_, err := u.repo.FindJWTRevocation(ctx, jti)
 	if err != nil && apperror.IsNotFound(err) {
 		return nil
 	}

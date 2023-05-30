@@ -11,15 +11,15 @@ import (
 )
 
 type entRepository struct {
-	ent *ent.Client
+	client *ent.Client
 }
 
 func NewEntRepository(e *ent.Client) Repository {
-	return &entRepository{ent: e}
+	return &entRepository{client: e}
 }
 
 func (e entRepository) FindInstitutionByAdminDomain(ctx context.Context, domain string) (*Institution, error) {
-	inst, err := e.ent.Institution.Query().
+	inst, err := e.client.Institution.Query().
 		Where(institution.AdminDomainEQ(domain)).
 		Only(ctx)
 	if err != nil {
@@ -32,7 +32,7 @@ func (e entRepository) FindInstitutionByAdminDomain(ctx context.Context, domain 
 }
 
 func (e entRepository) FindGroupsByUser(ctx context.Context, email string) ([]*Group, error) {
-	u, err := e.ent.Group.Query().
+	u, err := e.client.Group.Query().
 		Where(
 			group.HasUsersWith(
 				user.Email(email),
@@ -62,7 +62,7 @@ func (e entRepository) CreateGroup(ctx context.Context, groupType GroupType, opt
 		opt(&options)
 	}
 
-	g, err := e.ent.Group.
+	g, err := e.client.Group.
 		Create().
 		SetGroupType(groupType).
 		SetName(options.name).
@@ -80,6 +80,6 @@ func (e entRepository) CreateGroup(ctx context.Context, groupType GroupType, opt
 }
 
 func (e entRepository) DeleteGroup(ctx context.Context, path string) error {
-	_, err := e.ent.Group.Delete().Where(group.Path(path)).Exec(ctx)
+	_, err := e.client.Group.Delete().Where(group.Path(path)).Exec(ctx)
 	return err
 }

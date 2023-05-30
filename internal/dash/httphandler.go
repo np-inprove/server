@@ -13,9 +13,9 @@ import (
 )
 
 type httpHandler struct {
-	u UseCase
-	c *config.Config
-	j *jwtauth.JWTAuth
+	service UseCase
+	cfg     *config.Config
+	jwt     *jwtauth.JWTAuth
 }
 
 func NewHTTPHandler(u UseCase, c *config.Config, j *jwtauth.JWTAuth) chi.Router {
@@ -47,7 +47,7 @@ func (h httpHandler) ListGroups(w http.ResponseWriter, r *http.Request) {
 	token := r.Context().Value(jwtauth.TokenCtxKey)
 	email := token.(jwt.Token).Subject()
 
-	g, err := h.u.ListGroups(r.Context(), email)
+	g, err := h.service.ListGroups(r.Context(), email)
 	if err != nil {
 		_ = render.Render(w, r, mapDomainErr(err))
 		return
@@ -68,7 +68,7 @@ func (h httpHandler) ListGroups(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h httpHandler) ListGroupTypes(w http.ResponseWriter, r *http.Request) {
-	gt, err := h.u.ListGroupTypes()
+	gt, err := h.service.ListGroupTypes()
 	if err != nil {
 		_ = render.Render(w, r, mapDomainErr(err))
 		return
@@ -97,7 +97,7 @@ func (h httpHandler) CreateGroup(w http.ResponseWriter, r *http.Request) {
 	token := r.Context().Value(jwtauth.TokenCtxKey)
 	email := token.(jwt.Token).Subject()
 
-	res, err := h.u.CreateGroup(r.Context(), email, p.GroupType,
+	res, err := h.service.CreateGroup(r.Context(), email, p.GroupType,
 		Name(p.Name),
 		Path(p.Path),
 		Description(p.Description),
@@ -121,7 +121,7 @@ func (h httpHandler) DeleteGroup(w http.ResponseWriter, r *http.Request) {
 	token := r.Context().Value(jwtauth.TokenCtxKey)
 	email := token.(jwt.Token).Subject()
 
-	if err := h.u.DeleteGroup(r.Context(), email, path); err != nil {
+	if err := h.service.DeleteGroup(r.Context(), email, path); err != nil {
 		_ = render.Render(w, r, mapDomainErr(err))
 		return
 	}

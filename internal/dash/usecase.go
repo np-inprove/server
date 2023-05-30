@@ -17,19 +17,19 @@ type UseCase interface {
 }
 
 type useCase struct {
-	r Repository
+	repo Repository
 }
 
 func NewUseCase(r Repository) UseCase {
-	return useCase{r: r}
+	return useCase{repo: r}
 }
 
 func (u useCase) ListGroups(ctx context.Context, email string) ([]*Group, error) {
-	return u.r.FindGroupsByUser(ctx, email)
+	return u.repo.FindGroupsByUser(ctx, email)
 }
 
 func (u useCase) ListGroupTypes() ([]*GroupType, error) {
-	return u.r.FindGroupTypes()
+	return u.repo.FindGroupTypes()
 }
 
 func (u useCase) CreateGroup(ctx context.Context, adminEmail, groupType string, opts ...CreateGroupOption) (*Group, error) {
@@ -46,7 +46,7 @@ func (u useCase) CreateGroup(ctx context.Context, adminEmail, groupType string, 
 		opt(&options)
 	}
 
-	grp, err := u.r.CreateGroup(ctx, GroupType(groupType), opts...)
+	grp, err := u.repo.CreateGroup(ctx, GroupType(groupType), opts...)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create group: %w", err)
 	}
@@ -59,7 +59,7 @@ func (u useCase) DeleteGroup(ctx context.Context, adminEmail string, path string
 		return err
 	}
 
-	if err := u.r.DeleteGroup(ctx, path); err != nil {
+	if err := u.repo.DeleteGroup(ctx, path); err != nil {
 		return fmt.Errorf("failed to delete group: %w", err)
 	}
 
@@ -68,7 +68,7 @@ func (u useCase) DeleteGroup(ctx context.Context, adminEmail string, path string
 
 func (u useCase) validateAdmin(ctx context.Context, email string) (bool, error) {
 	domain := strings.Split(email, "@")[1] // This should not panic
-	inst, err := u.r.FindInstitutionByAdminDomain(ctx, email)
+	inst, err := u.repo.FindInstitutionByAdminDomain(ctx, email)
 	if err != nil {
 		return false, fmt.Errorf("failed to institution by admin domain: %w", err)
 	}

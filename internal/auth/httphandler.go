@@ -14,9 +14,9 @@ import (
 )
 
 type httpHandler struct {
-	u UseCase
-	c *config.Config
-	j *jwtauth.JWTAuth
+	service UseCase
+	cfg     *config.Config
+	jwt     *jwtauth.JWTAuth
 }
 
 func NewHTTPHandler(u UseCase, c *config.Config, j *jwtauth.JWTAuth) chi.Router {
@@ -56,7 +56,7 @@ func (h httpHandler) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	s, err := h.u.Login(r.Context(), p.Email, p.Password)
+	s, err := h.service.Login(r.Context(), p.Email, p.Password)
 	if err != nil {
 		_ = render.Render(w, r, mapDomainErr(err))
 		return
@@ -87,7 +87,7 @@ func (h httpHandler) Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	s, err := h.u.Register(r.Context(), p.FirstName, p.LastName, p.Email, p.Password)
+	s, err := h.service.Register(r.Context(), p.FirstName, p.LastName, p.Email, p.Password)
 	if err != nil {
 		_ = render.Render(w, r, mapDomainErr(err))
 		return
@@ -109,7 +109,7 @@ func (h httpHandler) Register(w http.ResponseWriter, r *http.Request) {
 func (h httpHandler) WhoAmI(w http.ResponseWriter, r *http.Request) {
 	token := r.Context().Value(jwtauth.TokenCtxKey)
 
-	user, err := h.u.WhoAmI(r.Context(), token.(jwt.Token))
+	user, err := h.service.WhoAmI(r.Context(), token.(jwt.Token))
 	if err != nil {
 		_ = render.Render(w, r, apperror.ErrLoggedOut)
 		return
@@ -129,8 +129,8 @@ func (h httpHandler) WhoAmI(w http.ResponseWriter, r *http.Request) {
 func (h httpHandler) setAuthCookies(w http.ResponseWriter, s *session) {
 	// JWT cookie for the server to use
 	http.SetCookie(w, &http.Cookie{
-		Name:     h.c.AppJWTCookieName(),
-		Domain:   h.c.AppJWTCookieDomain(),
+		Name:     h.cfg.AppJWTCookieName(),
+		Domain:   h.cfg.AppJWTCookieDomain(),
 		Value:    s.token,
 		Path:     "/",
 		Expires:  time.Now().Add(30 * time.Minute),
@@ -148,7 +148,7 @@ func (h httpHandler) setAuthCookies(w http.ResponseWriter, s *session) {
 	// This must be the same as specified in https://github.com/np-inprove/app/blob/main/middleware
 	http.SetCookie(w, &http.Cookie{
 		Name:     "b",
-		Domain:   h.c.AppJWTCookieDomain(),
+		Domain:   h.cfg.AppJWTCookieDomain(),
 		Value:    b,
 		Path:     "/",
 		Expires:  time.Now().Add(30 * time.Minute),

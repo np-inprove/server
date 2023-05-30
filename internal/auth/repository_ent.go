@@ -13,7 +13,7 @@ import (
 )
 
 type entRepository struct {
-	ent *ent.Client
+	client *ent.Client
 }
 
 func NewEntRepository(ent *ent.Client) Repository {
@@ -21,7 +21,7 @@ func NewEntRepository(ent *ent.Client) Repository {
 }
 
 func (e entRepository) FindUserByEmail(ctx context.Context, email string) (*User, error) {
-	u, err := e.ent.User.Query().Where(user.Email(email)).Only(ctx)
+	u, err := e.client.User.Query().Where(user.Email(email)).Only(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find user with email: %w", err)
 	}
@@ -30,7 +30,7 @@ func (e entRepository) FindUserByEmail(ctx context.Context, email string) (*User
 }
 
 func (e entRepository) FindJWTRevocation(ctx context.Context, jti string) (*JWTRevocation, error) {
-	r, err := e.ent.JWTRevocation.Query().Where(jwtrevocation.Jti(jti)).Only(ctx)
+	r, err := e.client.JWTRevocation.Query().Where(jwtrevocation.Jti(jti)).Only(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find jwt revocation with jti: %w", err)
 	}
@@ -39,7 +39,7 @@ func (e entRepository) FindJWTRevocation(ctx context.Context, jti string) (*JWTR
 }
 
 func (e entRepository) FindInstitutionByDomains(ctx context.Context, domain string) (*Institution, error) {
-	i, err := e.ent.Institution.Query().Where(institution.Or(institution.StudentDomain(domain), institution.AdminDomain(domain))).First(ctx)
+	i, err := e.client.Institution.Query().Where(institution.Or(institution.StudentDomain(domain), institution.AdminDomain(domain))).First(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find institution by domains: %w", err)
 	}
@@ -53,7 +53,7 @@ func (e entRepository) CreateUser(ctx context.Context, firstName string, lastNam
 		opt(&options)
 	}
 
-	u, err := e.ent.User.Create().
+	u, err := e.client.User.Create().
 		SetFirstName(firstName).
 		SetLastName(lastName).
 		SetEmail(email).
@@ -74,7 +74,7 @@ func (e entRepository) CreateUser(ctx context.Context, firstName string, lastNam
 }
 
 func (e entRepository) CreateJWTRevocation(ctx context.Context, jti string, expiry time.Time) (*JWTRevocation, error) {
-	j, err := e.ent.JWTRevocation.Create().SetJti(jti).SetExpiry(expiry).Save(ctx)
+	j, err := e.client.JWTRevocation.Create().SetJti(jti).SetExpiry(expiry).Save(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create jwt revocation: %w", err)
 	}

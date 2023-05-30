@@ -19,15 +19,15 @@ type UseCase interface {
 }
 
 type useCase struct {
-	r Repository
+	repo Repository
 }
 
 func NewUseCase(r Repository) UseCase {
-	return &useCase{r: r}
+	return &useCase{repo: r}
 }
 
 func (u useCase) ListInstitutions(ctx context.Context) ([]*Institution, error) {
-	insts, err := u.r.FindInstitutions(ctx)
+	insts, err := u.repo.FindInstitutions(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find institutions: %w", err)
 	}
@@ -42,8 +42,8 @@ func (u useCase) CreateInstitution(
 	studentDomain string,
 ) (*Institution, error) {
 	// TODO optimizations
-	err := u.r.WithTx(ctx, func(ctx context.Context) error {
-		_, err := u.r.CreateInstitution(ctx, name, shortName, adminDomain, studentDomain)
+	err := u.repo.WithTx(ctx, func(ctx context.Context) error {
+		_, err := u.repo.CreateInstitution(ctx, name, shortName, adminDomain, studentDomain)
 		if err != nil {
 			if apperror.IsConflict(err) {
 				return ErrShortNameConflict
@@ -56,7 +56,7 @@ func (u useCase) CreateInstitution(
 		return nil, err
 	}
 
-	insts, err := u.r.FindInstitutions(ctx)
+	insts, err := u.repo.FindInstitutions(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -73,7 +73,7 @@ func (u useCase) CreateInstitution(
 }
 
 func (u useCase) DeleteInstitution(ctx context.Context, shortName string) error {
-	return u.r.WithTx(ctx, func(ctx context.Context) error {
-		return u.r.DeleteInstitution(ctx, shortName)
+	return u.repo.WithTx(ctx, func(ctx context.Context) error {
+		return u.repo.DeleteInstitution(ctx, shortName)
 	})
 }
