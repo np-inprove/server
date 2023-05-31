@@ -1,0 +1,8 @@
+packages:
+  github.com/np-inprove/server/internal:
+    config:
+      all: True
+      recursive: True
+      with-expecter: True
+      filename: "mock_{{.InterfaceNameSnake}}_test.go"
+      dir: "{{.InterfaceDir}}/mocks"
