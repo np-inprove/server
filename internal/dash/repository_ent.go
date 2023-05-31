@@ -57,7 +57,7 @@ func (e entRepository) FindGroupTypes() ([]*GroupType, error) {
 }
 
 func (e entRepository) CreateGroup(ctx context.Context, groupType GroupType, opts ...CreateGroupOption) (*Group, error) {
-	var options createGroupOptions
+	var options CreateGroupOptions
 	for _, opt := range opts {
 		opt(&options)
 	}

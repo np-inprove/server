@@ -48,7 +48,7 @@ func (e entRepository) FindInstitutionByDomains(ctx context.Context, domain stri
 }
 
 func (e entRepository) CreateUser(ctx context.Context, firstName string, lastName string, email string, password hash.Encoded, opts ...CreateUserOption) (*User, error) {
-	var options createUserOptions
+	var options CreateUserOptions
 	for _, opt := range opts {
 		opt(&options)
 	}

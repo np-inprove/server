@@ -126,7 +126,7 @@ func (h httpHandler) WhoAmI(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-func (h httpHandler) setAuthCookies(w http.ResponseWriter, s *session) {
+func (h httpHandler) setAuthCookies(w http.ResponseWriter, s *Session) {
 	// JWT cookie for the server to use
 	http.SetCookie(w, &http.Cookie{
 		Name:     h.cfg.AppJWTCookieName(),

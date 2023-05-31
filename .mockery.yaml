@@ -1,8 +1,10 @@
 packages:
+  github.com/np-inprove/server/internal/ent: # Ignore ent folder in generation
   github.com/np-inprove/server/internal:
     config:
       all: True
       recursive: True
       with-expecter: True
+      outpkg: mocks
       filename: "mock_{{.InterfaceNameSnake}}_test.go"
       dir: "{{.InterfaceDir}}/mocks"

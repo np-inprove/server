@@ -15,28 +15,28 @@ func GroupTypeValidator(gt GroupType) error {
 	return group.GroupTypeValidator(gt)
 }
 
-type createGroupOptions struct {
+type CreateGroupOptions struct {
 	name        string
 	path        string
 	description string
 }
 
-type CreateGroupOption func(*createGroupOptions)
+type CreateGroupOption func(*CreateGroupOptions)
 
 func Name(n string) CreateGroupOption {
-	return func(opts *createGroupOptions) {
+	return func(opts *CreateGroupOptions) {
 		opts.name = n
 	}
 }
 
 func Path(p string) CreateGroupOption {
-	return func(opts *createGroupOptions) {
+	return func(opts *CreateGroupOptions) {
 		opts.path = p
 	}
 }
 
 func Description(d string) CreateGroupOption {
-	return func(opts *createGroupOptions) {
+	return func(opts *CreateGroupOptions) {
 		opts.description = d
 	}
 }

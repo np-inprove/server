@@ -41,7 +41,7 @@ func (u useCase) CreateGroup(ctx context.Context, adminEmail, groupType string, 
 		return nil, err
 	}
 
-	var options createGroupOptions
+	var options CreateGroupOptions
 	for _, opt := range opts {
 		opt(&options)
 	}
