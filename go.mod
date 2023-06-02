@@ -18,7 +18,7 @@ require (
 	github.com/knadh/koanf/v2 v2.0.1
 	github.com/lestrrat-go/jwx/v2 v2.0.9
 	github.com/lib/pq v1.10.9
-	github.com/mattn/go-sqlite3 v1.14.16
+	github.com/mattn/go-sqlite3 v1.14.17
 	github.com/stretchr/testify v1.8.4
 	go.uber.org/zap v1.24.0
 	golang.org/x/crypto v0.9.0
