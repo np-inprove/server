@@ -1,4 +1,4 @@
-package dash
+package group
 
 import (
 	"github.com/go-chi/chi/v5"
@@ -35,10 +35,10 @@ func NewHTTPHandler(u UseCase, c *config.Config, j *jwtauth.JWTAuth) chi.Router 
 
 		r.Use(middleware.Authenticator)
 
-		r.Get("/groups", a.ListGroups)
-		r.Get("/grouptypes", a.ListGroupTypes)
-		r.Post("/groups", a.CreateGroup)
-		r.Delete("/groups/{path}", a.DeleteGroup)
+		r.Get("/", a.ListGroups)
+		r.Get("/types", a.ListGroupTypes)
+		r.Post("/", a.CreateGroup)
+		r.Delete("/{path}", a.DeleteGroup)
 	})
 
 	return r

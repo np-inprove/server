@@ -1,4 +1,4 @@
-package god
+package institution
 
 import (
 	"github.com/go-chi/chi/v5"
@@ -33,9 +33,9 @@ func NewHTTPHandler(u UseCase, c *config.Config, j *jwtauth.JWTAuth) chi.Router 
 
 		r.Use(middleware.GodAuthenticator)
 
-		r.Get("/institutions", h.ListInstitutions)
-		r.Post("/institutions", h.CreateInstitution)
-		r.Delete("/institutions/{shortName}", h.DeleteInstitution)
+		r.Get("/", h.ListInstitutions)
+		r.Post("/", h.CreateInstitution)
+		r.Delete("/{shortName}", h.DeleteInstitution)
 	})
 
 	return r

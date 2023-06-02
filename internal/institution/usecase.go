@@ -1,4 +1,4 @@
-package god
+package institution
 
 import (
 	"context"
@@ -47,7 +47,7 @@ func (u useCase) CreateInstitution(
 		_, err := u.repo.CreateInstitution(ctx, name, shortName, adminDomain, studentDomain)
 		if err != nil {
 			if apperror.IsConflict(err) {
-				return ErrShortNameConflict
+				return ErrInstitutionShortNameConflict
 			}
 			return err
 		}

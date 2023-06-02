@@ -1,4 +1,4 @@
-package god
+package institution
 
 import (
 	"context"
@@ -42,7 +42,7 @@ func (e entRepository) CreateInstitution(ctx context.Context, name string, short
 		Save(ctx)
 	if err != nil {
 		if apperror.IsConflict(err) {
-			return nil, ErrShortNameConflict
+			return nil, ErrInstitutionShortNameConflict
 		}
 		return nil, fmt.Errorf("failed to save institution: %w", err)
 	}

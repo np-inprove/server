@@ -1,4 +1,4 @@
-package god
+package institution
 
 import (
 	"errors"
@@ -8,12 +8,12 @@ import (
 )
 
 var (
-	ErrShortNameConflict   = errors.New("short name conflicts with existing institution")
-	ErrInstitutionNotFound = errors.New("institution does not exist")
+	ErrInstitutionShortNameConflict = errors.New("short name conflicts with existing institution")
+	ErrInstitutionNotFound          = errors.New("institution does not exist")
 )
 
 func mapDomainErr(err error) *apperror.ErrResponse {
-	if errors.Is(err, ErrShortNameConflict) {
+	if errors.Is(err, ErrInstitutionShortNameConflict) {
 		return &apperror.ErrResponse{
 			Err:            err,
 			HTTPStatusCode: http.StatusConflict,

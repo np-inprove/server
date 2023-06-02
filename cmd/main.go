@@ -12,9 +12,9 @@ import (
 
 	"github.com/np-inprove/server/internal/auth"
 	"github.com/np-inprove/server/internal/config"
-	"github.com/np-inprove/server/internal/dash"
 	"github.com/np-inprove/server/internal/ent"
-	"github.com/np-inprove/server/internal/god"
+	"github.com/np-inprove/server/internal/group"
+	"github.com/np-inprove/server/internal/institution"
 	"github.com/np-inprove/server/internal/logger"
 	"github.com/np-inprove/server/internal/seed"
 
@@ -138,14 +138,14 @@ func main() {
 		logger.String("area", "auth"),
 	)
 
-	ar := auth.NewEntRepository(client)
-	auc, err := auth.NewUseCase(ar, cfg, publicKey, privateKey)
+	authRepo := auth.NewEntRepository(client)
+	authUseCase, err := auth.NewUseCase(authRepo, cfg, publicKey, privateKey)
 	if err != nil {
 		appLogger.Fatal("failed to initialize auth use case",
 			logger.String("err", err.Error()),
 		)
 	}
-	authHandler := auth.NewHTTPHandler(auc, cfg, tokenAuth)
+	authHandler := auth.NewHTTPHandler(authUseCase, cfg, tokenAuth)
 
 	r.Mount("/auth", authHandler)
 
@@ -153,21 +153,21 @@ func main() {
 		logger.String("area", "god"),
 	)
 
-	gr := god.NewEntRepository(appLogger, client)
-	guc := god.NewUseCase(gr)
-	godHandler := god.NewHTTPHandler(guc, cfg, tokenAuth)
+	instRepo := institution.NewEntRepository(appLogger, client)
+	instUseCase := institution.NewUseCase(instRepo)
+	instHandler := institution.NewHTTPHandler(instUseCase, cfg, tokenAuth)
 
-	r.Mount("/god", godHandler)
+	r.Mount("/institutions", instHandler)
 
 	appLogger.Info("registering dashboard services",
 		logger.String("area", "dashboard"),
 	)
 
-	dr := dash.NewEntRepository(client)
-	duc := dash.NewUseCase(dr)
-	dashHandler := dash.NewHTTPHandler(duc, cfg, tokenAuth)
+	groupRepo := group.NewEntRepository(client)
+	groupService := group.NewUseCase(groupRepo)
+	groupHandler := group.NewHTTPHandler(groupService, cfg, tokenAuth)
 
-	r.Mount("/dash", dashHandler)
+	r.Mount("/groups", groupHandler)
 
 	interrupt := make(chan os.Signal, 1)
 	signal.Notify(interrupt, syscall.SIGTERM, syscall.SIGINT)

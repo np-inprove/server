@@ -6,7 +6,6 @@ import (
 	context "context"
 
 	ent "github.com/np-inprove/server/internal/ent"
-
 	entitygroup "github.com/np-inprove/server/internal/entity/group"
 
 	group "github.com/np-inprove/server/internal/ent/group"

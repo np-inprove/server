@@ -1,4 +1,4 @@
-package dash
+package group
 
 import (
 	"errors"

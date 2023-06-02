@@ -6,7 +6,6 @@ import (
 	context "context"
 
 	ent "github.com/np-inprove/server/internal/ent"
-
 	group "github.com/np-inprove/server/internal/ent/group"
 
 	mock "github.com/stretchr/testify/mock"
