@@ -7,6 +7,7 @@ import (
 	"github.com/lestrrat-go/jwx/v2/jwt"
 	"github.com/np-inprove/server/internal/apperror"
 	"github.com/np-inprove/server/internal/config"
+	group2 "github.com/np-inprove/server/internal/entity/group"
 	"github.com/np-inprove/server/internal/middleware"
 	"github.com/np-inprove/server/internal/payload"
 	"net/http"
@@ -98,9 +99,9 @@ func (h httpHandler) CreateGroup(w http.ResponseWriter, r *http.Request) {
 	email := token.(jwt.Token).Subject()
 
 	res, err := h.service.CreateGroup(r.Context(), email, p.GroupType,
-		Name(p.Name),
-		Path(p.Path),
-		Description(p.Description),
+		group2.Name(p.Name),
+		group2.Path(p.Path),
+		group2.Description(p.Description),
 	)
 	if err != nil {
 		_ = render.Render(w, r, mapDomainErr(err))

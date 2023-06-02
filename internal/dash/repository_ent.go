@@ -8,6 +8,8 @@ import (
 	"github.com/np-inprove/server/internal/ent/group"
 	"github.com/np-inprove/server/internal/ent/institution"
 	"github.com/np-inprove/server/internal/ent/user"
+	"github.com/np-inprove/server/internal/entity"
+	group2 "github.com/np-inprove/server/internal/entity/group"
 )
 
 type entRepository struct {
@@ -18,7 +20,7 @@ func NewEntRepository(e *ent.Client) Repository {
 	return &entRepository{client: e}
 }
 
-func (e entRepository) FindInstitutionByAdminDomain(ctx context.Context, domain string) (*Institution, error) {
+func (e entRepository) FindInstitutionByAdminDomain(ctx context.Context, domain string) (*entity.Institution, error) {
 	inst, err := e.client.Institution.Query().
 		Where(institution.AdminDomainEQ(domain)).
 		Only(ctx)
@@ -31,7 +33,7 @@ func (e entRepository) FindInstitutionByAdminDomain(ctx context.Context, domain 
 	return inst, nil
 }
 
-func (e entRepository) FindGroupsByUser(ctx context.Context, email string) ([]*Group, error) {
+func (e entRepository) FindGroupsByUser(ctx context.Context, email string) ([]*entity.Group, error) {
 	u, err := e.client.Group.Query().
 		Where(
 			group.HasUsersWith(
@@ -46,18 +48,18 @@ func (e entRepository) FindGroupsByUser(ctx context.Context, email string) ([]*G
 	return u, nil
 }
 
-func (e entRepository) FindGroupTypes() ([]*GroupType, error) {
+func (e entRepository) FindGroupTypes() ([]*entity.GroupType, error) {
 	sig := group.GroupTypeSpecialInterestGroup
 	mod := group.GroupTypeModuleGroup
 	cca := group.GroupTypeCca
 	mc := group.GroupTypeMentorClass
-	return []*GroupType{
+	return []*entity.GroupType{
 		&sig, &mod, &cca, &mc,
 	}, nil
 }
 
-func (e entRepository) CreateGroup(ctx context.Context, groupType GroupType, opts ...CreateGroupOption) (*Group, error) {
-	var options CreateGroupOptions
+func (e entRepository) CreateGroup(ctx context.Context, groupType entity.GroupType, opts ...group2.Option) (*entity.Group, error) {
+	var options group2.Options
 	for _, opt := range opts {
 		opt(&options)
 	}
@@ -65,9 +67,9 @@ func (e entRepository) CreateGroup(ctx context.Context, groupType GroupType, opt
 	g, err := e.client.Group.
 		Create().
 		SetGroupType(groupType).
-		SetName(options.name).
-		SetPath(options.path).
-		SetDescription(options.description).
+		SetName(options.Name).
+		SetPath(options.Path).
+		SetDescription(options.Description).
 		Save(ctx)
 	if err != nil {
 		if apperror.IsConflict(err) {

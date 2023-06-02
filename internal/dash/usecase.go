@@ -3,15 +3,17 @@ package dash
 import (
 	"context"
 	"fmt"
+	"github.com/np-inprove/server/internal/entity"
+	"github.com/np-inprove/server/internal/entity/group"
 	"strings"
 )
 
 type UseCase interface {
-	ListGroups(ctx context.Context, email string) ([]*Group, error)
-	ListGroupTypes() ([]*GroupType, error)
+	ListGroups(ctx context.Context, email string) ([]*entity.Group, error)
+	ListGroupTypes() ([]*entity.GroupType, error)
 
 	// CreateGroup should be an admin only function
-	CreateGroup(ctx context.Context, adminEmail, groupType string, opts ...CreateGroupOption) (*Group, error)
+	CreateGroup(ctx context.Context, adminEmail, groupType string, opts ...group.Option) (*entity.Group, error)
 	// DeleteGroup should be an admin only function
 	DeleteGroup(ctx context.Context, adminEmail string, path string) error
 }
@@ -24,16 +26,16 @@ func NewUseCase(r Repository) UseCase {
 	return useCase{repo: r}
 }
 
-func (u useCase) ListGroups(ctx context.Context, email string) ([]*Group, error) {
+func (u useCase) ListGroups(ctx context.Context, email string) ([]*entity.Group, error) {
 	return u.repo.FindGroupsByUser(ctx, email)
 }
 
-func (u useCase) ListGroupTypes() ([]*GroupType, error) {
+func (u useCase) ListGroupTypes() ([]*entity.GroupType, error) {
 	return u.repo.FindGroupTypes()
 }
 
-func (u useCase) CreateGroup(ctx context.Context, adminEmail, groupType string, opts ...CreateGroupOption) (*Group, error) {
-	if err := GroupTypeValidator(GroupType(groupType)); err != nil {
+func (u useCase) CreateGroup(ctx context.Context, adminEmail, groupType string, opts ...group.Option) (*entity.Group, error) {
+	if err := group.TypeValidator(entity.GroupType(groupType)); err != nil {
 		return nil, ErrInvalidGroupType
 	}
 
@@ -41,12 +43,12 @@ func (u useCase) CreateGroup(ctx context.Context, adminEmail, groupType string, 
 		return nil, err
 	}
 
-	var options CreateGroupOptions
+	var options group.Options
 	for _, opt := range opts {
 		opt(&options)
 	}
 
-	grp, err := u.repo.CreateGroup(ctx, GroupType(groupType), opts...)
+	grp, err := u.repo.CreateGroup(ctx, entity.GroupType(groupType), opts...)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create group: %w", err)
 	}

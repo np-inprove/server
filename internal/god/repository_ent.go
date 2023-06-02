@@ -6,6 +6,7 @@ import (
 	"github.com/np-inprove/server/internal/apperror"
 	"github.com/np-inprove/server/internal/ent"
 	"github.com/np-inprove/server/internal/ent/institution"
+	"github.com/np-inprove/server/internal/entity"
 	"github.com/np-inprove/server/internal/entutils"
 	"github.com/np-inprove/server/internal/logger"
 )
@@ -19,7 +20,7 @@ func NewEntRepository(l logger.AppLogger, c *ent.Client) Repository {
 	return entRepository{l, c}
 }
 
-func (e entRepository) FindInstitutions(ctx context.Context) ([]*Institution, error) {
+func (e entRepository) FindInstitutions(ctx context.Context) ([]*entity.Institution, error) {
 	i, err := e.client.Institution.Query().All(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find all institutions: %w", err)
@@ -27,7 +28,7 @@ func (e entRepository) FindInstitutions(ctx context.Context) ([]*Institution, er
 	return i, nil
 }
 
-func (e entRepository) CreateInstitution(ctx context.Context, name string, shortName string, adminDomain string, studentDomain string) (*Institution, error) {
+func (e entRepository) CreateInstitution(ctx context.Context, name string, shortName string, adminDomain string, studentDomain string) (*entity.Institution, error) {
 	c := e.client
 	if cc, ok := entutils.ExtractTx(ctx); ok {
 		c = cc

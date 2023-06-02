@@ -2,11 +2,12 @@ package god
 
 import (
 	"context"
+	"github.com/np-inprove/server/internal/entity"
 	"github.com/np-inprove/server/internal/transactor"
 )
 
 type Reader interface {
-	FindInstitutions(ctx context.Context) ([]*Institution, error)
+	FindInstitutions(ctx context.Context) ([]*entity.Institution, error)
 }
 
 type Writer interface {
@@ -16,7 +17,7 @@ type Writer interface {
 		shortName string,
 		adminDomain string,
 		studentDomain string,
-	) (*Institution, error)
+	) (*entity.Institution, error)
 	DeleteInstitution(ctx context.Context, shortName string) error
 }
 

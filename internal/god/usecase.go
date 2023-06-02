@@ -4,17 +4,18 @@ import (
 	"context"
 	"fmt"
 	"github.com/np-inprove/server/internal/apperror"
+	"github.com/np-inprove/server/internal/entity"
 )
 
 type UseCase interface {
-	ListInstitutions(ctx context.Context) ([]*Institution, error)
+	ListInstitutions(ctx context.Context) ([]*entity.Institution, error)
 	CreateInstitution(
 		ctx context.Context,
 		name string,
 		shortName string,
 		adminDomain string,
 		studentDomain string,
-	) (*Institution, error)
+	) (*entity.Institution, error)
 	DeleteInstitution(ctx context.Context, shortName string) error
 }
 
@@ -26,7 +27,7 @@ func NewUseCase(r Repository) UseCase {
 	return &useCase{repo: r}
 }
 
-func (u useCase) ListInstitutions(ctx context.Context) ([]*Institution, error) {
+func (u useCase) ListInstitutions(ctx context.Context) ([]*entity.Institution, error) {
 	insts, err := u.repo.FindInstitutions(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find institutions: %w", err)
@@ -40,7 +41,7 @@ func (u useCase) CreateInstitution(
 	shortName string,
 	adminDomain string,
 	studentDomain string,
-) (*Institution, error) {
+) (*entity.Institution, error) {
 	// TODO optimizations
 	err := u.repo.WithTx(ctx, func(ctx context.Context) error {
 		_, err := u.repo.CreateInstitution(ctx, name, shortName, adminDomain, studentDomain)
@@ -61,7 +62,7 @@ func (u useCase) CreateInstitution(
 		return nil, err
 	}
 
-	var inst *Institution
+	var inst *entity.Institution
 	for _, i := range insts {
 		if i.ShortName == shortName {
 			inst = i

@@ -3,6 +3,7 @@ package auth
 import (
 	"context"
 	"fmt"
+	"github.com/np-inprove/server/internal/entity"
 	"strings"
 	"time"
 
@@ -20,11 +21,11 @@ var (
 	jwtAudience = []string{"np-inprove.qinguan.me"}
 )
 
-// Session is used to represent a successful call to usecase.Login.
+// Session is used to represent a successful call to UseCase.Login.
 // It contains the user information retrieved, as well as the token issued.
 // The handlers should distribute the issued token to the client.
 type Session struct {
-	user  *User
+	user  *entity.User
 	token string
 }
 
@@ -37,7 +38,7 @@ type usecase struct {
 }
 
 type UseCase interface {
-	WhoAmI(ctx context.Context, token jwt.Token) (*User, error)
+	WhoAmI(ctx context.Context, token jwt.Token) (*entity.User, error)
 	Login(ctx context.Context, email string, password string) (*Session, error)
 	Register(ctx context.Context, firstName string, lastName string, email string, password string) (*Session, error)
 }
@@ -46,7 +47,7 @@ func NewUseCase(r Repository, c *config.Config, publicKey jwk.Key, privateKey jw
 	return usecase{r, c, publicKey, privateKey}, nil
 }
 
-func (u usecase) WhoAmI(ctx context.Context, token jwt.Token) (*User, error) {
+func (u usecase) WhoAmI(ctx context.Context, token jwt.Token) (*entity.User, error) {
 	if err := u.tokenIsValid(ctx, token.JwtID()); err != nil {
 		return nil, fmt.Errorf("failed to find jwt revocation: %w", err)
 	}
