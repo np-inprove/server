@@ -1,5 +1,7 @@
 packages:
-  github.com/np-inprove/server/internal/ent: # Ignore ent folder in generation
+  github.com/np-inprove/server/internal/ent: # Ignore folder in generation
+  github.com/np-inprove/server/internal/entity/group: # Ignore folder in generation
+  github.com/np-inprove/server/internal/entity/user: # Ignore folder in generation
   github.com/np-inprove/server/internal:
     config:
       all: True

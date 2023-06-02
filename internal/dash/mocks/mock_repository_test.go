@@ -5,8 +5,9 @@ package mocks
 import (
 	context "context"
 
-	dash "github.com/np-inprove/server/internal/dash"
 	ent "github.com/np-inprove/server/internal/ent"
+
+	entitygroup "github.com/np-inprove/server/internal/entity/group"
 
 	group "github.com/np-inprove/server/internal/ent/group"
 
@@ -27,7 +28,7 @@ func (_m *MockRepository) EXPECT() *MockRepository_Expecter {
 }
 
 // CreateGroup provides a mock function with given fields: ctx, groupType, opts
-func (_m *MockRepository) CreateGroup(ctx context.Context, groupType group.GroupType, opts ...dash.CreateGroupOption) (*ent.Group, error) {
+func (_m *MockRepository) CreateGroup(ctx context.Context, groupType group.GroupType, opts ...entitygroup.Option) (*ent.Group, error) {
 	_va := make([]interface{}, len(opts))
 	for _i := range opts {
 		_va[_i] = opts[_i]
@@ -39,10 +40,10 @@ func (_m *MockRepository) CreateGroup(ctx context.Context, groupType group.Group
 
 	var r0 *ent.Group
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, group.GroupType, ...dash.CreateGroupOption) (*ent.Group, error)); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, group.GroupType, ...entitygroup.Option) (*ent.Group, error)); ok {
 		return rf(ctx, groupType, opts...)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, group.GroupType, ...dash.CreateGroupOption) *ent.Group); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, group.GroupType, ...entitygroup.Option) *ent.Group); ok {
 		r0 = rf(ctx, groupType, opts...)
 	} else {
 		if ret.Get(0) != nil {
@@ -50,7 +51,7 @@ func (_m *MockRepository) CreateGroup(ctx context.Context, groupType group.Group
 		}
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, group.GroupType, ...dash.CreateGroupOption) error); ok {
+	if rf, ok := ret.Get(1).(func(context.Context, group.GroupType, ...entitygroup.Option) error); ok {
 		r1 = rf(ctx, groupType, opts...)
 	} else {
 		r1 = ret.Error(1)
@@ -67,18 +68,18 @@ type MockRepository_CreateGroup_Call struct {
 // CreateGroup is a helper method to define mock.On call
 //   - ctx context.Context
 //   - groupType group.GroupType
-//   - opts ...dash.CreateGroupOption
+//   - opts ...entitygroup.Option
 func (_e *MockRepository_Expecter) CreateGroup(ctx interface{}, groupType interface{}, opts ...interface{}) *MockRepository_CreateGroup_Call {
 	return &MockRepository_CreateGroup_Call{Call: _e.mock.On("CreateGroup",
 		append([]interface{}{ctx, groupType}, opts...)...)}
 }
 
-func (_c *MockRepository_CreateGroup_Call) Run(run func(ctx context.Context, groupType group.GroupType, opts ...dash.CreateGroupOption)) *MockRepository_CreateGroup_Call {
+func (_c *MockRepository_CreateGroup_Call) Run(run func(ctx context.Context, groupType group.GroupType, opts ...entitygroup.Option)) *MockRepository_CreateGroup_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		variadicArgs := make([]dash.CreateGroupOption, len(args)-2)
+		variadicArgs := make([]entitygroup.Option, len(args)-2)
 		for i, a := range args[2:] {
 			if a != nil {
-				variadicArgs[i] = a.(dash.CreateGroupOption)
+				variadicArgs[i] = a.(entitygroup.Option)
 			}
 		}
 		run(args[0].(context.Context), args[1].(group.GroupType), variadicArgs...)
@@ -91,7 +92,7 @@ func (_c *MockRepository_CreateGroup_Call) Return(_a0 *ent.Group, _a1 error) *Mo
 	return _c
 }
 
-func (_c *MockRepository_CreateGroup_Call) RunAndReturn(run func(context.Context, group.GroupType, ...dash.CreateGroupOption) (*ent.Group, error)) *MockRepository_CreateGroup_Call {
+func (_c *MockRepository_CreateGroup_Call) RunAndReturn(run func(context.Context, group.GroupType, ...entitygroup.Option) (*ent.Group, error)) *MockRepository_CreateGroup_Call {
 	_c.Call.Return(run)
 	return _c
 }
