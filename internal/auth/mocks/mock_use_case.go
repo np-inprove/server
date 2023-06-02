@@ -5,9 +5,8 @@ package mocks
 import (
 	context "context"
 
-	auth "github.com/np-inprove/server/internal/auth"
-
 	ent "github.com/np-inprove/server/internal/ent"
+	entity "github.com/np-inprove/server/internal/entity"
 
 	jwt "github.com/lestrrat-go/jwx/v2/jwt"
 
@@ -28,19 +27,19 @@ func (_m *MockUseCase) EXPECT() *MockUseCase_Expecter {
 }
 
 // Login provides a mock function with given fields: ctx, email, password
-func (_m *MockUseCase) Login(ctx context.Context, email string, password string) (*auth.Session, error) {
+func (_m *MockUseCase) Login(ctx context.Context, email string, password string) (*entity.Session, error) {
 	ret := _m.Called(ctx, email, password)
 
-	var r0 *auth.Session
+	var r0 *entity.Session
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, string, string) (*auth.Session, error)); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, string, string) (*entity.Session, error)); ok {
 		return rf(ctx, email, password)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, string, string) *auth.Session); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, string, string) *entity.Session); ok {
 		r0 = rf(ctx, email, password)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*auth.Session)
+			r0 = ret.Get(0).(*entity.Session)
 		}
 	}
 
@@ -73,30 +72,30 @@ func (_c *MockUseCase_Login_Call) Run(run func(ctx context.Context, email string
 	return _c
 }
 
-func (_c *MockUseCase_Login_Call) Return(_a0 *auth.Session, _a1 error) *MockUseCase_Login_Call {
+func (_c *MockUseCase_Login_Call) Return(_a0 *entity.Session, _a1 error) *MockUseCase_Login_Call {
 	_c.Call.Return(_a0, _a1)
 	return _c
 }
 
-func (_c *MockUseCase_Login_Call) RunAndReturn(run func(context.Context, string, string) (*auth.Session, error)) *MockUseCase_Login_Call {
+func (_c *MockUseCase_Login_Call) RunAndReturn(run func(context.Context, string, string) (*entity.Session, error)) *MockUseCase_Login_Call {
 	_c.Call.Return(run)
 	return _c
 }
 
 // Register provides a mock function with given fields: ctx, firstName, lastName, email, password
-func (_m *MockUseCase) Register(ctx context.Context, firstName string, lastName string, email string, password string) (*auth.Session, error) {
+func (_m *MockUseCase) Register(ctx context.Context, firstName string, lastName string, email string, password string) (*entity.Session, error) {
 	ret := _m.Called(ctx, firstName, lastName, email, password)
 
-	var r0 *auth.Session
+	var r0 *entity.Session
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, string, string, string, string) (*auth.Session, error)); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, string, string, string, string) (*entity.Session, error)); ok {
 		return rf(ctx, firstName, lastName, email, password)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, string, string, string, string) *auth.Session); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, string, string, string, string) *entity.Session); ok {
 		r0 = rf(ctx, firstName, lastName, email, password)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*auth.Session)
+			r0 = ret.Get(0).(*entity.Session)
 		}
 	}
 
@@ -131,12 +130,12 @@ func (_c *MockUseCase_Register_Call) Run(run func(ctx context.Context, firstName
 	return _c
 }
 
-func (_c *MockUseCase_Register_Call) Return(_a0 *auth.Session, _a1 error) *MockUseCase_Register_Call {
+func (_c *MockUseCase_Register_Call) Return(_a0 *entity.Session, _a1 error) *MockUseCase_Register_Call {
 	_c.Call.Return(_a0, _a1)
 	return _c
 }
 
-func (_c *MockUseCase_Register_Call) RunAndReturn(run func(context.Context, string, string, string, string) (*auth.Session, error)) *MockUseCase_Register_Call {
+func (_c *MockUseCase_Register_Call) RunAndReturn(run func(context.Context, string, string, string, string) (*entity.Session, error)) *MockUseCase_Register_Call {
 	_c.Call.Return(run)
 	return _c
 }

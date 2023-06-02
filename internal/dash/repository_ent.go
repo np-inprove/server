@@ -5,11 +5,11 @@ import (
 	"fmt"
 	"github.com/np-inprove/server/internal/apperror"
 	"github.com/np-inprove/server/internal/ent"
-	"github.com/np-inprove/server/internal/ent/group"
+	entgroup "github.com/np-inprove/server/internal/ent/group"
 	"github.com/np-inprove/server/internal/ent/institution"
 	"github.com/np-inprove/server/internal/ent/user"
 	"github.com/np-inprove/server/internal/entity"
-	group2 "github.com/np-inprove/server/internal/entity/group"
+	"github.com/np-inprove/server/internal/entity/group"
 )
 
 type entRepository struct {
@@ -36,7 +36,7 @@ func (e entRepository) FindInstitutionByAdminDomain(ctx context.Context, domain 
 func (e entRepository) FindGroupsByUser(ctx context.Context, email string) ([]*entity.Group, error) {
 	u, err := e.client.Group.Query().
 		Where(
-			group.HasUsersWith(
+			entgroup.HasUsersWith(
 				user.Email(email),
 			),
 		).
@@ -49,17 +49,17 @@ func (e entRepository) FindGroupsByUser(ctx context.Context, email string) ([]*e
 }
 
 func (e entRepository) FindGroupTypes() ([]*entity.GroupType, error) {
-	sig := group.GroupTypeSpecialInterestGroup
-	mod := group.GroupTypeModuleGroup
-	cca := group.GroupTypeCca
-	mc := group.GroupTypeMentorClass
+	sig := entgroup.GroupTypeSpecialInterestGroup
+	mod := entgroup.GroupTypeModuleGroup
+	cca := entgroup.GroupTypeCca
+	mc := entgroup.GroupTypeMentorClass
 	return []*entity.GroupType{
 		&sig, &mod, &cca, &mc,
 	}, nil
 }
 
-func (e entRepository) CreateGroup(ctx context.Context, groupType entity.GroupType, opts ...group2.Option) (*entity.Group, error) {
-	var options group2.Options
+func (e entRepository) CreateGroup(ctx context.Context, groupType entity.GroupType, opts ...group.Option) (*entity.Group, error) {
+	var options group.Options
 	for _, opt := range opts {
 		opt(&options)
 	}
@@ -82,6 +82,6 @@ func (e entRepository) CreateGroup(ctx context.Context, groupType entity.GroupTy
 }
 
 func (e entRepository) DeleteGroup(ctx context.Context, path string) error {
-	_, err := e.client.Group.Delete().Where(group.Path(path)).Exec(ctx)
+	_, err := e.client.Group.Delete().Where(entgroup.Path(path)).Exec(ctx)
 	return err
 }

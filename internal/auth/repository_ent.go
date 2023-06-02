@@ -3,15 +3,16 @@ package auth
 import (
 	"context"
 	"fmt"
+	"time"
+
 	"github.com/np-inprove/server/internal/apperror"
 	"github.com/np-inprove/server/internal/ent"
 	"github.com/np-inprove/server/internal/ent/institution"
 	"github.com/np-inprove/server/internal/ent/jwtrevocation"
-	"github.com/np-inprove/server/internal/ent/user"
+	entuser "github.com/np-inprove/server/internal/ent/user"
 	"github.com/np-inprove/server/internal/entity"
-	user2 "github.com/np-inprove/server/internal/entity/user"
+	"github.com/np-inprove/server/internal/entity/user"
 	"github.com/np-inprove/server/internal/hash"
-	"time"
 )
 
 type entRepository struct {
@@ -23,7 +24,7 @@ func NewEntRepository(ent *ent.Client) Repository {
 }
 
 func (e entRepository) FindUserByEmail(ctx context.Context, email string) (*entity.User, error) {
-	u, err := e.client.User.Query().Where(user.Email(email)).Only(ctx)
+	u, err := e.client.User.Query().Where(entuser.Email(email)).Only(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find user with email: %w", err)
 	}
@@ -49,8 +50,8 @@ func (e entRepository) FindInstitutionByDomains(ctx context.Context, domain stri
 	return i, nil
 }
 
-func (e entRepository) CreateUser(ctx context.Context, firstName string, lastName string, email string, password hash.Encoded, opts ...user2.Option) (*entity.User, error) {
-	var options user2.Options
+func (e entRepository) CreateUser(ctx context.Context, firstName string, lastName string, email string, password hash.Encoded, opts ...user.Option) (*entity.User, error) {
+	var options user.Options
 	for _, opt := range opts {
 		opt(&options)
 	}

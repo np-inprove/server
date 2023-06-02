@@ -7,6 +7,7 @@ import (
 	"github.com/lestrrat-go/jwx/v2/jwt"
 	"github.com/np-inprove/server/internal/apperror"
 	"github.com/np-inprove/server/internal/config"
+	"github.com/np-inprove/server/internal/entity"
 	"github.com/np-inprove/server/internal/middleware"
 	"github.com/np-inprove/server/internal/payload"
 	"net/http"
@@ -65,13 +66,13 @@ func (h httpHandler) Login(w http.ResponseWriter, r *http.Request) {
 	h.setAuthCookies(w, s)
 
 	_ = render.Render(w, r, payload.User{
-		FirstName:              s.user.FirstName,
-		LastName:               s.user.LastName,
-		Email:                  s.user.Email,
-		Points:                 s.user.Points,
-		PointsAwardedCount:     s.user.PointsAwardedCount,
-		PointsAwardedResetTime: s.user.PointsAwardedResetTime,
-		GodMode:                s.user.GodMode,
+		FirstName:              s.User.FirstName,
+		LastName:               s.User.LastName,
+		Email:                  s.User.Email,
+		Points:                 s.User.Points,
+		PointsAwardedCount:     s.User.PointsAwardedCount,
+		PointsAwardedResetTime: s.User.PointsAwardedResetTime,
+		GodMode:                s.User.GodMode,
 	})
 }
 
@@ -96,42 +97,42 @@ func (h httpHandler) Register(w http.ResponseWriter, r *http.Request) {
 	h.setAuthCookies(w, s)
 
 	_ = render.Render(w, r, payload.User{
-		FirstName:              s.user.FirstName,
-		LastName:               s.user.LastName,
-		Email:                  s.user.Email,
-		Points:                 s.user.Points,
-		PointsAwardedCount:     s.user.PointsAwardedCount,
-		PointsAwardedResetTime: s.user.PointsAwardedResetTime,
-		GodMode:                s.user.GodMode,
+		FirstName:              s.User.FirstName,
+		LastName:               s.User.LastName,
+		Email:                  s.User.Email,
+		Points:                 s.User.Points,
+		PointsAwardedCount:     s.User.PointsAwardedCount,
+		PointsAwardedResetTime: s.User.PointsAwardedResetTime,
+		GodMode:                s.User.GodMode,
 	})
 }
 
 func (h httpHandler) WhoAmI(w http.ResponseWriter, r *http.Request) {
 	token := r.Context().Value(jwtauth.TokenCtxKey)
 
-	user, err := h.service.WhoAmI(r.Context(), token.(jwt.Token))
+	User, err := h.service.WhoAmI(r.Context(), token.(jwt.Token))
 	if err != nil {
 		_ = render.Render(w, r, apperror.ErrLoggedOut)
 		return
 	}
 
 	_ = render.Render(w, r, payload.User{
-		FirstName:              user.FirstName,
-		LastName:               user.LastName,
-		Email:                  user.Email,
-		Points:                 user.Points,
-		PointsAwardedCount:     user.PointsAwardedCount,
-		PointsAwardedResetTime: user.PointsAwardedResetTime,
-		GodMode:                user.GodMode,
+		FirstName:              User.FirstName,
+		LastName:               User.LastName,
+		Email:                  User.Email,
+		Points:                 User.Points,
+		PointsAwardedCount:     User.PointsAwardedCount,
+		PointsAwardedResetTime: User.PointsAwardedResetTime,
+		GodMode:                User.GodMode,
 	})
 }
 
-func (h httpHandler) setAuthCookies(w http.ResponseWriter, s *Session) {
+func (h httpHandler) setAuthCookies(w http.ResponseWriter, s *entity.Session) {
 	// JWT cookie for the server to use
 	http.SetCookie(w, &http.Cookie{
 		Name:     h.cfg.AppJWTCookieName(),
 		Domain:   h.cfg.AppJWTCookieDomain(),
-		Value:    s.token,
+		Value:    s.Token,
 		Path:     "/",
 		Expires:  time.Now().Add(30 * time.Minute),
 		MaxAge:   int(30 * time.Minute.Seconds()),
@@ -141,7 +142,7 @@ func (h httpHandler) setAuthCookies(w http.ResponseWriter, s *Session) {
 	})
 
 	b := "human"
-	if s.user.GodMode {
+	if s.User.GodMode {
 		b = "god"
 	}
 	// Cookie for the client to know that it's authenticated

@@ -8,5 +8,5 @@ packages:
       recursive: True
       with-expecter: True
       outpkg: mocks
-      filename: "mock_{{.InterfaceNameSnake}}_test.go"
+      filename: "mock_{{.InterfaceNameSnake}}.go"
       dir: "{{.InterfaceDir}}/mocks"

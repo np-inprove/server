@@ -21,14 +21,6 @@ var (
 	jwtAudience = []string{"np-inprove.qinguan.me"}
 )
 
-// Session is used to represent a successful call to UseCase.Login.
-// It contains the user information retrieved, as well as the token issued.
-// The handlers should distribute the issued token to the client.
-type Session struct {
-	user  *entity.User
-	token string
-}
-
 type usecase struct {
 	repo Repository
 	cfg  *config.Config
@@ -39,8 +31,8 @@ type usecase struct {
 
 type UseCase interface {
 	WhoAmI(ctx context.Context, token jwt.Token) (*entity.User, error)
-	Login(ctx context.Context, email string, password string) (*Session, error)
-	Register(ctx context.Context, firstName string, lastName string, email string, password string) (*Session, error)
+	Login(ctx context.Context, email string, password string) (*entity.Session, error)
+	Register(ctx context.Context, firstName string, lastName string, email string, password string) (*entity.Session, error)
 }
 
 func NewUseCase(r Repository, c *config.Config, publicKey jwk.Key, privateKey jwk.Key) (UseCase, error) {
@@ -60,7 +52,7 @@ func (u usecase) WhoAmI(ctx context.Context, token jwt.Token) (*entity.User, err
 	return user, nil
 }
 
-func (u usecase) Login(ctx context.Context, email string, password string) (*Session, error) {
+func (u usecase) Login(ctx context.Context, email string, password string) (*entity.Session, error) {
 	user, err := u.repo.FindUserByEmail(ctx, email)
 	if err != nil {
 		if apperror.IsNotFound(err) {
@@ -83,13 +75,13 @@ func (u usecase) Login(ctx context.Context, email string, password string) (*Ses
 		return nil, fmt.Errorf("failed to create jwt: %w", err)
 	}
 
-	return &Session{
-		user:  user,
-		token: string(j),
+	return &entity.Session{
+		User:  user,
+		Token: string(j),
 	}, nil
 }
 
-func (u usecase) Register(ctx context.Context, firstName string, lastName string, email string, password string) (*Session, error) {
+func (u usecase) Register(ctx context.Context, firstName string, lastName string, email string, password string) (*entity.Session, error) {
 	domain := strings.Split(email, "@")[1] // This should not panic
 	if _, err := u.repo.FindInstitutionByDomains(ctx, domain); err != nil {
 		if apperror.IsNotFound(err) {
@@ -113,9 +105,9 @@ func (u usecase) Register(ctx context.Context, firstName string, lastName string
 		return nil, fmt.Errorf("failed to create jwt: %w", err)
 	}
 
-	return &Session{
-		user:  user,
-		token: string(j),
+	return &entity.Session{
+		User:  user,
+		Token: string(j),
 	}, nil
 }
 
