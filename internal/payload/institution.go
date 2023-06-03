@@ -17,9 +17,9 @@ var (
 type Institution struct {
 	ID            int    `json:"id,omitempty"`
 	Name          string `json:"name,omitempty"`
-	ShortName     string `json:"short_name,omitempty"`
-	AdminDomain   string `json:"admin_domain,omitempty"`
-	StudentDomain string `json:"student_domain,omitempty"`
+	ShortName     string `json:"shortName,omitempty"`
+	AdminDomain   string `json:"adminDomain,omitempty"`
+	StudentDomain string `json:"studentDomain,omitempty"`
 }
 
 func (i Institution) Render(_ http.ResponseWriter, _ *http.Request) error {
@@ -28,9 +28,9 @@ func (i Institution) Render(_ http.ResponseWriter, _ *http.Request) error {
 
 type CreateInstitutionRequest struct {
 	Name          string `json:"name" validate:"required"`
-	ShortName     string `json:"short_name" validate:"required|alphaDash"`
-	AdminDomain   string `json:"admin_domain,omitempty" validate:"required|fqdn"`
-	StudentDomain string `json:"student_domain,omitempty" validate:"required|fqdn"`
+	ShortName     string `json:"shortName" validate:"required|alphaDash"`
+	AdminDomain   string `json:"adminDomain,omitempty" validate:"required|fqdn"`
+	StudentDomain string `json:"studentDomain,omitempty" validate:"required|fqdn"`
 }
 
 func (c CreateInstitutionRequest) Validate() *validate.Validation {

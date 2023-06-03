@@ -8,13 +8,13 @@ import (
 
 type User struct {
 	ID                     int       `json:"id,omitempty"`
-	FirstName              string    `json:"first_name,omitempty"`
-	LastName               string    `json:"last_name,omitempty"`
+	FirstName              string    `json:"firstName,omitempty"`
+	LastName               string    `json:"lastName,omitempty"`
 	Email                  string    `json:"email,omitempty"`
 	Points                 int       `json:"points,omitempty"`
-	PointsAwardedCount     int       `json:"points_awarded_count,omitempty"`
-	PointsAwardedResetTime time.Time `json:"points_awarded_reset_time,omitempty"`
-	GodMode                bool      `json:"god_mode,omitempty"`
+	PointsAwardedCount     int       `json:"pointsAwardedCount,omitempty"`
+	PointsAwardedResetTime time.Time `json:"pointsAwardedResetTime,omitempty"`
+	GodMode                bool      `json:"godMode,omitempty"`
 }
 
 func (u User) Render(_ http.ResponseWriter, _ *http.Request) error {
@@ -31,8 +31,8 @@ func (l LoginRequest) Validate() *validate.Validation {
 }
 
 type RegisterRequest struct {
-	FirstName string `json:"first_name,omitempty" validate:"required|min_len:1"`
-	LastName  string `json:"last_name,omitempty" validate:"required|min_len:1"`
+	FirstName string `json:"firstName,omitempty" validate:"required|min_len:1"`
+	LastName  string `json:"lastName,omitempty" validate:"required|min_len:1"`
 	Email     string `json:"email,omitempty" validate:"required|email"`
 	Password  string `json:"password" validate:"required|min_len:6"`
 }

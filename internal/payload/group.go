@@ -11,7 +11,7 @@ type Group struct {
 	Path        string `json:"path,omitempty"`
 	Name        string `json:"name,omitempty"`
 	Description string `json:"description,omitempty"`
-	GroupType   string `json:"group_type,omitempty"`
+	GroupType   string `json:"groupType,omitempty"`
 }
 
 func (g Group) Render(_ http.ResponseWriter, _ *http.Request) error {
@@ -28,7 +28,7 @@ type CreateGroupRequest struct {
 	Path        string `json:"path,omitempty" validate:"required|alphaDash"`
 	Name        string `json:"name,omitempty" validate:"required|minLen:3"`
 	Description string `json:"description,omitempty"`
-	GroupType   string `json:"group_type,omitempty" validate:"customValidator"`
+	GroupType   string `json:"groupType,omitempty" validate:"customValidator"`
 }
 
 func (c CreateGroupRequest) CustomValidator(val string) bool {
