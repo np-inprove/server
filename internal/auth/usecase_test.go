@@ -2,12 +2,10 @@ package auth
 
 import (
 	"context"
-	"crypto/ecdsa"
-	"crypto/elliptic"
-	"crypto/rand"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/lestrrat-go/jwx/v2/jwk"
 	"github.com/lestrrat-go/jwx/v2/jwt"
 	"github.com/np-inprove/server/internal/ent"
 	"github.com/np-inprove/server/internal/entity"
@@ -15,25 +13,25 @@ import (
 	"github.com/stretchr/testify/mock"
 	"testing"
 
-	"github.com/lestrrat-go/jwx/v2/jwk"
 	"github.com/np-inprove/server/internal/auth/mocks"
 	"github.com/np-inprove/server/internal/config"
 	"github.com/stretchr/testify/suite"
 )
 
 var (
-	publicKey       jwk.Key
-	privateKey      jwk.Key
 	repoInternalErr = errors.New("repo err")
 	repoNotFoundErr = new(ent.NotFoundError)
 
 	password              = "example"
-	encodedPasswordString = "{\"h\":\"15BrHhXrHhYM2yMFMrghE9gnY950dHNF1klveR5EdeY=\",\"s\":\"J7lr7qPnc/S4iGgdJQWSK2xVELHLE9N4+KIdcdBdHhM=\",\"t\":1,\"m\":65536,\"k\":32}\n"
-	encodedPassword       hash.Encoded
+	encodedPasswordString = "{\"h\":\"15BrHhXrHhYM2yMFMrghE9gnY950dHNF1klveR5EdeY=\",\"s\":\"J7lr7qPnc/S4iGgdJQWSK2xVELHLE9N4+KIdcdBdHhM=\",\"t\":1,\"m\":65536,\"k\":32}"
+	jwkString             = "{\"kty\": \"EC\",\"d\": \"AFDDClQjKNoNfFGZB9iLP2gRmAJXBa-mp_XIdYMJjNKLIRELS03WArued737uRt9ayopD6AEQZOiRSLs8o9LrT5B\",\"use\": \"sig\",\"crv\": \"P-521\",\"x\": \"AZGgvUEwezY2RHU7l4m1aF5vp8Vj8CUo_nyqUzVVwoVjFz_mbZM4ZznXrAvuLKlAqagI2bHHj-97W7Blp3VaI0A5\",\"y\": \"AdmmlsSae6qoGTPsUYj7gSOGMJcaRdHpcyvQ3hdq5owJnyozbRib5mUYXwsV_voIKBTSkeztQSRagiILwqiEy5-y\",\"alg\": \"ES512\"}"
 )
 
 type UseCaseTestSuite struct {
 	suite.Suite
+	publicKey       jwk.Key
+	privateKey      jwk.Key
+	encodedPassword hash.Encoded
 }
 
 func TestUseCaseTestSuite(t *testing.T) {
@@ -41,11 +39,9 @@ func TestUseCaseTestSuite(t *testing.T) {
 }
 
 func (suite *UseCaseTestSuite) SetupSuite() {
-	// These should never fail
-	raw, _ := ecdsa.GenerateKey(elliptic.P384(), rand.Reader)
-	privateKey, _ = jwk.FromRaw(raw)
-	publicKey, _ = privateKey.PublicKey()
-	_ = json.Unmarshal([]byte(encodedPasswordString), &encodedPassword)
+	suite.privateKey, _ = jwk.ParseKey([]byte(jwkString))
+	suite.publicKey, _ = suite.privateKey.PublicKey()
+	_ = json.Unmarshal([]byte(encodedPasswordString), &suite.encodedPassword)
 }
 
 func (suite *UseCaseTestSuite) TestNewUseCase() {
@@ -71,13 +67,13 @@ func (suite *UseCaseTestSuite) TestNewUseCase() {
 					return new(config.Config)
 				},
 				publicKey: func() jwk.Key {
-					return publicKey
+					return suite.publicKey
 				},
 				privateKey: func() jwk.Key {
-					return privateKey
+					return suite.privateKey
 				},
 			},
-			want: usecase{repo: new(mocks.MockRepository), cfg: new(config.Config), publicKey: publicKey, privateKey: privateKey},
+			want: usecase{repo: new(mocks.MockRepository), cfg: new(config.Config), publicKey: suite.publicKey, privateKey: suite.privateKey},
 		},
 	}
 
@@ -165,7 +161,7 @@ func (suite *UseCaseTestSuite) TestWhoAmI() {
 	for _, tc := range tests {
 		suite.Run(tc.name, func() {
 			repo := new(mocks.MockRepository)
-			uc := NewUseCase(repo, nil, publicKey, privateKey)
+			uc := NewUseCase(repo, nil, suite.publicKey, suite.privateKey)
 			tc.configure(repo)
 			ret, err := uc.WhoAmI(tc.args.ctx, tc.args.token)
 			suite.Equal(err, tc.err)
@@ -185,7 +181,7 @@ func (suite *UseCaseTestSuite) TestLogin() {
 		name      string
 		args      args
 		configure func(repository *mocks.MockRepository)
-		want      *entity.Session
+		assert    func(ret *entity.Session)
 		err       error
 	}{
 		{
@@ -199,8 +195,10 @@ func (suite *UseCaseTestSuite) TestLogin() {
 				repository.On("FindUserByEmail", mock.Anything, mock.Anything).
 					Return(nil, repoNotFoundErr)
 			},
-			want: nil,
-			err:  ErrUserNotFound,
+			assert: func(ret *entity.Session) {
+				suite.Nil(ret)
+			},
+			err: ErrUserNotFound,
 		},
 		{
 			name: "Find user internal repo error",
@@ -213,8 +211,10 @@ func (suite *UseCaseTestSuite) TestLogin() {
 				repository.On("FindUserByEmail", mock.Anything, mock.Anything).
 					Return(nil, repoInternalErr)
 			},
-			want: nil,
-			err:  fmt.Errorf("failed to find user: %w", repoInternalErr),
+			assert: func(ret *entity.Session) {
+				suite.Nil(ret)
+			},
+			err: fmt.Errorf("failed to find user: %w", repoInternalErr),
 		},
 		{
 			name: "Hash verification failed",
@@ -225,21 +225,97 @@ func (suite *UseCaseTestSuite) TestLogin() {
 			},
 			configure: func(repository *mocks.MockRepository) {
 				repository.On("FindUserByEmail", mock.Anything, mock.Anything).
-					Return(&entity.User{Password: encodedPassword}, nil)
+					Return(&entity.User{Password: suite.encodedPassword}, nil)
 			},
-			want: nil,
-			err:  ErrInvalidPassword,
+			assert: func(ret *entity.Session) {
+				suite.Nil(ret)
+			},
+			err: ErrInvalidPassword,
+		},
+		{
+			name: "Success",
+			args: args{
+				ctx:      context.Background(),
+				email:    "example@example.com",
+				password: password,
+			},
+			configure: func(repository *mocks.MockRepository) {
+				repository.On("FindUserByEmail", mock.Anything, mock.Anything).
+					Return(&entity.User{
+						Email:    "example@example.com",
+						Password: suite.encodedPassword,
+						GodMode:  false,
+					}, nil)
+			},
+			assert: func(ret *entity.Session) {
+				suite.Equal(ret.User, &entity.User{
+					Email:    "example@example.com",
+					Password: suite.encodedPassword,
+					GodMode:  false,
+				})
+				suite.NotEmpty(ret.Token)
+			},
+			err: nil,
 		},
 	}
 
 	for _, tc := range tests {
 		suite.Run(tc.name, func() {
 			repo := new(mocks.MockRepository)
-			uc := NewUseCase(repo, nil, publicKey, privateKey)
+			uc := NewUseCase(repo, nil, suite.publicKey, suite.privateKey)
 			tc.configure(repo)
 			ret, err := uc.Login(tc.args.ctx, tc.args.email, tc.args.password)
 			suite.Equal(err, tc.err)
-			suite.Equal(tc.want, ret)
+			tc.assert(ret)
+		})
+	}
+}
+
+func (suite *UseCaseTestSuite) TestRegister() {
+	type args struct {
+		ctx       context.Context
+		firstName string
+		lastName  string
+		email     string
+		password  string
+	}
+
+	tests := []struct {
+		name      string
+		args      args
+		configure func(repository *mocks.MockRepository)
+		assert    func(ret *entity.Session, repository *mocks.MockRepository)
+		err       error
+	}{
+		{
+			name: "Success",
+			args: args{
+				ctx:       context.Background(),
+				firstName: "John",
+				lastName:  "Smith",
+				email:     "me@example.com",
+				password:  password,
+			},
+			configure: func(repository *mocks.MockRepository) {
+				repository.On("FindInstitutionByDomains", mock.Anything, mock.Anything).
+					Return(&entity.Institution{}, nil)
+				repository.On("CreateUser", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
+					Return(&entity.User{Email: "me@example.com", GodMode: false}, nil)
+			},
+			assert: func(ret *entity.Session, repository *mocks.MockRepository) {
+				repository.AssertCalled(suite.T(), "CreateUser", context.Background(), "John", "Smith", "me@example.com", mock.Anything)
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		suite.Run(tc.name, func() {
+			repo := new(mocks.MockRepository)
+			uc := NewUseCase(repo, nil, suite.publicKey, suite.privateKey)
+			tc.configure(repo)
+			ret, err := uc.Register(tc.args.ctx, tc.args.firstName, tc.args.lastName, tc.args.email, tc.args.password)
+			suite.Equal(err, tc.err)
+			tc.assert(ret, repo)
 		})
 	}
 }

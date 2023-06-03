@@ -29,9 +29,9 @@ func (suite *HTTPHandlerTestSuite) TestErrResponseRender() {
 	sampleErr := errors.New("sample err")
 
 	tests := []struct {
-		name      string
-		args      args
-		assertion func(r *http.Request, e ErrResponse)
+		name   string
+		args   args
+		assert func(r *http.Request, e ErrResponse)
 	}{
 		{
 			name: "Renders status code",
@@ -52,7 +52,7 @@ func (suite *HTTPHandlerTestSuite) TestErrResponseRender() {
 					return httptest.NewRequest("", "/", nil)
 				},
 			},
-			assertion: func(r *http.Request, e ErrResponse) {
+			assert: func(r *http.Request, e ErrResponse) {
 				suite.Equal(http.StatusTeapot, r.Context().Value(render.StatusCtxKey))
 			},
 		},
@@ -79,7 +79,7 @@ func (suite *HTTPHandlerTestSuite) TestErrResponseRender() {
 					return httptest.NewRequest("", "/", nil)
 				},
 			},
-			assertion: func(r *http.Request, e ErrResponse) {
+			assert: func(r *http.Request, e ErrResponse) {
 				suite.Equal(e.Fields, r.Context().Value(logger.ErrValidationCtxKey))
 			},
 		},
@@ -102,7 +102,7 @@ func (suite *HTTPHandlerTestSuite) TestErrResponseRender() {
 					return httptest.NewRequest("", "/", nil)
 				},
 			},
-			assertion: func(r *http.Request, e ErrResponse) {
+			assert: func(r *http.Request, e ErrResponse) {
 				suite.Equal(e.Err, r.Context().Value(logger.ErrCtxKey))
 			},
 		},
@@ -129,7 +129,7 @@ func (suite *HTTPHandlerTestSuite) TestErrResponseRender() {
 					return httptest.NewRequest("", "/", nil)
 				},
 			},
-			assertion: func(r *http.Request, e ErrResponse) {
+			assert: func(r *http.Request, e ErrResponse) {
 				suite.Equal(e.Err, r.Context().Value(logger.ErrCtxKey))
 				suite.Equal(e.Fields, r.Context().Value(logger.ErrValidationCtxKey))
 			},
@@ -141,7 +141,7 @@ func (suite *HTTPHandlerTestSuite) TestErrResponseRender() {
 			r := tc.args.r()
 			err := tc.args.e()
 			ret := err.Render(tc.args.w(), r)
-			tc.assertion(r, err)
+			tc.assert(r, err)
 			suite.Nil(ret)
 		})
 	}
