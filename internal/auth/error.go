@@ -12,6 +12,7 @@ var (
 	ErrUserNotFound    = errors.New("failed to find user")
 	ErrUserConflict    = errors.New("failed to register new user as email already used")
 	ErrDomainNotFound  = errors.New("no institution is registered with provided domain")
+	ErrTokenRevoked    = errors.New("token is revoked")
 )
 
 func mapDomainErr(err error) *apperror.ErrResponse {
@@ -68,6 +69,15 @@ func mapDomainErr(err error) *apperror.ErrResponse {
 					"domain": "Email domain not found",
 				},
 			},
+		}
+	}
+
+	if errors.Is(err, ErrTokenRevoked) {
+		return &apperror.ErrResponse{
+			Err:            nil,
+			HTTPStatusCode: http.StatusUnauthorized,
+			AppErrCode:     http.StatusUnauthorized,
+			AppErrMessage:  "Token is revoked",
 		}
 	}
 

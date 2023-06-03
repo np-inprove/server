@@ -35,8 +35,8 @@ type UseCase interface {
 	Register(ctx context.Context, firstName string, lastName string, email string, password string) (*entity.Session, error)
 }
 
-func NewUseCase(r Repository, c *config.Config, publicKey jwk.Key, privateKey jwk.Key) (UseCase, error) {
-	return usecase{r, c, publicKey, privateKey}, nil
+func NewUseCase(r Repository, c *config.Config, publicKey jwk.Key, privateKey jwk.Key) UseCase {
+	return usecase{r, c, publicKey, privateKey}
 }
 
 func (u usecase) WhoAmI(ctx context.Context, token jwt.Token) (*entity.User, error) {
@@ -143,8 +143,13 @@ func (u usecase) createJWT(email string, godMode bool) ([]byte, error) {
 
 func (u usecase) tokenIsValid(ctx context.Context, jti string) error {
 	_, err := u.repo.FindJWTRevocation(ctx, jti)
-	if err != nil && apperror.IsNotFound(err) {
+	if err == nil {
+		return ErrTokenRevoked
+	}
+
+	if apperror.IsNotFound(err) {
 		return nil
 	}
+
 	return err
 }

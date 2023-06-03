@@ -139,7 +139,7 @@ func main() {
 	)
 
 	authRepo := auth.NewEntRepository(client)
-	authUseCase, err := auth.NewUseCase(authRepo, cfg, publicKey, privateKey)
+	authUseCase := auth.NewUseCase(authRepo, cfg, publicKey, privateKey)
 	if err != nil {
 		appLogger.Fatal("failed to initialize auth use case",
 			logger.String("err", err.Error()),
