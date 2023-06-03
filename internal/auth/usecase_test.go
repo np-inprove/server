@@ -65,13 +65,13 @@ func (suite *UseCaseTestSuite) TestNewFolder() {
 		},
 	}
 
-	for _, test := range tests {
-		suite.Run(test.name, func() {
-			result, err := NewUseCase(test.args.repository(), test.args.cfg(), test.args.publicKey(), test.args.privateKey())
+	for _, tc := range tests {
+		suite.Run(tc.name, func() {
+			result, err := NewUseCase(tc.args.repository(), tc.args.cfg(), tc.args.publicKey(), tc.args.privateKey())
 			if err != nil {
 				panic(err)
 			}
-			suite.Equal(test.want, result)
+			suite.Equal(tc.want, result)
 		})
 	}
 }

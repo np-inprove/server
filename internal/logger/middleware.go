@@ -2,6 +2,7 @@ package logger
 
 import (
 	chimiddleware "github.com/go-chi/chi/v5/middleware"
+	"github.com/gookit/validate"
 	"net/http"
 	"time"
 )
@@ -46,7 +47,7 @@ func (m *Middleware) Request(next http.Handler) http.Handler {
 
 				v = r.Context().Value(ErrValidationCtxKey)
 				if v != nil {
-					fields = append(fields, String("err_validation", v.(string)))
+					fields = append(fields, String("err_validation", v.(validate.Errors).String()))
 				}
 
 				m.logger.Info("handled http request",
