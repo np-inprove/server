@@ -20,7 +20,7 @@ func mapDomainErr(err error) *apperror.ErrResponse {
 			AppErrCode:     http.StatusConflict,
 			AppErrMessage:  "Short name already in use",
 			Fields: validate.Errors{
-				"short_name": map[string]string{
+				"shortName": map[string]string{
 					"conflict": "Short name already in use",
 				},
 			},
@@ -34,7 +34,7 @@ func mapDomainErr(err error) *apperror.ErrResponse {
 			AppErrCode:     http.StatusNotFound,
 			AppErrMessage:  "Institution does not exist",
 			Fields: validate.Errors{
-				"short_name": map[string]string{
+				"shortName": map[string]string{
 					"notFound": "Institution does not exist",
 				},
 			},
