@@ -63,7 +63,7 @@ func mapDomainErr(err error) *apperror.ErrResponse {
 			Err:            nil,
 			HTTPStatusCode: http.StatusBadRequest,
 			AppErrCode:     http.StatusBadRequest,
-			AppErrMessage:  "An institution does not exist for this domain. Please get your institution adminstrator to register first.",
+			AppErrMessage:  "An institution does not exist for this domain. Please get your institution administrator to register first.",
 			Fields: validate.Errors{
 				"email": map[string]string{
 					"domain": "Email domain not found",
