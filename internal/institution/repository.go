@@ -8,6 +8,7 @@ import (
 
 type Reader interface {
 	FindInstitutions(ctx context.Context) ([]*entity.Institution, error)
+	FindInstitutionByAdminDomain(ctx context.Context, domain string) (*entity.Institution, error)
 }
 
 type Writer interface {
@@ -19,6 +20,13 @@ type Writer interface {
 		studentDomain string,
 	) (*entity.Institution, error)
 	DeleteInstitution(ctx context.Context, shortName string) error
+
+	CreateDepartment(
+		ctx context.Context,
+		name string,
+		shortName string,
+		institutionID int,
+	) (*entity.Department, error)
 }
 
 type Repository interface {

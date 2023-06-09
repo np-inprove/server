@@ -96,3 +96,29 @@ func (e entRepository) WithTx(ctx context.Context, f func(ctx context.Context) e
 
 	return tx.Commit()
 }
+
+func (e entRepository) CreateDepartment(ctx context.Context, name string, shortName string, institutionID int) (*entity.Department, error) {
+	d, err := e.client.Department.Create().
+		SetName(name).
+		SetShortName(shortName).
+		SetInstitutionID(institutionID).
+		Save(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create department: %w", err)
+	}
+
+	return d, nil
+}
+
+func (e entRepository) FindInstitutionByAdminDomain(ctx context.Context, domain string) (*entity.Institution, error) {
+	inst, err := e.client.Institution.Query().
+		Where(institution.AdminDomainEQ(domain)).
+		Only(ctx)
+	if err != nil {
+		if apperror.IsNotFound(err) {
+			return nil, ErrInstitutionNotFound
+		}
+		return nil, err
+	}
+	return inst, nil
+}

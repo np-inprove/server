@@ -11,3 +11,4 @@ type Institution = ent.Institution
 type Group = ent.Group
 type GroupUser = ent.GroupUser
 type GroupType = group.GroupType
+type Department = ent.Department

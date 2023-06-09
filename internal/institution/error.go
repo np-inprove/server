@@ -10,6 +10,7 @@ import (
 var (
 	ErrInstitutionShortNameConflict = errors.New("short name conflicts with existing institution")
 	ErrInstitutionNotFound          = errors.New("institution does not exist")
+	ErrUserNotAdmin                 = errors.New("user tried to perform an admin-only action")
 )
 
 func mapDomainErr(err error) *apperror.ErrResponse {

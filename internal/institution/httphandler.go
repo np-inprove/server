@@ -4,6 +4,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/jwtauth/v5"
 	"github.com/go-chi/render"
+	"github.com/lestrrat-go/jwx/v2/jwt"
 	"github.com/np-inprove/server/internal/apperror"
 	"github.com/np-inprove/server/internal/config"
 	"github.com/np-inprove/server/internal/middleware"
@@ -36,6 +37,8 @@ func NewHTTPHandler(u UseCase, c *config.Config, j *jwtauth.JWTAuth) chi.Router 
 		r.Get("/", h.ListInstitutions)
 		r.Post("/", h.CreateInstitution)
 		r.Delete("/{shortName}", h.DeleteInstitution)
+
+		r.Post("/departments", h.CreateDepartment)
 	})
 
 	return r
@@ -99,4 +102,32 @@ func (h httpHandler) DeleteInstitution(w http.ResponseWriter, r *http.Request) {
 
 	render.Status(r, http.StatusNoContent)
 	render.NoContent(w, r)
+}
+
+func (h httpHandler) CreateDepartment(w http.ResponseWriter, r *http.Request) {
+	p := &payload.CreateDepartmentRequest{}
+	if err := render.Decode(r, p); err != nil {
+		_ = render.Render(w, r, apperror.ErrBadRequest(err))
+		return
+	}
+
+	if v := p.Validate(); !v.Validate() {
+		_ = render.Render(w, r, apperror.ErrValidation(v.Errors))
+		return
+	}
+
+	token := r.Context().Value(jwtauth.TokenCtxKey)
+	email := token.(jwt.Token).Subject()
+
+	dept, err := h.service.CreateDepartment(r.Context(), email, p.Name, p.ShortName)
+	if err != nil {
+		_ = render.Render(w, r, mapDomainErr(err))
+		return
+	}
+
+	_ = render.Render(w, r, payload.Department{
+		ID:        dept.ID,
+		Name:      dept.Name,
+		ShortName: dept.ShortName,
+	})
 }

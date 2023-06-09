@@ -52,3 +52,22 @@ func (c CreateInstitutionRequest) Validate() *validate.Validation {
 	})
 	return v
 }
+
+type Department struct {
+	ID        int    `json:"id,omitempty"`
+	Name      string `json:"name,omitempty"`
+	ShortName string `json:"shortName,omitempty"`
+}
+
+func (d Department) Render(_ http.ResponseWriter, _ *http.Request) error {
+	return nil
+}
+
+type CreateDepartmentRequest struct {
+	Name      string `json:"name" validate:"required"`
+	ShortName string `json:"shortName" validate:"required|alphaDash"`
+}
+
+func (c CreateDepartmentRequest) Validate() *validate.Validation {
+	return validate.Struct(c)
+}
