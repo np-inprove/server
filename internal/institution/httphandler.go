@@ -35,7 +35,8 @@ func NewHTTPHandler(u UseCase, c *config.Config, j *jwtauth.JWTAuth) chi.Router 
 
 		r.Get("/", h.ListInstitutions)
 		r.Post("/", h.CreateInstitution)
-		r.Delete("/{shortName}", h.DeleteInstitution)
+		r.Delete("/{id}", h.DeleteInstitution)
+		r.Put("/{id}", h.UpdateInstitution) 
 	})
 
 	return r
@@ -87,7 +88,7 @@ func (h httpHandler) CreateInstitution(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h httpHandler) DeleteInstitution(w http.ResponseWriter, r *http.Request) {
-	shortName := chi.URLParam(r, "shortName")
+	shortName := chi.URLParam(r, "id") //rename
 	err := h.service.DeleteInstitution(r.Context(), shortName)
 	if err != nil {
 		_ = render.Render(w, r, mapDomainErr(err))
@@ -96,4 +97,28 @@ func (h httpHandler) DeleteInstitution(w http.ResponseWriter, r *http.Request) {
 
 	render.Status(r, http.StatusNoContent)
 	render.NoContent(w, r)
+}
+
+func (h httpHandler) UpdateInstitution(w http.ResponseWriter, r *http.Request) {
+	p := &payload.UpdateInstitutionRequest{} 
+
+	if v := p.Validate(); !v.Validate() {
+		_ = render.Render(w, r, apperror.ErrValidation(v.Errors))
+		return
+	}
+
+	inst, err := h.service.UpdateInstitution(r.Context(), p.ID, p.Name, p.ShortName, p.AdminDomain, p.StudentDomain)
+	if err != nil {
+		_ = render.Render(w, r, mapDomainErr(err))
+		return
+	}
+
+	render.Status(r, http.StatusNoContent)
+	_ = render.Render(w, r, payload.Institution{
+		ID:            inst.ID,
+		Name:          inst.Name,
+		ShortName:     inst.ShortName,
+		AdminDomain:   inst.AdminDomain,
+		StudentDomain: inst.StudentDomain,
+	})
 }

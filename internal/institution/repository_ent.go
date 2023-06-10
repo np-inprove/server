@@ -71,6 +71,28 @@ func (e entRepository) DeleteInstitution(ctx context.Context, id int) error {
 	return nil
 }
 
+func (e entRepository) UpdateInstitution(ctx context.Context, id int, name string, shortName string, adminDomain string, studentDomain string)(*entity.Institution, error) {
+	c := e.client
+	if cc, ok := entutils.ExtractTx(ctx); ok {
+		c = cc
+	}
+
+	inst, err := c.Institution.UpdateOneID(id).
+		SetName(name).
+		SetShortName(shortName).
+		SetAdminDomain(adminDomain).
+		SetStudentDomain(studentDomain).
+		Save(ctx)
+	if err != nil {
+		if apperror.IsConflict(err) {
+			return nil, ErrInstitutionShortNameConflict
+		}
+		return nil, fmt.Errorf("failed to save institution: %w", err)
+	}
+
+	return inst, nil
+}
+
 func (e entRepository) WithTx(
 	ctx context.Context,
 	fn func(ctx context.Context) (interface{}, error),

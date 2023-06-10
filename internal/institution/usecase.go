@@ -10,6 +10,14 @@ import (
 type UseCase interface {
 	ListInstitutions(ctx context.Context) ([]*entity.Institution, error)
 	CreateInstitution(ctx context.Context, name string, shortName string, description string) (*entity.Institution, error)
+	UpdateInstitution(
+		ctx context.Context,
+		id int,
+		name string,
+		shortName string,
+		adminDomain string,
+		studentDomain string,
+	) (*entity.Institution, error)
 	DeleteInstitution(ctx context.Context, shortName string) error
 }
 
@@ -62,4 +70,49 @@ func (u useCase) DeleteInstitution(ctx context.Context, shortName string) error 
 	}
 
 	return nil
+}
+
+func (u useCase) DeleteInstitution(ctx context.Context, shortName string) error {
+	return u.repo.WithTx(ctx, func(ctx context.Context) error {
+		return u.repo.DeleteInstitution(ctx, shortName)
+	})
+}
+
+func (u useCase) UpdateInstitution(
+	ctx context.Context,
+	id int,
+	name string,
+	shortName string,
+	adminDomain string,
+	studentDomain string,
+) (*entity.Institution, error) {
+	//i dont know how to do optimization
+	err := u.repo.WithTx(ctx, func(ctx context.Context) error {
+		_, err := u.repo.UpdateInstitution(ctx, id, name, shortName, adminDomain, studentDomain)
+		if err != nil {
+			if apperror.IsConflict(err) {
+				return ErrInstitutionShortNameConflict
+			}
+			return err
+		}
+		return nil
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	insts, err := u.repo.FindInstitutions(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	var inst *entity.Institution
+	for _, i := range insts {
+		if i.ID == id {
+			inst = i
+			break
+		}
+	}
+
+	return inst, nil
 }

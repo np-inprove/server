@@ -14,6 +14,14 @@ type Reader interface {
 type Writer interface {
 	CreateInstitution(ctx context.Context, name, shortName, description string) (*entity.Institution, error)
 	DeleteInstitution(ctx context.Context, id int) error
+	UpdateInstitution(
+		ctx context.Context,
+		id int,
+		name string,
+		shortName string,
+		adminDomain string,
+		studentDomain string,
+	) (*entity.Institution, error)
 }
 
 type Repository interface {
