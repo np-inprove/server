@@ -3,8 +3,11 @@
 package user
 
 import (
+	"fmt"
+
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
+	"github.com/np-inprove/server/internal/entity/institution"
 )
 
 const (
@@ -28,8 +31,10 @@ const (
 	FieldPointsAwardedResetTime = "points_awarded_reset_time"
 	// FieldGodMode holds the string denoting the god_mode field in the database.
 	FieldGodMode = "god_mode"
-	// EdgeDepartment holds the string denoting the department edge name in mutations.
-	EdgeDepartment = "department"
+	// FieldRole holds the string denoting the role field in the database.
+	FieldRole = "role"
+	// EdgeInstitution holds the string denoting the institution edge name in mutations.
+	EdgeInstitution = "institution"
 	// EdgeRedemptions holds the string denoting the redemptions edge name in mutations.
 	EdgeRedemptions = "redemptions"
 	// EdgeForumPosts holds the string denoting the forum_posts edge name in mutations.
@@ -52,13 +57,13 @@ const (
 	EdgeReactions = "reactions"
 	// Table holds the table name of the user in the database.
 	Table = "users"
-	// DepartmentTable is the table that holds the department relation/edge.
-	DepartmentTable = "users"
-	// DepartmentInverseTable is the table name for the Department entity.
-	// It exists in this package in order to avoid circular dependency with the "department" package.
-	DepartmentInverseTable = "departments"
-	// DepartmentColumn is the table column denoting the department relation/edge.
-	DepartmentColumn = "department_users"
+	// InstitutionTable is the table that holds the institution relation/edge.
+	InstitutionTable = "users"
+	// InstitutionInverseTable is the table name for the Institution entity.
+	// It exists in this package in order to avoid circular dependency with the "entinstitution" package.
+	InstitutionInverseTable = "institutions"
+	// InstitutionColumn is the table column denoting the institution relation/edge.
+	InstitutionColumn = "institution_users"
 	// RedemptionsTable is the table that holds the redemptions relation/edge.
 	RedemptionsTable = "redemptions"
 	// RedemptionsInverseTable is the table name for the Redemption entity.
@@ -81,7 +86,7 @@ const (
 	// GroupsTable is the table that holds the groups relation/edge. The primary key declared below.
 	GroupsTable = "group_users"
 	// GroupsInverseTable is the table name for the Group entity.
-	// It exists in this package in order to avoid circular dependency with the "group" package.
+	// It exists in this package in order to avoid circular dependency with the "entgroup" package.
 	GroupsInverseTable = "groups"
 	// ReactedPostsTable is the table that holds the reacted_posts relation/edge. The primary key declared below.
 	ReactedPostsTable = "reactions"
@@ -134,12 +139,13 @@ var Columns = []string{
 	FieldPointsAwardedCount,
 	FieldPointsAwardedResetTime,
 	FieldGodMode,
+	FieldRole,
 }
 
 // ForeignKeys holds the SQL foreign-keys that are owned by the "users"
 // table and are not defined as standalone fields in the schema.
 var ForeignKeys = []string{
-	"department_users",
+	"institution_users",
 }
 
 var (
@@ -189,6 +195,16 @@ var (
 	PointsAwardedCountValidator func(int) error
 )
 
+// RoleValidator is a validator for the "role" field enum values. It is called by the builders before save.
+func RoleValidator(r institution.Role) error {
+	switch r {
+	case "admin", "educator", "member":
+		return nil
+	default:
+		return fmt.Errorf("user: invalid enum value for role field: %q", r)
+	}
+}
+
 // OrderOption defines the ordering options for the User queries.
 type OrderOption func(*sql.Selector)
 
@@ -232,10 +248,15 @@ func ByGodMode(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldGodMode, opts...).ToFunc()
 }
 
-// ByDepartmentField orders the results by department field.
-func ByDepartmentField(field string, opts ...sql.OrderTermOption) OrderOption {
+// ByRole orders the results by the role field.
+func ByRole(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldRole, opts...).ToFunc()
+}
+
+// ByInstitutionField orders the results by institution field.
+func ByInstitutionField(field string, opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newDepartmentStep(), sql.OrderByField(field, opts...))
+		sqlgraph.OrderByNeighborTerms(s, newInstitutionStep(), sql.OrderByField(field, opts...))
 	}
 }
 
@@ -378,11 +399,11 @@ func ByReactions(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 		sqlgraph.OrderByNeighborTerms(s, newReactionsStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
-func newDepartmentStep() *sqlgraph.Step {
+func newInstitutionStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
-		sqlgraph.To(DepartmentInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.M2O, true, DepartmentTable, DepartmentColumn),
+		sqlgraph.To(InstitutionInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.M2O, true, InstitutionTable, InstitutionColumn),
 	)
 }
 func newRedemptionsStep() *sqlgraph.Step {

@@ -29,7 +29,7 @@ const (
 	// GroupTable is the table that holds the group relation/edge.
 	GroupTable = "events"
 	// GroupInverseTable is the table name for the Group entity.
-	// It exists in this package in order to avoid circular dependency with the "group" package.
+	// It exists in this package in order to avoid circular dependency with the "entgroup" package.
 	GroupInverseTable = "groups"
 	// GroupColumn is the table column denoting the group relation/edge.
 	GroupColumn = "group_events"

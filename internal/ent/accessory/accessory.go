@@ -34,7 +34,7 @@ const (
 	// InstitutionTable is the table that holds the institution relation/edge.
 	InstitutionTable = "accessories"
 	// InstitutionInverseTable is the table name for the Institution entity.
-	// It exists in this package in order to avoid circular dependency with the "institution" package.
+	// It exists in this package in order to avoid circular dependency with the "entinstitution" package.
 	InstitutionInverseTable = "institutions"
 	// InstitutionColumn is the table column denoting the institution relation/edge.
 	InstitutionColumn = "institution_accessories"

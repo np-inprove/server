@@ -5,6 +5,7 @@ import (
 	"entgo.io/ent/schema"
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
+	"github.com/np-inprove/server/internal/entity/group"
 )
 
 // GroupUser holds the schema definition for the GroupUser entity.
@@ -27,7 +28,8 @@ func (GroupUser) Fields() []ent.Field {
 		field.Int("user_id").
 			Comment("ID of the user"),
 		field.Enum("role").
-			Values("student", "lecturer"),
+			GoType(group.Role("")).
+			Comment("Role of the user"),
 	}
 }
 

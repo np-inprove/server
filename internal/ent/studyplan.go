@@ -19,8 +19,8 @@ type StudyPlan struct {
 	ID int `json:"id,omitempty"`
 	// Name of the study plan
 	Name string `json:"name,omitempty"`
-	// Short share code for the study plan
-	ShareCode string `json:"share_code,omitempty"`
+	// Code for sharing the study plan
+	Code string `json:"code,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the StudyPlanQuery when eager-loading is set.
 	Edges             StudyPlanEdges `json:"edges"`
@@ -68,7 +68,7 @@ func (*StudyPlan) scanValues(columns []string) ([]any, error) {
 		switch columns[i] {
 		case studyplan.FieldID:
 			values[i] = new(sql.NullInt64)
-		case studyplan.FieldName, studyplan.FieldShareCode:
+		case studyplan.FieldName, studyplan.FieldCode:
 			values[i] = new(sql.NullString)
 		case studyplan.ForeignKeys[0]: // study_plan_author
 			values[i] = new(sql.NullInt64)
@@ -99,11 +99,11 @@ func (sp *StudyPlan) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				sp.Name = value.String
 			}
-		case studyplan.FieldShareCode:
+		case studyplan.FieldCode:
 			if value, ok := values[i].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field share_code", values[i])
+				return fmt.Errorf("unexpected type %T for field code", values[i])
 			} else if value.Valid {
-				sp.ShareCode = value.String
+				sp.Code = value.String
 			}
 		case studyplan.ForeignKeys[0]:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
@@ -161,8 +161,8 @@ func (sp *StudyPlan) String() string {
 	builder.WriteString("name=")
 	builder.WriteString(sp.Name)
 	builder.WriteString(", ")
-	builder.WriteString("share_code=")
-	builder.WriteString(sp.ShareCode)
+	builder.WriteString("code=")
+	builder.WriteString(sp.Code)
 	builder.WriteByte(')')
 	return builder.String()
 }

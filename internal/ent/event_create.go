@@ -12,7 +12,7 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/np-inprove/server/internal/ent/event"
-	"github.com/np-inprove/server/internal/ent/group"
+	entgroup "github.com/np-inprove/server/internal/ent/group"
 )
 
 // EventCreate is the builder for creating a Event entity.
@@ -191,7 +191,7 @@ func (ec *EventCreate) createSpec() (*Event, *sqlgraph.CreateSpec) {
 			Columns: []string{event.GroupColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(group.FieldID, field.TypeInt),
+				IDSpec: sqlgraph.NewFieldSpec(entgroup.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

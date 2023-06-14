@@ -6,28 +6,21 @@ import (
 	"github.com/np-inprove/server/internal/apperror"
 	"github.com/np-inprove/server/internal/config"
 	"github.com/np-inprove/server/internal/ent"
-	"github.com/np-inprove/server/internal/ent/department"
-	"github.com/np-inprove/server/internal/ent/institution"
+	entinstitution "github.com/np-inprove/server/internal/ent/institution"
 	"github.com/np-inprove/server/internal/ent/user"
+	"github.com/np-inprove/server/internal/entity/institution"
 	"github.com/np-inprove/server/internal/hash"
 	"github.com/np-inprove/server/internal/logger"
 )
 
-// TODO can shift to config in the future
-const (
-	rootDepartmentName      = "Groot"
-	rootDepartmentShortName = "groot"
-)
-
 func Exec(ctx context.Context, log logger.AppLogger, cfg *config.Config, client *ent.Client) error {
 	instID, err := client.Institution.Query().
-		Where(institution.ShortName(cfg.SeedRootInstitutionShortName())).
+		Where(entinstitution.ShortName(cfg.SeedRootInstitutionShortName())).
 		FirstID(ctx)
 	if err != nil && !apperror.IsNotFound(err) {
 		return fmt.Errorf("failed to query for root institution: %w", err)
 	}
 
-	// TODO this feels... inefficient
 	if apperror.IsNotFound(err) || cfg.SeedForceCreate() {
 		log.Info("seeding root institution",
 			logger.String("area", "seed"),
@@ -38,9 +31,8 @@ func Exec(ctx context.Context, log logger.AppLogger, cfg *config.Config, client 
 		instID, err = client.Institution.Create().
 			SetName(cfg.SeedRootInstitutionName()).
 			SetShortName(cfg.SeedRootInstitutionShortName()).
-			SetAdminDomain("np-inprove.com").
-			SetStudentDomain("s.np-inprove.com").
-			OnConflictColumns(institution.FieldShortName).
+			SetDescription("").
+			OnConflictColumns(entinstitution.FieldShortName).
 			UpdateNewValues().
 			ID(ctx)
 		if err != nil {
@@ -48,44 +40,12 @@ func Exec(ctx context.Context, log logger.AppLogger, cfg *config.Config, client 
 		}
 	}
 
-	deptID, err := client.Department.Query().
-		Where(
-			department.ShortName(rootDepartmentShortName),
-			department.HasInstitutionWith(
-				institution.ID(instID),
-			),
-		).
-		FirstID(ctx)
-	if err != nil && !apperror.IsNotFound(err) {
-		return fmt.Errorf("failed to query for root department: %w", err)
-	}
-
-	// TODO implement cfg.SeedForceCreate() by checking whether Department exists within Institution
-	if apperror.IsNotFound(err) {
-		log.Info("seeding root department",
-			logger.String("area", "seed"),
-			logger.String("department_name", rootDepartmentName),
-			logger.String("department_short_name", rootDepartmentShortName),
-			logger.Int("institution_id", instID),
-		)
-		dept, err := client.Department.Create().
-			SetName(rootDepartmentName).
-			SetShortName(rootDepartmentShortName).
-			SetInstitutionID(instID).
-			Save(ctx)
-		if err != nil {
-			return fmt.Errorf("failed to upsert root department: %w", err)
-		}
-
-		deptID = dept.ID
-	}
-
-	_, err = client.User.Query().Where(user.Email(cfg.SeedRootEmail())).FirstID(ctx)
+	exists, err := client.User.Query().Where(user.Email(cfg.SeedRootEmail())).Exist(ctx)
 	if err != nil && !apperror.IsNotFound(err) {
 		return fmt.Errorf("failed to query for root user: %w", err)
 	}
 
-	if apperror.IsNotFound(err) || cfg.SeedForceCreate() {
+	if !exists || cfg.SeedForceCreate() {
 		p, err := hash.CreateEncoded(cfg.SeedRootPassword())
 		if err != nil {
 			return fmt.Errorf("failed to hash root user password: %w", err)
@@ -101,17 +61,17 @@ func Exec(ctx context.Context, log logger.AppLogger, cfg *config.Config, client 
 			logger.String("first_name", firstName),
 			logger.String("last_name", lastName),
 			logger.String("email", cfg.SeedRootEmail()),
-			logger.Int("department_id", deptID),
 			logger.Bool("force_create", cfg.SeedForceCreate()),
 		)
 
 		err = client.User.Create().
+			SetInstitutionID(instID).
+			SetRole(institution.RoleAdmin).
 			SetFirstName(firstName).
 			SetLastName(lastName).
 			SetEmail(cfg.SeedRootEmail()).
 			SetPassword(p).
 			SetGodMode(true).
-			SetDepartmentID(deptID).
 			OnConflictColumns(user.FieldEmail).
 			UpdateNewValues().
 			Exec(ctx)

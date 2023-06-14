@@ -10,7 +10,7 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
-	"github.com/np-inprove/server/internal/ent/institution"
+	entinstitution "github.com/np-inprove/server/internal/ent/institution"
 	"github.com/np-inprove/server/internal/ent/predicate"
 	"github.com/np-inprove/server/internal/ent/redemption"
 	"github.com/np-inprove/server/internal/ent/voucher"
@@ -234,7 +234,7 @@ func (vu *VoucherUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Columns: []string{voucher.InstitutionColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(institution.FieldID, field.TypeInt),
+				IDSpec: sqlgraph.NewFieldSpec(entinstitution.FieldID, field.TypeInt),
 			},
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
@@ -247,7 +247,7 @@ func (vu *VoucherUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Columns: []string{voucher.InstitutionColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(institution.FieldID, field.TypeInt),
+				IDSpec: sqlgraph.NewFieldSpec(entinstitution.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -510,7 +510,7 @@ func (vuo *VoucherUpdateOne) sqlSave(ctx context.Context) (_node *Voucher, err e
 			Columns: []string{voucher.InstitutionColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(institution.FieldID, field.TypeInt),
+				IDSpec: sqlgraph.NewFieldSpec(entinstitution.FieldID, field.TypeInt),
 			},
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
@@ -523,7 +523,7 @@ func (vuo *VoucherUpdateOne) sqlSave(ctx context.Context) (_node *Voucher, err e
 			Columns: []string{voucher.InstitutionColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(institution.FieldID, field.TypeInt),
+				IDSpec: sqlgraph.NewFieldSpec(entinstitution.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

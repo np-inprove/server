@@ -195,7 +195,7 @@ func (_c *MockUseCase_ListGroupTypes_Call) RunAndReturn(run func() ([]*entgroup.
 }
 
 // ListGroups provides a mock function with given fields: ctx, email
-func (_m *MockUseCase) ListGroups(ctx context.Context, email string) ([]*ent.Group, error) {
+func (_m *MockUseCase) ListPrincipalGroups(ctx context.Context, email string) ([]*ent.Group, error) {
 	ret := _m.Called(ctx, email)
 
 	var r0 []*ent.Group

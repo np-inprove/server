@@ -16,18 +16,20 @@ type Tx struct {
 	Accessory *AccessoryClient
 	// Deadline is the client for interacting with the Deadline builders.
 	Deadline *DeadlineClient
-	// Department is the client for interacting with the Department builders.
-	Department *DepartmentClient
 	// Event is the client for interacting with the Event builders.
 	Event *EventClient
 	// ForumPost is the client for interacting with the ForumPost builders.
 	ForumPost *ForumPostClient
 	// Group is the client for interacting with the Group builders.
 	Group *GroupClient
+	// GroupInviteLink is the client for interacting with the GroupInviteLink builders.
+	GroupInviteLink *GroupInviteLinkClient
 	// GroupUser is the client for interacting with the GroupUser builders.
 	GroupUser *GroupUserClient
 	// Institution is the client for interacting with the Institution builders.
 	Institution *InstitutionClient
+	// InstitutionInviteLink is the client for interacting with the InstitutionInviteLink builders.
+	InstitutionInviteLink *InstitutionInviteLinkClient
 	// JWTRevocation is the client for interacting with the JWTRevocation builders.
 	JWTRevocation *JWTRevocationClient
 	// Milestone is the client for interacting with the Milestone builders.
@@ -179,12 +181,13 @@ func (tx *Tx) Client() *Client {
 func (tx *Tx) init() {
 	tx.Accessory = NewAccessoryClient(tx.config)
 	tx.Deadline = NewDeadlineClient(tx.config)
-	tx.Department = NewDepartmentClient(tx.config)
 	tx.Event = NewEventClient(tx.config)
 	tx.ForumPost = NewForumPostClient(tx.config)
 	tx.Group = NewGroupClient(tx.config)
+	tx.GroupInviteLink = NewGroupInviteLinkClient(tx.config)
 	tx.GroupUser = NewGroupUserClient(tx.config)
 	tx.Institution = NewInstitutionClient(tx.config)
+	tx.InstitutionInviteLink = NewInstitutionInviteLinkClient(tx.config)
 	tx.JWTRevocation = NewJWTRevocationClient(tx.config)
 	tx.Milestone = NewMilestoneClient(tx.config)
 	tx.Pet = NewPetClient(tx.config)

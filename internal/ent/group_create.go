@@ -13,8 +13,9 @@ import (
 	"github.com/np-inprove/server/internal/ent/deadline"
 	"github.com/np-inprove/server/internal/ent/event"
 	"github.com/np-inprove/server/internal/ent/forumpost"
-	"github.com/np-inprove/server/internal/ent/group"
-	"github.com/np-inprove/server/internal/ent/institution"
+	entgroup "github.com/np-inprove/server/internal/ent/group"
+	"github.com/np-inprove/server/internal/ent/groupinvitelink"
+	entinstitution "github.com/np-inprove/server/internal/ent/institution"
 	"github.com/np-inprove/server/internal/ent/user"
 )
 
@@ -26,27 +27,21 @@ type GroupCreate struct {
 	conflict []sql.ConflictOption
 }
 
-// SetPath sets the "path" field.
-func (gc *GroupCreate) SetPath(s string) *GroupCreate {
-	gc.mutation.SetPath(s)
-	return gc
-}
-
 // SetName sets the "name" field.
 func (gc *GroupCreate) SetName(s string) *GroupCreate {
 	gc.mutation.SetName(s)
 	return gc
 }
 
-// SetDescription sets the "description" field.
-func (gc *GroupCreate) SetDescription(s string) *GroupCreate {
-	gc.mutation.SetDescription(s)
+// SetShortName sets the "short_name" field.
+func (gc *GroupCreate) SetShortName(s string) *GroupCreate {
+	gc.mutation.SetShortName(s)
 	return gc
 }
 
-// SetGroupType sets the "group_type" field.
-func (gc *GroupCreate) SetGroupType(gt group.GroupType) *GroupCreate {
-	gc.mutation.SetGroupType(gt)
+// SetDescription sets the "description" field.
+func (gc *GroupCreate) SetDescription(s string) *GroupCreate {
+	gc.mutation.SetDescription(s)
 	return gc
 }
 
@@ -110,6 +105,21 @@ func (gc *GroupCreate) AddDeadlines(d ...*Deadline) *GroupCreate {
 	return gc.AddDeadlineIDs(ids...)
 }
 
+// AddInviteIDs adds the "invites" edge to the GroupInviteLink entity by IDs.
+func (gc *GroupCreate) AddInviteIDs(ids ...int) *GroupCreate {
+	gc.mutation.AddInviteIDs(ids...)
+	return gc
+}
+
+// AddInvites adds the "invites" edges to the GroupInviteLink entity.
+func (gc *GroupCreate) AddInvites(g ...*GroupInviteLink) *GroupCreate {
+	ids := make([]int, len(g))
+	for i := range g {
+		ids[i] = g[i].ID
+	}
+	return gc.AddInviteIDs(ids...)
+}
+
 // SetInstitutionID sets the "institution" edge to the Institution entity by ID.
 func (gc *GroupCreate) SetInstitutionID(id int) *GroupCreate {
 	gc.mutation.SetInstitutionID(id)
@@ -155,32 +165,24 @@ func (gc *GroupCreate) ExecX(ctx context.Context) {
 
 // check runs all checks and user-defined validators on the builder.
 func (gc *GroupCreate) check() error {
-	if _, ok := gc.mutation.Path(); !ok {
-		return &ValidationError{Name: "path", err: errors.New(`ent: missing required field "Group.path"`)}
-	}
-	if v, ok := gc.mutation.Path(); ok {
-		if err := group.PathValidator(v); err != nil {
-			return &ValidationError{Name: "path", err: fmt.Errorf(`ent: validator failed for field "Group.path": %w`, err)}
-		}
-	}
 	if _, ok := gc.mutation.Name(); !ok {
 		return &ValidationError{Name: "name", err: errors.New(`ent: missing required field "Group.name"`)}
 	}
 	if v, ok := gc.mutation.Name(); ok {
-		if err := group.NameValidator(v); err != nil {
+		if err := entgroup.NameValidator(v); err != nil {
 			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "Group.name": %w`, err)}
+		}
+	}
+	if _, ok := gc.mutation.ShortName(); !ok {
+		return &ValidationError{Name: "short_name", err: errors.New(`ent: missing required field "Group.short_name"`)}
+	}
+	if v, ok := gc.mutation.ShortName(); ok {
+		if err := entgroup.ShortNameValidator(v); err != nil {
+			return &ValidationError{Name: "short_name", err: fmt.Errorf(`ent: validator failed for field "Group.short_name": %w`, err)}
 		}
 	}
 	if _, ok := gc.mutation.Description(); !ok {
 		return &ValidationError{Name: "description", err: errors.New(`ent: missing required field "Group.description"`)}
-	}
-	if _, ok := gc.mutation.GroupType(); !ok {
-		return &ValidationError{Name: "group_type", err: errors.New(`ent: missing required field "Group.group_type"`)}
-	}
-	if v, ok := gc.mutation.GroupType(); ok {
-		if err := group.GroupTypeValidator(v); err != nil {
-			return &ValidationError{Name: "group_type", err: fmt.Errorf(`ent: validator failed for field "Group.group_type": %w`, err)}
-		}
 	}
 	if _, ok := gc.mutation.InstitutionID(); !ok {
 		return &ValidationError{Name: "institution", err: errors.New(`ent: missing required edge "Group.institution"`)}
@@ -209,31 +211,27 @@ func (gc *GroupCreate) sqlSave(ctx context.Context) (*Group, error) {
 func (gc *GroupCreate) createSpec() (*Group, *sqlgraph.CreateSpec) {
 	var (
 		_node = &Group{config: gc.config}
-		_spec = sqlgraph.NewCreateSpec(group.Table, sqlgraph.NewFieldSpec(group.FieldID, field.TypeInt))
+		_spec = sqlgraph.NewCreateSpec(entgroup.Table, sqlgraph.NewFieldSpec(entgroup.FieldID, field.TypeInt))
 	)
 	_spec.OnConflict = gc.conflict
-	if value, ok := gc.mutation.Path(); ok {
-		_spec.SetField(group.FieldPath, field.TypeString, value)
-		_node.Path = value
-	}
 	if value, ok := gc.mutation.Name(); ok {
-		_spec.SetField(group.FieldName, field.TypeString, value)
+		_spec.SetField(entgroup.FieldName, field.TypeString, value)
 		_node.Name = value
 	}
-	if value, ok := gc.mutation.Description(); ok {
-		_spec.SetField(group.FieldDescription, field.TypeString, value)
-		_node.Description = value
+	if value, ok := gc.mutation.ShortName(); ok {
+		_spec.SetField(entgroup.FieldShortName, field.TypeString, value)
+		_node.ShortName = value
 	}
-	if value, ok := gc.mutation.GroupType(); ok {
-		_spec.SetField(group.FieldGroupType, field.TypeEnum, value)
-		_node.GroupType = value
+	if value, ok := gc.mutation.Description(); ok {
+		_spec.SetField(entgroup.FieldDescription, field.TypeString, value)
+		_node.Description = value
 	}
 	if nodes := gc.mutation.UsersIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2M,
 			Inverse: false,
-			Table:   group.UsersTable,
-			Columns: group.UsersPrimaryKey,
+			Table:   entgroup.UsersTable,
+			Columns: entgroup.UsersPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeInt),
@@ -248,8 +246,8 @@ func (gc *GroupCreate) createSpec() (*Group, *sqlgraph.CreateSpec) {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
-			Table:   group.EventsTable,
-			Columns: []string{group.EventsColumn},
+			Table:   entgroup.EventsTable,
+			Columns: []string{entgroup.EventsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(event.FieldID, field.TypeInt),
@@ -264,8 +262,8 @@ func (gc *GroupCreate) createSpec() (*Group, *sqlgraph.CreateSpec) {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
-			Table:   group.ForumPostsTable,
-			Columns: []string{group.ForumPostsColumn},
+			Table:   entgroup.ForumPostsTable,
+			Columns: []string{entgroup.ForumPostsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(forumpost.FieldID, field.TypeInt),
@@ -280,11 +278,27 @@ func (gc *GroupCreate) createSpec() (*Group, *sqlgraph.CreateSpec) {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
-			Table:   group.DeadlinesTable,
-			Columns: []string{group.DeadlinesColumn},
+			Table:   entgroup.DeadlinesTable,
+			Columns: []string{entgroup.DeadlinesColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(deadline.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := gc.mutation.InvitesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   entgroup.InvitesTable,
+			Columns: []string{entgroup.InvitesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(groupinvitelink.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -296,11 +310,11 @@ func (gc *GroupCreate) createSpec() (*Group, *sqlgraph.CreateSpec) {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
-			Table:   group.InstitutionTable,
-			Columns: []string{group.InstitutionColumn},
+			Table:   entgroup.InstitutionTable,
+			Columns: []string{entgroup.InstitutionColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(institution.FieldID, field.TypeInt),
+				IDSpec: sqlgraph.NewFieldSpec(entinstitution.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -316,7 +330,7 @@ func (gc *GroupCreate) createSpec() (*Group, *sqlgraph.CreateSpec) {
 // of the `INSERT` statement. For example:
 //
 //	client.Group.Create().
-//		SetPath(v).
+//		SetName(v).
 //		OnConflict(
 //			// Update the row with the new values
 //			// the was proposed for insertion.
@@ -325,7 +339,7 @@ func (gc *GroupCreate) createSpec() (*Group, *sqlgraph.CreateSpec) {
 //		// Override some of the fields with custom
 //		// update values.
 //		Update(func(u *ent.GroupUpsert) {
-//			SetPath(v+v).
+//			SetName(v+v).
 //		}).
 //		Exec(ctx)
 func (gc *GroupCreate) OnConflict(opts ...sql.ConflictOption) *GroupUpsertOne {
@@ -361,51 +375,39 @@ type (
 	}
 )
 
-// SetPath sets the "path" field.
-func (u *GroupUpsert) SetPath(v string) *GroupUpsert {
-	u.Set(group.FieldPath, v)
-	return u
-}
-
-// UpdatePath sets the "path" field to the value that was provided on create.
-func (u *GroupUpsert) UpdatePath() *GroupUpsert {
-	u.SetExcluded(group.FieldPath)
-	return u
-}
-
 // SetName sets the "name" field.
 func (u *GroupUpsert) SetName(v string) *GroupUpsert {
-	u.Set(group.FieldName, v)
+	u.Set(entgroup.FieldName, v)
 	return u
 }
 
 // UpdateName sets the "name" field to the value that was provided on create.
 func (u *GroupUpsert) UpdateName() *GroupUpsert {
-	u.SetExcluded(group.FieldName)
+	u.SetExcluded(entgroup.FieldName)
+	return u
+}
+
+// SetShortName sets the "short_name" field.
+func (u *GroupUpsert) SetShortName(v string) *GroupUpsert {
+	u.Set(entgroup.FieldShortName, v)
+	return u
+}
+
+// UpdateShortName sets the "short_name" field to the value that was provided on create.
+func (u *GroupUpsert) UpdateShortName() *GroupUpsert {
+	u.SetExcluded(entgroup.FieldShortName)
 	return u
 }
 
 // SetDescription sets the "description" field.
 func (u *GroupUpsert) SetDescription(v string) *GroupUpsert {
-	u.Set(group.FieldDescription, v)
+	u.Set(entgroup.FieldDescription, v)
 	return u
 }
 
 // UpdateDescription sets the "description" field to the value that was provided on create.
 func (u *GroupUpsert) UpdateDescription() *GroupUpsert {
-	u.SetExcluded(group.FieldDescription)
-	return u
-}
-
-// SetGroupType sets the "group_type" field.
-func (u *GroupUpsert) SetGroupType(v group.GroupType) *GroupUpsert {
-	u.Set(group.FieldGroupType, v)
-	return u
-}
-
-// UpdateGroupType sets the "group_type" field to the value that was provided on create.
-func (u *GroupUpsert) UpdateGroupType() *GroupUpsert {
-	u.SetExcluded(group.FieldGroupType)
+	u.SetExcluded(entgroup.FieldDescription)
 	return u
 }
 
@@ -449,20 +451,6 @@ func (u *GroupUpsertOne) Update(set func(*GroupUpsert)) *GroupUpsertOne {
 	return u
 }
 
-// SetPath sets the "path" field.
-func (u *GroupUpsertOne) SetPath(v string) *GroupUpsertOne {
-	return u.Update(func(s *GroupUpsert) {
-		s.SetPath(v)
-	})
-}
-
-// UpdatePath sets the "path" field to the value that was provided on create.
-func (u *GroupUpsertOne) UpdatePath() *GroupUpsertOne {
-	return u.Update(func(s *GroupUpsert) {
-		s.UpdatePath()
-	})
-}
-
 // SetName sets the "name" field.
 func (u *GroupUpsertOne) SetName(v string) *GroupUpsertOne {
 	return u.Update(func(s *GroupUpsert) {
@@ -477,6 +465,20 @@ func (u *GroupUpsertOne) UpdateName() *GroupUpsertOne {
 	})
 }
 
+// SetShortName sets the "short_name" field.
+func (u *GroupUpsertOne) SetShortName(v string) *GroupUpsertOne {
+	return u.Update(func(s *GroupUpsert) {
+		s.SetShortName(v)
+	})
+}
+
+// UpdateShortName sets the "short_name" field to the value that was provided on create.
+func (u *GroupUpsertOne) UpdateShortName() *GroupUpsertOne {
+	return u.Update(func(s *GroupUpsert) {
+		s.UpdateShortName()
+	})
+}
+
 // SetDescription sets the "description" field.
 func (u *GroupUpsertOne) SetDescription(v string) *GroupUpsertOne {
 	return u.Update(func(s *GroupUpsert) {
@@ -488,20 +490,6 @@ func (u *GroupUpsertOne) SetDescription(v string) *GroupUpsertOne {
 func (u *GroupUpsertOne) UpdateDescription() *GroupUpsertOne {
 	return u.Update(func(s *GroupUpsert) {
 		s.UpdateDescription()
-	})
-}
-
-// SetGroupType sets the "group_type" field.
-func (u *GroupUpsertOne) SetGroupType(v group.GroupType) *GroupUpsertOne {
-	return u.Update(func(s *GroupUpsert) {
-		s.SetGroupType(v)
-	})
-}
-
-// UpdateGroupType sets the "group_type" field to the value that was provided on create.
-func (u *GroupUpsertOne) UpdateGroupType() *GroupUpsertOne {
-	return u.Update(func(s *GroupUpsert) {
-		s.UpdateGroupType()
 	})
 }
 
@@ -635,7 +623,7 @@ func (gcb *GroupCreateBulk) ExecX(ctx context.Context) {
 //		// Override some of the fields with custom
 //		// update values.
 //		Update(func(u *ent.GroupUpsert) {
-//			SetPath(v+v).
+//			SetName(v+v).
 //		}).
 //		Exec(ctx)
 func (gcb *GroupCreateBulk) OnConflict(opts ...sql.ConflictOption) *GroupUpsertBulk {
@@ -704,20 +692,6 @@ func (u *GroupUpsertBulk) Update(set func(*GroupUpsert)) *GroupUpsertBulk {
 	return u
 }
 
-// SetPath sets the "path" field.
-func (u *GroupUpsertBulk) SetPath(v string) *GroupUpsertBulk {
-	return u.Update(func(s *GroupUpsert) {
-		s.SetPath(v)
-	})
-}
-
-// UpdatePath sets the "path" field to the value that was provided on create.
-func (u *GroupUpsertBulk) UpdatePath() *GroupUpsertBulk {
-	return u.Update(func(s *GroupUpsert) {
-		s.UpdatePath()
-	})
-}
-
 // SetName sets the "name" field.
 func (u *GroupUpsertBulk) SetName(v string) *GroupUpsertBulk {
 	return u.Update(func(s *GroupUpsert) {
@@ -732,6 +706,20 @@ func (u *GroupUpsertBulk) UpdateName() *GroupUpsertBulk {
 	})
 }
 
+// SetShortName sets the "short_name" field.
+func (u *GroupUpsertBulk) SetShortName(v string) *GroupUpsertBulk {
+	return u.Update(func(s *GroupUpsert) {
+		s.SetShortName(v)
+	})
+}
+
+// UpdateShortName sets the "short_name" field to the value that was provided on create.
+func (u *GroupUpsertBulk) UpdateShortName() *GroupUpsertBulk {
+	return u.Update(func(s *GroupUpsert) {
+		s.UpdateShortName()
+	})
+}
+
 // SetDescription sets the "description" field.
 func (u *GroupUpsertBulk) SetDescription(v string) *GroupUpsertBulk {
 	return u.Update(func(s *GroupUpsert) {
@@ -743,20 +731,6 @@ func (u *GroupUpsertBulk) SetDescription(v string) *GroupUpsertBulk {
 func (u *GroupUpsertBulk) UpdateDescription() *GroupUpsertBulk {
 	return u.Update(func(s *GroupUpsert) {
 		s.UpdateDescription()
-	})
-}
-
-// SetGroupType sets the "group_type" field.
-func (u *GroupUpsertBulk) SetGroupType(v group.GroupType) *GroupUpsertBulk {
-	return u.Update(func(s *GroupUpsert) {
-		s.SetGroupType(v)
-	})
-}
-
-// UpdateGroupType sets the "group_type" field to the value that was provided on create.
-func (u *GroupUpsertBulk) UpdateGroupType() *GroupUpsertBulk {
-	return u.Update(func(s *GroupUpsert) {
-		s.UpdateGroupType()
 	})
 }
 

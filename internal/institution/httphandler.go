@@ -51,11 +51,9 @@ func (h httpHandler) ListInstitutions(w http.ResponseWriter, r *http.Request) {
 	l := make([]render.Renderer, len(insts))
 	for i, inst := range insts {
 		l[i] = payload.Institution{
-			ID:            inst.ID,
-			Name:          inst.Name,
-			ShortName:     inst.ShortName,
-			AdminDomain:   inst.AdminDomain,
-			StudentDomain: inst.StudentDomain,
+			ID:        inst.ID,
+			Name:      inst.Name,
+			ShortName: inst.ShortName,
 		}
 	}
 
@@ -74,18 +72,17 @@ func (h httpHandler) CreateInstitution(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	inst, err := h.service.CreateInstitution(r.Context(), p.Name, p.ShortName, p.AdminDomain, p.StudentDomain)
+	inst, err := h.service.CreateInstitution(r.Context(), p.Name, p.ShortName, p.Description)
 	if err != nil {
 		_ = render.Render(w, r, mapDomainErr(err))
 		return
 	}
 
 	_ = render.Render(w, r, payload.Institution{
-		ID:            inst.ID,
-		Name:          inst.Name,
-		ShortName:     inst.ShortName,
-		AdminDomain:   inst.AdminDomain,
-		StudentDomain: inst.StudentDomain,
+		ID:          inst.ID,
+		Name:        inst.Name,
+		ShortName:   inst.ShortName,
+		Description: inst.Description,
 	})
 }
 

@@ -14,9 +14,10 @@ import (
 	"github.com/np-inprove/server/internal/ent/deadline"
 	"github.com/np-inprove/server/internal/ent/event"
 	"github.com/np-inprove/server/internal/ent/forumpost"
-	"github.com/np-inprove/server/internal/ent/group"
+	entgroup "github.com/np-inprove/server/internal/ent/group"
+	"github.com/np-inprove/server/internal/ent/groupinvitelink"
 	"github.com/np-inprove/server/internal/ent/groupuser"
-	"github.com/np-inprove/server/internal/ent/institution"
+	entinstitution "github.com/np-inprove/server/internal/ent/institution"
 	"github.com/np-inprove/server/internal/ent/predicate"
 	"github.com/np-inprove/server/internal/ent/user"
 )
@@ -25,13 +26,14 @@ import (
 type GroupQuery struct {
 	config
 	ctx             *QueryContext
-	order           []group.OrderOption
+	order           []entgroup.OrderOption
 	inters          []Interceptor
 	predicates      []predicate.Group
 	withUsers       *UserQuery
 	withEvents      *EventQuery
 	withForumPosts  *ForumPostQuery
 	withDeadlines   *DeadlineQuery
+	withInvites     *GroupInviteLinkQuery
 	withInstitution *InstitutionQuery
 	withGroupUsers  *GroupUserQuery
 	withFKs         bool
@@ -66,7 +68,7 @@ func (gq *GroupQuery) Unique(unique bool) *GroupQuery {
 }
 
 // Order specifies how the records should be ordered.
-func (gq *GroupQuery) Order(o ...group.OrderOption) *GroupQuery {
+func (gq *GroupQuery) Order(o ...entgroup.OrderOption) *GroupQuery {
 	gq.order = append(gq.order, o...)
 	return gq
 }
@@ -83,9 +85,9 @@ func (gq *GroupQuery) QueryUsers() *UserQuery {
 			return nil, err
 		}
 		step := sqlgraph.NewStep(
-			sqlgraph.From(group.Table, group.FieldID, selector),
+			sqlgraph.From(entgroup.Table, entgroup.FieldID, selector),
 			sqlgraph.To(user.Table, user.FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, false, group.UsersTable, group.UsersPrimaryKey...),
+			sqlgraph.Edge(sqlgraph.M2M, false, entgroup.UsersTable, entgroup.UsersPrimaryKey...),
 		)
 		fromU = sqlgraph.SetNeighbors(gq.driver.Dialect(), step)
 		return fromU, nil
@@ -105,9 +107,9 @@ func (gq *GroupQuery) QueryEvents() *EventQuery {
 			return nil, err
 		}
 		step := sqlgraph.NewStep(
-			sqlgraph.From(group.Table, group.FieldID, selector),
+			sqlgraph.From(entgroup.Table, entgroup.FieldID, selector),
 			sqlgraph.To(event.Table, event.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, group.EventsTable, group.EventsColumn),
+			sqlgraph.Edge(sqlgraph.O2M, false, entgroup.EventsTable, entgroup.EventsColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(gq.driver.Dialect(), step)
 		return fromU, nil
@@ -127,9 +129,9 @@ func (gq *GroupQuery) QueryForumPosts() *ForumPostQuery {
 			return nil, err
 		}
 		step := sqlgraph.NewStep(
-			sqlgraph.From(group.Table, group.FieldID, selector),
+			sqlgraph.From(entgroup.Table, entgroup.FieldID, selector),
 			sqlgraph.To(forumpost.Table, forumpost.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, group.ForumPostsTable, group.ForumPostsColumn),
+			sqlgraph.Edge(sqlgraph.O2M, false, entgroup.ForumPostsTable, entgroup.ForumPostsColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(gq.driver.Dialect(), step)
 		return fromU, nil
@@ -149,9 +151,31 @@ func (gq *GroupQuery) QueryDeadlines() *DeadlineQuery {
 			return nil, err
 		}
 		step := sqlgraph.NewStep(
-			sqlgraph.From(group.Table, group.FieldID, selector),
+			sqlgraph.From(entgroup.Table, entgroup.FieldID, selector),
 			sqlgraph.To(deadline.Table, deadline.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, group.DeadlinesTable, group.DeadlinesColumn),
+			sqlgraph.Edge(sqlgraph.O2M, false, entgroup.DeadlinesTable, entgroup.DeadlinesColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(gq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryInvites chains the current query on the "invites" edge.
+func (gq *GroupQuery) QueryInvites() *GroupInviteLinkQuery {
+	query := (&GroupInviteLinkClient{config: gq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := gq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := gq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(entgroup.Table, entgroup.FieldID, selector),
+			sqlgraph.To(groupinvitelink.Table, groupinvitelink.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, entgroup.InvitesTable, entgroup.InvitesColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(gq.driver.Dialect(), step)
 		return fromU, nil
@@ -171,9 +195,9 @@ func (gq *GroupQuery) QueryInstitution() *InstitutionQuery {
 			return nil, err
 		}
 		step := sqlgraph.NewStep(
-			sqlgraph.From(group.Table, group.FieldID, selector),
-			sqlgraph.To(institution.Table, institution.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, group.InstitutionTable, group.InstitutionColumn),
+			sqlgraph.From(entgroup.Table, entgroup.FieldID, selector),
+			sqlgraph.To(entinstitution.Table, entinstitution.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, entgroup.InstitutionTable, entgroup.InstitutionColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(gq.driver.Dialect(), step)
 		return fromU, nil
@@ -193,9 +217,9 @@ func (gq *GroupQuery) QueryGroupUsers() *GroupUserQuery {
 			return nil, err
 		}
 		step := sqlgraph.NewStep(
-			sqlgraph.From(group.Table, group.FieldID, selector),
+			sqlgraph.From(entgroup.Table, entgroup.FieldID, selector),
 			sqlgraph.To(groupuser.Table, groupuser.GroupColumn),
-			sqlgraph.Edge(sqlgraph.O2M, true, group.GroupUsersTable, group.GroupUsersColumn),
+			sqlgraph.Edge(sqlgraph.O2M, true, entgroup.GroupUsersTable, entgroup.GroupUsersColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(gq.driver.Dialect(), step)
 		return fromU, nil
@@ -211,7 +235,7 @@ func (gq *GroupQuery) First(ctx context.Context) (*Group, error) {
 		return nil, err
 	}
 	if len(nodes) == 0 {
-		return nil, &NotFoundError{group.Label}
+		return nil, &NotFoundError{entgroup.Label}
 	}
 	return nodes[0], nil
 }
@@ -233,7 +257,7 @@ func (gq *GroupQuery) FirstID(ctx context.Context) (id int, err error) {
 		return
 	}
 	if len(ids) == 0 {
-		err = &NotFoundError{group.Label}
+		err = &NotFoundError{entgroup.Label}
 		return
 	}
 	return ids[0], nil
@@ -260,9 +284,9 @@ func (gq *GroupQuery) Only(ctx context.Context) (*Group, error) {
 	case 1:
 		return nodes[0], nil
 	case 0:
-		return nil, &NotFoundError{group.Label}
+		return nil, &NotFoundError{entgroup.Label}
 	default:
-		return nil, &NotSingularError{group.Label}
+		return nil, &NotSingularError{entgroup.Label}
 	}
 }
 
@@ -287,9 +311,9 @@ func (gq *GroupQuery) OnlyID(ctx context.Context) (id int, err error) {
 	case 1:
 		id = ids[0]
 	case 0:
-		err = &NotFoundError{group.Label}
+		err = &NotFoundError{entgroup.Label}
 	default:
-		err = &NotSingularError{group.Label}
+		err = &NotSingularError{entgroup.Label}
 	}
 	return
 }
@@ -328,7 +352,7 @@ func (gq *GroupQuery) IDs(ctx context.Context) (ids []int, err error) {
 		gq.Unique(true)
 	}
 	ctx = setContextOp(ctx, gq.ctx, "IDs")
-	if err = gq.Select(group.FieldID).Scan(ctx, &ids); err != nil {
+	if err = gq.Select(entgroup.FieldID).Scan(ctx, &ids); err != nil {
 		return nil, err
 	}
 	return ids, nil
@@ -392,13 +416,14 @@ func (gq *GroupQuery) Clone() *GroupQuery {
 	return &GroupQuery{
 		config:          gq.config,
 		ctx:             gq.ctx.Clone(),
-		order:           append([]group.OrderOption{}, gq.order...),
+		order:           append([]entgroup.OrderOption{}, gq.order...),
 		inters:          append([]Interceptor{}, gq.inters...),
 		predicates:      append([]predicate.Group{}, gq.predicates...),
 		withUsers:       gq.withUsers.Clone(),
 		withEvents:      gq.withEvents.Clone(),
 		withForumPosts:  gq.withForumPosts.Clone(),
 		withDeadlines:   gq.withDeadlines.Clone(),
+		withInvites:     gq.withInvites.Clone(),
 		withInstitution: gq.withInstitution.Clone(),
 		withGroupUsers:  gq.withGroupUsers.Clone(),
 		// clone intermediate query.
@@ -451,6 +476,17 @@ func (gq *GroupQuery) WithDeadlines(opts ...func(*DeadlineQuery)) *GroupQuery {
 	return gq
 }
 
+// WithInvites tells the query-builder to eager-load the nodes that are connected to
+// the "invites" edge. The optional arguments are used to configure the query builder of the edge.
+func (gq *GroupQuery) WithInvites(opts ...func(*GroupInviteLinkQuery)) *GroupQuery {
+	query := (&GroupInviteLinkClient{config: gq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	gq.withInvites = query
+	return gq
+}
+
 // WithInstitution tells the query-builder to eager-load the nodes that are connected to
 // the "institution" edge. The optional arguments are used to configure the query builder of the edge.
 func (gq *GroupQuery) WithInstitution(opts ...func(*InstitutionQuery)) *GroupQuery {
@@ -479,19 +515,19 @@ func (gq *GroupQuery) WithGroupUsers(opts ...func(*GroupUserQuery)) *GroupQuery 
 // Example:
 //
 //	var v []struct {
-//		Path string `json:"path,omitempty"`
+//		Name string `json:"name,omitempty"`
 //		Count int `json:"count,omitempty"`
 //	}
 //
 //	client.Group.Query().
-//		GroupBy(group.FieldPath).
+//		GroupBy(entgroup.FieldName).
 //		Aggregate(ent.Count()).
 //		Scan(ctx, &v)
 func (gq *GroupQuery) GroupBy(field string, fields ...string) *GroupGroupBy {
 	gq.ctx.Fields = append([]string{field}, fields...)
 	grbuild := &GroupGroupBy{build: gq}
 	grbuild.flds = &gq.ctx.Fields
-	grbuild.label = group.Label
+	grbuild.label = entgroup.Label
 	grbuild.scan = grbuild.Scan
 	return grbuild
 }
@@ -502,16 +538,16 @@ func (gq *GroupQuery) GroupBy(field string, fields ...string) *GroupGroupBy {
 // Example:
 //
 //	var v []struct {
-//		Path string `json:"path,omitempty"`
+//		Name string `json:"name,omitempty"`
 //	}
 //
 //	client.Group.Query().
-//		Select(group.FieldPath).
+//		Select(entgroup.FieldName).
 //		Scan(ctx, &v)
 func (gq *GroupQuery) Select(fields ...string) *GroupSelect {
 	gq.ctx.Fields = append(gq.ctx.Fields, fields...)
 	sbuild := &GroupSelect{GroupQuery: gq}
-	sbuild.label = group.Label
+	sbuild.label = entgroup.Label
 	sbuild.flds, sbuild.scan = &gq.ctx.Fields, sbuild.Scan
 	return sbuild
 }
@@ -533,7 +569,7 @@ func (gq *GroupQuery) prepareQuery(ctx context.Context) error {
 		}
 	}
 	for _, f := range gq.ctx.Fields {
-		if !group.ValidColumn(f) {
+		if !entgroup.ValidColumn(f) {
 			return &ValidationError{Name: f, err: fmt.Errorf("ent: invalid field %q for query", f)}
 		}
 	}
@@ -552,11 +588,12 @@ func (gq *GroupQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Group,
 		nodes       = []*Group{}
 		withFKs     = gq.withFKs
 		_spec       = gq.querySpec()
-		loadedTypes = [6]bool{
+		loadedTypes = [7]bool{
 			gq.withUsers != nil,
 			gq.withEvents != nil,
 			gq.withForumPosts != nil,
 			gq.withDeadlines != nil,
+			gq.withInvites != nil,
 			gq.withInstitution != nil,
 			gq.withGroupUsers != nil,
 		}
@@ -565,7 +602,7 @@ func (gq *GroupQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Group,
 		withFKs = true
 	}
 	if withFKs {
-		_spec.Node.Columns = append(_spec.Node.Columns, group.ForeignKeys...)
+		_spec.Node.Columns = append(_spec.Node.Columns, entgroup.ForeignKeys...)
 	}
 	_spec.ScanValues = func(columns []string) ([]any, error) {
 		return (*Group).scanValues(nil, columns)
@@ -613,6 +650,13 @@ func (gq *GroupQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Group,
 			return nil, err
 		}
 	}
+	if query := gq.withInvites; query != nil {
+		if err := gq.loadInvites(ctx, query, nodes,
+			func(n *Group) { n.Edges.Invites = []*GroupInviteLink{} },
+			func(n *Group, e *GroupInviteLink) { n.Edges.Invites = append(n.Edges.Invites, e) }); err != nil {
+			return nil, err
+		}
+	}
 	if query := gq.withInstitution; query != nil {
 		if err := gq.loadInstitution(ctx, query, nodes, nil,
 			func(n *Group, e *Institution) { n.Edges.Institution = e }); err != nil {
@@ -641,11 +685,11 @@ func (gq *GroupQuery) loadUsers(ctx context.Context, query *UserQuery, nodes []*
 		}
 	}
 	query.Where(func(s *sql.Selector) {
-		joinT := sql.Table(group.UsersTable)
-		s.Join(joinT).On(s.C(user.FieldID), joinT.C(group.UsersPrimaryKey[1]))
-		s.Where(sql.InValues(joinT.C(group.UsersPrimaryKey[0]), edgeIDs...))
+		joinT := sql.Table(entgroup.UsersTable)
+		s.Join(joinT).On(s.C(user.FieldID), joinT.C(entgroup.UsersPrimaryKey[1]))
+		s.Where(sql.InValues(joinT.C(entgroup.UsersPrimaryKey[0]), edgeIDs...))
 		columns := s.SelectedColumns()
-		s.Select(joinT.C(group.UsersPrimaryKey[0]))
+		s.Select(joinT.C(entgroup.UsersPrimaryKey[0]))
 		s.AppendSelect(columns...)
 		s.SetDistinct(false)
 	})
@@ -702,7 +746,7 @@ func (gq *GroupQuery) loadEvents(ctx context.Context, query *EventQuery, nodes [
 	}
 	query.withFKs = true
 	query.Where(predicate.Event(func(s *sql.Selector) {
-		s.Where(sql.InValues(s.C(group.EventsColumn), fks...))
+		s.Where(sql.InValues(s.C(entgroup.EventsColumn), fks...))
 	}))
 	neighbors, err := query.All(ctx)
 	if err != nil {
@@ -733,7 +777,7 @@ func (gq *GroupQuery) loadForumPosts(ctx context.Context, query *ForumPostQuery,
 	}
 	query.withFKs = true
 	query.Where(predicate.ForumPost(func(s *sql.Selector) {
-		s.Where(sql.InValues(s.C(group.ForumPostsColumn), fks...))
+		s.Where(sql.InValues(s.C(entgroup.ForumPostsColumn), fks...))
 	}))
 	neighbors, err := query.All(ctx)
 	if err != nil {
@@ -764,7 +808,7 @@ func (gq *GroupQuery) loadDeadlines(ctx context.Context, query *DeadlineQuery, n
 	}
 	query.withFKs = true
 	query.Where(predicate.Deadline(func(s *sql.Selector) {
-		s.Where(sql.InValues(s.C(group.DeadlinesColumn), fks...))
+		s.Where(sql.InValues(s.C(entgroup.DeadlinesColumn), fks...))
 	}))
 	neighbors, err := query.All(ctx)
 	if err != nil {
@@ -778,6 +822,37 @@ func (gq *GroupQuery) loadDeadlines(ctx context.Context, query *DeadlineQuery, n
 		node, ok := nodeids[*fk]
 		if !ok {
 			return fmt.Errorf(`unexpected referenced foreign-key "group_deadlines" returned %v for node %v`, *fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
+func (gq *GroupQuery) loadInvites(ctx context.Context, query *GroupInviteLinkQuery, nodes []*Group, init func(*Group), assign func(*Group, *GroupInviteLink)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int]*Group)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	query.withFKs = true
+	query.Where(predicate.GroupInviteLink(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(entgroup.InvitesColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.group_invites
+		if fk == nil {
+			return fmt.Errorf(`foreign-key "group_invites" is nil for node %v`, n.ID)
+		}
+		node, ok := nodeids[*fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "group_invites" returned %v for node %v`, *fk, n.ID)
 		}
 		assign(node, n)
 	}
@@ -799,7 +874,7 @@ func (gq *GroupQuery) loadInstitution(ctx context.Context, query *InstitutionQue
 	if len(ids) == 0 {
 		return nil
 	}
-	query.Where(institution.IDIn(ids...))
+	query.Where(entinstitution.IDIn(ids...))
 	neighbors, err := query.All(ctx)
 	if err != nil {
 		return err
@@ -829,7 +904,7 @@ func (gq *GroupQuery) loadGroupUsers(ctx context.Context, query *GroupUserQuery,
 		query.ctx.AppendFieldOnce(groupuser.FieldGroupID)
 	}
 	query.Where(predicate.GroupUser(func(s *sql.Selector) {
-		s.Where(sql.InValues(s.C(group.GroupUsersColumn), fks...))
+		s.Where(sql.InValues(s.C(entgroup.GroupUsersColumn), fks...))
 	}))
 	neighbors, err := query.All(ctx)
 	if err != nil {
@@ -856,7 +931,7 @@ func (gq *GroupQuery) sqlCount(ctx context.Context) (int, error) {
 }
 
 func (gq *GroupQuery) querySpec() *sqlgraph.QuerySpec {
-	_spec := sqlgraph.NewQuerySpec(group.Table, group.Columns, sqlgraph.NewFieldSpec(group.FieldID, field.TypeInt))
+	_spec := sqlgraph.NewQuerySpec(entgroup.Table, entgroup.Columns, sqlgraph.NewFieldSpec(entgroup.FieldID, field.TypeInt))
 	_spec.From = gq.sql
 	if unique := gq.ctx.Unique; unique != nil {
 		_spec.Unique = *unique
@@ -865,9 +940,9 @@ func (gq *GroupQuery) querySpec() *sqlgraph.QuerySpec {
 	}
 	if fields := gq.ctx.Fields; len(fields) > 0 {
 		_spec.Node.Columns = make([]string, 0, len(fields))
-		_spec.Node.Columns = append(_spec.Node.Columns, group.FieldID)
+		_spec.Node.Columns = append(_spec.Node.Columns, entgroup.FieldID)
 		for i := range fields {
-			if fields[i] != group.FieldID {
+			if fields[i] != entgroup.FieldID {
 				_spec.Node.Columns = append(_spec.Node.Columns, fields[i])
 			}
 		}
@@ -897,10 +972,10 @@ func (gq *GroupQuery) querySpec() *sqlgraph.QuerySpec {
 
 func (gq *GroupQuery) sqlQuery(ctx context.Context) *sql.Selector {
 	builder := sql.Dialect(gq.driver.Dialect())
-	t1 := builder.Table(group.Table)
+	t1 := builder.Table(entgroup.Table)
 	columns := gq.ctx.Fields
 	if len(columns) == 0 {
-		columns = group.Columns
+		columns = entgroup.Columns
 	}
 	selector := builder.Select(t1.Columns(columns...)...).From(t1)
 	if gq.sql != nil {

@@ -1,17 +1,36 @@
 package group
 
-import (
-	"github.com/np-inprove/server/internal/ent/group"
-	"github.com/np-inprove/server/internal/entity"
-)
+import "errors"
 
-func TypeValidator(gt entity.GroupType) error {
-	return group.GroupTypeValidator(gt)
+type Role string
+
+func (Role) Values() (kinds []string) {
+	for _, s := range Roles {
+		kinds = append(kinds, string(s))
+	}
+	return
 }
+
+func (gr Role) Validate() error {
+	switch gr {
+	case RoleOwner, RoleEducator, RoleMember:
+		return nil
+	default:
+		return errors.New("institution role is not valid")
+	}
+}
+
+var (
+	Roles = []Role{RoleOwner, RoleEducator, RoleMember}
+
+	RoleOwner    Role = "owner"
+	RoleEducator Role = "educator"
+	RoleMember   Role = "member"
+)
 
 type Options struct {
 	Name        string
-	Path        string
+	ShortName   string
 	Description string
 }
 
@@ -23,9 +42,9 @@ func Name(n string) Option {
 	}
 }
 
-func Path(p string) Option {
+func ShortName(n string) Option {
 	return func(opts *Options) {
-		opts.Path = p
+		opts.ShortName = n
 	}
 }
 

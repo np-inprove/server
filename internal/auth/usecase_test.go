@@ -55,7 +55,7 @@ func (suite *UseCaseTestSuite) TestNewUseCase() {
 	tests := []struct {
 		name string
 		args args
-		want usecase
+		want useCase
 	}{
 		{
 			name: "New folder",
@@ -73,7 +73,7 @@ func (suite *UseCaseTestSuite) TestNewUseCase() {
 					return suite.privateKey
 				},
 			},
-			want: usecase{repo: new(mocks.MockRepository), cfg: new(config.Config), publicKey: suite.publicKey, privateKey: suite.privateKey},
+			want: useCase{repo: new(mocks.MockRepository), cfg: new(config.Config), publicKey: suite.publicKey, privateKey: suite.privateKey},
 		},
 	}
 

@@ -22,14 +22,8 @@ func (Institution) Fields() []ent.Field {
 			NotEmpty().
 			Unique().
 			Comment("Short name of the institution (example: np)"),
-		field.String("admin_domain").
-			NotEmpty().
-			Unique().
-			Comment("Email domain associated with admins of this institution"),
-		field.String("student_domain").
-			NotEmpty().
-			Unique().
-			Comment("Email domain associated with students of this institution"),
+		field.String("Description").
+			Comment("Description of the institution"),
 	}
 }
 
@@ -42,11 +36,14 @@ func (Institution) Edges() []ent.Edge {
 		edge.To("accessories", Accessory.Type).
 			Annotations(entsql.OnDelete(entsql.Cascade)).
 			Comment("Prizes (accessories) available to be redeemed by users of the institution"),
-		edge.To("departments", Department.Type).
-			Annotations(entsql.OnDelete(entsql.Cascade)).
-			Comment("Departments of the institution"),
 		edge.To("groups", Group.Type).
 			Annotations(entsql.OnDelete(entsql.Cascade)).
 			Comment("Groups under the institution"),
+		edge.To("invites", InstitutionInviteLink.Type).
+			Annotations(entsql.OnDelete(entsql.Cascade)).
+			Comment("Invite links for the institution"),
+		edge.To("users", User.Type).
+			Annotations(entsql.OnDelete(entsql.Cascade)).
+			Comment("Users under the institution"),
 	}
 }

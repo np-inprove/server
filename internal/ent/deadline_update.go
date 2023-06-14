@@ -12,7 +12,7 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/np-inprove/server/internal/ent/deadline"
-	"github.com/np-inprove/server/internal/ent/group"
+	entgroup "github.com/np-inprove/server/internal/ent/group"
 	"github.com/np-inprove/server/internal/ent/predicate"
 	"github.com/np-inprove/server/internal/ent/user"
 )
@@ -277,7 +277,7 @@ func (du *DeadlineUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Columns: []string{deadline.GroupColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(group.FieldID, field.TypeInt),
+				IDSpec: sqlgraph.NewFieldSpec(entgroup.FieldID, field.TypeInt),
 			},
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
@@ -290,7 +290,7 @@ func (du *DeadlineUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Columns: []string{deadline.GroupColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(group.FieldID, field.TypeInt),
+				IDSpec: sqlgraph.NewFieldSpec(entgroup.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -595,7 +595,7 @@ func (duo *DeadlineUpdateOne) sqlSave(ctx context.Context) (_node *Deadline, err
 			Columns: []string{deadline.GroupColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(group.FieldID, field.TypeInt),
+				IDSpec: sqlgraph.NewFieldSpec(entgroup.FieldID, field.TypeInt),
 			},
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
@@ -608,7 +608,7 @@ func (duo *DeadlineUpdateOne) sqlSave(ctx context.Context) (_node *Deadline, err
 			Columns: []string{deadline.GroupColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(group.FieldID, field.TypeInt),
+				IDSpec: sqlgraph.NewFieldSpec(entgroup.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

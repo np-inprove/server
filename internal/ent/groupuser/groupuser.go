@@ -7,6 +7,7 @@ import (
 
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
+	"github.com/np-inprove/server/internal/entity/group"
 )
 
 const (
@@ -31,7 +32,7 @@ const (
 	// GroupTable is the table that holds the group relation/edge.
 	GroupTable = "group_users"
 	// GroupInverseTable is the table name for the Group entity.
-	// It exists in this package in order to avoid circular dependency with the "group" package.
+	// It exists in this package in order to avoid circular dependency with the "entgroup" package.
 	GroupInverseTable = "groups"
 	// GroupColumn is the table column denoting the group relation/edge.
 	GroupColumn = "group_id"
@@ -61,23 +62,10 @@ func ValidColumn(column string) bool {
 	return false
 }
 
-// Role defines the type for the "role" enum field.
-type Role string
-
-// Role values.
-const (
-	RoleStudent  Role = "student"
-	RoleLecturer Role = "lecturer"
-)
-
-func (r Role) String() string {
-	return string(r)
-}
-
 // RoleValidator is a validator for the "role" field enum values. It is called by the builders before save.
-func RoleValidator(r Role) error {
+func RoleValidator(r group.Role) error {
 	switch r {
-	case RoleStudent, RoleLecturer:
+	case "owner", "educator", "member":
 		return nil
 	default:
 		return fmt.Errorf("groupuser: invalid enum value for role field: %q", r)

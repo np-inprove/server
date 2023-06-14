@@ -12,12 +12,13 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/np-inprove/server/internal/ent/deadline"
-	"github.com/np-inprove/server/internal/ent/department"
 	"github.com/np-inprove/server/internal/ent/forumpost"
-	"github.com/np-inprove/server/internal/ent/group"
+	entgroup "github.com/np-inprove/server/internal/ent/group"
+	entinstitution "github.com/np-inprove/server/internal/ent/institution"
 	"github.com/np-inprove/server/internal/ent/pet"
 	"github.com/np-inprove/server/internal/ent/redemption"
 	"github.com/np-inprove/server/internal/ent/user"
+	"github.com/np-inprove/server/internal/entity/institution"
 	"github.com/np-inprove/server/internal/hash"
 )
 
@@ -101,23 +102,21 @@ func (uc *UserCreate) SetGodMode(b bool) *UserCreate {
 	return uc
 }
 
-// SetDepartmentID sets the "department" edge to the Department entity by ID.
-func (uc *UserCreate) SetDepartmentID(id int) *UserCreate {
-	uc.mutation.SetDepartmentID(id)
+// SetRole sets the "role" field.
+func (uc *UserCreate) SetRole(i institution.Role) *UserCreate {
+	uc.mutation.SetRole(i)
 	return uc
 }
 
-// SetNillableDepartmentID sets the "department" edge to the Department entity by ID if the given value is not nil.
-func (uc *UserCreate) SetNillableDepartmentID(id *int) *UserCreate {
-	if id != nil {
-		uc = uc.SetDepartmentID(*id)
-	}
+// SetInstitutionID sets the "institution" edge to the Institution entity by ID.
+func (uc *UserCreate) SetInstitutionID(id int) *UserCreate {
+	uc.mutation.SetInstitutionID(id)
 	return uc
 }
 
-// SetDepartment sets the "department" edge to the Department entity.
-func (uc *UserCreate) SetDepartment(d *Department) *UserCreate {
-	return uc.SetDepartmentID(d.ID)
+// SetInstitution sets the "institution" edge to the Institution entity.
+func (uc *UserCreate) SetInstitution(i *Institution) *UserCreate {
+	return uc.SetInstitutionID(i.ID)
 }
 
 // AddRedemptionIDs adds the "redemptions" edge to the Redemption entity by IDs.
@@ -318,6 +317,17 @@ func (uc *UserCreate) check() error {
 	if _, ok := uc.mutation.GodMode(); !ok {
 		return &ValidationError{Name: "god_mode", err: errors.New(`ent: missing required field "User.god_mode"`)}
 	}
+	if _, ok := uc.mutation.Role(); !ok {
+		return &ValidationError{Name: "role", err: errors.New(`ent: missing required field "User.role"`)}
+	}
+	if v, ok := uc.mutation.Role(); ok {
+		if err := user.RoleValidator(v); err != nil {
+			return &ValidationError{Name: "role", err: fmt.Errorf(`ent: validator failed for field "User.role": %w`, err)}
+		}
+	}
+	if _, ok := uc.mutation.InstitutionID(); !ok {
+		return &ValidationError{Name: "institution", err: errors.New(`ent: missing required edge "User.institution"`)}
+	}
 	return nil
 }
 
@@ -377,21 +387,25 @@ func (uc *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 		_spec.SetField(user.FieldGodMode, field.TypeBool, value)
 		_node.GodMode = value
 	}
-	if nodes := uc.mutation.DepartmentIDs(); len(nodes) > 0 {
+	if value, ok := uc.mutation.Role(); ok {
+		_spec.SetField(user.FieldRole, field.TypeEnum, value)
+		_node.Role = value
+	}
+	if nodes := uc.mutation.InstitutionIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
-			Table:   user.DepartmentTable,
-			Columns: []string{user.DepartmentColumn},
+			Table:   user.InstitutionTable,
+			Columns: []string{user.InstitutionColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(department.FieldID, field.TypeInt),
+				IDSpec: sqlgraph.NewFieldSpec(entinstitution.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
-		_node.department_users = &nodes[0]
+		_node.institution_users = &nodes[0]
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	if nodes := uc.mutation.RedemptionsIDs(); len(nodes) > 0 {
@@ -454,7 +468,7 @@ func (uc *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 			Columns: user.GroupsPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(group.FieldID, field.TypeInt),
+				IDSpec: sqlgraph.NewFieldSpec(entgroup.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -676,6 +690,18 @@ func (u *UserUpsert) UpdateGodMode() *UserUpsert {
 	return u
 }
 
+// SetRole sets the "role" field.
+func (u *UserUpsert) SetRole(v institution.Role) *UserUpsert {
+	u.Set(user.FieldRole, v)
+	return u
+}
+
+// UpdateRole sets the "role" field to the value that was provided on create.
+func (u *UserUpsert) UpdateRole() *UserUpsert {
+	u.SetExcluded(user.FieldRole)
+	return u
+}
+
 // UpdateNewValues updates the mutable fields using the new values that were set on create.
 // Using this option is equivalent to using:
 //
@@ -846,6 +872,20 @@ func (u *UserUpsertOne) SetGodMode(v bool) *UserUpsertOne {
 func (u *UserUpsertOne) UpdateGodMode() *UserUpsertOne {
 	return u.Update(func(s *UserUpsert) {
 		s.UpdateGodMode()
+	})
+}
+
+// SetRole sets the "role" field.
+func (u *UserUpsertOne) SetRole(v institution.Role) *UserUpsertOne {
+	return u.Update(func(s *UserUpsert) {
+		s.SetRole(v)
+	})
+}
+
+// UpdateRole sets the "role" field to the value that was provided on create.
+func (u *UserUpsertOne) UpdateRole() *UserUpsertOne {
+	return u.Update(func(s *UserUpsert) {
+		s.UpdateRole()
 	})
 }
 
@@ -1179,6 +1219,20 @@ func (u *UserUpsertBulk) SetGodMode(v bool) *UserUpsertBulk {
 func (u *UserUpsertBulk) UpdateGodMode() *UserUpsertBulk {
 	return u.Update(func(s *UserUpsert) {
 		s.UpdateGodMode()
+	})
+}
+
+// SetRole sets the "role" field.
+func (u *UserUpsertBulk) SetRole(v institution.Role) *UserUpsertBulk {
+	return u.Update(func(s *UserUpsert) {
+		s.SetRole(v)
+	})
+}
+
+// UpdateRole sets the "role" field to the value that was provided on create.
+func (u *UserUpsertBulk) UpdateRole() *UserUpsertBulk {
+	return u.Update(func(s *UserUpsert) {
+		s.UpdateRole()
 	})
 }
 

@@ -12,7 +12,7 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/np-inprove/server/internal/ent/forumpost"
-	"github.com/np-inprove/server/internal/ent/group"
+	entgroup "github.com/np-inprove/server/internal/ent/group"
 	"github.com/np-inprove/server/internal/ent/predicate"
 	"github.com/np-inprove/server/internal/ent/reaction"
 	"github.com/np-inprove/server/internal/ent/user"
@@ -103,7 +103,7 @@ func (fpq *ForumPostQuery) QueryGroup() *GroupQuery {
 		}
 		step := sqlgraph.NewStep(
 			sqlgraph.From(forumpost.Table, forumpost.FieldID, selector),
-			sqlgraph.To(group.Table, group.FieldID),
+			sqlgraph.To(entgroup.Table, entgroup.FieldID),
 			sqlgraph.Edge(sqlgraph.M2O, true, forumpost.GroupTable, forumpost.GroupColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(fpq.driver.Dialect(), step)
@@ -672,7 +672,7 @@ func (fpq *ForumPostQuery) loadGroup(ctx context.Context, query *GroupQuery, nod
 	if len(ids) == 0 {
 		return nil
 	}
-	query.Where(group.IDIn(ids...))
+	query.Where(entgroup.IDIn(ids...))
 	neighbors, err := query.All(ctx)
 	if err != nil {
 		return err

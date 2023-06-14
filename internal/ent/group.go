@@ -8,8 +8,8 @@ import (
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
-	"github.com/np-inprove/server/internal/ent/group"
-	"github.com/np-inprove/server/internal/ent/institution"
+	entgroup "github.com/np-inprove/server/internal/ent/group"
+	entinstitution "github.com/np-inprove/server/internal/ent/institution"
 )
 
 // Group is the model entity for the Group schema.
@@ -17,14 +17,12 @@ type Group struct {
 	config `json:"-"`
 	// ID of the ent.
 	ID int `json:"id,omitempty"`
-	// URL path of the group (example: csf01-2023)
-	Path string `json:"path,omitempty"`
 	// Name of the group (example: CSF01 2023)
 	Name string `json:"name,omitempty"`
+	// Short nameof the group (example: csf01-2023)
+	ShortName string `json:"short_name,omitempty"`
 	// Description of the group
 	Description string `json:"description,omitempty"`
-	// GroupType holds the value of the "group_type" field.
-	GroupType group.GroupType `json:"group_type,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the GroupQuery when eager-loading is set.
 	Edges              GroupEdges `json:"edges"`
@@ -42,13 +40,15 @@ type GroupEdges struct {
 	ForumPosts []*ForumPost `json:"forum_posts,omitempty"`
 	// Deadlines created by users from the group
 	Deadlines []*Deadline `json:"deadlines,omitempty"`
+	// Invites for the group
+	Invites []*GroupInviteLink `json:"invites,omitempty"`
 	// Institution owning this group
 	Institution *Institution `json:"institution,omitempty"`
 	// GroupUsers holds the value of the group_users edge.
 	GroupUsers []*GroupUser `json:"group_users,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [6]bool
+	loadedTypes [7]bool
 }
 
 // UsersOrErr returns the Users value or an error if the edge
@@ -87,13 +87,22 @@ func (e GroupEdges) DeadlinesOrErr() ([]*Deadline, error) {
 	return nil, &NotLoadedError{edge: "deadlines"}
 }
 
+// InvitesOrErr returns the Invites value or an error if the edge
+// was not loaded in eager-loading.
+func (e GroupEdges) InvitesOrErr() ([]*GroupInviteLink, error) {
+	if e.loadedTypes[4] {
+		return e.Invites, nil
+	}
+	return nil, &NotLoadedError{edge: "invites"}
+}
+
 // InstitutionOrErr returns the Institution value or an error if the edge
 // was not loaded in eager-loading, or loaded but was not found.
 func (e GroupEdges) InstitutionOrErr() (*Institution, error) {
-	if e.loadedTypes[4] {
+	if e.loadedTypes[5] {
 		if e.Institution == nil {
 			// Edge was loaded but was not found.
-			return nil, &NotFoundError{label: institution.Label}
+			return nil, &NotFoundError{label: entinstitution.Label}
 		}
 		return e.Institution, nil
 	}
@@ -103,7 +112,7 @@ func (e GroupEdges) InstitutionOrErr() (*Institution, error) {
 // GroupUsersOrErr returns the GroupUsers value or an error if the edge
 // was not loaded in eager-loading.
 func (e GroupEdges) GroupUsersOrErr() ([]*GroupUser, error) {
-	if e.loadedTypes[5] {
+	if e.loadedTypes[6] {
 		return e.GroupUsers, nil
 	}
 	return nil, &NotLoadedError{edge: "group_users"}
@@ -114,11 +123,11 @@ func (*Group) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case group.FieldID:
+		case entgroup.FieldID:
 			values[i] = new(sql.NullInt64)
-		case group.FieldPath, group.FieldName, group.FieldDescription, group.FieldGroupType:
+		case entgroup.FieldName, entgroup.FieldShortName, entgroup.FieldDescription:
 			values[i] = new(sql.NullString)
-		case group.ForeignKeys[0]: // institution_groups
+		case entgroup.ForeignKeys[0]: // institution_groups
 			values[i] = new(sql.NullInt64)
 		default:
 			values[i] = new(sql.UnknownType)
@@ -135,37 +144,31 @@ func (gr *Group) assignValues(columns []string, values []any) error {
 	}
 	for i := range columns {
 		switch columns[i] {
-		case group.FieldID:
+		case entgroup.FieldID:
 			value, ok := values[i].(*sql.NullInt64)
 			if !ok {
 				return fmt.Errorf("unexpected type %T for field id", value)
 			}
 			gr.ID = int(value.Int64)
-		case group.FieldPath:
-			if value, ok := values[i].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field path", values[i])
-			} else if value.Valid {
-				gr.Path = value.String
-			}
-		case group.FieldName:
+		case entgroup.FieldName:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field name", values[i])
 			} else if value.Valid {
 				gr.Name = value.String
 			}
-		case group.FieldDescription:
+		case entgroup.FieldShortName:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field short_name", values[i])
+			} else if value.Valid {
+				gr.ShortName = value.String
+			}
+		case entgroup.FieldDescription:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field description", values[i])
 			} else if value.Valid {
 				gr.Description = value.String
 			}
-		case group.FieldGroupType:
-			if value, ok := values[i].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field group_type", values[i])
-			} else if value.Valid {
-				gr.GroupType = group.GroupType(value.String)
-			}
-		case group.ForeignKeys[0]:
+		case entgroup.ForeignKeys[0]:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for edge-field institution_groups", value)
 			} else if value.Valid {
@@ -205,6 +208,11 @@ func (gr *Group) QueryDeadlines() *DeadlineQuery {
 	return NewGroupClient(gr.config).QueryDeadlines(gr)
 }
 
+// QueryInvites queries the "invites" edge of the Group entity.
+func (gr *Group) QueryInvites() *GroupInviteLinkQuery {
+	return NewGroupClient(gr.config).QueryInvites(gr)
+}
+
 // QueryInstitution queries the "institution" edge of the Group entity.
 func (gr *Group) QueryInstitution() *InstitutionQuery {
 	return NewGroupClient(gr.config).QueryInstitution(gr)
@@ -238,17 +246,14 @@ func (gr *Group) String() string {
 	var builder strings.Builder
 	builder.WriteString("Group(")
 	builder.WriteString(fmt.Sprintf("id=%v, ", gr.ID))
-	builder.WriteString("path=")
-	builder.WriteString(gr.Path)
-	builder.WriteString(", ")
 	builder.WriteString("name=")
 	builder.WriteString(gr.Name)
 	builder.WriteString(", ")
+	builder.WriteString("short_name=")
+	builder.WriteString(gr.ShortName)
+	builder.WriteString(", ")
 	builder.WriteString("description=")
 	builder.WriteString(gr.Description)
-	builder.WriteString(", ")
-	builder.WriteString("group_type=")
-	builder.WriteString(fmt.Sprintf("%v", gr.GroupType))
 	builder.WriteByte(')')
 	return builder.String()
 }

@@ -5,11 +5,12 @@ package ent
 import (
 	"github.com/np-inprove/server/internal/ent/accessory"
 	"github.com/np-inprove/server/internal/ent/deadline"
-	"github.com/np-inprove/server/internal/ent/department"
 	"github.com/np-inprove/server/internal/ent/event"
 	"github.com/np-inprove/server/internal/ent/forumpost"
-	"github.com/np-inprove/server/internal/ent/group"
-	"github.com/np-inprove/server/internal/ent/institution"
+	entgroup "github.com/np-inprove/server/internal/ent/group"
+	"github.com/np-inprove/server/internal/ent/groupinvitelink"
+	entinstitution "github.com/np-inprove/server/internal/ent/institution"
+	"github.com/np-inprove/server/internal/ent/institutioninvitelink"
 	"github.com/np-inprove/server/internal/ent/jwtrevocation"
 	"github.com/np-inprove/server/internal/ent/milestone"
 	"github.com/np-inprove/server/internal/ent/reaction"
@@ -43,16 +44,6 @@ func init() {
 	deadlineDescName := deadlineFields[0].Descriptor()
 	// deadline.NameValidator is a validator for the "name" field. It is called by the builders before save.
 	deadline.NameValidator = deadlineDescName.Validators[0].(func(string) error)
-	departmentFields := schema.Department{}.Fields()
-	_ = departmentFields
-	// departmentDescName is the schema descriptor for name field.
-	departmentDescName := departmentFields[0].Descriptor()
-	// department.NameValidator is a validator for the "name" field. It is called by the builders before save.
-	department.NameValidator = departmentDescName.Validators[0].(func(string) error)
-	// departmentDescShortName is the schema descriptor for short_name field.
-	departmentDescShortName := departmentFields[1].Descriptor()
-	// department.ShortNameValidator is a validator for the "short_name" field. It is called by the builders before save.
-	department.ShortNameValidator = departmentDescShortName.Validators[0].(func(string) error)
 	eventFields := schema.Event{}.Fields()
 	_ = eventFields
 	// eventDescName is the schema descriptor for name field.
@@ -69,34 +60,44 @@ func init() {
 	forumpostDescContent := forumpostFields[1].Descriptor()
 	// forumpost.ContentValidator is a validator for the "content" field. It is called by the builders before save.
 	forumpost.ContentValidator = forumpostDescContent.Validators[0].(func(string) error)
-	groupFields := schema.Group{}.Fields()
-	_ = groupFields
-	// groupDescPath is the schema descriptor for path field.
-	groupDescPath := groupFields[0].Descriptor()
-	// group.PathValidator is a validator for the "path" field. It is called by the builders before save.
-	group.PathValidator = groupDescPath.Validators[0].(func(string) error)
-	// groupDescName is the schema descriptor for name field.
-	groupDescName := groupFields[1].Descriptor()
-	// group.NameValidator is a validator for the "name" field. It is called by the builders before save.
-	group.NameValidator = groupDescName.Validators[0].(func(string) error)
-	institutionFields := schema.Institution{}.Fields()
-	_ = institutionFields
-	// institutionDescName is the schema descriptor for name field.
-	institutionDescName := institutionFields[0].Descriptor()
-	// institution.NameValidator is a validator for the "name" field. It is called by the builders before save.
-	institution.NameValidator = institutionDescName.Validators[0].(func(string) error)
-	// institutionDescShortName is the schema descriptor for short_name field.
-	institutionDescShortName := institutionFields[1].Descriptor()
-	// institution.ShortNameValidator is a validator for the "short_name" field. It is called by the builders before save.
-	institution.ShortNameValidator = institutionDescShortName.Validators[0].(func(string) error)
-	// institutionDescAdminDomain is the schema descriptor for admin_domain field.
-	institutionDescAdminDomain := institutionFields[2].Descriptor()
-	// institution.AdminDomainValidator is a validator for the "admin_domain" field. It is called by the builders before save.
-	institution.AdminDomainValidator = institutionDescAdminDomain.Validators[0].(func(string) error)
-	// institutionDescStudentDomain is the schema descriptor for student_domain field.
-	institutionDescStudentDomain := institutionFields[3].Descriptor()
-	// institution.StudentDomainValidator is a validator for the "student_domain" field. It is called by the builders before save.
-	institution.StudentDomainValidator = institutionDescStudentDomain.Validators[0].(func(string) error)
+	entgroupFields := schema.Group{}.Fields()
+	_ = entgroupFields
+	// entgroupDescName is the schema descriptor for name field.
+	entgroupDescName := entgroupFields[0].Descriptor()
+	// entgroup.NameValidator is a validator for the "name" field. It is called by the builders before save.
+	entgroup.NameValidator = entgroupDescName.Validators[0].(func(string) error)
+	// entgroupDescShortName is the schema descriptor for short_name field.
+	entgroupDescShortName := entgroupFields[1].Descriptor()
+	// entgroup.ShortNameValidator is a validator for the "short_name" field. It is called by the builders before save.
+	entgroup.ShortNameValidator = entgroupDescShortName.Validators[0].(func(string) error)
+	groupinvitelinkMixin := schema.GroupInviteLink{}.Mixin()
+	groupinvitelinkMixinFields0 := groupinvitelinkMixin[0].Fields()
+	_ = groupinvitelinkMixinFields0
+	groupinvitelinkFields := schema.GroupInviteLink{}.Fields()
+	_ = groupinvitelinkFields
+	// groupinvitelinkDescCode is the schema descriptor for code field.
+	groupinvitelinkDescCode := groupinvitelinkMixinFields0[0].Descriptor()
+	// groupinvitelink.CodeValidator is a validator for the "code" field. It is called by the builders before save.
+	groupinvitelink.CodeValidator = groupinvitelinkDescCode.Validators[0].(func(string) error)
+	entinstitutionFields := schema.Institution{}.Fields()
+	_ = entinstitutionFields
+	// entinstitutionDescName is the schema descriptor for name field.
+	entinstitutionDescName := entinstitutionFields[0].Descriptor()
+	// entinstitution.NameValidator is a validator for the "name" field. It is called by the builders before save.
+	entinstitution.NameValidator = entinstitutionDescName.Validators[0].(func(string) error)
+	// entinstitutionDescShortName is the schema descriptor for short_name field.
+	entinstitutionDescShortName := entinstitutionFields[1].Descriptor()
+	// entinstitution.ShortNameValidator is a validator for the "short_name" field. It is called by the builders before save.
+	entinstitution.ShortNameValidator = entinstitutionDescShortName.Validators[0].(func(string) error)
+	institutioninvitelinkMixin := schema.InstitutionInviteLink{}.Mixin()
+	institutioninvitelinkMixinFields0 := institutioninvitelinkMixin[0].Fields()
+	_ = institutioninvitelinkMixinFields0
+	institutioninvitelinkFields := schema.InstitutionInviteLink{}.Fields()
+	_ = institutioninvitelinkFields
+	// institutioninvitelinkDescCode is the schema descriptor for code field.
+	institutioninvitelinkDescCode := institutioninvitelinkMixinFields0[0].Descriptor()
+	// institutioninvitelink.CodeValidator is a validator for the "code" field. It is called by the builders before save.
+	institutioninvitelink.CodeValidator = institutioninvitelinkDescCode.Validators[0].(func(string) error)
 	jwtrevocationFields := schema.JWTRevocation{}.Fields()
 	_ = jwtrevocationFields
 	// jwtrevocationDescJti is the schema descriptor for jti field.

@@ -12,23 +12,26 @@ type Accessory func(*sql.Selector)
 // Deadline is the predicate function for deadline builders.
 type Deadline func(*sql.Selector)
 
-// Department is the predicate function for department builders.
-type Department func(*sql.Selector)
-
 // Event is the predicate function for event builders.
 type Event func(*sql.Selector)
 
 // ForumPost is the predicate function for forumpost builders.
 type ForumPost func(*sql.Selector)
 
-// Group is the predicate function for group builders.
+// Group is the predicate function for entgroup builders.
 type Group func(*sql.Selector)
+
+// GroupInviteLink is the predicate function for groupinvitelink builders.
+type GroupInviteLink func(*sql.Selector)
 
 // GroupUser is the predicate function for groupuser builders.
 type GroupUser func(*sql.Selector)
 
-// Institution is the predicate function for institution builders.
+// Institution is the predicate function for entinstitution builders.
 type Institution func(*sql.Selector)
+
+// InstitutionInviteLink is the predicate function for institutioninvitelink builders.
+type InstitutionInviteLink func(*sql.Selector)
 
 // JWTRevocation is the predicate function for jwtrevocation builders.
 type JWTRevocation func(*sql.Selector)

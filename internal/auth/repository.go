@@ -10,12 +10,12 @@ import (
 
 type Reader interface {
 	FindUserByEmail(ctx context.Context, email string) (*entity.User, error)
+	FindInstitutionInviteLinkWithInstitution(ctx context.Context, code string) (*entity.InstitutionInviteLink, error)
 	FindJWTRevocation(ctx context.Context, jti string) (*entity.JWTRevocation, error)
-	FindInstitutionByDomains(ctx context.Context, domain string) (*entity.Institution, error)
 }
 
 type Writer interface {
-	CreateUser(ctx context.Context, firstName string, lastName string, email string, password hash.Encoded, opts ...user.Option) (*entity.User, error)
+	CreateUser(ctx context.Context, instID int, firstName, lastName, email string, password hash.Encoded, opts ...user.Option) (*entity.User, error)
 	CreateJWTRevocation(ctx context.Context, jti string, expiry time.Time) (*entity.JWTRevocation, error)
 }
 

@@ -4,6 +4,7 @@ import (
 	"entgo.io/ent"
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
+	"github.com/np-inprove/server/internal/entity/institution"
 	"github.com/np-inprove/server/internal/hash"
 )
 
@@ -41,15 +42,19 @@ func (User) Fields() []ent.Field {
 			Comment("Time when points_awarded_count was last reset to 0"),
 		field.Bool("god_mode").
 			Comment("Superuser of the iNProve platform"),
+		field.Enum("role").
+			GoType(institution.Role("")).
+			Comment("Role of the in the institution"),
 	}
 }
 
 // Edges of the User.
 func (User) Edges() []ent.Edge {
 	return []ent.Edge{
-		edge.From("department", Department.Type).
+		edge.From("institution", Institution.Type).
 			Ref("users").
-			Unique(),
+			Unique().
+			Required(),
 		edge.From("redemptions", Redemption.Type).
 			Ref("user"),
 		edge.From("forum_posts", ForumPost.Type).

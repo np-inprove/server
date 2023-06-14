@@ -12,7 +12,7 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/np-inprove/server/internal/ent/deadline"
-	"github.com/np-inprove/server/internal/ent/group"
+	entgroup "github.com/np-inprove/server/internal/ent/group"
 	"github.com/np-inprove/server/internal/ent/user"
 )
 
@@ -205,7 +205,7 @@ func (dc *DeadlineCreate) createSpec() (*Deadline, *sqlgraph.CreateSpec) {
 			Columns: []string{deadline.GroupColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(group.FieldID, field.TypeInt),
+				IDSpec: sqlgraph.NewFieldSpec(entgroup.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

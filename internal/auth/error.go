@@ -13,6 +13,7 @@ var (
 	ErrUserConflict    = errors.New("failed to register new user as email already used")
 	ErrDomainNotFound  = errors.New("no institution is registered with provided domain")
 	ErrTokenRevoked    = errors.New("token is revoked")
+	ErrInvalidInvite   = errors.New("invalid invite code provided")
 )
 
 func mapDomainErr(err error) *apperror.ErrResponse {

@@ -11,7 +11,7 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/np-inprove/server/internal/ent/event"
-	"github.com/np-inprove/server/internal/ent/group"
+	entgroup "github.com/np-inprove/server/internal/ent/group"
 	"github.com/np-inprove/server/internal/ent/predicate"
 )
 
@@ -73,7 +73,7 @@ func (eq *EventQuery) QueryGroup() *GroupQuery {
 		}
 		step := sqlgraph.NewStep(
 			sqlgraph.From(event.Table, event.FieldID, selector),
-			sqlgraph.To(group.Table, group.FieldID),
+			sqlgraph.To(entgroup.Table, entgroup.FieldID),
 			sqlgraph.Edge(sqlgraph.M2O, true, event.GroupTable, event.GroupColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(eq.driver.Dialect(), step)
@@ -424,7 +424,7 @@ func (eq *EventQuery) loadGroup(ctx context.Context, query *GroupQuery, nodes []
 	if len(ids) == 0 {
 		return nil
 	}
-	query.Where(group.IDIn(ids...))
+	query.Where(entgroup.IDIn(ids...))
 	neighbors, err := query.All(ctx)
 	if err != nil {
 		return err

@@ -11,7 +11,7 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/np-inprove/server/internal/ent/accessory"
-	"github.com/np-inprove/server/internal/ent/institution"
+	entinstitution "github.com/np-inprove/server/internal/ent/institution"
 	"github.com/np-inprove/server/internal/ent/predicate"
 	"github.com/np-inprove/server/internal/ent/redemption"
 )
@@ -234,7 +234,7 @@ func (au *AccessoryUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Columns: []string{accessory.InstitutionColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(institution.FieldID, field.TypeInt),
+				IDSpec: sqlgraph.NewFieldSpec(entinstitution.FieldID, field.TypeInt),
 			},
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
@@ -247,7 +247,7 @@ func (au *AccessoryUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Columns: []string{accessory.InstitutionColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(institution.FieldID, field.TypeInt),
+				IDSpec: sqlgraph.NewFieldSpec(entinstitution.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -510,7 +510,7 @@ func (auo *AccessoryUpdateOne) sqlSave(ctx context.Context) (_node *Accessory, e
 			Columns: []string{accessory.InstitutionColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(institution.FieldID, field.TypeInt),
+				IDSpec: sqlgraph.NewFieldSpec(entinstitution.FieldID, field.TypeInt),
 			},
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
@@ -523,7 +523,7 @@ func (auo *AccessoryUpdateOne) sqlSave(ctx context.Context) (_node *Accessory, e
 			Columns: []string{accessory.InstitutionColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(institution.FieldID, field.TypeInt),
+				IDSpec: sqlgraph.NewFieldSpec(entinstitution.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

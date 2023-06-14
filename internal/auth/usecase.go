@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"github.com/np-inprove/server/internal/entity"
-	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -21,7 +20,7 @@ var (
 	jwtAudience = []string{"np-inprove.qinguan.me"}
 )
 
-type usecase struct {
+type useCase struct {
 	repo Repository
 	cfg  *config.Config
 
@@ -31,15 +30,15 @@ type usecase struct {
 
 type UseCase interface {
 	WhoAmI(ctx context.Context, token jwt.Token) (*entity.User, error)
-	Login(ctx context.Context, email string, password string) (*entity.Session, error)
-	Register(ctx context.Context, firstName string, lastName string, email string, password string) (*entity.Session, error)
+	Login(ctx context.Context, email, password string) (*entity.Session, error)
+	Register(ctx context.Context, inviteCode, firstName, lastName, email, password string) (*entity.Session, error)
 }
 
 func NewUseCase(r Repository, c *config.Config, publicKey jwk.Key, privateKey jwk.Key) UseCase {
-	return usecase{r, c, publicKey, privateKey}
+	return useCase{r, c, publicKey, privateKey}
 }
 
-func (u usecase) WhoAmI(ctx context.Context, token jwt.Token) (*entity.User, error) {
+func (u useCase) WhoAmI(ctx context.Context, token jwt.Token) (*entity.User, error) {
 	if err := u.tokenIsValid(ctx, token.JwtID()); err != nil {
 		return nil, fmt.Errorf("failed to find jwt revocation: %w", err)
 	}
@@ -52,7 +51,7 @@ func (u usecase) WhoAmI(ctx context.Context, token jwt.Token) (*entity.User, err
 	return user, nil
 }
 
-func (u usecase) Login(ctx context.Context, email string, password string) (*entity.Session, error) {
+func (u useCase) Login(ctx context.Context, email string, password string) (*entity.Session, error) {
 	user, err := u.repo.FindUserByEmail(ctx, email)
 	if err != nil {
 		if apperror.IsNotFound(err) {
@@ -81,13 +80,18 @@ func (u usecase) Login(ctx context.Context, email string, password string) (*ent
 	}, nil
 }
 
-func (u usecase) Register(ctx context.Context, firstName string, lastName string, email string, password string) (*entity.Session, error) {
-	domain := strings.Split(email, "@")[1] // This should not panic
-	if _, err := u.repo.FindInstitutionByDomains(ctx, domain); err != nil {
+func (u useCase) Register(ctx context.Context, inviteCode string, firstName string, lastName string, email string, password string) (*entity.Session, error) {
+	invite, err := u.repo.FindInstitutionInviteLinkWithInstitution(ctx, inviteCode)
+	if err != nil {
 		if apperror.IsNotFound(err) {
-			return nil, ErrDomainNotFound
+			return nil, ErrInvalidInvite
 		}
 		return nil, err
+	}
+
+	inst, err := invite.Edges.InstitutionOrErr()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get invite edge: %w", err)
 	}
 
 	h, err := hash.CreateEncoded(password)
@@ -95,7 +99,7 @@ func (u usecase) Register(ctx context.Context, firstName string, lastName string
 		return nil, fmt.Errorf("failed to create encoded password: %w", err)
 	}
 
-	user, err := u.repo.CreateUser(ctx, firstName, lastName, email, h)
+	user, err := u.repo.CreateUser(ctx, inst.ID, firstName, lastName, email, h)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create user: %w", err)
 	}
@@ -111,7 +115,7 @@ func (u usecase) Register(ctx context.Context, firstName string, lastName string
 	}, nil
 }
 
-func (u usecase) createJWT(email string, godMode bool) ([]byte, error) {
+func (u useCase) createJWT(email string, godMode bool) ([]byte, error) {
 	jti, err := uuid.NewUUID()
 	if err != nil {
 		return nil, fmt.Errorf("failed to generate jti: %w", err)
@@ -141,7 +145,7 @@ func (u usecase) createJWT(email string, godMode bool) ([]byte, error) {
 	return j, nil
 }
 
-func (u usecase) tokenIsValid(ctx context.Context, jti string) error {
+func (u useCase) tokenIsValid(ctx context.Context, jti string) error {
 	_, err := u.repo.FindJWTRevocation(ctx, jti)
 	if err == nil {
 		return ErrTokenRevoked

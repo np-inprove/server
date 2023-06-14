@@ -9,7 +9,7 @@ import (
 
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
-	"github.com/np-inprove/server/internal/ent/group"
+	entgroup "github.com/np-inprove/server/internal/ent/group"
 	"github.com/np-inprove/server/internal/ent/groupuser"
 	"github.com/np-inprove/server/internal/ent/predicate"
 	"github.com/np-inprove/server/internal/ent/user"
@@ -73,7 +73,7 @@ func (guq *GroupUserQuery) QueryGroup() *GroupQuery {
 		}
 		step := sqlgraph.NewStep(
 			sqlgraph.From(groupuser.Table, groupuser.GroupColumn, selector),
-			sqlgraph.To(group.Table, group.FieldID),
+			sqlgraph.To(entgroup.Table, entgroup.FieldID),
 			sqlgraph.Edge(sqlgraph.M2O, false, groupuser.GroupTable, groupuser.GroupColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(guq.driver.Dialect(), step)
@@ -383,7 +383,7 @@ func (guq *GroupUserQuery) loadGroup(ctx context.Context, query *GroupQuery, nod
 	if len(ids) == 0 {
 		return nil
 	}
-	query.Where(group.IDIn(ids...))
+	query.Where(entgroup.IDIn(ids...))
 	neighbors, err := query.All(ctx)
 	if err != nil {
 		return err

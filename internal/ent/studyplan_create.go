@@ -29,16 +29,16 @@ func (spc *StudyPlanCreate) SetName(s string) *StudyPlanCreate {
 	return spc
 }
 
-// SetShareCode sets the "share_code" field.
-func (spc *StudyPlanCreate) SetShareCode(s string) *StudyPlanCreate {
-	spc.mutation.SetShareCode(s)
+// SetCode sets the "code" field.
+func (spc *StudyPlanCreate) SetCode(s string) *StudyPlanCreate {
+	spc.mutation.SetCode(s)
 	return spc
 }
 
-// SetNillableShareCode sets the "share_code" field if the given value is not nil.
-func (spc *StudyPlanCreate) SetNillableShareCode(s *string) *StudyPlanCreate {
+// SetNillableCode sets the "code" field if the given value is not nil.
+func (spc *StudyPlanCreate) SetNillableCode(s *string) *StudyPlanCreate {
 	if s != nil {
-		spc.SetShareCode(*s)
+		spc.SetCode(*s)
 	}
 	return spc
 }
@@ -145,9 +145,9 @@ func (spc *StudyPlanCreate) createSpec() (*StudyPlan, *sqlgraph.CreateSpec) {
 		_spec.SetField(studyplan.FieldName, field.TypeString, value)
 		_node.Name = value
 	}
-	if value, ok := spc.mutation.ShareCode(); ok {
-		_spec.SetField(studyplan.FieldShareCode, field.TypeString, value)
-		_node.ShareCode = value
+	if value, ok := spc.mutation.Code(); ok {
+		_spec.SetField(studyplan.FieldCode, field.TypeString, value)
+		_node.Code = value
 	}
 	if nodes := spc.mutation.AuthorIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
@@ -246,21 +246,21 @@ func (u *StudyPlanUpsert) UpdateName() *StudyPlanUpsert {
 	return u
 }
 
-// SetShareCode sets the "share_code" field.
-func (u *StudyPlanUpsert) SetShareCode(v string) *StudyPlanUpsert {
-	u.Set(studyplan.FieldShareCode, v)
+// SetCode sets the "code" field.
+func (u *StudyPlanUpsert) SetCode(v string) *StudyPlanUpsert {
+	u.Set(studyplan.FieldCode, v)
 	return u
 }
 
-// UpdateShareCode sets the "share_code" field to the value that was provided on create.
-func (u *StudyPlanUpsert) UpdateShareCode() *StudyPlanUpsert {
-	u.SetExcluded(studyplan.FieldShareCode)
+// UpdateCode sets the "code" field to the value that was provided on create.
+func (u *StudyPlanUpsert) UpdateCode() *StudyPlanUpsert {
+	u.SetExcluded(studyplan.FieldCode)
 	return u
 }
 
-// ClearShareCode clears the value of the "share_code" field.
-func (u *StudyPlanUpsert) ClearShareCode() *StudyPlanUpsert {
-	u.SetNull(studyplan.FieldShareCode)
+// ClearCode clears the value of the "code" field.
+func (u *StudyPlanUpsert) ClearCode() *StudyPlanUpsert {
+	u.SetNull(studyplan.FieldCode)
 	return u
 }
 
@@ -318,24 +318,24 @@ func (u *StudyPlanUpsertOne) UpdateName() *StudyPlanUpsertOne {
 	})
 }
 
-// SetShareCode sets the "share_code" field.
-func (u *StudyPlanUpsertOne) SetShareCode(v string) *StudyPlanUpsertOne {
+// SetCode sets the "code" field.
+func (u *StudyPlanUpsertOne) SetCode(v string) *StudyPlanUpsertOne {
 	return u.Update(func(s *StudyPlanUpsert) {
-		s.SetShareCode(v)
+		s.SetCode(v)
 	})
 }
 
-// UpdateShareCode sets the "share_code" field to the value that was provided on create.
-func (u *StudyPlanUpsertOne) UpdateShareCode() *StudyPlanUpsertOne {
+// UpdateCode sets the "code" field to the value that was provided on create.
+func (u *StudyPlanUpsertOne) UpdateCode() *StudyPlanUpsertOne {
 	return u.Update(func(s *StudyPlanUpsert) {
-		s.UpdateShareCode()
+		s.UpdateCode()
 	})
 }
 
-// ClearShareCode clears the value of the "share_code" field.
-func (u *StudyPlanUpsertOne) ClearShareCode() *StudyPlanUpsertOne {
+// ClearCode clears the value of the "code" field.
+func (u *StudyPlanUpsertOne) ClearCode() *StudyPlanUpsertOne {
 	return u.Update(func(s *StudyPlanUpsert) {
-		s.ClearShareCode()
+		s.ClearCode()
 	})
 }
 
@@ -552,24 +552,24 @@ func (u *StudyPlanUpsertBulk) UpdateName() *StudyPlanUpsertBulk {
 	})
 }
 
-// SetShareCode sets the "share_code" field.
-func (u *StudyPlanUpsertBulk) SetShareCode(v string) *StudyPlanUpsertBulk {
+// SetCode sets the "code" field.
+func (u *StudyPlanUpsertBulk) SetCode(v string) *StudyPlanUpsertBulk {
 	return u.Update(func(s *StudyPlanUpsert) {
-		s.SetShareCode(v)
+		s.SetCode(v)
 	})
 }
 
-// UpdateShareCode sets the "share_code" field to the value that was provided on create.
-func (u *StudyPlanUpsertBulk) UpdateShareCode() *StudyPlanUpsertBulk {
+// UpdateCode sets the "code" field to the value that was provided on create.
+func (u *StudyPlanUpsertBulk) UpdateCode() *StudyPlanUpsertBulk {
 	return u.Update(func(s *StudyPlanUpsert) {
-		s.UpdateShareCode()
+		s.UpdateCode()
 	})
 }
 
-// ClearShareCode clears the value of the "share_code" field.
-func (u *StudyPlanUpsertBulk) ClearShareCode() *StudyPlanUpsertBulk {
+// ClearCode clears the value of the "code" field.
+func (u *StudyPlanUpsertBulk) ClearCode() *StudyPlanUpsertBulk {
 	return u.Update(func(s *StudyPlanUpsert) {
-		s.ClearShareCode()
+		s.ClearCode()
 	})
 }
 

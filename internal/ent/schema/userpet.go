@@ -5,6 +5,7 @@ import (
 	"entgo.io/ent/schema"
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
+	"entgo.io/ent/schema/index"
 )
 
 // UserPet holds the schema definition for the UserPet entity.
@@ -48,5 +49,12 @@ func (UserPet) Edges() []ent.Edge {
 			Required().
 			Unique().
 			Field("user_id"),
+	}
+}
+
+func (UserPet) Indexes() []ent.Index {
+	return []ent.Index{
+		index.Fields("user_id").
+			Unique(),
 	}
 }

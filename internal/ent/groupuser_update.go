@@ -10,10 +10,11 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
-	"github.com/np-inprove/server/internal/ent/group"
+	entgroup "github.com/np-inprove/server/internal/ent/group"
 	"github.com/np-inprove/server/internal/ent/groupuser"
 	"github.com/np-inprove/server/internal/ent/predicate"
 	"github.com/np-inprove/server/internal/ent/user"
+	"github.com/np-inprove/server/internal/entity/group"
 )
 
 // GroupUserUpdate is the builder for updating GroupUser entities.
@@ -42,7 +43,7 @@ func (guu *GroupUserUpdate) SetUserID(i int) *GroupUserUpdate {
 }
 
 // SetRole sets the "role" field.
-func (guu *GroupUserUpdate) SetRole(gr groupuser.Role) *GroupUserUpdate {
+func (guu *GroupUserUpdate) SetRole(gr group.Role) *GroupUserUpdate {
 	guu.mutation.SetRole(gr)
 	return guu
 }
@@ -140,7 +141,7 @@ func (guu *GroupUserUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Columns: []string{groupuser.GroupColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(group.FieldID, field.TypeInt),
+				IDSpec: sqlgraph.NewFieldSpec(entgroup.FieldID, field.TypeInt),
 			},
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
@@ -153,7 +154,7 @@ func (guu *GroupUserUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Columns: []string{groupuser.GroupColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(group.FieldID, field.TypeInt),
+				IDSpec: sqlgraph.NewFieldSpec(entgroup.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -223,7 +224,7 @@ func (guuo *GroupUserUpdateOne) SetUserID(i int) *GroupUserUpdateOne {
 }
 
 // SetRole sets the "role" field.
-func (guuo *GroupUserUpdateOne) SetRole(gr groupuser.Role) *GroupUserUpdateOne {
+func (guuo *GroupUserUpdateOne) SetRole(gr group.Role) *GroupUserUpdateOne {
 	guuo.mutation.SetRole(gr)
 	return guuo
 }
@@ -353,7 +354,7 @@ func (guuo *GroupUserUpdateOne) sqlSave(ctx context.Context) (_node *GroupUser, 
 			Columns: []string{groupuser.GroupColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(group.FieldID, field.TypeInt),
+				IDSpec: sqlgraph.NewFieldSpec(entgroup.FieldID, field.TypeInt),
 			},
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
@@ -366,7 +367,7 @@ func (guuo *GroupUserUpdateOne) sqlSave(ctx context.Context) (_node *GroupUser, 
 			Columns: []string{groupuser.GroupColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(group.FieldID, field.TypeInt),
+				IDSpec: sqlgraph.NewFieldSpec(entgroup.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
