@@ -6,7 +6,6 @@ import (
 	context "context"
 
 	ent "github.com/np-inprove/server/internal/ent"
-	group "github.com/np-inprove/server/internal/ent/group"
 
 	mock "github.com/stretchr/testify/mock"
 )
@@ -24,25 +23,25 @@ func (_m *MockReader) EXPECT() *MockReader_Expecter {
 	return &MockReader_Expecter{mock: &_m.Mock}
 }
 
-// FindGroupTypes provides a mock function with given fields:
-func (_m *MockReader) FindGroupTypes() ([]*group.GroupType, error) {
-	ret := _m.Called()
+// FindGroupByInstitutionIDAndShortName provides a mock function with given fields: ctx, institutionID, shortName
+func (_m *MockReader) FindGroupByInstitutionIDAndShortName(ctx context.Context, institutionID int, shortName string) (*ent.Group, error) {
+	ret := _m.Called(ctx, institutionID, shortName)
 
-	var r0 []*group.GroupType
+	var r0 *ent.Group
 	var r1 error
-	if rf, ok := ret.Get(0).(func() ([]*group.GroupType, error)); ok {
-		return rf()
+	if rf, ok := ret.Get(0).(func(context.Context, int, string) (*ent.Group, error)); ok {
+		return rf(ctx, institutionID, shortName)
 	}
-	if rf, ok := ret.Get(0).(func() []*group.GroupType); ok {
-		r0 = rf()
+	if rf, ok := ret.Get(0).(func(context.Context, int, string) *ent.Group); ok {
+		r0 = rf(ctx, institutionID, shortName)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]*group.GroupType)
+			r0 = ret.Get(0).(*ent.Group)
 		}
 	}
 
-	if rf, ok := ret.Get(1).(func() error); ok {
-		r1 = rf()
+	if rf, ok := ret.Get(1).(func(context.Context, int, string) error); ok {
+		r1 = rf(ctx, institutionID, shortName)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -50,44 +49,103 @@ func (_m *MockReader) FindGroupTypes() ([]*group.GroupType, error) {
 	return r0, r1
 }
 
-// MockReader_FindGroupTypes_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'FindGroupTypes'
-type MockReader_FindGroupTypes_Call struct {
+// MockReader_FindGroupByInstitutionIDAndShortName_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'FindGroupByInstitutionIDAndShortName'
+type MockReader_FindGroupByInstitutionIDAndShortName_Call struct {
 	*mock.Call
 }
 
-// FindGroupTypes is a helper method to define mock.On call
-func (_e *MockReader_Expecter) FindGroupTypes() *MockReader_FindGroupTypes_Call {
-	return &MockReader_FindGroupTypes_Call{Call: _e.mock.On("FindGroupTypes")}
+// FindGroupByInstitutionIDAndShortName is a helper method to define mock.On call
+//   - ctx context.Context
+//   - institutionID int
+//   - shortName string
+func (_e *MockReader_Expecter) FindGroupByInstitutionIDAndShortName(ctx interface{}, institutionID interface{}, shortName interface{}) *MockReader_FindGroupByInstitutionIDAndShortName_Call {
+	return &MockReader_FindGroupByInstitutionIDAndShortName_Call{Call: _e.mock.On("FindGroupByInstitutionIDAndShortName", ctx, institutionID, shortName)}
 }
 
-func (_c *MockReader_FindGroupTypes_Call) Run(run func()) *MockReader_FindGroupTypes_Call {
+func (_c *MockReader_FindGroupByInstitutionIDAndShortName_Call) Run(run func(ctx context.Context, institutionID int, shortName string)) *MockReader_FindGroupByInstitutionIDAndShortName_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run()
+		run(args[0].(context.Context), args[1].(int), args[2].(string))
 	})
 	return _c
 }
 
-func (_c *MockReader_FindGroupTypes_Call) Return(_a0 []*group.GroupType, _a1 error) *MockReader_FindGroupTypes_Call {
+func (_c *MockReader_FindGroupByInstitutionIDAndShortName_Call) Return(_a0 *ent.Group, _a1 error) *MockReader_FindGroupByInstitutionIDAndShortName_Call {
 	_c.Call.Return(_a0, _a1)
 	return _c
 }
 
-func (_c *MockReader_FindGroupTypes_Call) RunAndReturn(run func() ([]*group.GroupType, error)) *MockReader_FindGroupTypes_Call {
+func (_c *MockReader_FindGroupByInstitutionIDAndShortName_Call) RunAndReturn(run func(context.Context, int, string) (*ent.Group, error)) *MockReader_FindGroupByInstitutionIDAndShortName_Call {
 	_c.Call.Return(run)
 	return _c
 }
 
-// FindGroupsByUser provides a mock function with given fields: ctx, email
-func (_m *MockReader) FindGroupsByUser(ctx context.Context, email string) ([]*ent.Group, error) {
-	ret := _m.Called(ctx, email)
+// FindGroupUser provides a mock function with given fields: ctx, principal, shortName
+func (_m *MockReader) FindGroupUser(ctx context.Context, principal string, shortName string) (*ent.GroupUser, error) {
+	ret := _m.Called(ctx, principal, shortName)
+
+	var r0 *ent.GroupUser
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, string, string) (*ent.GroupUser, error)); ok {
+		return rf(ctx, principal, shortName)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, string, string) *ent.GroupUser); ok {
+		r0 = rf(ctx, principal, shortName)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*ent.GroupUser)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, string, string) error); ok {
+		r1 = rf(ctx, principal, shortName)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// MockReader_FindGroupUser_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'FindGroupUser'
+type MockReader_FindGroupUser_Call struct {
+	*mock.Call
+}
+
+// FindGroupUser is a helper method to define mock.On call
+//   - ctx context.Context
+//   - principal string
+//   - shortName string
+func (_e *MockReader_Expecter) FindGroupUser(ctx interface{}, principal interface{}, shortName interface{}) *MockReader_FindGroupUser_Call {
+	return &MockReader_FindGroupUser_Call{Call: _e.mock.On("FindGroupUser", ctx, principal, shortName)}
+}
+
+func (_c *MockReader_FindGroupUser_Call) Run(run func(ctx context.Context, principal string, shortName string)) *MockReader_FindGroupUser_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(string), args[2].(string))
+	})
+	return _c
+}
+
+func (_c *MockReader_FindGroupUser_Call) Return(_a0 *ent.GroupUser, _a1 error) *MockReader_FindGroupUser_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *MockReader_FindGroupUser_Call) RunAndReturn(run func(context.Context, string, string) (*ent.GroupUser, error)) *MockReader_FindGroupUser_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// FindGroupsByUser provides a mock function with given fields: ctx, principal
+func (_m *MockReader) FindGroupsByUser(ctx context.Context, principal string) ([]*ent.Group, error) {
+	ret := _m.Called(ctx, principal)
 
 	var r0 []*ent.Group
 	var r1 error
 	if rf, ok := ret.Get(0).(func(context.Context, string) ([]*ent.Group, error)); ok {
-		return rf(ctx, email)
+		return rf(ctx, principal)
 	}
 	if rf, ok := ret.Get(0).(func(context.Context, string) []*ent.Group); ok {
-		r0 = rf(ctx, email)
+		r0 = rf(ctx, principal)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).([]*ent.Group)
@@ -95,7 +153,7 @@ func (_m *MockReader) FindGroupsByUser(ctx context.Context, email string) ([]*en
 	}
 
 	if rf, ok := ret.Get(1).(func(context.Context, string) error); ok {
-		r1 = rf(ctx, email)
+		r1 = rf(ctx, principal)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -110,12 +168,12 @@ type MockReader_FindGroupsByUser_Call struct {
 
 // FindGroupsByUser is a helper method to define mock.On call
 //   - ctx context.Context
-//   - email string
-func (_e *MockReader_Expecter) FindGroupsByUser(ctx interface{}, email interface{}) *MockReader_FindGroupsByUser_Call {
-	return &MockReader_FindGroupsByUser_Call{Call: _e.mock.On("FindGroupsByUser", ctx, email)}
+//   - principal string
+func (_e *MockReader_Expecter) FindGroupsByUser(ctx interface{}, principal interface{}) *MockReader_FindGroupsByUser_Call {
+	return &MockReader_FindGroupsByUser_Call{Call: _e.mock.On("FindGroupsByUser", ctx, principal)}
 }
 
-func (_c *MockReader_FindGroupsByUser_Call) Run(run func(ctx context.Context, email string)) *MockReader_FindGroupsByUser_Call {
+func (_c *MockReader_FindGroupsByUser_Call) Run(run func(ctx context.Context, principal string)) *MockReader_FindGroupsByUser_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		run(args[0].(context.Context), args[1].(string))
 	})
@@ -132,25 +190,25 @@ func (_c *MockReader_FindGroupsByUser_Call) RunAndReturn(run func(context.Contex
 	return _c
 }
 
-// FindInstitutionByAdminDomain provides a mock function with given fields: ctx, domain
-func (_m *MockReader) FindInstitutionByAdminDomain(ctx context.Context, domain string) (*ent.Institution, error) {
-	ret := _m.Called(ctx, domain)
+// FindUserWithInstitution provides a mock function with given fields: ctx, principal
+func (_m *MockReader) FindUserWithInstitution(ctx context.Context, principal string) (*ent.User, error) {
+	ret := _m.Called(ctx, principal)
 
-	var r0 *ent.Institution
+	var r0 *ent.User
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, string) (*ent.Institution, error)); ok {
-		return rf(ctx, domain)
+	if rf, ok := ret.Get(0).(func(context.Context, string) (*ent.User, error)); ok {
+		return rf(ctx, principal)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, string) *ent.Institution); ok {
-		r0 = rf(ctx, domain)
+	if rf, ok := ret.Get(0).(func(context.Context, string) *ent.User); ok {
+		r0 = rf(ctx, principal)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*ent.Institution)
+			r0 = ret.Get(0).(*ent.User)
 		}
 	}
 
 	if rf, ok := ret.Get(1).(func(context.Context, string) error); ok {
-		r1 = rf(ctx, domain)
+		r1 = rf(ctx, principal)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -158,31 +216,31 @@ func (_m *MockReader) FindInstitutionByAdminDomain(ctx context.Context, domain s
 	return r0, r1
 }
 
-// MockReader_FindInstitutionByAdminDomain_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'FindInstitutionByAdminDomain'
-type MockReader_FindInstitutionByAdminDomain_Call struct {
+// MockReader_FindUserWithInstitution_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'FindUserWithInstitution'
+type MockReader_FindUserWithInstitution_Call struct {
 	*mock.Call
 }
 
-// FindInstitutionByAdminDomain is a helper method to define mock.On call
+// FindUserWithInstitution is a helper method to define mock.On call
 //   - ctx context.Context
-//   - domain string
-func (_e *MockReader_Expecter) FindInstitutionByAdminDomain(ctx interface{}, domain interface{}) *MockReader_FindInstitutionByAdminDomain_Call {
-	return &MockReader_FindInstitutionByAdminDomain_Call{Call: _e.mock.On("FindInstitutionByAdminDomain", ctx, domain)}
+//   - principal string
+func (_e *MockReader_Expecter) FindUserWithInstitution(ctx interface{}, principal interface{}) *MockReader_FindUserWithInstitution_Call {
+	return &MockReader_FindUserWithInstitution_Call{Call: _e.mock.On("FindUserWithInstitution", ctx, principal)}
 }
 
-func (_c *MockReader_FindInstitutionByAdminDomain_Call) Run(run func(ctx context.Context, domain string)) *MockReader_FindInstitutionByAdminDomain_Call {
+func (_c *MockReader_FindUserWithInstitution_Call) Run(run func(ctx context.Context, principal string)) *MockReader_FindUserWithInstitution_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		run(args[0].(context.Context), args[1].(string))
 	})
 	return _c
 }
 
-func (_c *MockReader_FindInstitutionByAdminDomain_Call) Return(_a0 *ent.Institution, _a1 error) *MockReader_FindInstitutionByAdminDomain_Call {
+func (_c *MockReader_FindUserWithInstitution_Call) Return(_a0 *ent.User, _a1 error) *MockReader_FindUserWithInstitution_Call {
 	_c.Call.Return(_a0, _a1)
 	return _c
 }
 
-func (_c *MockReader_FindInstitutionByAdminDomain_Call) RunAndReturn(run func(context.Context, string) (*ent.Institution, error)) *MockReader_FindInstitutionByAdminDomain_Call {
+func (_c *MockReader_FindUserWithInstitution_Call) RunAndReturn(run func(context.Context, string) (*ent.User, error)) *MockReader_FindUserWithInstitution_Call {
 	_c.Call.Return(run)
 	return _c
 }

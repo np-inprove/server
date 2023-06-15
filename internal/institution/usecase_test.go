@@ -96,11 +96,10 @@ func (suite *UseCaseTestSuite) TestListInstitutions() {
 
 func (suite *UseCaseTestSuite) TestCreateInstitution() {
 	type args struct {
-		ctx           context.Context
-		name          string
-		shortName     string
-		adminDomain   string
-		studentDomain string
+		ctx         context.Context
+		name        string
+		shortName   string
+		description string
 	}
 
 	tests := []struct {
@@ -113,11 +112,10 @@ func (suite *UseCaseTestSuite) TestCreateInstitution() {
 		{
 			name: "Wraps repo in tx",
 			args: args{
-				ctx:           context.Background(),
-				name:          "Funny institution",
-				shortName:     "funny-institution",
-				adminDomain:   "np-inprove.com",
-				studentDomain: "s.np-inprove.com",
+				ctx:         context.Background(),
+				name:        "Funny institution",
+				shortName:   "funny-institution",
+				description: "",
 			},
 			configure: func(repository *mocks.MockRepository) {
 				repository.On("WithTx", mock.Anything, mock.Anything).Return(repoInternalErr)
@@ -134,7 +132,7 @@ func (suite *UseCaseTestSuite) TestCreateInstitution() {
 			repo := new(mocks.MockRepository)
 			tc.configure(repo)
 			u := NewUseCase(repo)
-			ret, err := u.CreateInstitution(tc.args.ctx, tc.args.name, tc.args.shortName, tc.args.adminDomain, tc.args.studentDomain)
+			ret, err := u.CreateInstitution(tc.args.ctx, tc.args.name, tc.args.shortName, tc.args.description)
 			suite.Equal(tc.err, err)
 			tc.assert(ret, repo)
 		})

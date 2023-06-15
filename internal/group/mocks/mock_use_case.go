@@ -6,8 +6,6 @@ import (
 	context "context"
 
 	ent "github.com/np-inprove/server/internal/ent"
-	entgroup "github.com/np-inprove/server/internal/ent/group"
-
 	group "github.com/np-inprove/server/internal/entity/group"
 
 	mock "github.com/stretchr/testify/mock"
@@ -26,32 +24,32 @@ func (_m *MockUseCase) EXPECT() *MockUseCase_Expecter {
 	return &MockUseCase_Expecter{mock: &_m.Mock}
 }
 
-// CreateGroup provides a mock function with given fields: ctx, adminEmail, groupType, opts
-func (_m *MockUseCase) CreateGroup(ctx context.Context, adminEmail string, groupType string, opts ...group.Option) (*ent.Group, error) {
+// CreateGroup provides a mock function with given fields: ctx, principal, opts
+func (_m *MockUseCase) CreateGroup(ctx context.Context, principal string, opts ...group.Option) (*ent.Group, error) {
 	_va := make([]interface{}, len(opts))
 	for _i := range opts {
 		_va[_i] = opts[_i]
 	}
 	var _ca []interface{}
-	_ca = append(_ca, ctx, adminEmail, groupType)
+	_ca = append(_ca, ctx, principal)
 	_ca = append(_ca, _va...)
 	ret := _m.Called(_ca...)
 
 	var r0 *ent.Group
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, string, string, ...group.Option) (*ent.Group, error)); ok {
-		return rf(ctx, adminEmail, groupType, opts...)
+	if rf, ok := ret.Get(0).(func(context.Context, string, ...group.Option) (*ent.Group, error)); ok {
+		return rf(ctx, principal, opts...)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, string, string, ...group.Option) *ent.Group); ok {
-		r0 = rf(ctx, adminEmail, groupType, opts...)
+	if rf, ok := ret.Get(0).(func(context.Context, string, ...group.Option) *ent.Group); ok {
+		r0 = rf(ctx, principal, opts...)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(*ent.Group)
 		}
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, string, string, ...group.Option) error); ok {
-		r1 = rf(ctx, adminEmail, groupType, opts...)
+	if rf, ok := ret.Get(1).(func(context.Context, string, ...group.Option) error); ok {
+		r1 = rf(ctx, principal, opts...)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -66,23 +64,22 @@ type MockUseCase_CreateGroup_Call struct {
 
 // CreateGroup is a helper method to define mock.On call
 //   - ctx context.Context
-//   - adminEmail string
-//   - groupType string
+//   - principal string
 //   - opts ...group.Option
-func (_e *MockUseCase_Expecter) CreateGroup(ctx interface{}, adminEmail interface{}, groupType interface{}, opts ...interface{}) *MockUseCase_CreateGroup_Call {
+func (_e *MockUseCase_Expecter) CreateGroup(ctx interface{}, principal interface{}, opts ...interface{}) *MockUseCase_CreateGroup_Call {
 	return &MockUseCase_CreateGroup_Call{Call: _e.mock.On("CreateGroup",
-		append([]interface{}{ctx, adminEmail, groupType}, opts...)...)}
+		append([]interface{}{ctx, principal}, opts...)...)}
 }
 
-func (_c *MockUseCase_CreateGroup_Call) Run(run func(ctx context.Context, adminEmail string, groupType string, opts ...group.Option)) *MockUseCase_CreateGroup_Call {
+func (_c *MockUseCase_CreateGroup_Call) Run(run func(ctx context.Context, principal string, opts ...group.Option)) *MockUseCase_CreateGroup_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		variadicArgs := make([]group.Option, len(args)-3)
-		for i, a := range args[3:] {
+		variadicArgs := make([]group.Option, len(args)-2)
+		for i, a := range args[2:] {
 			if a != nil {
 				variadicArgs[i] = a.(group.Option)
 			}
 		}
-		run(args[0].(context.Context), args[1].(string), args[2].(string), variadicArgs...)
+		run(args[0].(context.Context), args[1].(string), variadicArgs...)
 	})
 	return _c
 }
@@ -92,18 +89,18 @@ func (_c *MockUseCase_CreateGroup_Call) Return(_a0 *ent.Group, _a1 error) *MockU
 	return _c
 }
 
-func (_c *MockUseCase_CreateGroup_Call) RunAndReturn(run func(context.Context, string, string, ...group.Option) (*ent.Group, error)) *MockUseCase_CreateGroup_Call {
+func (_c *MockUseCase_CreateGroup_Call) RunAndReturn(run func(context.Context, string, ...group.Option) (*ent.Group, error)) *MockUseCase_CreateGroup_Call {
 	_c.Call.Return(run)
 	return _c
 }
 
-// DeleteGroup provides a mock function with given fields: ctx, adminEmail, path
-func (_m *MockUseCase) DeleteGroup(ctx context.Context, adminEmail string, path string) error {
-	ret := _m.Called(ctx, adminEmail, path)
+// DeleteGroup provides a mock function with given fields: ctx, principal, shortName
+func (_m *MockUseCase) DeleteGroup(ctx context.Context, principal string, shortName string) error {
+	ret := _m.Called(ctx, principal, shortName)
 
 	var r0 error
 	if rf, ok := ret.Get(0).(func(context.Context, string, string) error); ok {
-		r0 = rf(ctx, adminEmail, path)
+		r0 = rf(ctx, principal, shortName)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -118,13 +115,13 @@ type MockUseCase_DeleteGroup_Call struct {
 
 // DeleteGroup is a helper method to define mock.On call
 //   - ctx context.Context
-//   - adminEmail string
-//   - path string
-func (_e *MockUseCase_Expecter) DeleteGroup(ctx interface{}, adminEmail interface{}, path interface{}) *MockUseCase_DeleteGroup_Call {
-	return &MockUseCase_DeleteGroup_Call{Call: _e.mock.On("DeleteGroup", ctx, adminEmail, path)}
+//   - principal string
+//   - shortName string
+func (_e *MockUseCase_Expecter) DeleteGroup(ctx interface{}, principal interface{}, shortName interface{}) *MockUseCase_DeleteGroup_Call {
+	return &MockUseCase_DeleteGroup_Call{Call: _e.mock.On("DeleteGroup", ctx, principal, shortName)}
 }
 
-func (_c *MockUseCase_DeleteGroup_Call) Run(run func(ctx context.Context, adminEmail string, path string)) *MockUseCase_DeleteGroup_Call {
+func (_c *MockUseCase_DeleteGroup_Call) Run(run func(ctx context.Context, principal string, shortName string)) *MockUseCase_DeleteGroup_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		run(args[0].(context.Context), args[1].(string), args[2].(string))
 	})
@@ -141,70 +138,17 @@ func (_c *MockUseCase_DeleteGroup_Call) RunAndReturn(run func(context.Context, s
 	return _c
 }
 
-// ListGroupTypes provides a mock function with given fields:
-func (_m *MockUseCase) ListGroupTypes() ([]*entgroup.GroupType, error) {
-	ret := _m.Called()
-
-	var r0 []*entgroup.GroupType
-	var r1 error
-	if rf, ok := ret.Get(0).(func() ([]*entgroup.GroupType, error)); ok {
-		return rf()
-	}
-	if rf, ok := ret.Get(0).(func() []*entgroup.GroupType); ok {
-		r0 = rf()
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]*entgroup.GroupType)
-		}
-	}
-
-	if rf, ok := ret.Get(1).(func() error); ok {
-		r1 = rf()
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
-}
-
-// MockUseCase_ListGroupTypes_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'ListGroupTypes'
-type MockUseCase_ListGroupTypes_Call struct {
-	*mock.Call
-}
-
-// ListGroupTypes is a helper method to define mock.On call
-func (_e *MockUseCase_Expecter) ListGroupTypes() *MockUseCase_ListGroupTypes_Call {
-	return &MockUseCase_ListGroupTypes_Call{Call: _e.mock.On("ListGroupTypes")}
-}
-
-func (_c *MockUseCase_ListGroupTypes_Call) Run(run func()) *MockUseCase_ListGroupTypes_Call {
-	_c.Call.Run(func(args mock.Arguments) {
-		run()
-	})
-	return _c
-}
-
-func (_c *MockUseCase_ListGroupTypes_Call) Return(_a0 []*entgroup.GroupType, _a1 error) *MockUseCase_ListGroupTypes_Call {
-	_c.Call.Return(_a0, _a1)
-	return _c
-}
-
-func (_c *MockUseCase_ListGroupTypes_Call) RunAndReturn(run func() ([]*entgroup.GroupType, error)) *MockUseCase_ListGroupTypes_Call {
-	_c.Call.Return(run)
-	return _c
-}
-
-// ListGroups provides a mock function with given fields: ctx, email
-func (_m *MockUseCase) ListPrincipalGroups(ctx context.Context, email string) ([]*ent.Group, error) {
-	ret := _m.Called(ctx, email)
+// ListPrincipalGroups provides a mock function with given fields: ctx, principal
+func (_m *MockUseCase) ListPrincipalGroups(ctx context.Context, principal string) ([]*ent.Group, error) {
+	ret := _m.Called(ctx, principal)
 
 	var r0 []*ent.Group
 	var r1 error
 	if rf, ok := ret.Get(0).(func(context.Context, string) ([]*ent.Group, error)); ok {
-		return rf(ctx, email)
+		return rf(ctx, principal)
 	}
 	if rf, ok := ret.Get(0).(func(context.Context, string) []*ent.Group); ok {
-		r0 = rf(ctx, email)
+		r0 = rf(ctx, principal)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).([]*ent.Group)
@@ -212,7 +156,7 @@ func (_m *MockUseCase) ListPrincipalGroups(ctx context.Context, email string) ([
 	}
 
 	if rf, ok := ret.Get(1).(func(context.Context, string) error); ok {
-		r1 = rf(ctx, email)
+		r1 = rf(ctx, principal)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -220,31 +164,31 @@ func (_m *MockUseCase) ListPrincipalGroups(ctx context.Context, email string) ([
 	return r0, r1
 }
 
-// MockUseCase_ListGroups_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'ListGroups'
-type MockUseCase_ListGroups_Call struct {
+// MockUseCase_ListPrincipalGroups_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'ListPrincipalGroups'
+type MockUseCase_ListPrincipalGroups_Call struct {
 	*mock.Call
 }
 
-// ListGroups is a helper method to define mock.On call
+// ListPrincipalGroups is a helper method to define mock.On call
 //   - ctx context.Context
-//   - email string
-func (_e *MockUseCase_Expecter) ListGroups(ctx interface{}, email interface{}) *MockUseCase_ListGroups_Call {
-	return &MockUseCase_ListGroups_Call{Call: _e.mock.On("ListGroups", ctx, email)}
+//   - principal string
+func (_e *MockUseCase_Expecter) ListPrincipalGroups(ctx interface{}, principal interface{}) *MockUseCase_ListPrincipalGroups_Call {
+	return &MockUseCase_ListPrincipalGroups_Call{Call: _e.mock.On("ListPrincipalGroups", ctx, principal)}
 }
 
-func (_c *MockUseCase_ListGroups_Call) Run(run func(ctx context.Context, email string)) *MockUseCase_ListGroups_Call {
+func (_c *MockUseCase_ListPrincipalGroups_Call) Run(run func(ctx context.Context, principal string)) *MockUseCase_ListPrincipalGroups_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		run(args[0].(context.Context), args[1].(string))
 	})
 	return _c
 }
 
-func (_c *MockUseCase_ListGroups_Call) Return(_a0 []*ent.Group, _a1 error) *MockUseCase_ListGroups_Call {
+func (_c *MockUseCase_ListPrincipalGroups_Call) Return(_a0 []*ent.Group, _a1 error) *MockUseCase_ListPrincipalGroups_Call {
 	_c.Call.Return(_a0, _a1)
 	return _c
 }
 
-func (_c *MockUseCase_ListGroups_Call) RunAndReturn(run func(context.Context, string) ([]*ent.Group, error)) *MockUseCase_ListGroups_Call {
+func (_c *MockUseCase_ListPrincipalGroups_Call) RunAndReturn(run func(context.Context, string) ([]*ent.Group, error)) *MockUseCase_ListPrincipalGroups_Call {
 	_c.Call.Return(run)
 	return _c
 }

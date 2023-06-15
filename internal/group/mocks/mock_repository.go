@@ -6,9 +6,7 @@ import (
 	context "context"
 
 	ent "github.com/np-inprove/server/internal/ent"
-	entitygroup "github.com/np-inprove/server/internal/entity/group"
-
-	group "github.com/np-inprove/server/internal/ent/group"
+	group "github.com/np-inprove/server/internal/entity/group"
 
 	mock "github.com/stretchr/testify/mock"
 )
@@ -26,32 +24,32 @@ func (_m *MockRepository) EXPECT() *MockRepository_Expecter {
 	return &MockRepository_Expecter{mock: &_m.Mock}
 }
 
-// CreateGroup provides a mock function with given fields: ctx, groupType, opts
-func (_m *MockRepository) CreateGroup(ctx context.Context, groupType group.GroupType, opts ...entitygroup.Option) (*ent.Group, error) {
+// CreateGroup provides a mock function with given fields: ctx, institutionID, opts
+func (_m *MockRepository) CreateGroup(ctx context.Context, institutionID int, opts ...group.Option) (*ent.Group, error) {
 	_va := make([]interface{}, len(opts))
 	for _i := range opts {
 		_va[_i] = opts[_i]
 	}
 	var _ca []interface{}
-	_ca = append(_ca, ctx, groupType)
+	_ca = append(_ca, ctx, institutionID)
 	_ca = append(_ca, _va...)
 	ret := _m.Called(_ca...)
 
 	var r0 *ent.Group
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, group.GroupType, ...entitygroup.Option) (*ent.Group, error)); ok {
-		return rf(ctx, groupType, opts...)
+	if rf, ok := ret.Get(0).(func(context.Context, int, ...group.Option) (*ent.Group, error)); ok {
+		return rf(ctx, institutionID, opts...)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, group.GroupType, ...entitygroup.Option) *ent.Group); ok {
-		r0 = rf(ctx, groupType, opts...)
+	if rf, ok := ret.Get(0).(func(context.Context, int, ...group.Option) *ent.Group); ok {
+		r0 = rf(ctx, institutionID, opts...)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(*ent.Group)
 		}
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, group.GroupType, ...entitygroup.Option) error); ok {
-		r1 = rf(ctx, groupType, opts...)
+	if rf, ok := ret.Get(1).(func(context.Context, int, ...group.Option) error); ok {
+		r1 = rf(ctx, institutionID, opts...)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -66,22 +64,22 @@ type MockRepository_CreateGroup_Call struct {
 
 // CreateGroup is a helper method to define mock.On call
 //   - ctx context.Context
-//   - groupType group.GroupType
-//   - opts ...entitygroup.Option
-func (_e *MockRepository_Expecter) CreateGroup(ctx interface{}, groupType interface{}, opts ...interface{}) *MockRepository_CreateGroup_Call {
+//   - institutionID int
+//   - opts ...group.Option
+func (_e *MockRepository_Expecter) CreateGroup(ctx interface{}, institutionID interface{}, opts ...interface{}) *MockRepository_CreateGroup_Call {
 	return &MockRepository_CreateGroup_Call{Call: _e.mock.On("CreateGroup",
-		append([]interface{}{ctx, groupType}, opts...)...)}
+		append([]interface{}{ctx, institutionID}, opts...)...)}
 }
 
-func (_c *MockRepository_CreateGroup_Call) Run(run func(ctx context.Context, groupType group.GroupType, opts ...entitygroup.Option)) *MockRepository_CreateGroup_Call {
+func (_c *MockRepository_CreateGroup_Call) Run(run func(ctx context.Context, institutionID int, opts ...group.Option)) *MockRepository_CreateGroup_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		variadicArgs := make([]entitygroup.Option, len(args)-2)
+		variadicArgs := make([]group.Option, len(args)-2)
 		for i, a := range args[2:] {
 			if a != nil {
-				variadicArgs[i] = a.(entitygroup.Option)
+				variadicArgs[i] = a.(group.Option)
 			}
 		}
-		run(args[0].(context.Context), args[1].(group.GroupType), variadicArgs...)
+		run(args[0].(context.Context), args[1].(int), variadicArgs...)
 	})
 	return _c
 }
@@ -91,18 +89,18 @@ func (_c *MockRepository_CreateGroup_Call) Return(_a0 *ent.Group, _a1 error) *Mo
 	return _c
 }
 
-func (_c *MockRepository_CreateGroup_Call) RunAndReturn(run func(context.Context, group.GroupType, ...entitygroup.Option) (*ent.Group, error)) *MockRepository_CreateGroup_Call {
+func (_c *MockRepository_CreateGroup_Call) RunAndReturn(run func(context.Context, int, ...group.Option) (*ent.Group, error)) *MockRepository_CreateGroup_Call {
 	_c.Call.Return(run)
 	return _c
 }
 
-// DeleteGroup provides a mock function with given fields: ctx, path
-func (_m *MockRepository) DeleteGroup(ctx context.Context, path string) error {
-	ret := _m.Called(ctx, path)
+// DeleteGroup provides a mock function with given fields: ctx, id
+func (_m *MockRepository) DeleteGroup(ctx context.Context, id int) error {
+	ret := _m.Called(ctx, id)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, string) error); ok {
-		r0 = rf(ctx, path)
+	if rf, ok := ret.Get(0).(func(context.Context, int) error); ok {
+		r0 = rf(ctx, id)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -117,14 +115,14 @@ type MockRepository_DeleteGroup_Call struct {
 
 // DeleteGroup is a helper method to define mock.On call
 //   - ctx context.Context
-//   - path string
-func (_e *MockRepository_Expecter) DeleteGroup(ctx interface{}, path interface{}) *MockRepository_DeleteGroup_Call {
-	return &MockRepository_DeleteGroup_Call{Call: _e.mock.On("DeleteGroup", ctx, path)}
+//   - id int
+func (_e *MockRepository_Expecter) DeleteGroup(ctx interface{}, id interface{}) *MockRepository_DeleteGroup_Call {
+	return &MockRepository_DeleteGroup_Call{Call: _e.mock.On("DeleteGroup", ctx, id)}
 }
 
-func (_c *MockRepository_DeleteGroup_Call) Run(run func(ctx context.Context, path string)) *MockRepository_DeleteGroup_Call {
+func (_c *MockRepository_DeleteGroup_Call) Run(run func(ctx context.Context, id int)) *MockRepository_DeleteGroup_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(string))
+		run(args[0].(context.Context), args[1].(int))
 	})
 	return _c
 }
@@ -134,30 +132,30 @@ func (_c *MockRepository_DeleteGroup_Call) Return(_a0 error) *MockRepository_Del
 	return _c
 }
 
-func (_c *MockRepository_DeleteGroup_Call) RunAndReturn(run func(context.Context, string) error) *MockRepository_DeleteGroup_Call {
+func (_c *MockRepository_DeleteGroup_Call) RunAndReturn(run func(context.Context, int) error) *MockRepository_DeleteGroup_Call {
 	_c.Call.Return(run)
 	return _c
 }
 
-// FindGroupTypes provides a mock function with given fields:
-func (_m *MockRepository) FindGroupTypes() ([]*group.GroupType, error) {
-	ret := _m.Called()
+// FindGroupByInstitutionIDAndShortName provides a mock function with given fields: ctx, institutionID, shortName
+func (_m *MockRepository) FindGroupByInstitutionIDAndShortName(ctx context.Context, institutionID int, shortName string) (*ent.Group, error) {
+	ret := _m.Called(ctx, institutionID, shortName)
 
-	var r0 []*group.GroupType
+	var r0 *ent.Group
 	var r1 error
-	if rf, ok := ret.Get(0).(func() ([]*group.GroupType, error)); ok {
-		return rf()
+	if rf, ok := ret.Get(0).(func(context.Context, int, string) (*ent.Group, error)); ok {
+		return rf(ctx, institutionID, shortName)
 	}
-	if rf, ok := ret.Get(0).(func() []*group.GroupType); ok {
-		r0 = rf()
+	if rf, ok := ret.Get(0).(func(context.Context, int, string) *ent.Group); ok {
+		r0 = rf(ctx, institutionID, shortName)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]*group.GroupType)
+			r0 = ret.Get(0).(*ent.Group)
 		}
 	}
 
-	if rf, ok := ret.Get(1).(func() error); ok {
-		r1 = rf()
+	if rf, ok := ret.Get(1).(func(context.Context, int, string) error); ok {
+		r1 = rf(ctx, institutionID, shortName)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -165,44 +163,103 @@ func (_m *MockRepository) FindGroupTypes() ([]*group.GroupType, error) {
 	return r0, r1
 }
 
-// MockRepository_FindGroupTypes_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'FindGroupTypes'
-type MockRepository_FindGroupTypes_Call struct {
+// MockRepository_FindGroupByInstitutionIDAndShortName_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'FindGroupByInstitutionIDAndShortName'
+type MockRepository_FindGroupByInstitutionIDAndShortName_Call struct {
 	*mock.Call
 }
 
-// FindGroupTypes is a helper method to define mock.On call
-func (_e *MockRepository_Expecter) FindGroupTypes() *MockRepository_FindGroupTypes_Call {
-	return &MockRepository_FindGroupTypes_Call{Call: _e.mock.On("FindGroupTypes")}
+// FindGroupByInstitutionIDAndShortName is a helper method to define mock.On call
+//   - ctx context.Context
+//   - institutionID int
+//   - shortName string
+func (_e *MockRepository_Expecter) FindGroupByInstitutionIDAndShortName(ctx interface{}, institutionID interface{}, shortName interface{}) *MockRepository_FindGroupByInstitutionIDAndShortName_Call {
+	return &MockRepository_FindGroupByInstitutionIDAndShortName_Call{Call: _e.mock.On("FindGroupByInstitutionIDAndShortName", ctx, institutionID, shortName)}
 }
 
-func (_c *MockRepository_FindGroupTypes_Call) Run(run func()) *MockRepository_FindGroupTypes_Call {
+func (_c *MockRepository_FindGroupByInstitutionIDAndShortName_Call) Run(run func(ctx context.Context, institutionID int, shortName string)) *MockRepository_FindGroupByInstitutionIDAndShortName_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run()
+		run(args[0].(context.Context), args[1].(int), args[2].(string))
 	})
 	return _c
 }
 
-func (_c *MockRepository_FindGroupTypes_Call) Return(_a0 []*group.GroupType, _a1 error) *MockRepository_FindGroupTypes_Call {
+func (_c *MockRepository_FindGroupByInstitutionIDAndShortName_Call) Return(_a0 *ent.Group, _a1 error) *MockRepository_FindGroupByInstitutionIDAndShortName_Call {
 	_c.Call.Return(_a0, _a1)
 	return _c
 }
 
-func (_c *MockRepository_FindGroupTypes_Call) RunAndReturn(run func() ([]*group.GroupType, error)) *MockRepository_FindGroupTypes_Call {
+func (_c *MockRepository_FindGroupByInstitutionIDAndShortName_Call) RunAndReturn(run func(context.Context, int, string) (*ent.Group, error)) *MockRepository_FindGroupByInstitutionIDAndShortName_Call {
 	_c.Call.Return(run)
 	return _c
 }
 
-// FindGroupsByUser provides a mock function with given fields: ctx, email
-func (_m *MockRepository) FindGroupsByUser(ctx context.Context, email string) ([]*ent.Group, error) {
-	ret := _m.Called(ctx, email)
+// FindGroupUser provides a mock function with given fields: ctx, principal, shortName
+func (_m *MockRepository) FindGroupUser(ctx context.Context, principal string, shortName string) (*ent.GroupUser, error) {
+	ret := _m.Called(ctx, principal, shortName)
+
+	var r0 *ent.GroupUser
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, string, string) (*ent.GroupUser, error)); ok {
+		return rf(ctx, principal, shortName)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, string, string) *ent.GroupUser); ok {
+		r0 = rf(ctx, principal, shortName)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*ent.GroupUser)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, string, string) error); ok {
+		r1 = rf(ctx, principal, shortName)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// MockRepository_FindGroupUser_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'FindGroupUser'
+type MockRepository_FindGroupUser_Call struct {
+	*mock.Call
+}
+
+// FindGroupUser is a helper method to define mock.On call
+//   - ctx context.Context
+//   - principal string
+//   - shortName string
+func (_e *MockRepository_Expecter) FindGroupUser(ctx interface{}, principal interface{}, shortName interface{}) *MockRepository_FindGroupUser_Call {
+	return &MockRepository_FindGroupUser_Call{Call: _e.mock.On("FindGroupUser", ctx, principal, shortName)}
+}
+
+func (_c *MockRepository_FindGroupUser_Call) Run(run func(ctx context.Context, principal string, shortName string)) *MockRepository_FindGroupUser_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(string), args[2].(string))
+	})
+	return _c
+}
+
+func (_c *MockRepository_FindGroupUser_Call) Return(_a0 *ent.GroupUser, _a1 error) *MockRepository_FindGroupUser_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *MockRepository_FindGroupUser_Call) RunAndReturn(run func(context.Context, string, string) (*ent.GroupUser, error)) *MockRepository_FindGroupUser_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// FindGroupsByUser provides a mock function with given fields: ctx, principal
+func (_m *MockRepository) FindGroupsByUser(ctx context.Context, principal string) ([]*ent.Group, error) {
+	ret := _m.Called(ctx, principal)
 
 	var r0 []*ent.Group
 	var r1 error
 	if rf, ok := ret.Get(0).(func(context.Context, string) ([]*ent.Group, error)); ok {
-		return rf(ctx, email)
+		return rf(ctx, principal)
 	}
 	if rf, ok := ret.Get(0).(func(context.Context, string) []*ent.Group); ok {
-		r0 = rf(ctx, email)
+		r0 = rf(ctx, principal)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).([]*ent.Group)
@@ -210,7 +267,7 @@ func (_m *MockRepository) FindGroupsByUser(ctx context.Context, email string) ([
 	}
 
 	if rf, ok := ret.Get(1).(func(context.Context, string) error); ok {
-		r1 = rf(ctx, email)
+		r1 = rf(ctx, principal)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -225,12 +282,12 @@ type MockRepository_FindGroupsByUser_Call struct {
 
 // FindGroupsByUser is a helper method to define mock.On call
 //   - ctx context.Context
-//   - email string
-func (_e *MockRepository_Expecter) FindGroupsByUser(ctx interface{}, email interface{}) *MockRepository_FindGroupsByUser_Call {
-	return &MockRepository_FindGroupsByUser_Call{Call: _e.mock.On("FindGroupsByUser", ctx, email)}
+//   - principal string
+func (_e *MockRepository_Expecter) FindGroupsByUser(ctx interface{}, principal interface{}) *MockRepository_FindGroupsByUser_Call {
+	return &MockRepository_FindGroupsByUser_Call{Call: _e.mock.On("FindGroupsByUser", ctx, principal)}
 }
 
-func (_c *MockRepository_FindGroupsByUser_Call) Run(run func(ctx context.Context, email string)) *MockRepository_FindGroupsByUser_Call {
+func (_c *MockRepository_FindGroupsByUser_Call) Run(run func(ctx context.Context, principal string)) *MockRepository_FindGroupsByUser_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		run(args[0].(context.Context), args[1].(string))
 	})
@@ -247,25 +304,25 @@ func (_c *MockRepository_FindGroupsByUser_Call) RunAndReturn(run func(context.Co
 	return _c
 }
 
-// FindInstitutionByAdminDomain provides a mock function with given fields: ctx, domain
-func (_m *MockRepository) FindInstitutionByAdminDomain(ctx context.Context, domain string) (*ent.Institution, error) {
-	ret := _m.Called(ctx, domain)
+// FindUserWithInstitution provides a mock function with given fields: ctx, principal
+func (_m *MockRepository) FindUserWithInstitution(ctx context.Context, principal string) (*ent.User, error) {
+	ret := _m.Called(ctx, principal)
 
-	var r0 *ent.Institution
+	var r0 *ent.User
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, string) (*ent.Institution, error)); ok {
-		return rf(ctx, domain)
+	if rf, ok := ret.Get(0).(func(context.Context, string) (*ent.User, error)); ok {
+		return rf(ctx, principal)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, string) *ent.Institution); ok {
-		r0 = rf(ctx, domain)
+	if rf, ok := ret.Get(0).(func(context.Context, string) *ent.User); ok {
+		r0 = rf(ctx, principal)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*ent.Institution)
+			r0 = ret.Get(0).(*ent.User)
 		}
 	}
 
 	if rf, ok := ret.Get(1).(func(context.Context, string) error); ok {
-		r1 = rf(ctx, domain)
+		r1 = rf(ctx, principal)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -273,31 +330,101 @@ func (_m *MockRepository) FindInstitutionByAdminDomain(ctx context.Context, doma
 	return r0, r1
 }
 
-// MockRepository_FindInstitutionByAdminDomain_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'FindInstitutionByAdminDomain'
-type MockRepository_FindInstitutionByAdminDomain_Call struct {
+// MockRepository_FindUserWithInstitution_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'FindUserWithInstitution'
+type MockRepository_FindUserWithInstitution_Call struct {
 	*mock.Call
 }
 
-// FindInstitutionByAdminDomain is a helper method to define mock.On call
+// FindUserWithInstitution is a helper method to define mock.On call
 //   - ctx context.Context
-//   - domain string
-func (_e *MockRepository_Expecter) FindInstitutionByAdminDomain(ctx interface{}, domain interface{}) *MockRepository_FindInstitutionByAdminDomain_Call {
-	return &MockRepository_FindInstitutionByAdminDomain_Call{Call: _e.mock.On("FindInstitutionByAdminDomain", ctx, domain)}
+//   - principal string
+func (_e *MockRepository_Expecter) FindUserWithInstitution(ctx interface{}, principal interface{}) *MockRepository_FindUserWithInstitution_Call {
+	return &MockRepository_FindUserWithInstitution_Call{Call: _e.mock.On("FindUserWithInstitution", ctx, principal)}
 }
 
-func (_c *MockRepository_FindInstitutionByAdminDomain_Call) Run(run func(ctx context.Context, domain string)) *MockRepository_FindInstitutionByAdminDomain_Call {
+func (_c *MockRepository_FindUserWithInstitution_Call) Run(run func(ctx context.Context, principal string)) *MockRepository_FindUserWithInstitution_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		run(args[0].(context.Context), args[1].(string))
 	})
 	return _c
 }
 
-func (_c *MockRepository_FindInstitutionByAdminDomain_Call) Return(_a0 *ent.Institution, _a1 error) *MockRepository_FindInstitutionByAdminDomain_Call {
+func (_c *MockRepository_FindUserWithInstitution_Call) Return(_a0 *ent.User, _a1 error) *MockRepository_FindUserWithInstitution_Call {
 	_c.Call.Return(_a0, _a1)
 	return _c
 }
 
-func (_c *MockRepository_FindInstitutionByAdminDomain_Call) RunAndReturn(run func(context.Context, string) (*ent.Institution, error)) *MockRepository_FindInstitutionByAdminDomain_Call {
+func (_c *MockRepository_FindUserWithInstitution_Call) RunAndReturn(run func(context.Context, string) (*ent.User, error)) *MockRepository_FindUserWithInstitution_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// UpdateGroup provides a mock function with given fields: ctx, id, opts
+func (_m *MockRepository) UpdateGroup(ctx context.Context, id int, opts ...group.Option) (*ent.Group, error) {
+	_va := make([]interface{}, len(opts))
+	for _i := range opts {
+		_va[_i] = opts[_i]
+	}
+	var _ca []interface{}
+	_ca = append(_ca, ctx, id)
+	_ca = append(_ca, _va...)
+	ret := _m.Called(_ca...)
+
+	var r0 *ent.Group
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, int, ...group.Option) (*ent.Group, error)); ok {
+		return rf(ctx, id, opts...)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, int, ...group.Option) *ent.Group); ok {
+		r0 = rf(ctx, id, opts...)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*ent.Group)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, int, ...group.Option) error); ok {
+		r1 = rf(ctx, id, opts...)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// MockRepository_UpdateGroup_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'UpdateGroup'
+type MockRepository_UpdateGroup_Call struct {
+	*mock.Call
+}
+
+// UpdateGroup is a helper method to define mock.On call
+//   - ctx context.Context
+//   - id int
+//   - opts ...group.Option
+func (_e *MockRepository_Expecter) UpdateGroup(ctx interface{}, id interface{}, opts ...interface{}) *MockRepository_UpdateGroup_Call {
+	return &MockRepository_UpdateGroup_Call{Call: _e.mock.On("UpdateGroup",
+		append([]interface{}{ctx, id}, opts...)...)}
+}
+
+func (_c *MockRepository_UpdateGroup_Call) Run(run func(ctx context.Context, id int, opts ...group.Option)) *MockRepository_UpdateGroup_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		variadicArgs := make([]group.Option, len(args)-2)
+		for i, a := range args[2:] {
+			if a != nil {
+				variadicArgs[i] = a.(group.Option)
+			}
+		}
+		run(args[0].(context.Context), args[1].(int), variadicArgs...)
+	})
+	return _c
+}
+
+func (_c *MockRepository_UpdateGroup_Call) Return(_a0 *ent.Group, _a1 error) *MockRepository_UpdateGroup_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *MockRepository_UpdateGroup_Call) RunAndReturn(run func(context.Context, int, ...group.Option) (*ent.Group, error)) *MockRepository_UpdateGroup_Call {
 	_c.Call.Return(run)
 	return _c
 }
