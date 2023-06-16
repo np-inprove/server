@@ -3,6 +3,7 @@ package institution
 import (
 	"context"
 	"fmt"
+
 	"github.com/np-inprove/server/internal/apperror"
 	"github.com/np-inprove/server/internal/entity"
 )
@@ -12,11 +13,11 @@ type UseCase interface {
 	CreateInstitution(ctx context.Context, name string, shortName string, description string) (*entity.Institution, error)
 	UpdateInstitution(
 		ctx context.Context,
-		id int,
 		name string,
 		shortName string,
 		adminDomain string,
 		studentDomain string,
+		updateShortname string,
 	) (*entity.Institution, error)
 	DeleteInstitution(ctx context.Context, shortName string) error
 }
@@ -80,7 +81,6 @@ func (u useCase) DeleteInstitution(ctx context.Context, shortName string) error 
 
 func (u useCase) UpdateInstitution(
 	ctx context.Context,
-	id int,
 	name string,
 	shortName string,
 	adminDomain string,
@@ -88,7 +88,7 @@ func (u useCase) UpdateInstitution(
 ) (*entity.Institution, error) {
 	//i dont know how to do optimization
 	err := u.repo.WithTx(ctx, func(ctx context.Context) error {
-		_, err := u.repo.UpdateInstitution(ctx, id, name, shortName, adminDomain, studentDomain)
+		_, err := u.repo.UpdateInstitution(ctx, name, shortName, adminDomain, studentDomain)
 		if err != nil {
 			if apperror.IsConflict(err) {
 				return ErrInstitutionShortNameConflict
@@ -108,7 +108,7 @@ func (u useCase) UpdateInstitution(
 
 	var inst *entity.Institution
 	for _, i := range insts {
-		if i.ID == id {
+		if i.ShortName == shortName {
 			inst = i
 			break
 		}

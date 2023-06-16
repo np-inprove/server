@@ -1,7 +1,6 @@
 package payload
 
 import (
-	"github.com/gookit/validate"
 	"net/http"
 )
 
@@ -27,7 +26,6 @@ func (c CreateInstitutionRequest) Validate() *validate.Validation {
 }
 
 type UpdateInstitutionRequest struct {
-	ID            int    `json:"id" validate:"required"`
 	Name          string `json:"name" validate:"required"`
 	ShortName     string `json:"shortName" validate:"required|alphaDash"`
 	AdminDomain   string `json:"adminDomain,omitempty" validate:"required|fqdn"`

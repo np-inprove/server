@@ -3,6 +3,7 @@ package institution
 import (
 	"context"
 	"fmt"
+
 	"github.com/np-inprove/server/internal/apperror"
 	"github.com/np-inprove/server/internal/ent"
 	entinstitution "github.com/np-inprove/server/internal/ent/institution"
@@ -71,23 +72,24 @@ func (e entRepository) DeleteInstitution(ctx context.Context, id int) error {
 	return nil
 }
 
-func (e entRepository) UpdateInstitution(ctx context.Context, id int, name string, shortName string, adminDomain string, studentDomain string)(*entity.Institution, error) {
+func (e entRepository) UpdateInstitution(ctx context.Context, name string, shortName string, adminDomain string, studentDomain string, updateShortName string) (*entity.Institution, error) {
 	c := e.client
 	if cc, ok := entutils.ExtractTx(ctx); ok {
 		c = cc
 	}
 
-	inst, err := c.Institution.UpdateOneID(id).
+	inst, err := c.Institution.Update().
 		SetName(name).
 		SetShortName(shortName).
 		SetAdminDomain(adminDomain).
 		SetStudentDomain(studentDomain).
+		Where(institution.ShortName(updateShortName)).
 		Save(ctx)
 	if err != nil {
 		if apperror.IsConflict(err) {
 			return nil, ErrInstitutionShortNameConflict
 		}
-		return nil, fmt.Errorf("failed to save institution: %w", err)
+		return nil, fmt.Errorf("failed to edit institution: %w", err)
 	}
 
 	return inst, nil

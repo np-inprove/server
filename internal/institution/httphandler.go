@@ -1,6 +1,8 @@
 package institution
 
 import (
+	"net/http"
+
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/jwtauth/v5"
 	"github.com/go-chi/render"
@@ -8,7 +10,6 @@ import (
 	"github.com/np-inprove/server/internal/config"
 	"github.com/np-inprove/server/internal/middleware"
 	"github.com/np-inprove/server/internal/payload"
-	"net/http"
 )
 
 type httpHandler struct {
@@ -35,8 +36,8 @@ func NewHTTPHandler(u UseCase, c *config.Config, j *jwtauth.JWTAuth) chi.Router 
 
 		r.Get("/", h.ListInstitutions)
 		r.Post("/", h.CreateInstitution)
-		r.Delete("/{id}", h.DeleteInstitution)
-		r.Put("/{id}", h.UpdateInstitution) 
+		r.Delete("/{shortName}", h.DeleteInstitution)
+		r.Put("/{shortName}", h.UpdateInstitution)
 	})
 
 	return r
@@ -88,7 +89,7 @@ func (h httpHandler) CreateInstitution(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h httpHandler) DeleteInstitution(w http.ResponseWriter, r *http.Request) {
-	shortName := chi.URLParam(r, "id") //rename
+	shortName := chi.URLParam(r, "shortName")
 	err := h.service.DeleteInstitution(r.Context(), shortName)
 	if err != nil {
 		_ = render.Render(w, r, mapDomainErr(err))
@@ -100,14 +101,14 @@ func (h httpHandler) DeleteInstitution(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h httpHandler) UpdateInstitution(w http.ResponseWriter, r *http.Request) {
-	p := &payload.UpdateInstitutionRequest{} 
-
+	p := &payload.UpdateInstitutionRequest{}
+	shortName := chi.URLParam(r, "shortName")
 	if v := p.Validate(); !v.Validate() {
 		_ = render.Render(w, r, apperror.ErrValidation(v.Errors))
 		return
 	}
 
-	inst, err := h.service.UpdateInstitution(r.Context(), p.ID, p.Name, p.ShortName, p.AdminDomain, p.StudentDomain)
+	inst, err := h.service.UpdateInstitution(r.Context(), p.Name, p.ShortName, p.AdminDomain, p.StudentDomain, shortName)
 	if err != nil {
 		_ = render.Render(w, r, mapDomainErr(err))
 		return

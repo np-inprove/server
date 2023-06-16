@@ -2,6 +2,7 @@ package institution
 
 import (
 	"context"
+
 	"github.com/np-inprove/server/internal/entity"
 	"github.com/np-inprove/server/internal/transactor"
 )
@@ -16,7 +17,6 @@ type Writer interface {
 	DeleteInstitution(ctx context.Context, id int) error
 	UpdateInstitution(
 		ctx context.Context,
-		id int,
 		name string,
 		shortName string,
 		adminDomain string,
