@@ -89,9 +89,8 @@ func (u useCase) Register(ctx context.Context, inviteCode string, firstName stri
 		return nil, err
 	}
 
-	inst, err := invite.Edges.InstitutionOrErr()
-	if err != nil {
-		return nil, fmt.Errorf("failed to get invite edge: %w", err)
+	if invite.Edges.Institution == nil {
+		return nil, fmt.Errorf("invite edges not loaded")
 	}
 
 	h, err := hash.CreateEncoded(password)
@@ -99,6 +98,7 @@ func (u useCase) Register(ctx context.Context, inviteCode string, firstName stri
 		return nil, fmt.Errorf("failed to create encoded password: %w", err)
 	}
 
+	inst := invite.Edges.Institution
 	user, err := u.repo.CreateUser(ctx, inst.ID, firstName, lastName, email, h)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create user: %w", err)

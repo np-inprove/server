@@ -36,6 +36,10 @@ func (u useCase) CreateGroup(ctx context.Context, principal string, opts ...grou
 		return nil, fmt.Errorf("failed to find user: %w", err)
 	}
 
+	if usr.Edges.Institution == nil {
+		return nil, fmt.Errorf("user edges not loaded")
+	}
+
 	if usr.Role != institution.RoleAdmin {
 		return nil, ErrUnauthorized
 	}
@@ -45,11 +49,7 @@ func (u useCase) CreateGroup(ctx context.Context, principal string, opts ...grou
 		opt(&options)
 	}
 
-	inst, err := usr.Edges.InstitutionOrErr()
-	if err != nil {
-		return nil, fmt.Errorf("failed to get user edges: %w", err)
-	}
-
+	inst := usr.Edges.Institution
 	if _, err := u.repo.FindGroupByInstitutionIDAndShortName(ctx, inst.ID, options.ShortName); err == nil {
 		return nil, ErrGroupShortNameConflict
 	}
