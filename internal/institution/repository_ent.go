@@ -3,6 +3,7 @@ package institution
 import (
 	"context"
 	"fmt"
+
 	"github.com/np-inprove/server/internal/apperror"
 	"github.com/np-inprove/server/internal/ent"
 	entinstitution "github.com/np-inprove/server/internal/ent/institution"
@@ -69,6 +70,24 @@ func (e entRepository) DeleteInstitution(ctx context.Context, id int) error {
 	}
 
 	return nil
+}
+
+func (e entRepository) UpdateInstitution(ctx context.Context, id int, name, shortName, description string) (*entity.Institution, error) {
+	c := e.client
+	if cc, ok := entutils.ExtractTx(ctx); ok {
+		c = cc
+	}
+
+	inst, err := c.Institution.UpdateOneID(id).
+		SetName(name).
+		SetShortName(shortName).
+		SetDescription(description).
+		Save(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to update institution: %w", err)
+	}
+
+	return inst, nil
 }
 
 func (e entRepository) WithTx(

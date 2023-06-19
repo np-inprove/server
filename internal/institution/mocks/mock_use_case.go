@@ -177,6 +177,64 @@ func (_c *MockUseCase_ListInstitutions_Call) RunAndReturn(run func(context.Conte
 	return _c
 }
 
+// UpdateInstitution provides a mock function with given fields: ctx, principal, name, shortName, description
+func (_m *MockUseCase) UpdateInstitution(ctx context.Context, principal string, name string, shortName string, description string) (*ent.Institution, error) {
+	ret := _m.Called(ctx, principal, name, shortName, description)
+
+	var r0 *ent.Institution
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, string, string, string, string) (*ent.Institution, error)); ok {
+		return rf(ctx, principal, name, shortName, description)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, string, string, string, string) *ent.Institution); ok {
+		r0 = rf(ctx, principal, name, shortName, description)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*ent.Institution)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, string, string, string, string) error); ok {
+		r1 = rf(ctx, principal, name, shortName, description)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// MockUseCase_UpdateInstitution_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'UpdateInstitution'
+type MockUseCase_UpdateInstitution_Call struct {
+	*mock.Call
+}
+
+// UpdateInstitution is a helper method to define mock.On call
+//   - ctx context.Context
+//   - principal string
+//   - name string
+//   - shortName string
+//   - description string
+func (_e *MockUseCase_Expecter) UpdateInstitution(ctx interface{}, principal interface{}, name interface{}, shortName interface{}, description interface{}) *MockUseCase_UpdateInstitution_Call {
+	return &MockUseCase_UpdateInstitution_Call{Call: _e.mock.On("UpdateInstitution", ctx, principal, name, shortName, description)}
+}
+
+func (_c *MockUseCase_UpdateInstitution_Call) Run(run func(ctx context.Context, principal string, name string, shortName string, description string)) *MockUseCase_UpdateInstitution_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(string), args[2].(string), args[3].(string), args[4].(string))
+	})
+	return _c
+}
+
+func (_c *MockUseCase_UpdateInstitution_Call) Return(_a0 *ent.Institution, _a1 error) *MockUseCase_UpdateInstitution_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *MockUseCase_UpdateInstitution_Call) RunAndReturn(run func(context.Context, string, string, string, string) (*ent.Institution, error)) *MockUseCase_UpdateInstitution_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 type mockConstructorTestingTNewMockUseCase interface {
 	mock.TestingT
 	Cleanup(func())

@@ -25,3 +25,13 @@ type CreateInstitutionRequest struct {
 func (c CreateInstitutionRequest) Validate() *validate.Validation {
 	return validate.Struct(c)
 }
+
+type UpdateInstitutionRequest struct {
+	Name        string `json:"name" validate:"required"`
+	ShortName   string `json:"shortName" validate:"required|alphaDash"`
+	Description string `json:"description"`
+}
+
+func (u UpdateInstitutionRequest) Validate() *validate.Validation {
+	return validate.Struct(u)
+}

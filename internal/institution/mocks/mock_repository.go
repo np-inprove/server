@@ -232,6 +232,64 @@ func (_c *MockRepository_FindInstitutions_Call) RunAndReturn(run func(context.Co
 	return _c
 }
 
+// UpdateInstitution provides a mock function with given fields: ctx, id, name, shortName, description
+func (_m *MockRepository) UpdateInstitution(ctx context.Context, id int, name string, shortName string, description string) (*ent.Institution, error) {
+	ret := _m.Called(ctx, id, name, shortName, description)
+
+	var r0 *ent.Institution
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, int, string, string, string) (*ent.Institution, error)); ok {
+		return rf(ctx, id, name, shortName, description)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, int, string, string, string) *ent.Institution); ok {
+		r0 = rf(ctx, id, name, shortName, description)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*ent.Institution)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, int, string, string, string) error); ok {
+		r1 = rf(ctx, id, name, shortName, description)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// MockRepository_UpdateInstitution_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'UpdateInstitution'
+type MockRepository_UpdateInstitution_Call struct {
+	*mock.Call
+}
+
+// UpdateInstitution is a helper method to define mock.On call
+//   - ctx context.Context
+//   - id int
+//   - name string
+//   - shortName string
+//   - description string
+func (_e *MockRepository_Expecter) UpdateInstitution(ctx interface{}, id interface{}, name interface{}, shortName interface{}, description interface{}) *MockRepository_UpdateInstitution_Call {
+	return &MockRepository_UpdateInstitution_Call{Call: _e.mock.On("UpdateInstitution", ctx, id, name, shortName, description)}
+}
+
+func (_c *MockRepository_UpdateInstitution_Call) Run(run func(ctx context.Context, id int, name string, shortName string, description string)) *MockRepository_UpdateInstitution_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(int), args[2].(string), args[3].(string), args[4].(string))
+	})
+	return _c
+}
+
+func (_c *MockRepository_UpdateInstitution_Call) Return(_a0 *ent.Institution, _a1 error) *MockRepository_UpdateInstitution_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *MockRepository_UpdateInstitution_Call) RunAndReturn(run func(context.Context, int, string, string, string) (*ent.Institution, error)) *MockRepository_UpdateInstitution_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // WithTx provides a mock function with given fields: _a0, _a1
 func (_m *MockRepository) WithTx(_a0 context.Context, _a1 func(context.Context) (interface{}, error)) (interface{}, error) {
 	ret := _m.Called(_a0, _a1)

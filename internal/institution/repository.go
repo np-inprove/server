@@ -2,6 +2,7 @@ package institution
 
 import (
 	"context"
+
 	"github.com/np-inprove/server/internal/entity"
 	"github.com/np-inprove/server/internal/transactor"
 )
@@ -13,6 +14,7 @@ type Reader interface {
 
 type Writer interface {
 	CreateInstitution(ctx context.Context, name, shortName, description string) (*entity.Institution, error)
+	UpdateInstitution(ctx context.Context, id int, name, shortName, description string) (*entity.Institution, error)
 	DeleteInstitution(ctx context.Context, id int) error
 }
 

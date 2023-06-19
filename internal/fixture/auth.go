@@ -24,13 +24,19 @@ var (
 		},
 	}
 
-	Institutions = []*entity.Institution{InstitutionNP}
+	Institutions = []*entity.Institution{InstitutionNP, InstitutionSP}
 
 	InstitutionNP = &entity.Institution{
 		ID:          1,
 		Name:        "Ngee Ann Polytechnic",
 		ShortName:   "NP",
 		Description: "Ngee Ann Polytechnic",
+	}
+	InstitutionSP = &entity.Institution{
+		ID:          1,
+		Name:        "Singapore Polytechnic",
+		ShortName:   "SP",
+		Description: "Singapore Polytechnic",
 	}
 
 	UserJohnPassword = "example"
