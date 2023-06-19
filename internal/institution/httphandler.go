@@ -108,7 +108,7 @@ func (h httpHandler) UpdateInstitution(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	inst, err := h.service.UpdateInstitution(r.Context(), p.Name, p.ShortName, p.AdminDomain, p.StudentDomain, shortName)
+	inst, err := h.service.UpdateInstitution(r.Context(), shortName, p.Name, p.ShortName, p.Description)
 	if err != nil {
 		_ = render.Render(w, r, mapDomainErr(err))
 		return
@@ -116,10 +116,9 @@ func (h httpHandler) UpdateInstitution(w http.ResponseWriter, r *http.Request) {
 
 	render.Status(r, http.StatusNoContent)
 	_ = render.Render(w, r, payload.Institution{
-		ID:            inst.ID,
-		Name:          inst.Name,
-		ShortName:     inst.ShortName,
-		AdminDomain:   inst.AdminDomain,
-		StudentDomain: inst.StudentDomain,
+		ID:          inst.ID,
+		Name:        inst.Name,
+		ShortName:   inst.ShortName,
+		Description: inst.Description,
 	})
 }

@@ -226,7 +226,7 @@ func (suite *UseCaseTestSuite) TestDeleteInstitution() {
 				repository.On("FindInstitution", mock.Anything, mock.Anything).
 					Return(nil, fixture.RepoNotFoundErr)
 			},
-			err: fmt.Errorf("failed to find institution: %w", fixture.RepoNotFoundErr),
+			err: ErrInstitutionNotFound,
 		},
 		{
 			name: "Internal repo error",
@@ -265,6 +265,59 @@ func (suite *UseCaseTestSuite) TestDeleteInstitution() {
 			u := NewUseCase(repo)
 			err := u.DeleteInstitution(tc.args.ctx, tc.args.shortName)
 			suite.Equal(tc.err, err)
+		})
+	}
+}
+
+func (suite *UseCaseTestSuite) TestUpdateInstitution() {
+	type args struct {
+		ctx         context.Context
+		principal   string
+		name        string
+		shortName   string
+		description string
+	}
+
+	tests := []struct {
+		name      string
+		args      args
+		configure func(repository *mocks.MockRepository)
+		err       error
+		want      *entity.Institution
+	}{
+		{
+			name: "Success",
+			args: args{
+				ctx:         context.Background(),
+				principal:   fixture.InstitutionNP.ShortName,
+				name:        fixture.InstitutionSP.Name,
+				shortName:   fixture.InstitutionSP.ShortName,
+				description: fixture.InstitutionSP.ShortName,
+			},
+			configure: func(repository *mocks.MockRepository) {
+				repository.On("FindInstitution", mock.Anything, mock.Anything).
+					Return(fixture.InstitutionNP, nil)
+				repository.On("UpdateInstitution", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
+					Return(fixture.InstitutionSP, nil)
+			},
+			err: nil,
+			want: &entity.Institution{
+				ID:          fixture.InstitutionNP.ID,
+				Name:        fixture.InstitutionSP.Name,
+				ShortName:   fixture.InstitutionSP.ShortName,
+				Description: fixture.InstitutionSP.Name,
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		suite.Run(tc.name, func() {
+			repo := new(mocks.MockRepository)
+			tc.configure(repo)
+			u := NewUseCase(repo)
+			inst, err := u.UpdateInstitution(tc.args.ctx, tc.args.principal, tc.args.name, tc.args.shortName, tc.args.description)
+			suite.Equal(tc.err, err)
+			suite.Equal(tc.want, inst)
 		})
 	}
 }

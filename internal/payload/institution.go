@@ -1,6 +1,7 @@
 package payload
 
 import (
+	"github.com/gookit/validate"
 	"net/http"
 )
 
@@ -26,28 +27,11 @@ func (c CreateInstitutionRequest) Validate() *validate.Validation {
 }
 
 type UpdateInstitutionRequest struct {
-	Name          string `json:"name" validate:"required"`
-	ShortName     string `json:"shortName" validate:"required|alphaDash"`
-	AdminDomain   string `json:"adminDomain,omitempty" validate:"required|fqdn"`
-	StudentDomain string `json:"studentDomain,omitempty" validate:"required|fqdn"`
+	Name        string `json:"name" validate:"required"`
+	ShortName   string `json:"shortName" validate:"required|alphaDash"`
+	Description string `json:"description"`
 }
 
-func (c UpdateInstitutionRequest) Validate() *validate.Validation {
-	v := validate.Struct(c)
-	v.AddValidator("fqdn", func(val interface{}) bool {
-		s, ok := val.(string)
-		if !ok {
-			return false
-		}
-
-		if s == "" {
-			return false
-		}
-
-		return fqdnRegexRFC1123.MatchString(s)
-	})
-	v.AddMessages(map[string]string{
-		"fqdn": "value is not a fully qualified domain name",
-	})
-	return v
+func (u UpdateInstitutionRequest) Validate() *validate.Validation {
+	return validate.Struct(u)
 }

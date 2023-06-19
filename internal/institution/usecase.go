@@ -10,15 +10,10 @@ import (
 
 type UseCase interface {
 	ListInstitutions(ctx context.Context) ([]*entity.Institution, error)
-	CreateInstitution(ctx context.Context, name string, shortName string, description string) (*entity.Institution, error)
-	UpdateInstitution(
-		ctx context.Context,
-		name string,
-		shortName string,
-		adminDomain string,
-		studentDomain string,
-		updateShortname string,
-	) (*entity.Institution, error)
+	CreateInstitution(ctx context.Context, name, shortName, description string) (*entity.Institution, error)
+
+	// UpdateInstitution modifies an institution which has a short name identified by the principal argument.
+	UpdateInstitution(ctx context.Context, principal, name, shortName, description string) (*entity.Institution, error)
 	DeleteInstitution(ctx context.Context, shortName string) error
 }
 
@@ -37,8 +32,6 @@ func (u useCase) ListInstitutions(ctx context.Context) ([]*entity.Institution, e
 	}
 	return insts, nil
 }
-
-type T *entity.Institution
 
 func (u useCase) CreateInstitution(ctx context.Context, name, shortName, description string) (*entity.Institution, error) {
 	inst, err := u.repo.WithTx(ctx, func(ctx context.Context) (interface{}, error) {
@@ -62,6 +55,9 @@ func (u useCase) CreateInstitution(ctx context.Context, name, shortName, descrip
 func (u useCase) DeleteInstitution(ctx context.Context, shortName string) error {
 	inst, err := u.repo.FindInstitution(ctx, shortName)
 	if err != nil {
+		if apperror.IsNotFound(err) {
+			return ErrInstitutionNotFound
+		}
 		return fmt.Errorf("failed to find institution: %w", err)
 	}
 
@@ -73,45 +69,18 @@ func (u useCase) DeleteInstitution(ctx context.Context, shortName string) error 
 	return nil
 }
 
-func (u useCase) DeleteInstitution(ctx context.Context, shortName string) error {
-	return u.repo.WithTx(ctx, func(ctx context.Context) error {
-		return u.repo.DeleteInstitution(ctx, shortName)
-	})
-}
-
-func (u useCase) UpdateInstitution(
-	ctx context.Context,
-	name string,
-	shortName string,
-	adminDomain string,
-	studentDomain string,
-) (*entity.Institution, error) {
-	//i dont know how to do optimization
-	err := u.repo.WithTx(ctx, func(ctx context.Context) error {
-		_, err := u.repo.UpdateInstitution(ctx, name, shortName, adminDomain, studentDomain)
-		if err != nil {
-			if apperror.IsConflict(err) {
-				return ErrInstitutionShortNameConflict
-			}
-			return err
-		}
-		return nil
-	})
+func (u useCase) UpdateInstitution(ctx context.Context, principal, shortName, name, description string) (*entity.Institution, error) {
+	inst, err := u.repo.FindInstitution(ctx, principal)
 	if err != nil {
-		return nil, err
+		if apperror.IsNotFound(err) {
+			return nil, ErrInstitutionNotFound
+		}
+		return nil, fmt.Errorf("failed to find institution: %w", err)
 	}
 
-	insts, err := u.repo.FindInstitutions(ctx)
+	inst, err = u.repo.UpdateInstitution(ctx, inst.ID, shortName, name, description)
 	if err != nil {
-		return nil, err
-	}
-
-	var inst *entity.Institution
-	for _, i := range insts {
-		if i.ShortName == shortName {
-			inst = i
-			break
-		}
+		return nil, fmt.Errorf("failed to update institution %w", err)
 	}
 
 	return inst, nil
