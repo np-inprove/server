@@ -308,6 +308,38 @@ func (suite *UseCaseTestSuite) TestUpdateInstitution() {
 				Description: fixture.InstitutionSP.Name,
 			},
 		},
+		{
+			name: "Not found",
+			args: args{
+				ctx:         context.Background(),
+				principal:   "HmMm",
+				name:        fixture.InstitutionSP.Name,
+				shortName:   fixture.InstitutionSP.ShortName,
+				description: fixture.InstitutionSP.ShortName,
+			},
+			configure: func(repository *mocks.MockRepository) {
+				repository.On("FindInstitution", mock.Anything, mock.Anything).
+					Return(nil, fixture.RepoNotFoundErr)
+			},
+			err:  ErrInstitutionNotFound,
+			want: nil,
+		},
+		{
+			name: "Repo internal err",
+			args: args{
+				ctx:         context.Background(),
+				principal:   fixture.InstitutionNP.ShortName,
+				name:        fixture.InstitutionSP.Name,
+				shortName:   fixture.InstitutionSP.ShortName,
+				description: fixture.InstitutionSP.ShortName,
+			},
+			configure: func(repository *mocks.MockRepository) {
+				repository.On("FindInstitution", mock.Anything, mock.Anything).
+					Return(nil, fixture.RepoInternalErr)
+			},
+			err:  fmt.Errorf("failed to find institution: %w", fixture.RepoInternalErr),
+			want: nil,
+		},
 	}
 
 	for _, tc := range tests {
