@@ -22,17 +22,29 @@ func (_m *MockTransactor) EXPECT() *MockTransactor_Expecter {
 }
 
 // WithTx provides a mock function with given fields: _a0, _a1
-func (_m *MockTransactor) WithTx(_a0 context.Context, _a1 func(context.Context) error) error {
+func (_m *MockTransactor) WithTx(_a0 context.Context, _a1 func(context.Context) (interface{}, error)) (interface{}, error) {
 	ret := _m.Called(_a0, _a1)
 
-	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, func(context.Context) error) error); ok {
+	var r0 interface{}
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, func(context.Context) (interface{}, error)) (interface{}, error)); ok {
+		return rf(_a0, _a1)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, func(context.Context) (interface{}, error)) interface{}); ok {
 		r0 = rf(_a0, _a1)
 	} else {
-		r0 = ret.Error(0)
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(interface{})
+		}
 	}
 
-	return r0
+	if rf, ok := ret.Get(1).(func(context.Context, func(context.Context) (interface{}, error)) error); ok {
+		r1 = rf(_a0, _a1)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
 }
 
 // MockTransactor_WithTx_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'WithTx'
@@ -42,24 +54,24 @@ type MockTransactor_WithTx_Call struct {
 
 // WithTx is a helper method to define mock.On call
 //   - _a0 context.Context
-//   - _a1 func(context.Context) error
+//   - _a1 func(context.Context)(interface{} , error)
 func (_e *MockTransactor_Expecter) WithTx(_a0 interface{}, _a1 interface{}) *MockTransactor_WithTx_Call {
 	return &MockTransactor_WithTx_Call{Call: _e.mock.On("WithTx", _a0, _a1)}
 }
 
-func (_c *MockTransactor_WithTx_Call) Run(run func(_a0 context.Context, _a1 func(context.Context) error)) *MockTransactor_WithTx_Call {
+func (_c *MockTransactor_WithTx_Call) Run(run func(_a0 context.Context, _a1 func(context.Context) (interface{}, error))) *MockTransactor_WithTx_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(func(context.Context) error))
+		run(args[0].(context.Context), args[1].(func(context.Context) (interface{}, error)))
 	})
 	return _c
 }
 
-func (_c *MockTransactor_WithTx_Call) Return(_a0 error) *MockTransactor_WithTx_Call {
-	_c.Call.Return(_a0)
+func (_c *MockTransactor_WithTx_Call) Return(_a0 interface{}, _a1 error) *MockTransactor_WithTx_Call {
+	_c.Call.Return(_a0, _a1)
 	return _c
 }
 
-func (_c *MockTransactor_WithTx_Call) RunAndReturn(run func(context.Context, func(context.Context) error) error) *MockTransactor_WithTx_Call {
+func (_c *MockTransactor_WithTx_Call) RunAndReturn(run func(context.Context, func(context.Context) (interface{}, error)) (interface{}, error)) *MockTransactor_WithTx_Call {
 	_c.Call.Return(run)
 	return _c
 }

@@ -71,16 +71,20 @@ func (e entRepository) DeleteInstitution(ctx context.Context, id int) error {
 	return nil
 }
 
-func (e entRepository) WithTx(ctx context.Context, f func(ctx context.Context) error) error {
+func (e entRepository) WithTx(
+	ctx context.Context,
+	fn func(ctx context.Context) (interface{}, error),
+) (interface{}, error) {
 	tx, err := e.client.Tx(ctx)
 	if err != nil {
-		return fmt.Errorf("failed to start ent transaction: %w", err)
+		return nil, fmt.Errorf("failed to start ent transaction: %w", err)
 	}
 
 	txc := tx.Client()
 	ctx = context.WithValue(ctx, entutils.EntTxCtxKey, txc)
 
-	if err := f(ctx); err != nil {
+	ret, err := fn(ctx)
+	if err != nil {
 		e.log.Warn("failed database query during ent transaction",
 			logger.String("err", err.Error()),
 			logger.String("area", "god"),
@@ -91,10 +95,15 @@ func (e entRepository) WithTx(ctx context.Context, f func(ctx context.Context) e
 				logger.String("causer", err.Error()),
 				logger.String("area", "god"),
 			)
-			return fmt.Errorf("failed to rollback ent transaction: %w", err2)
+			return nil, fmt.Errorf("failed to rollback ent transaction: %w", err2)
 		}
-		return err
+		return nil, err
 	}
 
-	return tx.Commit()
+	err = tx.Commit()
+	if err != nil {
+		return nil, err
+	}
+
+	return ret, nil
 }

@@ -24,6 +24,8 @@ var (
 		},
 	}
 
+	Institutions = []*entity.Institution{InstitutionNP}
+
 	InstitutionNP = &entity.Institution{
 		ID:          1,
 		Name:        "Ngee Ann Polytechnic",

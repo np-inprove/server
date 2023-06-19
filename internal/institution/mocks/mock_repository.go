@@ -233,17 +233,29 @@ func (_c *MockRepository_FindInstitutions_Call) RunAndReturn(run func(context.Co
 }
 
 // WithTx provides a mock function with given fields: _a0, _a1
-func (_m *MockRepository) WithTx(_a0 context.Context, _a1 func(context.Context) error) error {
+func (_m *MockRepository) WithTx(_a0 context.Context, _a1 func(context.Context) (interface{}, error)) (interface{}, error) {
 	ret := _m.Called(_a0, _a1)
 
-	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, func(context.Context) error) error); ok {
+	var r0 interface{}
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, func(context.Context) (interface{}, error)) (interface{}, error)); ok {
+		return rf(_a0, _a1)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, func(context.Context) (interface{}, error)) interface{}); ok {
 		r0 = rf(_a0, _a1)
 	} else {
-		r0 = ret.Error(0)
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(interface{})
+		}
 	}
 
-	return r0
+	if rf, ok := ret.Get(1).(func(context.Context, func(context.Context) (interface{}, error)) error); ok {
+		r1 = rf(_a0, _a1)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
 }
 
 // MockRepository_WithTx_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'WithTx'
@@ -253,24 +265,24 @@ type MockRepository_WithTx_Call struct {
 
 // WithTx is a helper method to define mock.On call
 //   - _a0 context.Context
-//   - _a1 func(context.Context) error
+//   - _a1 func(context.Context)(interface{} , error)
 func (_e *MockRepository_Expecter) WithTx(_a0 interface{}, _a1 interface{}) *MockRepository_WithTx_Call {
 	return &MockRepository_WithTx_Call{Call: _e.mock.On("WithTx", _a0, _a1)}
 }
 
-func (_c *MockRepository_WithTx_Call) Run(run func(_a0 context.Context, _a1 func(context.Context) error)) *MockRepository_WithTx_Call {
+func (_c *MockRepository_WithTx_Call) Run(run func(_a0 context.Context, _a1 func(context.Context) (interface{}, error))) *MockRepository_WithTx_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(func(context.Context) error))
+		run(args[0].(context.Context), args[1].(func(context.Context) (interface{}, error)))
 	})
 	return _c
 }
 
-func (_c *MockRepository_WithTx_Call) Return(_a0 error) *MockRepository_WithTx_Call {
-	_c.Call.Return(_a0)
+func (_c *MockRepository_WithTx_Call) Return(_a0 interface{}, _a1 error) *MockRepository_WithTx_Call {
+	_c.Call.Return(_a0, _a1)
 	return _c
 }
 
-func (_c *MockRepository_WithTx_Call) RunAndReturn(run func(context.Context, func(context.Context) error) error) *MockRepository_WithTx_Call {
+func (_c *MockRepository_WithTx_Call) RunAndReturn(run func(context.Context, func(context.Context) (interface{}, error)) (interface{}, error)) *MockRepository_WithTx_Call {
 	_c.Call.Return(run)
 	return _c
 }
