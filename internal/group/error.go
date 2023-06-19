@@ -7,21 +7,12 @@ import (
 )
 
 var (
-	ErrInvalidGroupType    = errors.New("group type used is invalid")
-	ErrInstitutionNotFound = errors.New("institution does not exist")
-	ErrGroupPathConflict   = errors.New("a group with the desired path already exists")
-	ErrUserNotAdmin        = errors.New("user tried to perform an admin-only action")
+	ErrInstitutionNotFound    = errors.New("institution does not exist")
+	ErrGroupShortNameConflict = errors.New("a group with the desired short name already exists")
+	ErrUnauthorized           = errors.New("not authorized")
 )
 
 func mapDomainErr(err error) *apperror.ErrResponse {
-	if errors.Is(err, ErrInvalidGroupType) {
-		return &apperror.ErrResponse{
-			Err:            err,
-			HTTPStatusCode: http.StatusBadGateway,
-			AppErrCode:     40101,
-			AppErrMessage:  "The group type used is invalid",
-		}
-	}
 	if errors.Is(err, ErrInstitutionNotFound) {
 		return &apperror.ErrResponse{
 			Err:            err,
@@ -31,21 +22,21 @@ func mapDomainErr(err error) *apperror.ErrResponse {
 		}
 	}
 
-	if errors.Is(err, ErrGroupPathConflict) {
+	if errors.Is(err, ErrGroupShortNameConflict) {
 		return &apperror.ErrResponse{
 			Err:            err,
 			HTTPStatusCode: http.StatusConflict,
 			AppErrCode:     40901,
-			AppErrMessage:  "The group path chosen is unavailable",
+			AppErrMessage:  "This group short name is unavailable",
 		}
 	}
 
-	if errors.Is(err, ErrUserNotAdmin) {
+	if errors.Is(err, ErrUnauthorized) {
 		return &apperror.ErrResponse{
 			Err:            err,
 			HTTPStatusCode: http.StatusUnauthorized,
 			AppErrCode:     40301,
-			AppErrMessage:  "You must be an admin to perform this action",
+			AppErrMessage:  "Unauthorized",
 		}
 	}
 

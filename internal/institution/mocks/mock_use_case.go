@@ -23,25 +23,25 @@ func (_m *MockUseCase) EXPECT() *MockUseCase_Expecter {
 	return &MockUseCase_Expecter{mock: &_m.Mock}
 }
 
-// CreateInstitution provides a mock function with given fields: ctx, name, shortName, adminDomain, studentDomain
-func (_m *MockUseCase) CreateInstitution(ctx context.Context, name string, shortName string, adminDomain string, studentDomain string) (*ent.Institution, error) {
-	ret := _m.Called(ctx, name, shortName, adminDomain, studentDomain)
+// CreateInstitution provides a mock function with given fields: ctx, name, shortName, description
+func (_m *MockUseCase) CreateInstitution(ctx context.Context, name string, shortName string, description string) (*ent.Institution, error) {
+	ret := _m.Called(ctx, name, shortName, description)
 
 	var r0 *ent.Institution
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, string, string, string, string) (*ent.Institution, error)); ok {
-		return rf(ctx, name, shortName, adminDomain, studentDomain)
+	if rf, ok := ret.Get(0).(func(context.Context, string, string, string) (*ent.Institution, error)); ok {
+		return rf(ctx, name, shortName, description)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, string, string, string, string) *ent.Institution); ok {
-		r0 = rf(ctx, name, shortName, adminDomain, studentDomain)
+	if rf, ok := ret.Get(0).(func(context.Context, string, string, string) *ent.Institution); ok {
+		r0 = rf(ctx, name, shortName, description)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(*ent.Institution)
 		}
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, string, string, string, string) error); ok {
-		r1 = rf(ctx, name, shortName, adminDomain, studentDomain)
+	if rf, ok := ret.Get(1).(func(context.Context, string, string, string) error); ok {
+		r1 = rf(ctx, name, shortName, description)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -58,15 +58,14 @@ type MockUseCase_CreateInstitution_Call struct {
 //   - ctx context.Context
 //   - name string
 //   - shortName string
-//   - adminDomain string
-//   - studentDomain string
-func (_e *MockUseCase_Expecter) CreateInstitution(ctx interface{}, name interface{}, shortName interface{}, adminDomain interface{}, studentDomain interface{}) *MockUseCase_CreateInstitution_Call {
-	return &MockUseCase_CreateInstitution_Call{Call: _e.mock.On("CreateInstitution", ctx, name, shortName, adminDomain, studentDomain)}
+//   - description string
+func (_e *MockUseCase_Expecter) CreateInstitution(ctx interface{}, name interface{}, shortName interface{}, description interface{}) *MockUseCase_CreateInstitution_Call {
+	return &MockUseCase_CreateInstitution_Call{Call: _e.mock.On("CreateInstitution", ctx, name, shortName, description)}
 }
 
-func (_c *MockUseCase_CreateInstitution_Call) Run(run func(ctx context.Context, name string, shortName string, adminDomain string, studentDomain string)) *MockUseCase_CreateInstitution_Call {
+func (_c *MockUseCase_CreateInstitution_Call) Run(run func(ctx context.Context, name string, shortName string, description string)) *MockUseCase_CreateInstitution_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(string), args[2].(string), args[3].(string), args[4].(string))
+		run(args[0].(context.Context), args[1].(string), args[2].(string), args[3].(string))
 	})
 	return _c
 }
@@ -76,7 +75,7 @@ func (_c *MockUseCase_CreateInstitution_Call) Return(_a0 *ent.Institution, _a1 e
 	return _c
 }
 
-func (_c *MockUseCase_CreateInstitution_Call) RunAndReturn(run func(context.Context, string, string, string, string) (*ent.Institution, error)) *MockUseCase_CreateInstitution_Call {
+func (_c *MockUseCase_CreateInstitution_Call) RunAndReturn(run func(context.Context, string, string, string) (*ent.Institution, error)) *MockUseCase_CreateInstitution_Call {
 	_c.Call.Return(run)
 	return _c
 }

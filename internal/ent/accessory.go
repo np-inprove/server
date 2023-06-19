@@ -9,7 +9,7 @@ import (
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
 	"github.com/np-inprove/server/internal/ent/accessory"
-	"github.com/np-inprove/server/internal/ent/institution"
+	entinstitution "github.com/np-inprove/server/internal/ent/institution"
 )
 
 // Accessory is the model entity for the Accessory schema.
@@ -56,7 +56,7 @@ func (e AccessoryEdges) InstitutionOrErr() (*Institution, error) {
 	if e.loadedTypes[1] {
 		if e.Institution == nil {
 			// Edge was loaded but was not found.
-			return nil, &NotFoundError{label: institution.Label}
+			return nil, &NotFoundError{label: entinstitution.Label}
 		}
 		return e.Institution, nil
 	}

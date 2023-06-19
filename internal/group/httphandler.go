@@ -36,7 +36,6 @@ func NewHTTPHandler(u UseCase, c *config.Config, j *jwtauth.JWTAuth) chi.Router 
 		r.Use(middleware.Authenticator)
 
 		r.Get("/", a.ListGroups)
-		r.Get("/types", a.ListGroupTypes)
 		r.Post("/", a.CreateGroup)
 		r.Delete("/{path}", a.DeleteGroup)
 	})
@@ -48,7 +47,7 @@ func (h httpHandler) ListGroups(w http.ResponseWriter, r *http.Request) {
 	token := r.Context().Value(jwtauth.TokenCtxKey)
 	email := token.(jwt.Token).Subject()
 
-	g, err := h.service.ListGroups(r.Context(), email)
+	g, err := h.service.ListPrincipalGroups(r.Context(), email)
 	if err != nil {
 		_ = render.Render(w, r, mapDomainErr(err))
 		return
@@ -58,26 +57,10 @@ func (h httpHandler) ListGroups(w http.ResponseWriter, r *http.Request) {
 	for i, item := range g {
 		res[i] = payload.Group{
 			ID:          item.ID,
-			Path:        item.Path,
+			ShortName:   item.ShortName,
 			Name:        item.Name,
 			Description: item.Description,
-			GroupType:   item.GroupType.String(),
 		}
-	}
-
-	_ = render.RenderList(w, r, res)
-}
-
-func (h httpHandler) ListGroupTypes(w http.ResponseWriter, r *http.Request) {
-	gt, err := h.service.ListGroupTypes()
-	if err != nil {
-		_ = render.Render(w, r, mapDomainErr(err))
-		return
-	}
-
-	res := make([]render.Renderer, len(gt))
-	for i, item := range gt {
-		res[i] = payload.GroupType(item.String())
 	}
 
 	_ = render.RenderList(w, r, res)
@@ -98,9 +81,9 @@ func (h httpHandler) CreateGroup(w http.ResponseWriter, r *http.Request) {
 	token := r.Context().Value(jwtauth.TokenCtxKey)
 	email := token.(jwt.Token).Subject()
 
-	res, err := h.service.CreateGroup(r.Context(), email, p.GroupType,
+	res, err := h.service.CreateGroup(r.Context(), email,
 		group.Name(p.Name),
-		group.Path(p.Path),
+		group.ShortName(p.ShortName),
 		group.Description(p.Description),
 	)
 	if err != nil {
@@ -110,10 +93,9 @@ func (h httpHandler) CreateGroup(w http.ResponseWriter, r *http.Request) {
 
 	_ = render.Render(w, r, payload.Group{
 		ID:          res.ID,
-		Path:        res.Path,
+		ShortName:   res.ShortName,
 		Name:        res.Name,
 		Description: res.Description,
-		GroupType:   res.GroupType.String(),
 	})
 }
 

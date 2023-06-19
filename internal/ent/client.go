@@ -16,12 +16,13 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"github.com/np-inprove/server/internal/ent/accessory"
 	"github.com/np-inprove/server/internal/ent/deadline"
-	"github.com/np-inprove/server/internal/ent/department"
 	"github.com/np-inprove/server/internal/ent/event"
 	"github.com/np-inprove/server/internal/ent/forumpost"
-	"github.com/np-inprove/server/internal/ent/group"
+	entgroup "github.com/np-inprove/server/internal/ent/group"
+	"github.com/np-inprove/server/internal/ent/groupinvitelink"
 	"github.com/np-inprove/server/internal/ent/groupuser"
-	"github.com/np-inprove/server/internal/ent/institution"
+	entinstitution "github.com/np-inprove/server/internal/ent/institution"
+	"github.com/np-inprove/server/internal/ent/institutioninvitelink"
 	"github.com/np-inprove/server/internal/ent/jwtrevocation"
 	"github.com/np-inprove/server/internal/ent/milestone"
 	"github.com/np-inprove/server/internal/ent/pet"
@@ -42,18 +43,20 @@ type Client struct {
 	Accessory *AccessoryClient
 	// Deadline is the client for interacting with the Deadline builders.
 	Deadline *DeadlineClient
-	// Department is the client for interacting with the Department builders.
-	Department *DepartmentClient
 	// Event is the client for interacting with the Event builders.
 	Event *EventClient
 	// ForumPost is the client for interacting with the ForumPost builders.
 	ForumPost *ForumPostClient
 	// Group is the client for interacting with the Group builders.
 	Group *GroupClient
+	// GroupInviteLink is the client for interacting with the GroupInviteLink builders.
+	GroupInviteLink *GroupInviteLinkClient
 	// GroupUser is the client for interacting with the GroupUser builders.
 	GroupUser *GroupUserClient
 	// Institution is the client for interacting with the Institution builders.
 	Institution *InstitutionClient
+	// InstitutionInviteLink is the client for interacting with the InstitutionInviteLink builders.
+	InstitutionInviteLink *InstitutionInviteLinkClient
 	// JWTRevocation is the client for interacting with the JWTRevocation builders.
 	JWTRevocation *JWTRevocationClient
 	// Milestone is the client for interacting with the Milestone builders.
@@ -87,12 +90,13 @@ func (c *Client) init() {
 	c.Schema = migrate.NewSchema(c.driver)
 	c.Accessory = NewAccessoryClient(c.config)
 	c.Deadline = NewDeadlineClient(c.config)
-	c.Department = NewDepartmentClient(c.config)
 	c.Event = NewEventClient(c.config)
 	c.ForumPost = NewForumPostClient(c.config)
 	c.Group = NewGroupClient(c.config)
+	c.GroupInviteLink = NewGroupInviteLinkClient(c.config)
 	c.GroupUser = NewGroupUserClient(c.config)
 	c.Institution = NewInstitutionClient(c.config)
+	c.InstitutionInviteLink = NewInstitutionInviteLinkClient(c.config)
 	c.JWTRevocation = NewJWTRevocationClient(c.config)
 	c.Milestone = NewMilestoneClient(c.config)
 	c.Pet = NewPetClient(c.config)
@@ -182,25 +186,26 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 	cfg := c.config
 	cfg.driver = tx
 	return &Tx{
-		ctx:           ctx,
-		config:        cfg,
-		Accessory:     NewAccessoryClient(cfg),
-		Deadline:      NewDeadlineClient(cfg),
-		Department:    NewDepartmentClient(cfg),
-		Event:         NewEventClient(cfg),
-		ForumPost:     NewForumPostClient(cfg),
-		Group:         NewGroupClient(cfg),
-		GroupUser:     NewGroupUserClient(cfg),
-		Institution:   NewInstitutionClient(cfg),
-		JWTRevocation: NewJWTRevocationClient(cfg),
-		Milestone:     NewMilestoneClient(cfg),
-		Pet:           NewPetClient(cfg),
-		Reaction:      NewReactionClient(cfg),
-		Redemption:    NewRedemptionClient(cfg),
-		StudyPlan:     NewStudyPlanClient(cfg),
-		User:          NewUserClient(cfg),
-		UserPet:       NewUserPetClient(cfg),
-		Voucher:       NewVoucherClient(cfg),
+		ctx:                   ctx,
+		config:                cfg,
+		Accessory:             NewAccessoryClient(cfg),
+		Deadline:              NewDeadlineClient(cfg),
+		Event:                 NewEventClient(cfg),
+		ForumPost:             NewForumPostClient(cfg),
+		Group:                 NewGroupClient(cfg),
+		GroupInviteLink:       NewGroupInviteLinkClient(cfg),
+		GroupUser:             NewGroupUserClient(cfg),
+		Institution:           NewInstitutionClient(cfg),
+		InstitutionInviteLink: NewInstitutionInviteLinkClient(cfg),
+		JWTRevocation:         NewJWTRevocationClient(cfg),
+		Milestone:             NewMilestoneClient(cfg),
+		Pet:                   NewPetClient(cfg),
+		Reaction:              NewReactionClient(cfg),
+		Redemption:            NewRedemptionClient(cfg),
+		StudyPlan:             NewStudyPlanClient(cfg),
+		User:                  NewUserClient(cfg),
+		UserPet:               NewUserPetClient(cfg),
+		Voucher:               NewVoucherClient(cfg),
 	}, nil
 }
 
@@ -218,25 +223,26 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 	cfg := c.config
 	cfg.driver = &txDriver{tx: tx, drv: c.driver}
 	return &Tx{
-		ctx:           ctx,
-		config:        cfg,
-		Accessory:     NewAccessoryClient(cfg),
-		Deadline:      NewDeadlineClient(cfg),
-		Department:    NewDepartmentClient(cfg),
-		Event:         NewEventClient(cfg),
-		ForumPost:     NewForumPostClient(cfg),
-		Group:         NewGroupClient(cfg),
-		GroupUser:     NewGroupUserClient(cfg),
-		Institution:   NewInstitutionClient(cfg),
-		JWTRevocation: NewJWTRevocationClient(cfg),
-		Milestone:     NewMilestoneClient(cfg),
-		Pet:           NewPetClient(cfg),
-		Reaction:      NewReactionClient(cfg),
-		Redemption:    NewRedemptionClient(cfg),
-		StudyPlan:     NewStudyPlanClient(cfg),
-		User:          NewUserClient(cfg),
-		UserPet:       NewUserPetClient(cfg),
-		Voucher:       NewVoucherClient(cfg),
+		ctx:                   ctx,
+		config:                cfg,
+		Accessory:             NewAccessoryClient(cfg),
+		Deadline:              NewDeadlineClient(cfg),
+		Event:                 NewEventClient(cfg),
+		ForumPost:             NewForumPostClient(cfg),
+		Group:                 NewGroupClient(cfg),
+		GroupInviteLink:       NewGroupInviteLinkClient(cfg),
+		GroupUser:             NewGroupUserClient(cfg),
+		Institution:           NewInstitutionClient(cfg),
+		InstitutionInviteLink: NewInstitutionInviteLinkClient(cfg),
+		JWTRevocation:         NewJWTRevocationClient(cfg),
+		Milestone:             NewMilestoneClient(cfg),
+		Pet:                   NewPetClient(cfg),
+		Reaction:              NewReactionClient(cfg),
+		Redemption:            NewRedemptionClient(cfg),
+		StudyPlan:             NewStudyPlanClient(cfg),
+		User:                  NewUserClient(cfg),
+		UserPet:               NewUserPetClient(cfg),
+		Voucher:               NewVoucherClient(cfg),
 	}, nil
 }
 
@@ -266,9 +272,10 @@ func (c *Client) Close() error {
 // In order to add hooks to a specific client, call: `client.Node.Use(...)`.
 func (c *Client) Use(hooks ...Hook) {
 	for _, n := range []interface{ Use(...Hook) }{
-		c.Accessory, c.Deadline, c.Department, c.Event, c.ForumPost, c.Group,
-		c.GroupUser, c.Institution, c.JWTRevocation, c.Milestone, c.Pet, c.Reaction,
-		c.Redemption, c.StudyPlan, c.User, c.UserPet, c.Voucher,
+		c.Accessory, c.Deadline, c.Event, c.ForumPost, c.Group, c.GroupInviteLink,
+		c.GroupUser, c.Institution, c.InstitutionInviteLink, c.JWTRevocation,
+		c.Milestone, c.Pet, c.Reaction, c.Redemption, c.StudyPlan, c.User, c.UserPet,
+		c.Voucher,
 	} {
 		n.Use(hooks...)
 	}
@@ -278,9 +285,10 @@ func (c *Client) Use(hooks ...Hook) {
 // In order to add interceptors to a specific client, call: `client.Node.Intercept(...)`.
 func (c *Client) Intercept(interceptors ...Interceptor) {
 	for _, n := range []interface{ Intercept(...Interceptor) }{
-		c.Accessory, c.Deadline, c.Department, c.Event, c.ForumPost, c.Group,
-		c.GroupUser, c.Institution, c.JWTRevocation, c.Milestone, c.Pet, c.Reaction,
-		c.Redemption, c.StudyPlan, c.User, c.UserPet, c.Voucher,
+		c.Accessory, c.Deadline, c.Event, c.ForumPost, c.Group, c.GroupInviteLink,
+		c.GroupUser, c.Institution, c.InstitutionInviteLink, c.JWTRevocation,
+		c.Milestone, c.Pet, c.Reaction, c.Redemption, c.StudyPlan, c.User, c.UserPet,
+		c.Voucher,
 	} {
 		n.Intercept(interceptors...)
 	}
@@ -293,18 +301,20 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.Accessory.mutate(ctx, m)
 	case *DeadlineMutation:
 		return c.Deadline.mutate(ctx, m)
-	case *DepartmentMutation:
-		return c.Department.mutate(ctx, m)
 	case *EventMutation:
 		return c.Event.mutate(ctx, m)
 	case *ForumPostMutation:
 		return c.ForumPost.mutate(ctx, m)
 	case *GroupMutation:
 		return c.Group.mutate(ctx, m)
+	case *GroupInviteLinkMutation:
+		return c.GroupInviteLink.mutate(ctx, m)
 	case *GroupUserMutation:
 		return c.GroupUser.mutate(ctx, m)
 	case *InstitutionMutation:
 		return c.Institution.mutate(ctx, m)
+	case *InstitutionInviteLinkMutation:
+		return c.InstitutionInviteLink.mutate(ctx, m)
 	case *JWTRevocationMutation:
 		return c.JWTRevocation.mutate(ctx, m)
 	case *MilestoneMutation:
@@ -444,7 +454,7 @@ func (c *AccessoryClient) QueryInstitution(a *Accessory) *InstitutionQuery {
 		id := a.ID
 		step := sqlgraph.NewStep(
 			sqlgraph.From(accessory.Table, accessory.FieldID, id),
-			sqlgraph.To(institution.Table, institution.FieldID),
+			sqlgraph.To(entinstitution.Table, entinstitution.FieldID),
 			sqlgraph.Edge(sqlgraph.M2O, true, accessory.InstitutionTable, accessory.InstitutionColumn),
 		)
 		fromV = sqlgraph.Neighbors(a.driver.Dialect(), step)
@@ -610,7 +620,7 @@ func (c *DeadlineClient) QueryGroup(d *Deadline) *GroupQuery {
 		id := d.ID
 		step := sqlgraph.NewStep(
 			sqlgraph.From(deadline.Table, deadline.FieldID, id),
-			sqlgraph.To(group.Table, group.FieldID),
+			sqlgraph.To(entgroup.Table, entgroup.FieldID),
 			sqlgraph.Edge(sqlgraph.M2O, true, deadline.GroupTable, deadline.GroupColumn),
 		)
 		fromV = sqlgraph.Neighbors(d.driver.Dialect(), step)
@@ -641,188 +651,6 @@ func (c *DeadlineClient) mutate(ctx context.Context, m *DeadlineMutation) (Value
 		return (&DeadlineDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
 	default:
 		return nil, fmt.Errorf("ent: unknown Deadline mutation op: %q", m.Op())
-	}
-}
-
-// DepartmentClient is a client for the Department schema.
-type DepartmentClient struct {
-	config
-}
-
-// NewDepartmentClient returns a client for the Department from the given config.
-func NewDepartmentClient(c config) *DepartmentClient {
-	return &DepartmentClient{config: c}
-}
-
-// Use adds a list of mutation hooks to the hooks stack.
-// A call to `Use(f, g, h)` equals to `department.Hooks(f(g(h())))`.
-func (c *DepartmentClient) Use(hooks ...Hook) {
-	c.hooks.Department = append(c.hooks.Department, hooks...)
-}
-
-// Intercept adds a list of query interceptors to the interceptors stack.
-// A call to `Intercept(f, g, h)` equals to `department.Intercept(f(g(h())))`.
-func (c *DepartmentClient) Intercept(interceptors ...Interceptor) {
-	c.inters.Department = append(c.inters.Department, interceptors...)
-}
-
-// Create returns a builder for creating a Department entity.
-func (c *DepartmentClient) Create() *DepartmentCreate {
-	mutation := newDepartmentMutation(c.config, OpCreate)
-	return &DepartmentCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// CreateBulk returns a builder for creating a bulk of Department entities.
-func (c *DepartmentClient) CreateBulk(builders ...*DepartmentCreate) *DepartmentCreateBulk {
-	return &DepartmentCreateBulk{config: c.config, builders: builders}
-}
-
-// Update returns an update builder for Department.
-func (c *DepartmentClient) Update() *DepartmentUpdate {
-	mutation := newDepartmentMutation(c.config, OpUpdate)
-	return &DepartmentUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// UpdateOne returns an update builder for the given entity.
-func (c *DepartmentClient) UpdateOne(d *Department) *DepartmentUpdateOne {
-	mutation := newDepartmentMutation(c.config, OpUpdateOne, withDepartment(d))
-	return &DepartmentUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// UpdateOneID returns an update builder for the given id.
-func (c *DepartmentClient) UpdateOneID(id int) *DepartmentUpdateOne {
-	mutation := newDepartmentMutation(c.config, OpUpdateOne, withDepartmentID(id))
-	return &DepartmentUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// Delete returns a delete builder for Department.
-func (c *DepartmentClient) Delete() *DepartmentDelete {
-	mutation := newDepartmentMutation(c.config, OpDelete)
-	return &DepartmentDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// DeleteOne returns a builder for deleting the given entity.
-func (c *DepartmentClient) DeleteOne(d *Department) *DepartmentDeleteOne {
-	return c.DeleteOneID(d.ID)
-}
-
-// DeleteOneID returns a builder for deleting the given entity by its id.
-func (c *DepartmentClient) DeleteOneID(id int) *DepartmentDeleteOne {
-	builder := c.Delete().Where(department.ID(id))
-	builder.mutation.id = &id
-	builder.mutation.op = OpDeleteOne
-	return &DepartmentDeleteOne{builder}
-}
-
-// Query returns a query builder for Department.
-func (c *DepartmentClient) Query() *DepartmentQuery {
-	return &DepartmentQuery{
-		config: c.config,
-		ctx:    &QueryContext{Type: TypeDepartment},
-		inters: c.Interceptors(),
-	}
-}
-
-// Get returns a Department entity by its id.
-func (c *DepartmentClient) Get(ctx context.Context, id int) (*Department, error) {
-	return c.Query().Where(department.ID(id)).Only(ctx)
-}
-
-// GetX is like Get, but panics if an error occurs.
-func (c *DepartmentClient) GetX(ctx context.Context, id int) *Department {
-	obj, err := c.Get(ctx, id)
-	if err != nil {
-		panic(err)
-	}
-	return obj
-}
-
-// QueryInstitution queries the institution edge of a Department.
-func (c *DepartmentClient) QueryInstitution(d *Department) *InstitutionQuery {
-	query := (&InstitutionClient{config: c.config}).Query()
-	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := d.ID
-		step := sqlgraph.NewStep(
-			sqlgraph.From(department.Table, department.FieldID, id),
-			sqlgraph.To(institution.Table, institution.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, department.InstitutionTable, department.InstitutionColumn),
-		)
-		fromV = sqlgraph.Neighbors(d.driver.Dialect(), step)
-		return fromV, nil
-	}
-	return query
-}
-
-// QueryParent queries the parent edge of a Department.
-func (c *DepartmentClient) QueryParent(d *Department) *DepartmentQuery {
-	query := (&DepartmentClient{config: c.config}).Query()
-	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := d.ID
-		step := sqlgraph.NewStep(
-			sqlgraph.From(department.Table, department.FieldID, id),
-			sqlgraph.To(department.Table, department.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, department.ParentTable, department.ParentColumn),
-		)
-		fromV = sqlgraph.Neighbors(d.driver.Dialect(), step)
-		return fromV, nil
-	}
-	return query
-}
-
-// QueryChildren queries the children edge of a Department.
-func (c *DepartmentClient) QueryChildren(d *Department) *DepartmentQuery {
-	query := (&DepartmentClient{config: c.config}).Query()
-	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := d.ID
-		step := sqlgraph.NewStep(
-			sqlgraph.From(department.Table, department.FieldID, id),
-			sqlgraph.To(department.Table, department.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, department.ChildrenTable, department.ChildrenColumn),
-		)
-		fromV = sqlgraph.Neighbors(d.driver.Dialect(), step)
-		return fromV, nil
-	}
-	return query
-}
-
-// QueryUsers queries the users edge of a Department.
-func (c *DepartmentClient) QueryUsers(d *Department) *UserQuery {
-	query := (&UserClient{config: c.config}).Query()
-	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := d.ID
-		step := sqlgraph.NewStep(
-			sqlgraph.From(department.Table, department.FieldID, id),
-			sqlgraph.To(user.Table, user.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, department.UsersTable, department.UsersColumn),
-		)
-		fromV = sqlgraph.Neighbors(d.driver.Dialect(), step)
-		return fromV, nil
-	}
-	return query
-}
-
-// Hooks returns the client hooks.
-func (c *DepartmentClient) Hooks() []Hook {
-	return c.hooks.Department
-}
-
-// Interceptors returns the client interceptors.
-func (c *DepartmentClient) Interceptors() []Interceptor {
-	return c.inters.Department
-}
-
-func (c *DepartmentClient) mutate(ctx context.Context, m *DepartmentMutation) (Value, error) {
-	switch m.Op() {
-	case OpCreate:
-		return (&DepartmentCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
-	case OpUpdate:
-		return (&DepartmentUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
-	case OpUpdateOne:
-		return (&DepartmentUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
-	case OpDelete, OpDeleteOne:
-		return (&DepartmentDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
-	default:
-		return nil, fmt.Errorf("ent: unknown Department mutation op: %q", m.Op())
 	}
 }
 
@@ -926,7 +754,7 @@ func (c *EventClient) QueryGroup(e *Event) *GroupQuery {
 		id := e.ID
 		step := sqlgraph.NewStep(
 			sqlgraph.From(event.Table, event.FieldID, id),
-			sqlgraph.To(group.Table, group.FieldID),
+			sqlgraph.To(entgroup.Table, entgroup.FieldID),
 			sqlgraph.Edge(sqlgraph.M2O, true, event.GroupTable, event.GroupColumn),
 		)
 		fromV = sqlgraph.Neighbors(e.driver.Dialect(), step)
@@ -1076,7 +904,7 @@ func (c *ForumPostClient) QueryGroup(fp *ForumPost) *GroupQuery {
 		id := fp.ID
 		step := sqlgraph.NewStep(
 			sqlgraph.From(forumpost.Table, forumpost.FieldID, id),
-			sqlgraph.To(group.Table, group.FieldID),
+			sqlgraph.To(entgroup.Table, entgroup.FieldID),
 			sqlgraph.Edge(sqlgraph.M2O, true, forumpost.GroupTable, forumpost.GroupColumn),
 		)
 		fromV = sqlgraph.Neighbors(fp.driver.Dialect(), step)
@@ -1185,13 +1013,13 @@ func NewGroupClient(c config) *GroupClient {
 }
 
 // Use adds a list of mutation hooks to the hooks stack.
-// A call to `Use(f, g, h)` equals to `group.Hooks(f(g(h())))`.
+// A call to `Use(f, g, h)` equals to `entgroup.Hooks(f(g(h())))`.
 func (c *GroupClient) Use(hooks ...Hook) {
 	c.hooks.Group = append(c.hooks.Group, hooks...)
 }
 
 // Intercept adds a list of query interceptors to the interceptors stack.
-// A call to `Intercept(f, g, h)` equals to `group.Intercept(f(g(h())))`.
+// A call to `Intercept(f, g, h)` equals to `entgroup.Intercept(f(g(h())))`.
 func (c *GroupClient) Intercept(interceptors ...Interceptor) {
 	c.inters.Group = append(c.inters.Group, interceptors...)
 }
@@ -1238,7 +1066,7 @@ func (c *GroupClient) DeleteOne(gr *Group) *GroupDeleteOne {
 
 // DeleteOneID returns a builder for deleting the given entity by its id.
 func (c *GroupClient) DeleteOneID(id int) *GroupDeleteOne {
-	builder := c.Delete().Where(group.ID(id))
+	builder := c.Delete().Where(entgroup.ID(id))
 	builder.mutation.id = &id
 	builder.mutation.op = OpDeleteOne
 	return &GroupDeleteOne{builder}
@@ -1255,7 +1083,7 @@ func (c *GroupClient) Query() *GroupQuery {
 
 // Get returns a Group entity by its id.
 func (c *GroupClient) Get(ctx context.Context, id int) (*Group, error) {
-	return c.Query().Where(group.ID(id)).Only(ctx)
+	return c.Query().Where(entgroup.ID(id)).Only(ctx)
 }
 
 // GetX is like Get, but panics if an error occurs.
@@ -1273,9 +1101,9 @@ func (c *GroupClient) QueryUsers(gr *Group) *UserQuery {
 	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
 		id := gr.ID
 		step := sqlgraph.NewStep(
-			sqlgraph.From(group.Table, group.FieldID, id),
+			sqlgraph.From(entgroup.Table, entgroup.FieldID, id),
 			sqlgraph.To(user.Table, user.FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, false, group.UsersTable, group.UsersPrimaryKey...),
+			sqlgraph.Edge(sqlgraph.M2M, false, entgroup.UsersTable, entgroup.UsersPrimaryKey...),
 		)
 		fromV = sqlgraph.Neighbors(gr.driver.Dialect(), step)
 		return fromV, nil
@@ -1289,9 +1117,9 @@ func (c *GroupClient) QueryEvents(gr *Group) *EventQuery {
 	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
 		id := gr.ID
 		step := sqlgraph.NewStep(
-			sqlgraph.From(group.Table, group.FieldID, id),
+			sqlgraph.From(entgroup.Table, entgroup.FieldID, id),
 			sqlgraph.To(event.Table, event.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, group.EventsTable, group.EventsColumn),
+			sqlgraph.Edge(sqlgraph.O2M, false, entgroup.EventsTable, entgroup.EventsColumn),
 		)
 		fromV = sqlgraph.Neighbors(gr.driver.Dialect(), step)
 		return fromV, nil
@@ -1305,9 +1133,9 @@ func (c *GroupClient) QueryForumPosts(gr *Group) *ForumPostQuery {
 	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
 		id := gr.ID
 		step := sqlgraph.NewStep(
-			sqlgraph.From(group.Table, group.FieldID, id),
+			sqlgraph.From(entgroup.Table, entgroup.FieldID, id),
 			sqlgraph.To(forumpost.Table, forumpost.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, group.ForumPostsTable, group.ForumPostsColumn),
+			sqlgraph.Edge(sqlgraph.O2M, false, entgroup.ForumPostsTable, entgroup.ForumPostsColumn),
 		)
 		fromV = sqlgraph.Neighbors(gr.driver.Dialect(), step)
 		return fromV, nil
@@ -1321,9 +1149,25 @@ func (c *GroupClient) QueryDeadlines(gr *Group) *DeadlineQuery {
 	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
 		id := gr.ID
 		step := sqlgraph.NewStep(
-			sqlgraph.From(group.Table, group.FieldID, id),
+			sqlgraph.From(entgroup.Table, entgroup.FieldID, id),
 			sqlgraph.To(deadline.Table, deadline.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, group.DeadlinesTable, group.DeadlinesColumn),
+			sqlgraph.Edge(sqlgraph.O2M, false, entgroup.DeadlinesTable, entgroup.DeadlinesColumn),
+		)
+		fromV = sqlgraph.Neighbors(gr.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryInvites queries the invites edge of a Group.
+func (c *GroupClient) QueryInvites(gr *Group) *GroupInviteLinkQuery {
+	query := (&GroupInviteLinkClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := gr.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(entgroup.Table, entgroup.FieldID, id),
+			sqlgraph.To(groupinvitelink.Table, groupinvitelink.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, entgroup.InvitesTable, entgroup.InvitesColumn),
 		)
 		fromV = sqlgraph.Neighbors(gr.driver.Dialect(), step)
 		return fromV, nil
@@ -1337,9 +1181,9 @@ func (c *GroupClient) QueryInstitution(gr *Group) *InstitutionQuery {
 	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
 		id := gr.ID
 		step := sqlgraph.NewStep(
-			sqlgraph.From(group.Table, group.FieldID, id),
-			sqlgraph.To(institution.Table, institution.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, group.InstitutionTable, group.InstitutionColumn),
+			sqlgraph.From(entgroup.Table, entgroup.FieldID, id),
+			sqlgraph.To(entinstitution.Table, entinstitution.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, entgroup.InstitutionTable, entgroup.InstitutionColumn),
 		)
 		fromV = sqlgraph.Neighbors(gr.driver.Dialect(), step)
 		return fromV, nil
@@ -1353,9 +1197,9 @@ func (c *GroupClient) QueryGroupUsers(gr *Group) *GroupUserQuery {
 	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
 		id := gr.ID
 		step := sqlgraph.NewStep(
-			sqlgraph.From(group.Table, group.FieldID, id),
+			sqlgraph.From(entgroup.Table, entgroup.FieldID, id),
 			sqlgraph.To(groupuser.Table, groupuser.GroupColumn),
-			sqlgraph.Edge(sqlgraph.O2M, true, group.GroupUsersTable, group.GroupUsersColumn),
+			sqlgraph.Edge(sqlgraph.O2M, true, entgroup.GroupUsersTable, entgroup.GroupUsersColumn),
 		)
 		fromV = sqlgraph.Neighbors(gr.driver.Dialect(), step)
 		return fromV, nil
@@ -1385,6 +1229,140 @@ func (c *GroupClient) mutate(ctx context.Context, m *GroupMutation) (Value, erro
 		return (&GroupDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
 	default:
 		return nil, fmt.Errorf("ent: unknown Group mutation op: %q", m.Op())
+	}
+}
+
+// GroupInviteLinkClient is a client for the GroupInviteLink schema.
+type GroupInviteLinkClient struct {
+	config
+}
+
+// NewGroupInviteLinkClient returns a client for the GroupInviteLink from the given config.
+func NewGroupInviteLinkClient(c config) *GroupInviteLinkClient {
+	return &GroupInviteLinkClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `groupinvitelink.Hooks(f(g(h())))`.
+func (c *GroupInviteLinkClient) Use(hooks ...Hook) {
+	c.hooks.GroupInviteLink = append(c.hooks.GroupInviteLink, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `groupinvitelink.Intercept(f(g(h())))`.
+func (c *GroupInviteLinkClient) Intercept(interceptors ...Interceptor) {
+	c.inters.GroupInviteLink = append(c.inters.GroupInviteLink, interceptors...)
+}
+
+// Create returns a builder for creating a GroupInviteLink entity.
+func (c *GroupInviteLinkClient) Create() *GroupInviteLinkCreate {
+	mutation := newGroupInviteLinkMutation(c.config, OpCreate)
+	return &GroupInviteLinkCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of GroupInviteLink entities.
+func (c *GroupInviteLinkClient) CreateBulk(builders ...*GroupInviteLinkCreate) *GroupInviteLinkCreateBulk {
+	return &GroupInviteLinkCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for GroupInviteLink.
+func (c *GroupInviteLinkClient) Update() *GroupInviteLinkUpdate {
+	mutation := newGroupInviteLinkMutation(c.config, OpUpdate)
+	return &GroupInviteLinkUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *GroupInviteLinkClient) UpdateOne(gil *GroupInviteLink) *GroupInviteLinkUpdateOne {
+	mutation := newGroupInviteLinkMutation(c.config, OpUpdateOne, withGroupInviteLink(gil))
+	return &GroupInviteLinkUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *GroupInviteLinkClient) UpdateOneID(id int) *GroupInviteLinkUpdateOne {
+	mutation := newGroupInviteLinkMutation(c.config, OpUpdateOne, withGroupInviteLinkID(id))
+	return &GroupInviteLinkUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for GroupInviteLink.
+func (c *GroupInviteLinkClient) Delete() *GroupInviteLinkDelete {
+	mutation := newGroupInviteLinkMutation(c.config, OpDelete)
+	return &GroupInviteLinkDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *GroupInviteLinkClient) DeleteOne(gil *GroupInviteLink) *GroupInviteLinkDeleteOne {
+	return c.DeleteOneID(gil.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *GroupInviteLinkClient) DeleteOneID(id int) *GroupInviteLinkDeleteOne {
+	builder := c.Delete().Where(groupinvitelink.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &GroupInviteLinkDeleteOne{builder}
+}
+
+// Query returns a query builder for GroupInviteLink.
+func (c *GroupInviteLinkClient) Query() *GroupInviteLinkQuery {
+	return &GroupInviteLinkQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeGroupInviteLink},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a GroupInviteLink entity by its id.
+func (c *GroupInviteLinkClient) Get(ctx context.Context, id int) (*GroupInviteLink, error) {
+	return c.Query().Where(groupinvitelink.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *GroupInviteLinkClient) GetX(ctx context.Context, id int) *GroupInviteLink {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryGroup queries the group edge of a GroupInviteLink.
+func (c *GroupInviteLinkClient) QueryGroup(gil *GroupInviteLink) *GroupQuery {
+	query := (&GroupClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := gil.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(groupinvitelink.Table, groupinvitelink.FieldID, id),
+			sqlgraph.To(entgroup.Table, entgroup.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, groupinvitelink.GroupTable, groupinvitelink.GroupColumn),
+		)
+		fromV = sqlgraph.Neighbors(gil.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *GroupInviteLinkClient) Hooks() []Hook {
+	return c.hooks.GroupInviteLink
+}
+
+// Interceptors returns the client interceptors.
+func (c *GroupInviteLinkClient) Interceptors() []Interceptor {
+	return c.inters.GroupInviteLink
+}
+
+func (c *GroupInviteLinkClient) mutate(ctx context.Context, m *GroupInviteLinkMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&GroupInviteLinkCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&GroupInviteLinkUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&GroupInviteLinkUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&GroupInviteLinkDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown GroupInviteLink mutation op: %q", m.Op())
 	}
 }
 
@@ -1500,13 +1478,13 @@ func NewInstitutionClient(c config) *InstitutionClient {
 }
 
 // Use adds a list of mutation hooks to the hooks stack.
-// A call to `Use(f, g, h)` equals to `institution.Hooks(f(g(h())))`.
+// A call to `Use(f, g, h)` equals to `entinstitution.Hooks(f(g(h())))`.
 func (c *InstitutionClient) Use(hooks ...Hook) {
 	c.hooks.Institution = append(c.hooks.Institution, hooks...)
 }
 
 // Intercept adds a list of query interceptors to the interceptors stack.
-// A call to `Intercept(f, g, h)` equals to `institution.Intercept(f(g(h())))`.
+// A call to `Intercept(f, g, h)` equals to `entinstitution.Intercept(f(g(h())))`.
 func (c *InstitutionClient) Intercept(interceptors ...Interceptor) {
 	c.inters.Institution = append(c.inters.Institution, interceptors...)
 }
@@ -1553,7 +1531,7 @@ func (c *InstitutionClient) DeleteOne(i *Institution) *InstitutionDeleteOne {
 
 // DeleteOneID returns a builder for deleting the given entity by its id.
 func (c *InstitutionClient) DeleteOneID(id int) *InstitutionDeleteOne {
-	builder := c.Delete().Where(institution.ID(id))
+	builder := c.Delete().Where(entinstitution.ID(id))
 	builder.mutation.id = &id
 	builder.mutation.op = OpDeleteOne
 	return &InstitutionDeleteOne{builder}
@@ -1570,7 +1548,7 @@ func (c *InstitutionClient) Query() *InstitutionQuery {
 
 // Get returns a Institution entity by its id.
 func (c *InstitutionClient) Get(ctx context.Context, id int) (*Institution, error) {
-	return c.Query().Where(institution.ID(id)).Only(ctx)
+	return c.Query().Where(entinstitution.ID(id)).Only(ctx)
 }
 
 // GetX is like Get, but panics if an error occurs.
@@ -1588,9 +1566,9 @@ func (c *InstitutionClient) QueryVouchers(i *Institution) *VoucherQuery {
 	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
 		id := i.ID
 		step := sqlgraph.NewStep(
-			sqlgraph.From(institution.Table, institution.FieldID, id),
+			sqlgraph.From(entinstitution.Table, entinstitution.FieldID, id),
 			sqlgraph.To(voucher.Table, voucher.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, institution.VouchersTable, institution.VouchersColumn),
+			sqlgraph.Edge(sqlgraph.O2M, false, entinstitution.VouchersTable, entinstitution.VouchersColumn),
 		)
 		fromV = sqlgraph.Neighbors(i.driver.Dialect(), step)
 		return fromV, nil
@@ -1604,25 +1582,9 @@ func (c *InstitutionClient) QueryAccessories(i *Institution) *AccessoryQuery {
 	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
 		id := i.ID
 		step := sqlgraph.NewStep(
-			sqlgraph.From(institution.Table, institution.FieldID, id),
+			sqlgraph.From(entinstitution.Table, entinstitution.FieldID, id),
 			sqlgraph.To(accessory.Table, accessory.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, institution.AccessoriesTable, institution.AccessoriesColumn),
-		)
-		fromV = sqlgraph.Neighbors(i.driver.Dialect(), step)
-		return fromV, nil
-	}
-	return query
-}
-
-// QueryDepartments queries the departments edge of a Institution.
-func (c *InstitutionClient) QueryDepartments(i *Institution) *DepartmentQuery {
-	query := (&DepartmentClient{config: c.config}).Query()
-	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
-		id := i.ID
-		step := sqlgraph.NewStep(
-			sqlgraph.From(institution.Table, institution.FieldID, id),
-			sqlgraph.To(department.Table, department.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, institution.DepartmentsTable, institution.DepartmentsColumn),
+			sqlgraph.Edge(sqlgraph.O2M, false, entinstitution.AccessoriesTable, entinstitution.AccessoriesColumn),
 		)
 		fromV = sqlgraph.Neighbors(i.driver.Dialect(), step)
 		return fromV, nil
@@ -1636,9 +1598,41 @@ func (c *InstitutionClient) QueryGroups(i *Institution) *GroupQuery {
 	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
 		id := i.ID
 		step := sqlgraph.NewStep(
-			sqlgraph.From(institution.Table, institution.FieldID, id),
-			sqlgraph.To(group.Table, group.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, institution.GroupsTable, institution.GroupsColumn),
+			sqlgraph.From(entinstitution.Table, entinstitution.FieldID, id),
+			sqlgraph.To(entgroup.Table, entgroup.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, entinstitution.GroupsTable, entinstitution.GroupsColumn),
+		)
+		fromV = sqlgraph.Neighbors(i.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryInvites queries the invites edge of a Institution.
+func (c *InstitutionClient) QueryInvites(i *Institution) *InstitutionInviteLinkQuery {
+	query := (&InstitutionInviteLinkClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := i.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(entinstitution.Table, entinstitution.FieldID, id),
+			sqlgraph.To(institutioninvitelink.Table, institutioninvitelink.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, entinstitution.InvitesTable, entinstitution.InvitesColumn),
+		)
+		fromV = sqlgraph.Neighbors(i.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryUsers queries the users edge of a Institution.
+func (c *InstitutionClient) QueryUsers(i *Institution) *UserQuery {
+	query := (&UserClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := i.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(entinstitution.Table, entinstitution.FieldID, id),
+			sqlgraph.To(user.Table, user.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, entinstitution.UsersTable, entinstitution.UsersColumn),
 		)
 		fromV = sqlgraph.Neighbors(i.driver.Dialect(), step)
 		return fromV, nil
@@ -1668,6 +1662,140 @@ func (c *InstitutionClient) mutate(ctx context.Context, m *InstitutionMutation) 
 		return (&InstitutionDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
 	default:
 		return nil, fmt.Errorf("ent: unknown Institution mutation op: %q", m.Op())
+	}
+}
+
+// InstitutionInviteLinkClient is a client for the InstitutionInviteLink schema.
+type InstitutionInviteLinkClient struct {
+	config
+}
+
+// NewInstitutionInviteLinkClient returns a client for the InstitutionInviteLink from the given config.
+func NewInstitutionInviteLinkClient(c config) *InstitutionInviteLinkClient {
+	return &InstitutionInviteLinkClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `institutioninvitelink.Hooks(f(g(h())))`.
+func (c *InstitutionInviteLinkClient) Use(hooks ...Hook) {
+	c.hooks.InstitutionInviteLink = append(c.hooks.InstitutionInviteLink, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `institutioninvitelink.Intercept(f(g(h())))`.
+func (c *InstitutionInviteLinkClient) Intercept(interceptors ...Interceptor) {
+	c.inters.InstitutionInviteLink = append(c.inters.InstitutionInviteLink, interceptors...)
+}
+
+// Create returns a builder for creating a InstitutionInviteLink entity.
+func (c *InstitutionInviteLinkClient) Create() *InstitutionInviteLinkCreate {
+	mutation := newInstitutionInviteLinkMutation(c.config, OpCreate)
+	return &InstitutionInviteLinkCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of InstitutionInviteLink entities.
+func (c *InstitutionInviteLinkClient) CreateBulk(builders ...*InstitutionInviteLinkCreate) *InstitutionInviteLinkCreateBulk {
+	return &InstitutionInviteLinkCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for InstitutionInviteLink.
+func (c *InstitutionInviteLinkClient) Update() *InstitutionInviteLinkUpdate {
+	mutation := newInstitutionInviteLinkMutation(c.config, OpUpdate)
+	return &InstitutionInviteLinkUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *InstitutionInviteLinkClient) UpdateOne(iil *InstitutionInviteLink) *InstitutionInviteLinkUpdateOne {
+	mutation := newInstitutionInviteLinkMutation(c.config, OpUpdateOne, withInstitutionInviteLink(iil))
+	return &InstitutionInviteLinkUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *InstitutionInviteLinkClient) UpdateOneID(id int) *InstitutionInviteLinkUpdateOne {
+	mutation := newInstitutionInviteLinkMutation(c.config, OpUpdateOne, withInstitutionInviteLinkID(id))
+	return &InstitutionInviteLinkUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for InstitutionInviteLink.
+func (c *InstitutionInviteLinkClient) Delete() *InstitutionInviteLinkDelete {
+	mutation := newInstitutionInviteLinkMutation(c.config, OpDelete)
+	return &InstitutionInviteLinkDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *InstitutionInviteLinkClient) DeleteOne(iil *InstitutionInviteLink) *InstitutionInviteLinkDeleteOne {
+	return c.DeleteOneID(iil.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *InstitutionInviteLinkClient) DeleteOneID(id int) *InstitutionInviteLinkDeleteOne {
+	builder := c.Delete().Where(institutioninvitelink.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &InstitutionInviteLinkDeleteOne{builder}
+}
+
+// Query returns a query builder for InstitutionInviteLink.
+func (c *InstitutionInviteLinkClient) Query() *InstitutionInviteLinkQuery {
+	return &InstitutionInviteLinkQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeInstitutionInviteLink},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a InstitutionInviteLink entity by its id.
+func (c *InstitutionInviteLinkClient) Get(ctx context.Context, id int) (*InstitutionInviteLink, error) {
+	return c.Query().Where(institutioninvitelink.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *InstitutionInviteLinkClient) GetX(ctx context.Context, id int) *InstitutionInviteLink {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryInstitution queries the institution edge of a InstitutionInviteLink.
+func (c *InstitutionInviteLinkClient) QueryInstitution(iil *InstitutionInviteLink) *InstitutionQuery {
+	query := (&InstitutionClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := iil.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(institutioninvitelink.Table, institutioninvitelink.FieldID, id),
+			sqlgraph.To(entinstitution.Table, entinstitution.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, institutioninvitelink.InstitutionTable, institutioninvitelink.InstitutionColumn),
+		)
+		fromV = sqlgraph.Neighbors(iil.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *InstitutionInviteLinkClient) Hooks() []Hook {
+	return c.hooks.InstitutionInviteLink
+}
+
+// Interceptors returns the client interceptors.
+func (c *InstitutionInviteLinkClient) Interceptors() []Interceptor {
+	return c.inters.InstitutionInviteLink
+}
+
+func (c *InstitutionInviteLinkClient) mutate(ctx context.Context, m *InstitutionInviteLinkMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&InstitutionInviteLinkCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&InstitutionInviteLinkUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&InstitutionInviteLinkUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&InstitutionInviteLinkDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown InstitutionInviteLink mutation op: %q", m.Op())
 	}
 }
 
@@ -2583,15 +2711,15 @@ func (c *UserClient) GetX(ctx context.Context, id int) *User {
 	return obj
 }
 
-// QueryDepartment queries the department edge of a User.
-func (c *UserClient) QueryDepartment(u *User) *DepartmentQuery {
-	query := (&DepartmentClient{config: c.config}).Query()
+// QueryInstitution queries the institution edge of a User.
+func (c *UserClient) QueryInstitution(u *User) *InstitutionQuery {
+	query := (&InstitutionClient{config: c.config}).Query()
 	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
 		id := u.ID
 		step := sqlgraph.NewStep(
 			sqlgraph.From(user.Table, user.FieldID, id),
-			sqlgraph.To(department.Table, department.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, user.DepartmentTable, user.DepartmentColumn),
+			sqlgraph.To(entinstitution.Table, entinstitution.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, user.InstitutionTable, user.InstitutionColumn),
 		)
 		fromV = sqlgraph.Neighbors(u.driver.Dialect(), step)
 		return fromV, nil
@@ -2654,7 +2782,7 @@ func (c *UserClient) QueryGroups(u *User) *GroupQuery {
 		id := u.ID
 		step := sqlgraph.NewStep(
 			sqlgraph.From(user.Table, user.FieldID, id),
-			sqlgraph.To(group.Table, group.FieldID),
+			sqlgraph.To(entgroup.Table, entgroup.FieldID),
 			sqlgraph.Edge(sqlgraph.M2M, true, user.GroupsTable, user.GroupsPrimaryKey...),
 		)
 		fromV = sqlgraph.Neighbors(u.driver.Dialect(), step)
@@ -3001,7 +3129,7 @@ func (c *VoucherClient) QueryInstitution(v *Voucher) *InstitutionQuery {
 		id := v.ID
 		step := sqlgraph.NewStep(
 			sqlgraph.From(voucher.Table, voucher.FieldID, id),
-			sqlgraph.To(institution.Table, institution.FieldID),
+			sqlgraph.To(entinstitution.Table, entinstitution.FieldID),
 			sqlgraph.Edge(sqlgraph.M2O, true, voucher.InstitutionTable, voucher.InstitutionColumn),
 		)
 		fromV = sqlgraph.Neighbors(v.driver.Dialect(), step)
@@ -3038,13 +3166,13 @@ func (c *VoucherClient) mutate(ctx context.Context, m *VoucherMutation) (Value, 
 // hooks and interceptors per client, for fast access.
 type (
 	hooks struct {
-		Accessory, Deadline, Department, Event, ForumPost, Group, GroupUser,
-		Institution, JWTRevocation, Milestone, Pet, Reaction, Redemption, StudyPlan,
-		User, UserPet, Voucher []ent.Hook
+		Accessory, Deadline, Event, ForumPost, Group, GroupInviteLink, GroupUser,
+		Institution, InstitutionInviteLink, JWTRevocation, Milestone, Pet, Reaction,
+		Redemption, StudyPlan, User, UserPet, Voucher []ent.Hook
 	}
 	inters struct {
-		Accessory, Deadline, Department, Event, ForumPost, Group, GroupUser,
-		Institution, JWTRevocation, Milestone, Pet, Reaction, Redemption, StudyPlan,
-		User, UserPet, Voucher []ent.Interceptor
+		Accessory, Deadline, Event, ForumPost, Group, GroupInviteLink, GroupUser,
+		Institution, InstitutionInviteLink, JWTRevocation, Milestone, Pet, Reaction,
+		Redemption, StudyPlan, User, UserPet, Voucher []ent.Interceptor
 	}
 )

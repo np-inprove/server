@@ -10,7 +10,7 @@ import (
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
 	"github.com/np-inprove/server/internal/ent/event"
-	"github.com/np-inprove/server/internal/ent/group"
+	entgroup "github.com/np-inprove/server/internal/ent/group"
 )
 
 // Event is the model entity for the Event schema.
@@ -51,7 +51,7 @@ func (e EventEdges) GroupOrErr() (*Group, error) {
 	if e.loadedTypes[0] {
 		if e.Group == nil {
 			// Edge was loaded but was not found.
-			return nil, &NotFoundError{label: group.Label}
+			return nil, &NotFoundError{label: entgroup.Label}
 		}
 		return e.Group, nil
 	}

@@ -11,7 +11,7 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
-	"github.com/np-inprove/server/internal/ent/institution"
+	entinstitution "github.com/np-inprove/server/internal/ent/institution"
 	"github.com/np-inprove/server/internal/ent/predicate"
 	"github.com/np-inprove/server/internal/ent/redemption"
 	"github.com/np-inprove/server/internal/ent/voucher"
@@ -98,7 +98,7 @@ func (vq *VoucherQuery) QueryInstitution() *InstitutionQuery {
 		}
 		step := sqlgraph.NewStep(
 			sqlgraph.From(voucher.Table, voucher.FieldID, selector),
-			sqlgraph.To(institution.Table, institution.FieldID),
+			sqlgraph.To(entinstitution.Table, entinstitution.FieldID),
 			sqlgraph.Edge(sqlgraph.M2O, true, voucher.InstitutionTable, voucher.InstitutionColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(vq.driver.Dialect(), step)
@@ -500,7 +500,7 @@ func (vq *VoucherQuery) loadInstitution(ctx context.Context, query *InstitutionQ
 	if len(ids) == 0 {
 		return nil
 	}
-	query.Where(institution.IDIn(ids...))
+	query.Where(entinstitution.IDIn(ids...))
 	neighbors, err := query.All(ctx)
 	if err != nil {
 		return err

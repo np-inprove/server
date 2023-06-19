@@ -88,7 +88,7 @@ func (h httpHandler) Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	s, err := h.service.Register(r.Context(), p.FirstName, p.LastName, p.Email, p.Password)
+	s, err := h.service.Register(r.Context(), p.InviteCode, p.FirstName, p.LastName, p.Email, p.Password)
 	if err != nil {
 		_ = render.Render(w, r, mapDomainErr(err))
 		return

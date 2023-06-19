@@ -23,25 +23,25 @@ func (_m *MockWriter) EXPECT() *MockWriter_Expecter {
 	return &MockWriter_Expecter{mock: &_m.Mock}
 }
 
-// CreateInstitution provides a mock function with given fields: ctx, name, shortName, adminDomain, studentDomain
-func (_m *MockWriter) CreateInstitution(ctx context.Context, name string, shortName string, adminDomain string, studentDomain string) (*ent.Institution, error) {
-	ret := _m.Called(ctx, name, shortName, adminDomain, studentDomain)
+// CreateInstitution provides a mock function with given fields: ctx, name, shortName, description
+func (_m *MockWriter) CreateInstitution(ctx context.Context, name string, shortName string, description string) (*ent.Institution, error) {
+	ret := _m.Called(ctx, name, shortName, description)
 
 	var r0 *ent.Institution
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, string, string, string, string) (*ent.Institution, error)); ok {
-		return rf(ctx, name, shortName, adminDomain, studentDomain)
+	if rf, ok := ret.Get(0).(func(context.Context, string, string, string) (*ent.Institution, error)); ok {
+		return rf(ctx, name, shortName, description)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, string, string, string, string) *ent.Institution); ok {
-		r0 = rf(ctx, name, shortName, adminDomain, studentDomain)
+	if rf, ok := ret.Get(0).(func(context.Context, string, string, string) *ent.Institution); ok {
+		r0 = rf(ctx, name, shortName, description)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(*ent.Institution)
 		}
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, string, string, string, string) error); ok {
-		r1 = rf(ctx, name, shortName, adminDomain, studentDomain)
+	if rf, ok := ret.Get(1).(func(context.Context, string, string, string) error); ok {
+		r1 = rf(ctx, name, shortName, description)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -58,15 +58,14 @@ type MockWriter_CreateInstitution_Call struct {
 //   - ctx context.Context
 //   - name string
 //   - shortName string
-//   - adminDomain string
-//   - studentDomain string
-func (_e *MockWriter_Expecter) CreateInstitution(ctx interface{}, name interface{}, shortName interface{}, adminDomain interface{}, studentDomain interface{}) *MockWriter_CreateInstitution_Call {
-	return &MockWriter_CreateInstitution_Call{Call: _e.mock.On("CreateInstitution", ctx, name, shortName, adminDomain, studentDomain)}
+//   - description string
+func (_e *MockWriter_Expecter) CreateInstitution(ctx interface{}, name interface{}, shortName interface{}, description interface{}) *MockWriter_CreateInstitution_Call {
+	return &MockWriter_CreateInstitution_Call{Call: _e.mock.On("CreateInstitution", ctx, name, shortName, description)}
 }
 
-func (_c *MockWriter_CreateInstitution_Call) Run(run func(ctx context.Context, name string, shortName string, adminDomain string, studentDomain string)) *MockWriter_CreateInstitution_Call {
+func (_c *MockWriter_CreateInstitution_Call) Run(run func(ctx context.Context, name string, shortName string, description string)) *MockWriter_CreateInstitution_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(string), args[2].(string), args[3].(string), args[4].(string))
+		run(args[0].(context.Context), args[1].(string), args[2].(string), args[3].(string))
 	})
 	return _c
 }
@@ -76,18 +75,18 @@ func (_c *MockWriter_CreateInstitution_Call) Return(_a0 *ent.Institution, _a1 er
 	return _c
 }
 
-func (_c *MockWriter_CreateInstitution_Call) RunAndReturn(run func(context.Context, string, string, string, string) (*ent.Institution, error)) *MockWriter_CreateInstitution_Call {
+func (_c *MockWriter_CreateInstitution_Call) RunAndReturn(run func(context.Context, string, string, string) (*ent.Institution, error)) *MockWriter_CreateInstitution_Call {
 	_c.Call.Return(run)
 	return _c
 }
 
-// DeleteInstitution provides a mock function with given fields: ctx, shortName
-func (_m *MockWriter) DeleteInstitution(ctx context.Context, shortName string) error {
-	ret := _m.Called(ctx, shortName)
+// DeleteInstitution provides a mock function with given fields: ctx, id
+func (_m *MockWriter) DeleteInstitution(ctx context.Context, id int) error {
+	ret := _m.Called(ctx, id)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, string) error); ok {
-		r0 = rf(ctx, shortName)
+	if rf, ok := ret.Get(0).(func(context.Context, int) error); ok {
+		r0 = rf(ctx, id)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -102,14 +101,14 @@ type MockWriter_DeleteInstitution_Call struct {
 
 // DeleteInstitution is a helper method to define mock.On call
 //   - ctx context.Context
-//   - shortName string
-func (_e *MockWriter_Expecter) DeleteInstitution(ctx interface{}, shortName interface{}) *MockWriter_DeleteInstitution_Call {
-	return &MockWriter_DeleteInstitution_Call{Call: _e.mock.On("DeleteInstitution", ctx, shortName)}
+//   - id int
+func (_e *MockWriter_Expecter) DeleteInstitution(ctx interface{}, id interface{}) *MockWriter_DeleteInstitution_Call {
+	return &MockWriter_DeleteInstitution_Call{Call: _e.mock.On("DeleteInstitution", ctx, id)}
 }
 
-func (_c *MockWriter_DeleteInstitution_Call) Run(run func(ctx context.Context, shortName string)) *MockWriter_DeleteInstitution_Call {
+func (_c *MockWriter_DeleteInstitution_Call) Run(run func(ctx context.Context, id int)) *MockWriter_DeleteInstitution_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(string))
+		run(args[0].(context.Context), args[1].(int))
 	})
 	return _c
 }
@@ -119,7 +118,7 @@ func (_c *MockWriter_DeleteInstitution_Call) Return(_a0 error) *MockWriter_Delet
 	return _c
 }
 
-func (_c *MockWriter_DeleteInstitution_Call) RunAndReturn(run func(context.Context, string) error) *MockWriter_DeleteInstitution_Call {
+func (_c *MockWriter_DeleteInstitution_Call) RunAndReturn(run func(context.Context, int) error) *MockWriter_DeleteInstitution_Call {
 	_c.Call.Return(run)
 	return _c
 }

@@ -8,7 +8,7 @@ import (
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
-	"github.com/np-inprove/server/internal/ent/institution"
+	entinstitution "github.com/np-inprove/server/internal/ent/institution"
 )
 
 // Institution is the model entity for the Institution schema.
@@ -20,10 +20,8 @@ type Institution struct {
 	Name string `json:"name,omitempty"`
 	// Short name of the institution (example: np)
 	ShortName string `json:"short_name,omitempty"`
-	// Email domain associated with admins of this institution
-	AdminDomain string `json:"admin_domain,omitempty"`
-	// Email domain associated with students of this institution
-	StudentDomain string `json:"student_domain,omitempty"`
+	// Description of the institution
+	Description string `json:"Description,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the InstitutionQuery when eager-loading is set.
 	Edges        InstitutionEdges `json:"edges"`
@@ -36,13 +34,15 @@ type InstitutionEdges struct {
 	Vouchers []*Voucher `json:"vouchers,omitempty"`
 	// Prizes (accessories) available to be redeemed by users of the institution
 	Accessories []*Accessory `json:"accessories,omitempty"`
-	// Departments of the institution
-	Departments []*Department `json:"departments,omitempty"`
 	// Groups under the institution
 	Groups []*Group `json:"groups,omitempty"`
+	// Invite links for the institution
+	Invites []*InstitutionInviteLink `json:"invites,omitempty"`
+	// Users under the institution
+	Users []*User `json:"users,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [4]bool
+	loadedTypes [5]bool
 }
 
 // VouchersOrErr returns the Vouchers value or an error if the edge
@@ -63,22 +63,31 @@ func (e InstitutionEdges) AccessoriesOrErr() ([]*Accessory, error) {
 	return nil, &NotLoadedError{edge: "accessories"}
 }
 
-// DepartmentsOrErr returns the Departments value or an error if the edge
-// was not loaded in eager-loading.
-func (e InstitutionEdges) DepartmentsOrErr() ([]*Department, error) {
-	if e.loadedTypes[2] {
-		return e.Departments, nil
-	}
-	return nil, &NotLoadedError{edge: "departments"}
-}
-
 // GroupsOrErr returns the Groups value or an error if the edge
 // was not loaded in eager-loading.
 func (e InstitutionEdges) GroupsOrErr() ([]*Group, error) {
-	if e.loadedTypes[3] {
+	if e.loadedTypes[2] {
 		return e.Groups, nil
 	}
 	return nil, &NotLoadedError{edge: "groups"}
+}
+
+// InvitesOrErr returns the Invites value or an error if the edge
+// was not loaded in eager-loading.
+func (e InstitutionEdges) InvitesOrErr() ([]*InstitutionInviteLink, error) {
+	if e.loadedTypes[3] {
+		return e.Invites, nil
+	}
+	return nil, &NotLoadedError{edge: "invites"}
+}
+
+// UsersOrErr returns the Users value or an error if the edge
+// was not loaded in eager-loading.
+func (e InstitutionEdges) UsersOrErr() ([]*User, error) {
+	if e.loadedTypes[4] {
+		return e.Users, nil
+	}
+	return nil, &NotLoadedError{edge: "users"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -86,9 +95,9 @@ func (*Institution) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case institution.FieldID:
+		case entinstitution.FieldID:
 			values[i] = new(sql.NullInt64)
-		case institution.FieldName, institution.FieldShortName, institution.FieldAdminDomain, institution.FieldStudentDomain:
+		case entinstitution.FieldName, entinstitution.FieldShortName, entinstitution.FieldDescription:
 			values[i] = new(sql.NullString)
 		default:
 			values[i] = new(sql.UnknownType)
@@ -105,35 +114,29 @@ func (i *Institution) assignValues(columns []string, values []any) error {
 	}
 	for j := range columns {
 		switch columns[j] {
-		case institution.FieldID:
+		case entinstitution.FieldID:
 			value, ok := values[j].(*sql.NullInt64)
 			if !ok {
 				return fmt.Errorf("unexpected type %T for field id", value)
 			}
 			i.ID = int(value.Int64)
-		case institution.FieldName:
+		case entinstitution.FieldName:
 			if value, ok := values[j].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field name", values[j])
 			} else if value.Valid {
 				i.Name = value.String
 			}
-		case institution.FieldShortName:
+		case entinstitution.FieldShortName:
 			if value, ok := values[j].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field short_name", values[j])
 			} else if value.Valid {
 				i.ShortName = value.String
 			}
-		case institution.FieldAdminDomain:
+		case entinstitution.FieldDescription:
 			if value, ok := values[j].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field admin_domain", values[j])
+				return fmt.Errorf("unexpected type %T for field Description", values[j])
 			} else if value.Valid {
-				i.AdminDomain = value.String
-			}
-		case institution.FieldStudentDomain:
-			if value, ok := values[j].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field student_domain", values[j])
-			} else if value.Valid {
-				i.StudentDomain = value.String
+				i.Description = value.String
 			}
 		default:
 			i.selectValues.Set(columns[j], values[j])
@@ -158,14 +161,19 @@ func (i *Institution) QueryAccessories() *AccessoryQuery {
 	return NewInstitutionClient(i.config).QueryAccessories(i)
 }
 
-// QueryDepartments queries the "departments" edge of the Institution entity.
-func (i *Institution) QueryDepartments() *DepartmentQuery {
-	return NewInstitutionClient(i.config).QueryDepartments(i)
-}
-
 // QueryGroups queries the "groups" edge of the Institution entity.
 func (i *Institution) QueryGroups() *GroupQuery {
 	return NewInstitutionClient(i.config).QueryGroups(i)
+}
+
+// QueryInvites queries the "invites" edge of the Institution entity.
+func (i *Institution) QueryInvites() *InstitutionInviteLinkQuery {
+	return NewInstitutionClient(i.config).QueryInvites(i)
+}
+
+// QueryUsers queries the "users" edge of the Institution entity.
+func (i *Institution) QueryUsers() *UserQuery {
+	return NewInstitutionClient(i.config).QueryUsers(i)
 }
 
 // Update returns a builder for updating this Institution.
@@ -197,11 +205,8 @@ func (i *Institution) String() string {
 	builder.WriteString("short_name=")
 	builder.WriteString(i.ShortName)
 	builder.WriteString(", ")
-	builder.WriteString("admin_domain=")
-	builder.WriteString(i.AdminDomain)
-	builder.WriteString(", ")
-	builder.WriteString("student_domain=")
-	builder.WriteString(i.StudentDomain)
+	builder.WriteString("Description=")
+	builder.WriteString(i.Description)
 	builder.WriteByte(')')
 	return builder.String()
 }

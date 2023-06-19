@@ -11,9 +11,10 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/np-inprove/server/internal/ent/accessory"
-	"github.com/np-inprove/server/internal/ent/department"
-	"github.com/np-inprove/server/internal/ent/group"
-	"github.com/np-inprove/server/internal/ent/institution"
+	entgroup "github.com/np-inprove/server/internal/ent/group"
+	entinstitution "github.com/np-inprove/server/internal/ent/institution"
+	"github.com/np-inprove/server/internal/ent/institutioninvitelink"
+	"github.com/np-inprove/server/internal/ent/user"
 	"github.com/np-inprove/server/internal/ent/voucher"
 )
 
@@ -37,15 +38,9 @@ func (ic *InstitutionCreate) SetShortName(s string) *InstitutionCreate {
 	return ic
 }
 
-// SetAdminDomain sets the "admin_domain" field.
-func (ic *InstitutionCreate) SetAdminDomain(s string) *InstitutionCreate {
-	ic.mutation.SetAdminDomain(s)
-	return ic
-}
-
-// SetStudentDomain sets the "student_domain" field.
-func (ic *InstitutionCreate) SetStudentDomain(s string) *InstitutionCreate {
-	ic.mutation.SetStudentDomain(s)
+// SetDescription sets the "Description" field.
+func (ic *InstitutionCreate) SetDescription(s string) *InstitutionCreate {
+	ic.mutation.SetDescription(s)
 	return ic
 }
 
@@ -79,21 +74,6 @@ func (ic *InstitutionCreate) AddAccessories(a ...*Accessory) *InstitutionCreate 
 	return ic.AddAccessoryIDs(ids...)
 }
 
-// AddDepartmentIDs adds the "departments" edge to the Department entity by IDs.
-func (ic *InstitutionCreate) AddDepartmentIDs(ids ...int) *InstitutionCreate {
-	ic.mutation.AddDepartmentIDs(ids...)
-	return ic
-}
-
-// AddDepartments adds the "departments" edges to the Department entity.
-func (ic *InstitutionCreate) AddDepartments(d ...*Department) *InstitutionCreate {
-	ids := make([]int, len(d))
-	for i := range d {
-		ids[i] = d[i].ID
-	}
-	return ic.AddDepartmentIDs(ids...)
-}
-
 // AddGroupIDs adds the "groups" edge to the Group entity by IDs.
 func (ic *InstitutionCreate) AddGroupIDs(ids ...int) *InstitutionCreate {
 	ic.mutation.AddGroupIDs(ids...)
@@ -107,6 +87,36 @@ func (ic *InstitutionCreate) AddGroups(g ...*Group) *InstitutionCreate {
 		ids[i] = g[i].ID
 	}
 	return ic.AddGroupIDs(ids...)
+}
+
+// AddInviteIDs adds the "invites" edge to the InstitutionInviteLink entity by IDs.
+func (ic *InstitutionCreate) AddInviteIDs(ids ...int) *InstitutionCreate {
+	ic.mutation.AddInviteIDs(ids...)
+	return ic
+}
+
+// AddInvites adds the "invites" edges to the InstitutionInviteLink entity.
+func (ic *InstitutionCreate) AddInvites(i ...*InstitutionInviteLink) *InstitutionCreate {
+	ids := make([]int, len(i))
+	for j := range i {
+		ids[j] = i[j].ID
+	}
+	return ic.AddInviteIDs(ids...)
+}
+
+// AddUserIDs adds the "users" edge to the User entity by IDs.
+func (ic *InstitutionCreate) AddUserIDs(ids ...int) *InstitutionCreate {
+	ic.mutation.AddUserIDs(ids...)
+	return ic
+}
+
+// AddUsers adds the "users" edges to the User entity.
+func (ic *InstitutionCreate) AddUsers(u ...*User) *InstitutionCreate {
+	ids := make([]int, len(u))
+	for i := range u {
+		ids[i] = u[i].ID
+	}
+	return ic.AddUserIDs(ids...)
 }
 
 // Mutation returns the InstitutionMutation object of the builder.
@@ -147,7 +157,7 @@ func (ic *InstitutionCreate) check() error {
 		return &ValidationError{Name: "name", err: errors.New(`ent: missing required field "Institution.name"`)}
 	}
 	if v, ok := ic.mutation.Name(); ok {
-		if err := institution.NameValidator(v); err != nil {
+		if err := entinstitution.NameValidator(v); err != nil {
 			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "Institution.name": %w`, err)}
 		}
 	}
@@ -155,25 +165,12 @@ func (ic *InstitutionCreate) check() error {
 		return &ValidationError{Name: "short_name", err: errors.New(`ent: missing required field "Institution.short_name"`)}
 	}
 	if v, ok := ic.mutation.ShortName(); ok {
-		if err := institution.ShortNameValidator(v); err != nil {
+		if err := entinstitution.ShortNameValidator(v); err != nil {
 			return &ValidationError{Name: "short_name", err: fmt.Errorf(`ent: validator failed for field "Institution.short_name": %w`, err)}
 		}
 	}
-	if _, ok := ic.mutation.AdminDomain(); !ok {
-		return &ValidationError{Name: "admin_domain", err: errors.New(`ent: missing required field "Institution.admin_domain"`)}
-	}
-	if v, ok := ic.mutation.AdminDomain(); ok {
-		if err := institution.AdminDomainValidator(v); err != nil {
-			return &ValidationError{Name: "admin_domain", err: fmt.Errorf(`ent: validator failed for field "Institution.admin_domain": %w`, err)}
-		}
-	}
-	if _, ok := ic.mutation.StudentDomain(); !ok {
-		return &ValidationError{Name: "student_domain", err: errors.New(`ent: missing required field "Institution.student_domain"`)}
-	}
-	if v, ok := ic.mutation.StudentDomain(); ok {
-		if err := institution.StudentDomainValidator(v); err != nil {
-			return &ValidationError{Name: "student_domain", err: fmt.Errorf(`ent: validator failed for field "Institution.student_domain": %w`, err)}
-		}
+	if _, ok := ic.mutation.Description(); !ok {
+		return &ValidationError{Name: "Description", err: errors.New(`ent: missing required field "Institution.Description"`)}
 	}
 	return nil
 }
@@ -199,31 +196,27 @@ func (ic *InstitutionCreate) sqlSave(ctx context.Context) (*Institution, error) 
 func (ic *InstitutionCreate) createSpec() (*Institution, *sqlgraph.CreateSpec) {
 	var (
 		_node = &Institution{config: ic.config}
-		_spec = sqlgraph.NewCreateSpec(institution.Table, sqlgraph.NewFieldSpec(institution.FieldID, field.TypeInt))
+		_spec = sqlgraph.NewCreateSpec(entinstitution.Table, sqlgraph.NewFieldSpec(entinstitution.FieldID, field.TypeInt))
 	)
 	_spec.OnConflict = ic.conflict
 	if value, ok := ic.mutation.Name(); ok {
-		_spec.SetField(institution.FieldName, field.TypeString, value)
+		_spec.SetField(entinstitution.FieldName, field.TypeString, value)
 		_node.Name = value
 	}
 	if value, ok := ic.mutation.ShortName(); ok {
-		_spec.SetField(institution.FieldShortName, field.TypeString, value)
+		_spec.SetField(entinstitution.FieldShortName, field.TypeString, value)
 		_node.ShortName = value
 	}
-	if value, ok := ic.mutation.AdminDomain(); ok {
-		_spec.SetField(institution.FieldAdminDomain, field.TypeString, value)
-		_node.AdminDomain = value
-	}
-	if value, ok := ic.mutation.StudentDomain(); ok {
-		_spec.SetField(institution.FieldStudentDomain, field.TypeString, value)
-		_node.StudentDomain = value
+	if value, ok := ic.mutation.Description(); ok {
+		_spec.SetField(entinstitution.FieldDescription, field.TypeString, value)
+		_node.Description = value
 	}
 	if nodes := ic.mutation.VouchersIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
-			Table:   institution.VouchersTable,
-			Columns: []string{institution.VouchersColumn},
+			Table:   entinstitution.VouchersTable,
+			Columns: []string{entinstitution.VouchersColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(voucher.FieldID, field.TypeInt),
@@ -238,27 +231,11 @@ func (ic *InstitutionCreate) createSpec() (*Institution, *sqlgraph.CreateSpec) {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
-			Table:   institution.AccessoriesTable,
-			Columns: []string{institution.AccessoriesColumn},
+			Table:   entinstitution.AccessoriesTable,
+			Columns: []string{entinstitution.AccessoriesColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(accessory.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges = append(_spec.Edges, edge)
-	}
-	if nodes := ic.mutation.DepartmentsIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   institution.DepartmentsTable,
-			Columns: []string{institution.DepartmentsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(department.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -270,11 +247,43 @@ func (ic *InstitutionCreate) createSpec() (*Institution, *sqlgraph.CreateSpec) {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
-			Table:   institution.GroupsTable,
-			Columns: []string{institution.GroupsColumn},
+			Table:   entinstitution.GroupsTable,
+			Columns: []string{entinstitution.GroupsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(group.FieldID, field.TypeInt),
+				IDSpec: sqlgraph.NewFieldSpec(entgroup.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := ic.mutation.InvitesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   entinstitution.InvitesTable,
+			Columns: []string{entinstitution.InvitesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(institutioninvitelink.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := ic.mutation.UsersIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   entinstitution.UsersTable,
+			Columns: []string{entinstitution.UsersColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -336,49 +345,37 @@ type (
 
 // SetName sets the "name" field.
 func (u *InstitutionUpsert) SetName(v string) *InstitutionUpsert {
-	u.Set(institution.FieldName, v)
+	u.Set(entinstitution.FieldName, v)
 	return u
 }
 
 // UpdateName sets the "name" field to the value that was provided on create.
 func (u *InstitutionUpsert) UpdateName() *InstitutionUpsert {
-	u.SetExcluded(institution.FieldName)
+	u.SetExcluded(entinstitution.FieldName)
 	return u
 }
 
 // SetShortName sets the "short_name" field.
 func (u *InstitutionUpsert) SetShortName(v string) *InstitutionUpsert {
-	u.Set(institution.FieldShortName, v)
+	u.Set(entinstitution.FieldShortName, v)
 	return u
 }
 
 // UpdateShortName sets the "short_name" field to the value that was provided on create.
 func (u *InstitutionUpsert) UpdateShortName() *InstitutionUpsert {
-	u.SetExcluded(institution.FieldShortName)
+	u.SetExcluded(entinstitution.FieldShortName)
 	return u
 }
 
-// SetAdminDomain sets the "admin_domain" field.
-func (u *InstitutionUpsert) SetAdminDomain(v string) *InstitutionUpsert {
-	u.Set(institution.FieldAdminDomain, v)
+// SetDescription sets the "Description" field.
+func (u *InstitutionUpsert) SetDescription(v string) *InstitutionUpsert {
+	u.Set(entinstitution.FieldDescription, v)
 	return u
 }
 
-// UpdateAdminDomain sets the "admin_domain" field to the value that was provided on create.
-func (u *InstitutionUpsert) UpdateAdminDomain() *InstitutionUpsert {
-	u.SetExcluded(institution.FieldAdminDomain)
-	return u
-}
-
-// SetStudentDomain sets the "student_domain" field.
-func (u *InstitutionUpsert) SetStudentDomain(v string) *InstitutionUpsert {
-	u.Set(institution.FieldStudentDomain, v)
-	return u
-}
-
-// UpdateStudentDomain sets the "student_domain" field to the value that was provided on create.
-func (u *InstitutionUpsert) UpdateStudentDomain() *InstitutionUpsert {
-	u.SetExcluded(institution.FieldStudentDomain)
+// UpdateDescription sets the "Description" field to the value that was provided on create.
+func (u *InstitutionUpsert) UpdateDescription() *InstitutionUpsert {
+	u.SetExcluded(entinstitution.FieldDescription)
 	return u
 }
 
@@ -450,31 +447,17 @@ func (u *InstitutionUpsertOne) UpdateShortName() *InstitutionUpsertOne {
 	})
 }
 
-// SetAdminDomain sets the "admin_domain" field.
-func (u *InstitutionUpsertOne) SetAdminDomain(v string) *InstitutionUpsertOne {
+// SetDescription sets the "Description" field.
+func (u *InstitutionUpsertOne) SetDescription(v string) *InstitutionUpsertOne {
 	return u.Update(func(s *InstitutionUpsert) {
-		s.SetAdminDomain(v)
+		s.SetDescription(v)
 	})
 }
 
-// UpdateAdminDomain sets the "admin_domain" field to the value that was provided on create.
-func (u *InstitutionUpsertOne) UpdateAdminDomain() *InstitutionUpsertOne {
+// UpdateDescription sets the "Description" field to the value that was provided on create.
+func (u *InstitutionUpsertOne) UpdateDescription() *InstitutionUpsertOne {
 	return u.Update(func(s *InstitutionUpsert) {
-		s.UpdateAdminDomain()
-	})
-}
-
-// SetStudentDomain sets the "student_domain" field.
-func (u *InstitutionUpsertOne) SetStudentDomain(v string) *InstitutionUpsertOne {
-	return u.Update(func(s *InstitutionUpsert) {
-		s.SetStudentDomain(v)
-	})
-}
-
-// UpdateStudentDomain sets the "student_domain" field to the value that was provided on create.
-func (u *InstitutionUpsertOne) UpdateStudentDomain() *InstitutionUpsertOne {
-	return u.Update(func(s *InstitutionUpsert) {
-		s.UpdateStudentDomain()
+		s.UpdateDescription()
 	})
 }
 
@@ -705,31 +688,17 @@ func (u *InstitutionUpsertBulk) UpdateShortName() *InstitutionUpsertBulk {
 	})
 }
 
-// SetAdminDomain sets the "admin_domain" field.
-func (u *InstitutionUpsertBulk) SetAdminDomain(v string) *InstitutionUpsertBulk {
+// SetDescription sets the "Description" field.
+func (u *InstitutionUpsertBulk) SetDescription(v string) *InstitutionUpsertBulk {
 	return u.Update(func(s *InstitutionUpsert) {
-		s.SetAdminDomain(v)
+		s.SetDescription(v)
 	})
 }
 
-// UpdateAdminDomain sets the "admin_domain" field to the value that was provided on create.
-func (u *InstitutionUpsertBulk) UpdateAdminDomain() *InstitutionUpsertBulk {
+// UpdateDescription sets the "Description" field to the value that was provided on create.
+func (u *InstitutionUpsertBulk) UpdateDescription() *InstitutionUpsertBulk {
 	return u.Update(func(s *InstitutionUpsert) {
-		s.UpdateAdminDomain()
-	})
-}
-
-// SetStudentDomain sets the "student_domain" field.
-func (u *InstitutionUpsertBulk) SetStudentDomain(v string) *InstitutionUpsertBulk {
-	return u.Update(func(s *InstitutionUpsert) {
-		s.SetStudentDomain(v)
-	})
-}
-
-// UpdateStudentDomain sets the "student_domain" field to the value that was provided on create.
-func (u *InstitutionUpsertBulk) UpdateStudentDomain() *InstitutionUpsertBulk {
-	return u.Update(func(s *InstitutionUpsert) {
-		s.UpdateStudentDomain()
+		s.UpdateDescription()
 	})
 }
 

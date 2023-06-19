@@ -14,12 +14,15 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"github.com/np-inprove/server/internal/ent/accessory"
 	"github.com/np-inprove/server/internal/ent/deadline"
-	"github.com/np-inprove/server/internal/ent/department"
 	"github.com/np-inprove/server/internal/ent/event"
 	"github.com/np-inprove/server/internal/ent/forumpost"
-	"github.com/np-inprove/server/internal/ent/group"
+
+	entgroup "github.com/np-inprove/server/internal/ent/group"
+	"github.com/np-inprove/server/internal/ent/groupinvitelink"
 	"github.com/np-inprove/server/internal/ent/groupuser"
-	"github.com/np-inprove/server/internal/ent/institution"
+
+	entinstitution "github.com/np-inprove/server/internal/ent/institution"
+	"github.com/np-inprove/server/internal/ent/institutioninvitelink"
 	"github.com/np-inprove/server/internal/ent/jwtrevocation"
 	"github.com/np-inprove/server/internal/ent/milestone"
 	"github.com/np-inprove/server/internal/ent/pet"
@@ -89,23 +92,24 @@ var (
 func checkColumn(table, column string) error {
 	initCheck.Do(func() {
 		columnCheck = sql.NewColumnCheck(map[string]func(string) bool{
-			accessory.Table:     accessory.ValidColumn,
-			deadline.Table:      deadline.ValidColumn,
-			department.Table:    department.ValidColumn,
-			event.Table:         event.ValidColumn,
-			forumpost.Table:     forumpost.ValidColumn,
-			group.Table:         group.ValidColumn,
-			groupuser.Table:     groupuser.ValidColumn,
-			institution.Table:   institution.ValidColumn,
-			jwtrevocation.Table: jwtrevocation.ValidColumn,
-			milestone.Table:     milestone.ValidColumn,
-			pet.Table:           pet.ValidColumn,
-			reaction.Table:      reaction.ValidColumn,
-			redemption.Table:    redemption.ValidColumn,
-			studyplan.Table:     studyplan.ValidColumn,
-			user.Table:          user.ValidColumn,
-			userpet.Table:       userpet.ValidColumn,
-			voucher.Table:       voucher.ValidColumn,
+			accessory.Table:             accessory.ValidColumn,
+			deadline.Table:              deadline.ValidColumn,
+			event.Table:                 event.ValidColumn,
+			forumpost.Table:             forumpost.ValidColumn,
+			entgroup.Table:              entgroup.ValidColumn,
+			groupinvitelink.Table:       groupinvitelink.ValidColumn,
+			groupuser.Table:             groupuser.ValidColumn,
+			entinstitution.Table:        entinstitution.ValidColumn,
+			institutioninvitelink.Table: institutioninvitelink.ValidColumn,
+			jwtrevocation.Table:         jwtrevocation.ValidColumn,
+			milestone.Table:             milestone.ValidColumn,
+			pet.Table:                   pet.ValidColumn,
+			reaction.Table:              reaction.ValidColumn,
+			redemption.Table:            redemption.ValidColumn,
+			studyplan.Table:             studyplan.ValidColumn,
+			user.Table:                  user.ValidColumn,
+			userpet.Table:               userpet.ValidColumn,
+			voucher.Table:               voucher.ValidColumn,
 		})
 	})
 	return columnCheck(table, column)

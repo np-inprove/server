@@ -8,6 +8,7 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"github.com/np-inprove/server/internal/ent/predicate"
+	"github.com/np-inprove/server/internal/entity/institution"
 )
 
 // ID filters vertices based on their ID field.
@@ -425,21 +426,51 @@ func GodModeNEQ(v bool) predicate.User {
 	return predicate.User(sql.FieldNEQ(FieldGodMode, v))
 }
 
-// HasDepartment applies the HasEdge predicate on the "department" edge.
-func HasDepartment() predicate.User {
+// RoleEQ applies the EQ predicate on the "role" field.
+func RoleEQ(v institution.Role) predicate.User {
+	vc := v
+	return predicate.User(sql.FieldEQ(FieldRole, vc))
+}
+
+// RoleNEQ applies the NEQ predicate on the "role" field.
+func RoleNEQ(v institution.Role) predicate.User {
+	vc := v
+	return predicate.User(sql.FieldNEQ(FieldRole, vc))
+}
+
+// RoleIn applies the In predicate on the "role" field.
+func RoleIn(vs ...institution.Role) predicate.User {
+	v := make([]any, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.User(sql.FieldIn(FieldRole, v...))
+}
+
+// RoleNotIn applies the NotIn predicate on the "role" field.
+func RoleNotIn(vs ...institution.Role) predicate.User {
+	v := make([]any, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.User(sql.FieldNotIn(FieldRole, v...))
+}
+
+// HasInstitution applies the HasEdge predicate on the "institution" edge.
+func HasInstitution() predicate.User {
 	return predicate.User(func(s *sql.Selector) {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, DepartmentTable, DepartmentColumn),
+			sqlgraph.Edge(sqlgraph.M2O, true, InstitutionTable, InstitutionColumn),
 		)
 		sqlgraph.HasNeighbors(s, step)
 	})
 }
 
-// HasDepartmentWith applies the HasEdge predicate on the "department" edge with a given conditions (other predicates).
-func HasDepartmentWith(preds ...predicate.Department) predicate.User {
+// HasInstitutionWith applies the HasEdge predicate on the "institution" edge with a given conditions (other predicates).
+func HasInstitutionWith(preds ...predicate.Institution) predicate.User {
 	return predicate.User(func(s *sql.Selector) {
-		step := newDepartmentStep()
+		step := newInstitutionStep()
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)

@@ -11,10 +11,11 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/np-inprove/server/internal/ent/accessory"
-	"github.com/np-inprove/server/internal/ent/department"
-	"github.com/np-inprove/server/internal/ent/group"
-	"github.com/np-inprove/server/internal/ent/institution"
+	entgroup "github.com/np-inprove/server/internal/ent/group"
+	entinstitution "github.com/np-inprove/server/internal/ent/institution"
+	"github.com/np-inprove/server/internal/ent/institutioninvitelink"
 	"github.com/np-inprove/server/internal/ent/predicate"
+	"github.com/np-inprove/server/internal/ent/user"
 	"github.com/np-inprove/server/internal/ent/voucher"
 )
 
@@ -43,15 +44,9 @@ func (iu *InstitutionUpdate) SetShortName(s string) *InstitutionUpdate {
 	return iu
 }
 
-// SetAdminDomain sets the "admin_domain" field.
-func (iu *InstitutionUpdate) SetAdminDomain(s string) *InstitutionUpdate {
-	iu.mutation.SetAdminDomain(s)
-	return iu
-}
-
-// SetStudentDomain sets the "student_domain" field.
-func (iu *InstitutionUpdate) SetStudentDomain(s string) *InstitutionUpdate {
-	iu.mutation.SetStudentDomain(s)
+// SetDescription sets the "Description" field.
+func (iu *InstitutionUpdate) SetDescription(s string) *InstitutionUpdate {
+	iu.mutation.SetDescription(s)
 	return iu
 }
 
@@ -85,21 +80,6 @@ func (iu *InstitutionUpdate) AddAccessories(a ...*Accessory) *InstitutionUpdate 
 	return iu.AddAccessoryIDs(ids...)
 }
 
-// AddDepartmentIDs adds the "departments" edge to the Department entity by IDs.
-func (iu *InstitutionUpdate) AddDepartmentIDs(ids ...int) *InstitutionUpdate {
-	iu.mutation.AddDepartmentIDs(ids...)
-	return iu
-}
-
-// AddDepartments adds the "departments" edges to the Department entity.
-func (iu *InstitutionUpdate) AddDepartments(d ...*Department) *InstitutionUpdate {
-	ids := make([]int, len(d))
-	for i := range d {
-		ids[i] = d[i].ID
-	}
-	return iu.AddDepartmentIDs(ids...)
-}
-
 // AddGroupIDs adds the "groups" edge to the Group entity by IDs.
 func (iu *InstitutionUpdate) AddGroupIDs(ids ...int) *InstitutionUpdate {
 	iu.mutation.AddGroupIDs(ids...)
@@ -113,6 +93,36 @@ func (iu *InstitutionUpdate) AddGroups(g ...*Group) *InstitutionUpdate {
 		ids[i] = g[i].ID
 	}
 	return iu.AddGroupIDs(ids...)
+}
+
+// AddInviteIDs adds the "invites" edge to the InstitutionInviteLink entity by IDs.
+func (iu *InstitutionUpdate) AddInviteIDs(ids ...int) *InstitutionUpdate {
+	iu.mutation.AddInviteIDs(ids...)
+	return iu
+}
+
+// AddInvites adds the "invites" edges to the InstitutionInviteLink entity.
+func (iu *InstitutionUpdate) AddInvites(i ...*InstitutionInviteLink) *InstitutionUpdate {
+	ids := make([]int, len(i))
+	for j := range i {
+		ids[j] = i[j].ID
+	}
+	return iu.AddInviteIDs(ids...)
+}
+
+// AddUserIDs adds the "users" edge to the User entity by IDs.
+func (iu *InstitutionUpdate) AddUserIDs(ids ...int) *InstitutionUpdate {
+	iu.mutation.AddUserIDs(ids...)
+	return iu
+}
+
+// AddUsers adds the "users" edges to the User entity.
+func (iu *InstitutionUpdate) AddUsers(u ...*User) *InstitutionUpdate {
+	ids := make([]int, len(u))
+	for i := range u {
+		ids[i] = u[i].ID
+	}
+	return iu.AddUserIDs(ids...)
 }
 
 // Mutation returns the InstitutionMutation object of the builder.
@@ -162,27 +172,6 @@ func (iu *InstitutionUpdate) RemoveAccessories(a ...*Accessory) *InstitutionUpda
 	return iu.RemoveAccessoryIDs(ids...)
 }
 
-// ClearDepartments clears all "departments" edges to the Department entity.
-func (iu *InstitutionUpdate) ClearDepartments() *InstitutionUpdate {
-	iu.mutation.ClearDepartments()
-	return iu
-}
-
-// RemoveDepartmentIDs removes the "departments" edge to Department entities by IDs.
-func (iu *InstitutionUpdate) RemoveDepartmentIDs(ids ...int) *InstitutionUpdate {
-	iu.mutation.RemoveDepartmentIDs(ids...)
-	return iu
-}
-
-// RemoveDepartments removes "departments" edges to Department entities.
-func (iu *InstitutionUpdate) RemoveDepartments(d ...*Department) *InstitutionUpdate {
-	ids := make([]int, len(d))
-	for i := range d {
-		ids[i] = d[i].ID
-	}
-	return iu.RemoveDepartmentIDs(ids...)
-}
-
 // ClearGroups clears all "groups" edges to the Group entity.
 func (iu *InstitutionUpdate) ClearGroups() *InstitutionUpdate {
 	iu.mutation.ClearGroups()
@@ -202,6 +191,48 @@ func (iu *InstitutionUpdate) RemoveGroups(g ...*Group) *InstitutionUpdate {
 		ids[i] = g[i].ID
 	}
 	return iu.RemoveGroupIDs(ids...)
+}
+
+// ClearInvites clears all "invites" edges to the InstitutionInviteLink entity.
+func (iu *InstitutionUpdate) ClearInvites() *InstitutionUpdate {
+	iu.mutation.ClearInvites()
+	return iu
+}
+
+// RemoveInviteIDs removes the "invites" edge to InstitutionInviteLink entities by IDs.
+func (iu *InstitutionUpdate) RemoveInviteIDs(ids ...int) *InstitutionUpdate {
+	iu.mutation.RemoveInviteIDs(ids...)
+	return iu
+}
+
+// RemoveInvites removes "invites" edges to InstitutionInviteLink entities.
+func (iu *InstitutionUpdate) RemoveInvites(i ...*InstitutionInviteLink) *InstitutionUpdate {
+	ids := make([]int, len(i))
+	for j := range i {
+		ids[j] = i[j].ID
+	}
+	return iu.RemoveInviteIDs(ids...)
+}
+
+// ClearUsers clears all "users" edges to the User entity.
+func (iu *InstitutionUpdate) ClearUsers() *InstitutionUpdate {
+	iu.mutation.ClearUsers()
+	return iu
+}
+
+// RemoveUserIDs removes the "users" edge to User entities by IDs.
+func (iu *InstitutionUpdate) RemoveUserIDs(ids ...int) *InstitutionUpdate {
+	iu.mutation.RemoveUserIDs(ids...)
+	return iu
+}
+
+// RemoveUsers removes "users" edges to User entities.
+func (iu *InstitutionUpdate) RemoveUsers(u ...*User) *InstitutionUpdate {
+	ids := make([]int, len(u))
+	for i := range u {
+		ids[i] = u[i].ID
+	}
+	return iu.RemoveUserIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -234,23 +265,13 @@ func (iu *InstitutionUpdate) ExecX(ctx context.Context) {
 // check runs all checks and user-defined validators on the builder.
 func (iu *InstitutionUpdate) check() error {
 	if v, ok := iu.mutation.Name(); ok {
-		if err := institution.NameValidator(v); err != nil {
+		if err := entinstitution.NameValidator(v); err != nil {
 			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "Institution.name": %w`, err)}
 		}
 	}
 	if v, ok := iu.mutation.ShortName(); ok {
-		if err := institution.ShortNameValidator(v); err != nil {
+		if err := entinstitution.ShortNameValidator(v); err != nil {
 			return &ValidationError{Name: "short_name", err: fmt.Errorf(`ent: validator failed for field "Institution.short_name": %w`, err)}
-		}
-	}
-	if v, ok := iu.mutation.AdminDomain(); ok {
-		if err := institution.AdminDomainValidator(v); err != nil {
-			return &ValidationError{Name: "admin_domain", err: fmt.Errorf(`ent: validator failed for field "Institution.admin_domain": %w`, err)}
-		}
-	}
-	if v, ok := iu.mutation.StudentDomain(); ok {
-		if err := institution.StudentDomainValidator(v); err != nil {
-			return &ValidationError{Name: "student_domain", err: fmt.Errorf(`ent: validator failed for field "Institution.student_domain": %w`, err)}
 		}
 	}
 	return nil
@@ -260,7 +281,7 @@ func (iu *InstitutionUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if err := iu.check(); err != nil {
 		return n, err
 	}
-	_spec := sqlgraph.NewUpdateSpec(institution.Table, institution.Columns, sqlgraph.NewFieldSpec(institution.FieldID, field.TypeInt))
+	_spec := sqlgraph.NewUpdateSpec(entinstitution.Table, entinstitution.Columns, sqlgraph.NewFieldSpec(entinstitution.FieldID, field.TypeInt))
 	if ps := iu.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
@@ -269,23 +290,20 @@ func (iu *InstitutionUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 	}
 	if value, ok := iu.mutation.Name(); ok {
-		_spec.SetField(institution.FieldName, field.TypeString, value)
+		_spec.SetField(entinstitution.FieldName, field.TypeString, value)
 	}
 	if value, ok := iu.mutation.ShortName(); ok {
-		_spec.SetField(institution.FieldShortName, field.TypeString, value)
+		_spec.SetField(entinstitution.FieldShortName, field.TypeString, value)
 	}
-	if value, ok := iu.mutation.AdminDomain(); ok {
-		_spec.SetField(institution.FieldAdminDomain, field.TypeString, value)
-	}
-	if value, ok := iu.mutation.StudentDomain(); ok {
-		_spec.SetField(institution.FieldStudentDomain, field.TypeString, value)
+	if value, ok := iu.mutation.Description(); ok {
+		_spec.SetField(entinstitution.FieldDescription, field.TypeString, value)
 	}
 	if iu.mutation.VouchersCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
-			Table:   institution.VouchersTable,
-			Columns: []string{institution.VouchersColumn},
+			Table:   entinstitution.VouchersTable,
+			Columns: []string{entinstitution.VouchersColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(voucher.FieldID, field.TypeInt),
@@ -297,8 +315,8 @@ func (iu *InstitutionUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
-			Table:   institution.VouchersTable,
-			Columns: []string{institution.VouchersColumn},
+			Table:   entinstitution.VouchersTable,
+			Columns: []string{entinstitution.VouchersColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(voucher.FieldID, field.TypeInt),
@@ -313,8 +331,8 @@ func (iu *InstitutionUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
-			Table:   institution.VouchersTable,
-			Columns: []string{institution.VouchersColumn},
+			Table:   entinstitution.VouchersTable,
+			Columns: []string{entinstitution.VouchersColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(voucher.FieldID, field.TypeInt),
@@ -329,8 +347,8 @@ func (iu *InstitutionUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
-			Table:   institution.AccessoriesTable,
-			Columns: []string{institution.AccessoriesColumn},
+			Table:   entinstitution.AccessoriesTable,
+			Columns: []string{entinstitution.AccessoriesColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(accessory.FieldID, field.TypeInt),
@@ -342,8 +360,8 @@ func (iu *InstitutionUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
-			Table:   institution.AccessoriesTable,
-			Columns: []string{institution.AccessoriesColumn},
+			Table:   entinstitution.AccessoriesTable,
+			Columns: []string{entinstitution.AccessoriesColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(accessory.FieldID, field.TypeInt),
@@ -358,56 +376,11 @@ func (iu *InstitutionUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
-			Table:   institution.AccessoriesTable,
-			Columns: []string{institution.AccessoriesColumn},
+			Table:   entinstitution.AccessoriesTable,
+			Columns: []string{entinstitution.AccessoriesColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(accessory.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
-	}
-	if iu.mutation.DepartmentsCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   institution.DepartmentsTable,
-			Columns: []string{institution.DepartmentsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(department.FieldID, field.TypeInt),
-			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := iu.mutation.RemovedDepartmentsIDs(); len(nodes) > 0 && !iu.mutation.DepartmentsCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   institution.DepartmentsTable,
-			Columns: []string{institution.DepartmentsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(department.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := iu.mutation.DepartmentsIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   institution.DepartmentsTable,
-			Columns: []string{institution.DepartmentsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(department.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -419,11 +392,11 @@ func (iu *InstitutionUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
-			Table:   institution.GroupsTable,
-			Columns: []string{institution.GroupsColumn},
+			Table:   entinstitution.GroupsTable,
+			Columns: []string{entinstitution.GroupsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(group.FieldID, field.TypeInt),
+				IDSpec: sqlgraph.NewFieldSpec(entgroup.FieldID, field.TypeInt),
 			},
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
@@ -432,11 +405,11 @@ func (iu *InstitutionUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
-			Table:   institution.GroupsTable,
-			Columns: []string{institution.GroupsColumn},
+			Table:   entinstitution.GroupsTable,
+			Columns: []string{entinstitution.GroupsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(group.FieldID, field.TypeInt),
+				IDSpec: sqlgraph.NewFieldSpec(entgroup.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -448,11 +421,101 @@ func (iu *InstitutionUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
-			Table:   institution.GroupsTable,
-			Columns: []string{institution.GroupsColumn},
+			Table:   entinstitution.GroupsTable,
+			Columns: []string{entinstitution.GroupsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(group.FieldID, field.TypeInt),
+				IDSpec: sqlgraph.NewFieldSpec(entgroup.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if iu.mutation.InvitesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   entinstitution.InvitesTable,
+			Columns: []string{entinstitution.InvitesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(institutioninvitelink.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := iu.mutation.RemovedInvitesIDs(); len(nodes) > 0 && !iu.mutation.InvitesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   entinstitution.InvitesTable,
+			Columns: []string{entinstitution.InvitesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(institutioninvitelink.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := iu.mutation.InvitesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   entinstitution.InvitesTable,
+			Columns: []string{entinstitution.InvitesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(institutioninvitelink.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if iu.mutation.UsersCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   entinstitution.UsersTable,
+			Columns: []string{entinstitution.UsersColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := iu.mutation.RemovedUsersIDs(); len(nodes) > 0 && !iu.mutation.UsersCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   entinstitution.UsersTable,
+			Columns: []string{entinstitution.UsersColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := iu.mutation.UsersIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   entinstitution.UsersTable,
+			Columns: []string{entinstitution.UsersColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -462,7 +525,7 @@ func (iu *InstitutionUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if n, err = sqlgraph.UpdateNodes(ctx, iu.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
-			err = &NotFoundError{institution.Label}
+			err = &NotFoundError{entinstitution.Label}
 		} else if sqlgraph.IsConstraintError(err) {
 			err = &ConstraintError{msg: err.Error(), wrap: err}
 		}
@@ -492,15 +555,9 @@ func (iuo *InstitutionUpdateOne) SetShortName(s string) *InstitutionUpdateOne {
 	return iuo
 }
 
-// SetAdminDomain sets the "admin_domain" field.
-func (iuo *InstitutionUpdateOne) SetAdminDomain(s string) *InstitutionUpdateOne {
-	iuo.mutation.SetAdminDomain(s)
-	return iuo
-}
-
-// SetStudentDomain sets the "student_domain" field.
-func (iuo *InstitutionUpdateOne) SetStudentDomain(s string) *InstitutionUpdateOne {
-	iuo.mutation.SetStudentDomain(s)
+// SetDescription sets the "Description" field.
+func (iuo *InstitutionUpdateOne) SetDescription(s string) *InstitutionUpdateOne {
+	iuo.mutation.SetDescription(s)
 	return iuo
 }
 
@@ -534,21 +591,6 @@ func (iuo *InstitutionUpdateOne) AddAccessories(a ...*Accessory) *InstitutionUpd
 	return iuo.AddAccessoryIDs(ids...)
 }
 
-// AddDepartmentIDs adds the "departments" edge to the Department entity by IDs.
-func (iuo *InstitutionUpdateOne) AddDepartmentIDs(ids ...int) *InstitutionUpdateOne {
-	iuo.mutation.AddDepartmentIDs(ids...)
-	return iuo
-}
-
-// AddDepartments adds the "departments" edges to the Department entity.
-func (iuo *InstitutionUpdateOne) AddDepartments(d ...*Department) *InstitutionUpdateOne {
-	ids := make([]int, len(d))
-	for i := range d {
-		ids[i] = d[i].ID
-	}
-	return iuo.AddDepartmentIDs(ids...)
-}
-
 // AddGroupIDs adds the "groups" edge to the Group entity by IDs.
 func (iuo *InstitutionUpdateOne) AddGroupIDs(ids ...int) *InstitutionUpdateOne {
 	iuo.mutation.AddGroupIDs(ids...)
@@ -562,6 +604,36 @@ func (iuo *InstitutionUpdateOne) AddGroups(g ...*Group) *InstitutionUpdateOne {
 		ids[i] = g[i].ID
 	}
 	return iuo.AddGroupIDs(ids...)
+}
+
+// AddInviteIDs adds the "invites" edge to the InstitutionInviteLink entity by IDs.
+func (iuo *InstitutionUpdateOne) AddInviteIDs(ids ...int) *InstitutionUpdateOne {
+	iuo.mutation.AddInviteIDs(ids...)
+	return iuo
+}
+
+// AddInvites adds the "invites" edges to the InstitutionInviteLink entity.
+func (iuo *InstitutionUpdateOne) AddInvites(i ...*InstitutionInviteLink) *InstitutionUpdateOne {
+	ids := make([]int, len(i))
+	for j := range i {
+		ids[j] = i[j].ID
+	}
+	return iuo.AddInviteIDs(ids...)
+}
+
+// AddUserIDs adds the "users" edge to the User entity by IDs.
+func (iuo *InstitutionUpdateOne) AddUserIDs(ids ...int) *InstitutionUpdateOne {
+	iuo.mutation.AddUserIDs(ids...)
+	return iuo
+}
+
+// AddUsers adds the "users" edges to the User entity.
+func (iuo *InstitutionUpdateOne) AddUsers(u ...*User) *InstitutionUpdateOne {
+	ids := make([]int, len(u))
+	for i := range u {
+		ids[i] = u[i].ID
+	}
+	return iuo.AddUserIDs(ids...)
 }
 
 // Mutation returns the InstitutionMutation object of the builder.
@@ -611,27 +683,6 @@ func (iuo *InstitutionUpdateOne) RemoveAccessories(a ...*Accessory) *Institution
 	return iuo.RemoveAccessoryIDs(ids...)
 }
 
-// ClearDepartments clears all "departments" edges to the Department entity.
-func (iuo *InstitutionUpdateOne) ClearDepartments() *InstitutionUpdateOne {
-	iuo.mutation.ClearDepartments()
-	return iuo
-}
-
-// RemoveDepartmentIDs removes the "departments" edge to Department entities by IDs.
-func (iuo *InstitutionUpdateOne) RemoveDepartmentIDs(ids ...int) *InstitutionUpdateOne {
-	iuo.mutation.RemoveDepartmentIDs(ids...)
-	return iuo
-}
-
-// RemoveDepartments removes "departments" edges to Department entities.
-func (iuo *InstitutionUpdateOne) RemoveDepartments(d ...*Department) *InstitutionUpdateOne {
-	ids := make([]int, len(d))
-	for i := range d {
-		ids[i] = d[i].ID
-	}
-	return iuo.RemoveDepartmentIDs(ids...)
-}
-
 // ClearGroups clears all "groups" edges to the Group entity.
 func (iuo *InstitutionUpdateOne) ClearGroups() *InstitutionUpdateOne {
 	iuo.mutation.ClearGroups()
@@ -651,6 +702,48 @@ func (iuo *InstitutionUpdateOne) RemoveGroups(g ...*Group) *InstitutionUpdateOne
 		ids[i] = g[i].ID
 	}
 	return iuo.RemoveGroupIDs(ids...)
+}
+
+// ClearInvites clears all "invites" edges to the InstitutionInviteLink entity.
+func (iuo *InstitutionUpdateOne) ClearInvites() *InstitutionUpdateOne {
+	iuo.mutation.ClearInvites()
+	return iuo
+}
+
+// RemoveInviteIDs removes the "invites" edge to InstitutionInviteLink entities by IDs.
+func (iuo *InstitutionUpdateOne) RemoveInviteIDs(ids ...int) *InstitutionUpdateOne {
+	iuo.mutation.RemoveInviteIDs(ids...)
+	return iuo
+}
+
+// RemoveInvites removes "invites" edges to InstitutionInviteLink entities.
+func (iuo *InstitutionUpdateOne) RemoveInvites(i ...*InstitutionInviteLink) *InstitutionUpdateOne {
+	ids := make([]int, len(i))
+	for j := range i {
+		ids[j] = i[j].ID
+	}
+	return iuo.RemoveInviteIDs(ids...)
+}
+
+// ClearUsers clears all "users" edges to the User entity.
+func (iuo *InstitutionUpdateOne) ClearUsers() *InstitutionUpdateOne {
+	iuo.mutation.ClearUsers()
+	return iuo
+}
+
+// RemoveUserIDs removes the "users" edge to User entities by IDs.
+func (iuo *InstitutionUpdateOne) RemoveUserIDs(ids ...int) *InstitutionUpdateOne {
+	iuo.mutation.RemoveUserIDs(ids...)
+	return iuo
+}
+
+// RemoveUsers removes "users" edges to User entities.
+func (iuo *InstitutionUpdateOne) RemoveUsers(u ...*User) *InstitutionUpdateOne {
+	ids := make([]int, len(u))
+	for i := range u {
+		ids[i] = u[i].ID
+	}
+	return iuo.RemoveUserIDs(ids...)
 }
 
 // Where appends a list predicates to the InstitutionUpdate builder.
@@ -696,23 +789,13 @@ func (iuo *InstitutionUpdateOne) ExecX(ctx context.Context) {
 // check runs all checks and user-defined validators on the builder.
 func (iuo *InstitutionUpdateOne) check() error {
 	if v, ok := iuo.mutation.Name(); ok {
-		if err := institution.NameValidator(v); err != nil {
+		if err := entinstitution.NameValidator(v); err != nil {
 			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "Institution.name": %w`, err)}
 		}
 	}
 	if v, ok := iuo.mutation.ShortName(); ok {
-		if err := institution.ShortNameValidator(v); err != nil {
+		if err := entinstitution.ShortNameValidator(v); err != nil {
 			return &ValidationError{Name: "short_name", err: fmt.Errorf(`ent: validator failed for field "Institution.short_name": %w`, err)}
-		}
-	}
-	if v, ok := iuo.mutation.AdminDomain(); ok {
-		if err := institution.AdminDomainValidator(v); err != nil {
-			return &ValidationError{Name: "admin_domain", err: fmt.Errorf(`ent: validator failed for field "Institution.admin_domain": %w`, err)}
-		}
-	}
-	if v, ok := iuo.mutation.StudentDomain(); ok {
-		if err := institution.StudentDomainValidator(v); err != nil {
-			return &ValidationError{Name: "student_domain", err: fmt.Errorf(`ent: validator failed for field "Institution.student_domain": %w`, err)}
 		}
 	}
 	return nil
@@ -722,7 +805,7 @@ func (iuo *InstitutionUpdateOne) sqlSave(ctx context.Context) (_node *Institutio
 	if err := iuo.check(); err != nil {
 		return _node, err
 	}
-	_spec := sqlgraph.NewUpdateSpec(institution.Table, institution.Columns, sqlgraph.NewFieldSpec(institution.FieldID, field.TypeInt))
+	_spec := sqlgraph.NewUpdateSpec(entinstitution.Table, entinstitution.Columns, sqlgraph.NewFieldSpec(entinstitution.FieldID, field.TypeInt))
 	id, ok := iuo.mutation.ID()
 	if !ok {
 		return nil, &ValidationError{Name: "id", err: errors.New(`ent: missing "Institution.id" for update`)}
@@ -730,12 +813,12 @@ func (iuo *InstitutionUpdateOne) sqlSave(ctx context.Context) (_node *Institutio
 	_spec.Node.ID.Value = id
 	if fields := iuo.fields; len(fields) > 0 {
 		_spec.Node.Columns = make([]string, 0, len(fields))
-		_spec.Node.Columns = append(_spec.Node.Columns, institution.FieldID)
+		_spec.Node.Columns = append(_spec.Node.Columns, entinstitution.FieldID)
 		for _, f := range fields {
-			if !institution.ValidColumn(f) {
+			if !entinstitution.ValidColumn(f) {
 				return nil, &ValidationError{Name: f, err: fmt.Errorf("ent: invalid field %q for query", f)}
 			}
-			if f != institution.FieldID {
+			if f != entinstitution.FieldID {
 				_spec.Node.Columns = append(_spec.Node.Columns, f)
 			}
 		}
@@ -748,23 +831,20 @@ func (iuo *InstitutionUpdateOne) sqlSave(ctx context.Context) (_node *Institutio
 		}
 	}
 	if value, ok := iuo.mutation.Name(); ok {
-		_spec.SetField(institution.FieldName, field.TypeString, value)
+		_spec.SetField(entinstitution.FieldName, field.TypeString, value)
 	}
 	if value, ok := iuo.mutation.ShortName(); ok {
-		_spec.SetField(institution.FieldShortName, field.TypeString, value)
+		_spec.SetField(entinstitution.FieldShortName, field.TypeString, value)
 	}
-	if value, ok := iuo.mutation.AdminDomain(); ok {
-		_spec.SetField(institution.FieldAdminDomain, field.TypeString, value)
-	}
-	if value, ok := iuo.mutation.StudentDomain(); ok {
-		_spec.SetField(institution.FieldStudentDomain, field.TypeString, value)
+	if value, ok := iuo.mutation.Description(); ok {
+		_spec.SetField(entinstitution.FieldDescription, field.TypeString, value)
 	}
 	if iuo.mutation.VouchersCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
-			Table:   institution.VouchersTable,
-			Columns: []string{institution.VouchersColumn},
+			Table:   entinstitution.VouchersTable,
+			Columns: []string{entinstitution.VouchersColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(voucher.FieldID, field.TypeInt),
@@ -776,8 +856,8 @@ func (iuo *InstitutionUpdateOne) sqlSave(ctx context.Context) (_node *Institutio
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
-			Table:   institution.VouchersTable,
-			Columns: []string{institution.VouchersColumn},
+			Table:   entinstitution.VouchersTable,
+			Columns: []string{entinstitution.VouchersColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(voucher.FieldID, field.TypeInt),
@@ -792,8 +872,8 @@ func (iuo *InstitutionUpdateOne) sqlSave(ctx context.Context) (_node *Institutio
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
-			Table:   institution.VouchersTable,
-			Columns: []string{institution.VouchersColumn},
+			Table:   entinstitution.VouchersTable,
+			Columns: []string{entinstitution.VouchersColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(voucher.FieldID, field.TypeInt),
@@ -808,8 +888,8 @@ func (iuo *InstitutionUpdateOne) sqlSave(ctx context.Context) (_node *Institutio
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
-			Table:   institution.AccessoriesTable,
-			Columns: []string{institution.AccessoriesColumn},
+			Table:   entinstitution.AccessoriesTable,
+			Columns: []string{entinstitution.AccessoriesColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(accessory.FieldID, field.TypeInt),
@@ -821,8 +901,8 @@ func (iuo *InstitutionUpdateOne) sqlSave(ctx context.Context) (_node *Institutio
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
-			Table:   institution.AccessoriesTable,
-			Columns: []string{institution.AccessoriesColumn},
+			Table:   entinstitution.AccessoriesTable,
+			Columns: []string{entinstitution.AccessoriesColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(accessory.FieldID, field.TypeInt),
@@ -837,56 +917,11 @@ func (iuo *InstitutionUpdateOne) sqlSave(ctx context.Context) (_node *Institutio
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
-			Table:   institution.AccessoriesTable,
-			Columns: []string{institution.AccessoriesColumn},
+			Table:   entinstitution.AccessoriesTable,
+			Columns: []string{entinstitution.AccessoriesColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(accessory.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
-	}
-	if iuo.mutation.DepartmentsCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   institution.DepartmentsTable,
-			Columns: []string{institution.DepartmentsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(department.FieldID, field.TypeInt),
-			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := iuo.mutation.RemovedDepartmentsIDs(); len(nodes) > 0 && !iuo.mutation.DepartmentsCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   institution.DepartmentsTable,
-			Columns: []string{institution.DepartmentsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(department.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := iuo.mutation.DepartmentsIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   institution.DepartmentsTable,
-			Columns: []string{institution.DepartmentsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(department.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -898,11 +933,11 @@ func (iuo *InstitutionUpdateOne) sqlSave(ctx context.Context) (_node *Institutio
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
-			Table:   institution.GroupsTable,
-			Columns: []string{institution.GroupsColumn},
+			Table:   entinstitution.GroupsTable,
+			Columns: []string{entinstitution.GroupsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(group.FieldID, field.TypeInt),
+				IDSpec: sqlgraph.NewFieldSpec(entgroup.FieldID, field.TypeInt),
 			},
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
@@ -911,11 +946,11 @@ func (iuo *InstitutionUpdateOne) sqlSave(ctx context.Context) (_node *Institutio
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
-			Table:   institution.GroupsTable,
-			Columns: []string{institution.GroupsColumn},
+			Table:   entinstitution.GroupsTable,
+			Columns: []string{entinstitution.GroupsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(group.FieldID, field.TypeInt),
+				IDSpec: sqlgraph.NewFieldSpec(entgroup.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -927,11 +962,101 @@ func (iuo *InstitutionUpdateOne) sqlSave(ctx context.Context) (_node *Institutio
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
-			Table:   institution.GroupsTable,
-			Columns: []string{institution.GroupsColumn},
+			Table:   entinstitution.GroupsTable,
+			Columns: []string{entinstitution.GroupsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(group.FieldID, field.TypeInt),
+				IDSpec: sqlgraph.NewFieldSpec(entgroup.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if iuo.mutation.InvitesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   entinstitution.InvitesTable,
+			Columns: []string{entinstitution.InvitesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(institutioninvitelink.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := iuo.mutation.RemovedInvitesIDs(); len(nodes) > 0 && !iuo.mutation.InvitesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   entinstitution.InvitesTable,
+			Columns: []string{entinstitution.InvitesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(institutioninvitelink.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := iuo.mutation.InvitesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   entinstitution.InvitesTable,
+			Columns: []string{entinstitution.InvitesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(institutioninvitelink.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if iuo.mutation.UsersCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   entinstitution.UsersTable,
+			Columns: []string{entinstitution.UsersColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := iuo.mutation.RemovedUsersIDs(); len(nodes) > 0 && !iuo.mutation.UsersCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   entinstitution.UsersTable,
+			Columns: []string{entinstitution.UsersColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := iuo.mutation.UsersIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   entinstitution.UsersTable,
+			Columns: []string{entinstitution.UsersColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -944,7 +1069,7 @@ func (iuo *InstitutionUpdateOne) sqlSave(ctx context.Context) (_node *Institutio
 	_spec.ScanValues = _node.scanValues
 	if err = sqlgraph.UpdateNode(ctx, iuo.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
-			err = &NotFoundError{institution.Label}
+			err = &NotFoundError{entinstitution.Label}
 		} else if sqlgraph.IsConstraintError(err) {
 			err = &ConstraintError{msg: err.Error(), wrap: err}
 		}

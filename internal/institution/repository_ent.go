@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"github.com/np-inprove/server/internal/apperror"
 	"github.com/np-inprove/server/internal/ent"
-	"github.com/np-inprove/server/internal/ent/institution"
+	entinstitution "github.com/np-inprove/server/internal/ent/institution"
 	"github.com/np-inprove/server/internal/entity"
 	"github.com/np-inprove/server/internal/entutils"
 	"github.com/np-inprove/server/internal/logger"
@@ -21,14 +21,22 @@ func NewEntRepository(l logger.AppLogger, c *ent.Client) Repository {
 }
 
 func (e entRepository) FindInstitutions(ctx context.Context) ([]*entity.Institution, error) {
-	i, err := e.client.Institution.Query().All(ctx)
+	inst, err := e.client.Institution.Query().All(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find all institutions: %w", err)
 	}
-	return i, nil
+	return inst, nil
 }
 
-func (e entRepository) CreateInstitution(ctx context.Context, name string, shortName string, adminDomain string, studentDomain string) (*entity.Institution, error) {
+func (e entRepository) FindInstitution(ctx context.Context, shortName string) (*entity.Institution, error) {
+	inst, err := e.client.Institution.Query().Where(entinstitution.ShortName(shortName)).Only(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to find institution: %w", err)
+	}
+	return inst, nil
+}
+
+func (e entRepository) CreateInstitution(ctx context.Context, name, shortName, description string) (*entity.Institution, error) {
 	c := e.client
 	if cc, ok := entutils.ExtractTx(ctx); ok {
 		c = cc
@@ -37,8 +45,7 @@ func (e entRepository) CreateInstitution(ctx context.Context, name string, short
 	inst, err := c.Institution.Create().
 		SetName(name).
 		SetShortName(shortName).
-		SetAdminDomain(adminDomain).
-		SetStudentDomain(studentDomain).
+		SetDescription(description).
 		Save(ctx)
 	if err != nil {
 		if apperror.IsConflict(err) {
@@ -50,18 +57,13 @@ func (e entRepository) CreateInstitution(ctx context.Context, name string, short
 	return inst, nil
 }
 
-func (e entRepository) DeleteInstitution(ctx context.Context, shortName string) error {
+func (e entRepository) DeleteInstitution(ctx context.Context, id int) error {
 	c := e.client
 	if cc, ok := entutils.ExtractTx(ctx); ok {
 		c = cc
 	}
 
-	id, err := c.Institution.Query().Where(institution.ShortName(shortName)).OnlyID(ctx)
-	if err != nil {
-		return fmt.Errorf("failed to delete institution as it does not exist: %w", err)
-	}
-
-	err = c.Institution.DeleteOneID(id).Exec(ctx)
+	err := c.Institution.DeleteOneID(id).Exec(ctx)
 	if err != nil {
 		return fmt.Errorf("failed to delete institution: %w", err)
 	}
@@ -69,16 +71,20 @@ func (e entRepository) DeleteInstitution(ctx context.Context, shortName string) 
 	return nil
 }
 
-func (e entRepository) WithTx(ctx context.Context, f func(ctx context.Context) error) error {
+func (e entRepository) WithTx(
+	ctx context.Context,
+	fn func(ctx context.Context) (interface{}, error),
+) (interface{}, error) {
 	tx, err := e.client.Tx(ctx)
 	if err != nil {
-		return fmt.Errorf("failed to start ent transaction: %w", err)
+		return nil, fmt.Errorf("failed to start ent transaction: %w", err)
 	}
 
 	txc := tx.Client()
 	ctx = context.WithValue(ctx, entutils.EntTxCtxKey, txc)
 
-	if err := f(ctx); err != nil {
+	ret, err := fn(ctx)
+	if err != nil {
 		e.log.Warn("failed database query during ent transaction",
 			logger.String("err", err.Error()),
 			logger.String("area", "god"),
@@ -89,10 +95,15 @@ func (e entRepository) WithTx(ctx context.Context, f func(ctx context.Context) e
 				logger.String("causer", err.Error()),
 				logger.String("area", "god"),
 			)
-			return fmt.Errorf("failed to rollback ent transaction: %w", err2)
+			return nil, fmt.Errorf("failed to rollback ent transaction: %w", err2)
 		}
-		return err
+		return nil, err
 	}
 
-	return tx.Commit()
+	err = tx.Commit()
+	if err != nil {
+		return nil, err
+	}
+
+	return ret, nil
 }

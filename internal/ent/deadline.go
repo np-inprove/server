@@ -10,7 +10,7 @@ import (
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
 	"github.com/np-inprove/server/internal/ent/deadline"
-	"github.com/np-inprove/server/internal/ent/group"
+	entgroup "github.com/np-inprove/server/internal/ent/group"
 	"github.com/np-inprove/server/internal/ent/user"
 )
 
@@ -73,7 +73,7 @@ func (e DeadlineEdges) GroupOrErr() (*Group, error) {
 	if e.loadedTypes[2] {
 		if e.Group == nil {
 			// Edge was loaded but was not found.
-			return nil, &NotFoundError{label: group.Label}
+			return nil, &NotFoundError{label: entgroup.Label}
 		}
 		return e.Group, nil
 	}

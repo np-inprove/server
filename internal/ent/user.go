@@ -10,8 +10,9 @@ import (
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
-	"github.com/np-inprove/server/internal/ent/department"
+	entinstitution "github.com/np-inprove/server/internal/ent/institution"
 	"github.com/np-inprove/server/internal/ent/user"
+	"github.com/np-inprove/server/internal/entity/institution"
 	"github.com/np-inprove/server/internal/hash"
 )
 
@@ -38,17 +39,19 @@ type User struct {
 	PointsAwardedResetTime time.Time `json:"points_awarded_reset_time,omitempty"`
 	// Superuser of the iNProve platform
 	GodMode bool `json:"god_mode,omitempty"`
+	// Role of the in the institution
+	Role institution.Role `json:"role,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the UserQuery when eager-loading is set.
-	Edges            UserEdges `json:"edges"`
-	department_users *int
-	selectValues     sql.SelectValues
+	Edges             UserEdges `json:"edges"`
+	institution_users *int
+	selectValues      sql.SelectValues
 }
 
 // UserEdges holds the relations/edges for other nodes in the graph.
 type UserEdges struct {
-	// Department holds the value of the department edge.
-	Department *Department `json:"department,omitempty"`
+	// Institution holds the value of the institution edge.
+	Institution *Institution `json:"institution,omitempty"`
 	// Redemptions holds the value of the redemptions edge.
 	Redemptions []*Redemption `json:"redemptions,omitempty"`
 	// ForumPosts holds the value of the forum_posts edge.
@@ -74,17 +77,17 @@ type UserEdges struct {
 	loadedTypes [11]bool
 }
 
-// DepartmentOrErr returns the Department value or an error if the edge
+// InstitutionOrErr returns the Institution value or an error if the edge
 // was not loaded in eager-loading, or loaded but was not found.
-func (e UserEdges) DepartmentOrErr() (*Department, error) {
+func (e UserEdges) InstitutionOrErr() (*Institution, error) {
 	if e.loadedTypes[0] {
-		if e.Department == nil {
+		if e.Institution == nil {
 			// Edge was loaded but was not found.
-			return nil, &NotFoundError{label: department.Label}
+			return nil, &NotFoundError{label: entinstitution.Label}
 		}
-		return e.Department, nil
+		return e.Institution, nil
 	}
-	return nil, &NotLoadedError{edge: "department"}
+	return nil, &NotLoadedError{edge: "institution"}
 }
 
 // RedemptionsOrErr returns the Redemptions value or an error if the edge
@@ -188,11 +191,11 @@ func (*User) scanValues(columns []string) ([]any, error) {
 			values[i] = new(sql.NullBool)
 		case user.FieldID, user.FieldPoints, user.FieldPointsAwardedCount:
 			values[i] = new(sql.NullInt64)
-		case user.FieldFirstName, user.FieldLastName, user.FieldEmail:
+		case user.FieldFirstName, user.FieldLastName, user.FieldEmail, user.FieldRole:
 			values[i] = new(sql.NullString)
 		case user.FieldPointsAwardedResetTime:
 			values[i] = new(sql.NullTime)
-		case user.ForeignKeys[0]: // department_users
+		case user.ForeignKeys[0]: // institution_users
 			values[i] = new(sql.NullInt64)
 		default:
 			values[i] = new(sql.UnknownType)
@@ -265,12 +268,18 @@ func (u *User) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				u.GodMode = value.Bool
 			}
+		case user.FieldRole:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field role", values[i])
+			} else if value.Valid {
+				u.Role = institution.Role(value.String)
+			}
 		case user.ForeignKeys[0]:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
-				return fmt.Errorf("unexpected type %T for edge-field department_users", value)
+				return fmt.Errorf("unexpected type %T for edge-field institution_users", value)
 			} else if value.Valid {
-				u.department_users = new(int)
-				*u.department_users = int(value.Int64)
+				u.institution_users = new(int)
+				*u.institution_users = int(value.Int64)
 			}
 		default:
 			u.selectValues.Set(columns[i], values[i])
@@ -285,9 +294,9 @@ func (u *User) Value(name string) (ent.Value, error) {
 	return u.selectValues.Get(name)
 }
 
-// QueryDepartment queries the "department" edge of the User entity.
-func (u *User) QueryDepartment() *DepartmentQuery {
-	return NewUserClient(u.config).QueryDepartment(u)
+// QueryInstitution queries the "institution" edge of the User entity.
+func (u *User) QueryInstitution() *InstitutionQuery {
+	return NewUserClient(u.config).QueryInstitution(u)
 }
 
 // QueryRedemptions queries the "redemptions" edge of the User entity.
@@ -385,6 +394,9 @@ func (u *User) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("god_mode=")
 	builder.WriteString(fmt.Sprintf("%v", u.GodMode))
+	builder.WriteString(", ")
+	builder.WriteString("role=")
+	builder.WriteString(fmt.Sprintf("%v", u.Role))
 	builder.WriteByte(')')
 	return builder.String()
 }

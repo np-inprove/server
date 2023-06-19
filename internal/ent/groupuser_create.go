@@ -10,9 +10,10 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
-	"github.com/np-inprove/server/internal/ent/group"
+	entgroup "github.com/np-inprove/server/internal/ent/group"
 	"github.com/np-inprove/server/internal/ent/groupuser"
 	"github.com/np-inprove/server/internal/ent/user"
+	"github.com/np-inprove/server/internal/entity/group"
 )
 
 // GroupUserCreate is the builder for creating a GroupUser entity.
@@ -36,7 +37,7 @@ func (guc *GroupUserCreate) SetUserID(i int) *GroupUserCreate {
 }
 
 // SetRole sets the "role" field.
-func (guc *GroupUserCreate) SetRole(gr groupuser.Role) *GroupUserCreate {
+func (guc *GroupUserCreate) SetRole(gr group.Role) *GroupUserCreate {
 	guc.mutation.SetRole(gr)
 	return guc
 }
@@ -140,7 +141,7 @@ func (guc *GroupUserCreate) createSpec() (*GroupUser, *sqlgraph.CreateSpec) {
 			Columns: []string{groupuser.GroupColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(group.FieldID, field.TypeInt),
+				IDSpec: sqlgraph.NewFieldSpec(entgroup.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -243,7 +244,7 @@ func (u *GroupUserUpsert) UpdateUserID() *GroupUserUpsert {
 }
 
 // SetRole sets the "role" field.
-func (u *GroupUserUpsert) SetRole(v groupuser.Role) *GroupUserUpsert {
+func (u *GroupUserUpsert) SetRole(v group.Role) *GroupUserUpsert {
 	u.Set(groupuser.FieldRole, v)
 	return u
 }
@@ -323,7 +324,7 @@ func (u *GroupUserUpsertOne) UpdateUserID() *GroupUserUpsertOne {
 }
 
 // SetRole sets the "role" field.
-func (u *GroupUserUpsertOne) SetRole(v groupuser.Role) *GroupUserUpsertOne {
+func (u *GroupUserUpsertOne) SetRole(v group.Role) *GroupUserUpsertOne {
 	return u.Update(func(s *GroupUserUpsert) {
 		s.SetRole(v)
 	})
@@ -541,7 +542,7 @@ func (u *GroupUserUpsertBulk) UpdateUserID() *GroupUserUpsertBulk {
 }
 
 // SetRole sets the "role" field.
-func (u *GroupUserUpsertBulk) SetRole(v groupuser.Role) *GroupUserUpsertBulk {
+func (u *GroupUserUpsertBulk) SetRole(v group.Role) *GroupUserUpsertBulk {
 	return u.Update(func(s *GroupUserUpsert) {
 		s.SetRole(v)
 	})

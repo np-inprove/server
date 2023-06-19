@@ -31,10 +31,11 @@ func (l LoginRequest) Validate() *validate.Validation {
 }
 
 type RegisterRequest struct {
-	FirstName string `json:"firstName,omitempty" validate:"required|min_len:1"`
-	LastName  string `json:"lastName,omitempty" validate:"required|min_len:1"`
-	Email     string `json:"email,omitempty" validate:"required|email"`
-	Password  string `json:"password" validate:"required|min_len:6"`
+	FirstName  string `json:"firstName,omitempty" validate:"required|min_len:1"`
+	LastName   string `json:"lastName,omitempty" validate:"required|min_len:1"`
+	InviteCode string `json:"inviteCode,omitempty" validate:"required"`
+	Email      string `json:"email,omitempty" validate:"required|email"`
+	Password   string `json:"password" validate:"required|min_len:6"`
 }
 
 func (r RegisterRequest) Validate() *validate.Validation {

@@ -23,25 +23,25 @@ func (_m *MockRepository) EXPECT() *MockRepository_Expecter {
 	return &MockRepository_Expecter{mock: &_m.Mock}
 }
 
-// CreateInstitution provides a mock function with given fields: ctx, name, shortName, adminDomain, studentDomain
-func (_m *MockRepository) CreateInstitution(ctx context.Context, name string, shortName string, adminDomain string, studentDomain string) (*ent.Institution, error) {
-	ret := _m.Called(ctx, name, shortName, adminDomain, studentDomain)
+// CreateInstitution provides a mock function with given fields: ctx, name, shortName, description
+func (_m *MockRepository) CreateInstitution(ctx context.Context, name string, shortName string, description string) (*ent.Institution, error) {
+	ret := _m.Called(ctx, name, shortName, description)
 
 	var r0 *ent.Institution
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, string, string, string, string) (*ent.Institution, error)); ok {
-		return rf(ctx, name, shortName, adminDomain, studentDomain)
+	if rf, ok := ret.Get(0).(func(context.Context, string, string, string) (*ent.Institution, error)); ok {
+		return rf(ctx, name, shortName, description)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, string, string, string, string) *ent.Institution); ok {
-		r0 = rf(ctx, name, shortName, adminDomain, studentDomain)
+	if rf, ok := ret.Get(0).(func(context.Context, string, string, string) *ent.Institution); ok {
+		r0 = rf(ctx, name, shortName, description)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(*ent.Institution)
 		}
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, string, string, string, string) error); ok {
-		r1 = rf(ctx, name, shortName, adminDomain, studentDomain)
+	if rf, ok := ret.Get(1).(func(context.Context, string, string, string) error); ok {
+		r1 = rf(ctx, name, shortName, description)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -58,15 +58,14 @@ type MockRepository_CreateInstitution_Call struct {
 //   - ctx context.Context
 //   - name string
 //   - shortName string
-//   - adminDomain string
-//   - studentDomain string
-func (_e *MockRepository_Expecter) CreateInstitution(ctx interface{}, name interface{}, shortName interface{}, adminDomain interface{}, studentDomain interface{}) *MockRepository_CreateInstitution_Call {
-	return &MockRepository_CreateInstitution_Call{Call: _e.mock.On("CreateInstitution", ctx, name, shortName, adminDomain, studentDomain)}
+//   - description string
+func (_e *MockRepository_Expecter) CreateInstitution(ctx interface{}, name interface{}, shortName interface{}, description interface{}) *MockRepository_CreateInstitution_Call {
+	return &MockRepository_CreateInstitution_Call{Call: _e.mock.On("CreateInstitution", ctx, name, shortName, description)}
 }
 
-func (_c *MockRepository_CreateInstitution_Call) Run(run func(ctx context.Context, name string, shortName string, adminDomain string, studentDomain string)) *MockRepository_CreateInstitution_Call {
+func (_c *MockRepository_CreateInstitution_Call) Run(run func(ctx context.Context, name string, shortName string, description string)) *MockRepository_CreateInstitution_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(string), args[2].(string), args[3].(string), args[4].(string))
+		run(args[0].(context.Context), args[1].(string), args[2].(string), args[3].(string))
 	})
 	return _c
 }
@@ -76,18 +75,18 @@ func (_c *MockRepository_CreateInstitution_Call) Return(_a0 *ent.Institution, _a
 	return _c
 }
 
-func (_c *MockRepository_CreateInstitution_Call) RunAndReturn(run func(context.Context, string, string, string, string) (*ent.Institution, error)) *MockRepository_CreateInstitution_Call {
+func (_c *MockRepository_CreateInstitution_Call) RunAndReturn(run func(context.Context, string, string, string) (*ent.Institution, error)) *MockRepository_CreateInstitution_Call {
 	_c.Call.Return(run)
 	return _c
 }
 
-// DeleteInstitution provides a mock function with given fields: ctx, shortName
-func (_m *MockRepository) DeleteInstitution(ctx context.Context, shortName string) error {
-	ret := _m.Called(ctx, shortName)
+// DeleteInstitution provides a mock function with given fields: ctx, id
+func (_m *MockRepository) DeleteInstitution(ctx context.Context, id int) error {
+	ret := _m.Called(ctx, id)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, string) error); ok {
-		r0 = rf(ctx, shortName)
+	if rf, ok := ret.Get(0).(func(context.Context, int) error); ok {
+		r0 = rf(ctx, id)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -102,14 +101,14 @@ type MockRepository_DeleteInstitution_Call struct {
 
 // DeleteInstitution is a helper method to define mock.On call
 //   - ctx context.Context
-//   - shortName string
-func (_e *MockRepository_Expecter) DeleteInstitution(ctx interface{}, shortName interface{}) *MockRepository_DeleteInstitution_Call {
-	return &MockRepository_DeleteInstitution_Call{Call: _e.mock.On("DeleteInstitution", ctx, shortName)}
+//   - id int
+func (_e *MockRepository_Expecter) DeleteInstitution(ctx interface{}, id interface{}) *MockRepository_DeleteInstitution_Call {
+	return &MockRepository_DeleteInstitution_Call{Call: _e.mock.On("DeleteInstitution", ctx, id)}
 }
 
-func (_c *MockRepository_DeleteInstitution_Call) Run(run func(ctx context.Context, shortName string)) *MockRepository_DeleteInstitution_Call {
+func (_c *MockRepository_DeleteInstitution_Call) Run(run func(ctx context.Context, id int)) *MockRepository_DeleteInstitution_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(string))
+		run(args[0].(context.Context), args[1].(int))
 	})
 	return _c
 }
@@ -119,7 +118,62 @@ func (_c *MockRepository_DeleteInstitution_Call) Return(_a0 error) *MockReposito
 	return _c
 }
 
-func (_c *MockRepository_DeleteInstitution_Call) RunAndReturn(run func(context.Context, string) error) *MockRepository_DeleteInstitution_Call {
+func (_c *MockRepository_DeleteInstitution_Call) RunAndReturn(run func(context.Context, int) error) *MockRepository_DeleteInstitution_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// FindInstitution provides a mock function with given fields: ctx, shortName
+func (_m *MockRepository) FindInstitution(ctx context.Context, shortName string) (*ent.Institution, error) {
+	ret := _m.Called(ctx, shortName)
+
+	var r0 *ent.Institution
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, string) (*ent.Institution, error)); ok {
+		return rf(ctx, shortName)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, string) *ent.Institution); ok {
+		r0 = rf(ctx, shortName)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*ent.Institution)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, string) error); ok {
+		r1 = rf(ctx, shortName)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// MockRepository_FindInstitution_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'FindInstitution'
+type MockRepository_FindInstitution_Call struct {
+	*mock.Call
+}
+
+// FindInstitution is a helper method to define mock.On call
+//   - ctx context.Context
+//   - shortName string
+func (_e *MockRepository_Expecter) FindInstitution(ctx interface{}, shortName interface{}) *MockRepository_FindInstitution_Call {
+	return &MockRepository_FindInstitution_Call{Call: _e.mock.On("FindInstitution", ctx, shortName)}
+}
+
+func (_c *MockRepository_FindInstitution_Call) Run(run func(ctx context.Context, shortName string)) *MockRepository_FindInstitution_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(string))
+	})
+	return _c
+}
+
+func (_c *MockRepository_FindInstitution_Call) Return(_a0 *ent.Institution, _a1 error) *MockRepository_FindInstitution_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *MockRepository_FindInstitution_Call) RunAndReturn(run func(context.Context, string) (*ent.Institution, error)) *MockRepository_FindInstitution_Call {
 	_c.Call.Return(run)
 	return _c
 }
@@ -179,17 +233,29 @@ func (_c *MockRepository_FindInstitutions_Call) RunAndReturn(run func(context.Co
 }
 
 // WithTx provides a mock function with given fields: _a0, _a1
-func (_m *MockRepository) WithTx(_a0 context.Context, _a1 func(context.Context) error) error {
+func (_m *MockRepository) WithTx(_a0 context.Context, _a1 func(context.Context) (interface{}, error)) (interface{}, error) {
 	ret := _m.Called(_a0, _a1)
 
-	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, func(context.Context) error) error); ok {
+	var r0 interface{}
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, func(context.Context) (interface{}, error)) (interface{}, error)); ok {
+		return rf(_a0, _a1)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, func(context.Context) (interface{}, error)) interface{}); ok {
 		r0 = rf(_a0, _a1)
 	} else {
-		r0 = ret.Error(0)
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(interface{})
+		}
 	}
 
-	return r0
+	if rf, ok := ret.Get(1).(func(context.Context, func(context.Context) (interface{}, error)) error); ok {
+		r1 = rf(_a0, _a1)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
 }
 
 // MockRepository_WithTx_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'WithTx'
@@ -199,24 +265,24 @@ type MockRepository_WithTx_Call struct {
 
 // WithTx is a helper method to define mock.On call
 //   - _a0 context.Context
-//   - _a1 func(context.Context) error
+//   - _a1 func(context.Context)(interface{} , error)
 func (_e *MockRepository_Expecter) WithTx(_a0 interface{}, _a1 interface{}) *MockRepository_WithTx_Call {
 	return &MockRepository_WithTx_Call{Call: _e.mock.On("WithTx", _a0, _a1)}
 }
 
-func (_c *MockRepository_WithTx_Call) Run(run func(_a0 context.Context, _a1 func(context.Context) error)) *MockRepository_WithTx_Call {
+func (_c *MockRepository_WithTx_Call) Run(run func(_a0 context.Context, _a1 func(context.Context) (interface{}, error))) *MockRepository_WithTx_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(func(context.Context) error))
+		run(args[0].(context.Context), args[1].(func(context.Context) (interface{}, error)))
 	})
 	return _c
 }
 
-func (_c *MockRepository_WithTx_Call) Return(_a0 error) *MockRepository_WithTx_Call {
-	_c.Call.Return(_a0)
+func (_c *MockRepository_WithTx_Call) Return(_a0 interface{}, _a1 error) *MockRepository_WithTx_Call {
+	_c.Call.Return(_a0, _a1)
 	return _c
 }
 
-func (_c *MockRepository_WithTx_Call) RunAndReturn(run func(context.Context, func(context.Context) error) error) *MockRepository_WithTx_Call {
+func (_c *MockRepository_WithTx_Call) RunAndReturn(run func(context.Context, func(context.Context) (interface{}, error)) (interface{}, error)) *MockRepository_WithTx_Call {
 	_c.Call.Return(run)
 	return _c
 }

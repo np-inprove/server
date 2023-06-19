@@ -12,7 +12,7 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/np-inprove/server/internal/ent/accessory"
-	"github.com/np-inprove/server/internal/ent/institution"
+	entinstitution "github.com/np-inprove/server/internal/ent/institution"
 	"github.com/np-inprove/server/internal/ent/predicate"
 	"github.com/np-inprove/server/internal/ent/redemption"
 )
@@ -98,7 +98,7 @@ func (aq *AccessoryQuery) QueryInstitution() *InstitutionQuery {
 		}
 		step := sqlgraph.NewStep(
 			sqlgraph.From(accessory.Table, accessory.FieldID, selector),
-			sqlgraph.To(institution.Table, institution.FieldID),
+			sqlgraph.To(entinstitution.Table, entinstitution.FieldID),
 			sqlgraph.Edge(sqlgraph.M2O, true, accessory.InstitutionTable, accessory.InstitutionColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(aq.driver.Dialect(), step)
@@ -500,7 +500,7 @@ func (aq *AccessoryQuery) loadInstitution(ctx context.Context, query *Institutio
 	if len(ids) == 0 {
 		return nil
 	}
-	query.Where(institution.IDIn(ids...))
+	query.Where(entinstitution.IDIn(ids...))
 	neighbors, err := query.All(ctx)
 	if err != nil {
 		return err

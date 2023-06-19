@@ -58,34 +58,6 @@ var (
 			},
 		},
 	}
-	// DepartmentsColumns holds the columns for the "departments" table.
-	DepartmentsColumns = []*schema.Column{
-		{Name: "id", Type: field.TypeInt, Increment: true},
-		{Name: "name", Type: field.TypeString},
-		{Name: "short_name", Type: field.TypeString},
-		{Name: "department_children", Type: field.TypeInt, Nullable: true},
-		{Name: "institution_departments", Type: field.TypeInt},
-	}
-	// DepartmentsTable holds the schema information for the "departments" table.
-	DepartmentsTable = &schema.Table{
-		Name:       "departments",
-		Columns:    DepartmentsColumns,
-		PrimaryKey: []*schema.Column{DepartmentsColumns[0]},
-		ForeignKeys: []*schema.ForeignKey{
-			{
-				Symbol:     "departments_departments_children",
-				Columns:    []*schema.Column{DepartmentsColumns[3]},
-				RefColumns: []*schema.Column{DepartmentsColumns[0]},
-				OnDelete:   schema.SetNull,
-			},
-			{
-				Symbol:     "departments_institutions_departments",
-				Columns:    []*schema.Column{DepartmentsColumns[4]},
-				RefColumns: []*schema.Column{InstitutionsColumns[0]},
-				OnDelete:   schema.Cascade,
-			},
-		},
-	}
 	// EventsColumns holds the columns for the "events" table.
 	EventsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
@@ -149,10 +121,9 @@ var (
 	// GroupsColumns holds the columns for the "groups" table.
 	GroupsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
-		{Name: "path", Type: field.TypeString, Unique: true},
 		{Name: "name", Type: field.TypeString},
+		{Name: "short_name", Type: field.TypeString},
 		{Name: "description", Type: field.TypeString},
-		{Name: "group_type", Type: field.TypeEnum, Enums: []string{"special_interest_group", "module_group", "cca", "mentor_class"}},
 		{Name: "institution_groups", Type: field.TypeInt},
 	}
 	// GroupsTable holds the schema information for the "groups" table.
@@ -163,15 +134,36 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "groups_institutions_groups",
-				Columns:    []*schema.Column{GroupsColumns[5]},
+				Columns:    []*schema.Column{GroupsColumns[4]},
 				RefColumns: []*schema.Column{InstitutionsColumns[0]},
 				OnDelete:   schema.Cascade,
 			},
 		},
 	}
+	// GroupInviteLinksColumns holds the columns for the "group_invite_links" table.
+	GroupInviteLinksColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "code", Type: field.TypeString, Unique: true},
+		{Name: "role", Type: field.TypeEnum, Enums: []string{"owner", "educator", "member"}},
+		{Name: "group_invites", Type: field.TypeInt},
+	}
+	// GroupInviteLinksTable holds the schema information for the "group_invite_links" table.
+	GroupInviteLinksTable = &schema.Table{
+		Name:       "group_invite_links",
+		Columns:    GroupInviteLinksColumns,
+		PrimaryKey: []*schema.Column{GroupInviteLinksColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "group_invite_links_groups_invites",
+				Columns:    []*schema.Column{GroupInviteLinksColumns[3]},
+				RefColumns: []*schema.Column{GroupsColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+	}
 	// GroupUsersColumns holds the columns for the "group_users" table.
 	GroupUsersColumns = []*schema.Column{
-		{Name: "role", Type: field.TypeEnum, Enums: []string{"student", "lecturer"}},
+		{Name: "role", Type: field.TypeEnum, Enums: []string{"owner", "educator", "member"}},
 		{Name: "group_id", Type: field.TypeInt},
 		{Name: "user_id", Type: field.TypeInt},
 	}
@@ -200,14 +192,34 @@ var (
 		{Name: "id", Type: field.TypeInt, Increment: true},
 		{Name: "name", Type: field.TypeString},
 		{Name: "short_name", Type: field.TypeString, Unique: true},
-		{Name: "admin_domain", Type: field.TypeString, Unique: true},
-		{Name: "student_domain", Type: field.TypeString, Unique: true},
+		{Name: "description", Type: field.TypeString},
 	}
 	// InstitutionsTable holds the schema information for the "institutions" table.
 	InstitutionsTable = &schema.Table{
 		Name:       "institutions",
 		Columns:    InstitutionsColumns,
 		PrimaryKey: []*schema.Column{InstitutionsColumns[0]},
+	}
+	// InstitutionInviteLinksColumns holds the columns for the "institution_invite_links" table.
+	InstitutionInviteLinksColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "code", Type: field.TypeString, Unique: true},
+		{Name: "role", Type: field.TypeEnum, Enums: []string{"admin", "educator", "member"}},
+		{Name: "institution_invites", Type: field.TypeInt},
+	}
+	// InstitutionInviteLinksTable holds the schema information for the "institution_invite_links" table.
+	InstitutionInviteLinksTable = &schema.Table{
+		Name:       "institution_invite_links",
+		Columns:    InstitutionInviteLinksColumns,
+		PrimaryKey: []*schema.Column{InstitutionInviteLinksColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "institution_invite_links_institutions_invites",
+				Columns:    []*schema.Column{InstitutionInviteLinksColumns[3]},
+				RefColumns: []*schema.Column{InstitutionsColumns[0]},
+				OnDelete:   schema.Cascade,
+			},
+		},
 	}
 	// JwtRevocationsColumns holds the columns for the "jwt_revocations" table.
 	JwtRevocationsColumns = []*schema.Column{
@@ -318,7 +330,7 @@ var (
 	StudyPlansColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
 		{Name: "name", Type: field.TypeString},
-		{Name: "share_code", Type: field.TypeString, Nullable: true},
+		{Name: "code", Type: field.TypeString, Nullable: true},
 		{Name: "study_plan_author", Type: field.TypeInt},
 	}
 	// StudyPlansTable holds the schema information for the "study_plans" table.
@@ -346,7 +358,8 @@ var (
 		{Name: "points_awarded_count", Type: field.TypeInt, Default: 0},
 		{Name: "points_awarded_reset_time", Type: field.TypeTime, Nullable: true},
 		{Name: "god_mode", Type: field.TypeBool},
-		{Name: "department_users", Type: field.TypeInt, Nullable: true},
+		{Name: "role", Type: field.TypeEnum, Enums: []string{"admin", "educator", "member"}},
+		{Name: "institution_users", Type: field.TypeInt},
 	}
 	// UsersTable holds the schema information for the "users" table.
 	UsersTable = &schema.Table{
@@ -355,10 +368,10 @@ var (
 		PrimaryKey: []*schema.Column{UsersColumns[0]},
 		ForeignKeys: []*schema.ForeignKey{
 			{
-				Symbol:     "users_departments_users",
-				Columns:    []*schema.Column{UsersColumns[9]},
-				RefColumns: []*schema.Column{DepartmentsColumns[0]},
-				OnDelete:   schema.SetNull,
+				Symbol:     "users_institutions_users",
+				Columns:    []*schema.Column{UsersColumns[10]},
+				RefColumns: []*schema.Column{InstitutionsColumns[0]},
+				OnDelete:   schema.Cascade,
 			},
 		},
 	}
@@ -386,6 +399,13 @@ var (
 				Columns:    []*schema.Column{UserPetsColumns[3]},
 				RefColumns: []*schema.Column{UsersColumns[0]},
 				OnDelete:   schema.NoAction,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "userpet_user_id",
+				Unique:  true,
+				Columns: []*schema.Column{UserPetsColumns[3]},
 			},
 		},
 	}
@@ -440,12 +460,13 @@ var (
 	Tables = []*schema.Table{
 		AccessoriesTable,
 		DeadlinesTable,
-		DepartmentsTable,
 		EventsTable,
 		ForumPostsTable,
 		GroupsTable,
+		GroupInviteLinksTable,
 		GroupUsersTable,
 		InstitutionsTable,
+		InstitutionInviteLinksTable,
 		JwtRevocationsTable,
 		MilestonesTable,
 		PetsTable,
@@ -463,15 +484,15 @@ func init() {
 	AccessoriesTable.ForeignKeys[0].RefTable = InstitutionsTable
 	DeadlinesTable.ForeignKeys[0].RefTable = UsersTable
 	DeadlinesTable.ForeignKeys[1].RefTable = GroupsTable
-	DepartmentsTable.ForeignKeys[0].RefTable = DepartmentsTable
-	DepartmentsTable.ForeignKeys[1].RefTable = InstitutionsTable
 	EventsTable.ForeignKeys[0].RefTable = GroupsTable
 	ForumPostsTable.ForeignKeys[0].RefTable = UsersTable
 	ForumPostsTable.ForeignKeys[1].RefTable = ForumPostsTable
 	ForumPostsTable.ForeignKeys[2].RefTable = GroupsTable
 	GroupsTable.ForeignKeys[0].RefTable = InstitutionsTable
+	GroupInviteLinksTable.ForeignKeys[0].RefTable = GroupsTable
 	GroupUsersTable.ForeignKeys[0].RefTable = GroupsTable
 	GroupUsersTable.ForeignKeys[1].RefTable = UsersTable
+	InstitutionInviteLinksTable.ForeignKeys[0].RefTable = InstitutionsTable
 	MilestonesTable.ForeignKeys[0].RefTable = StudyPlansTable
 	ReactionsTable.ForeignKeys[0].RefTable = UsersTable
 	ReactionsTable.ForeignKeys[1].RefTable = ForumPostsTable
@@ -479,7 +500,7 @@ func init() {
 	RedemptionsTable.ForeignKeys[1].RefTable = UsersTable
 	RedemptionsTable.ForeignKeys[2].RefTable = VouchersTable
 	StudyPlansTable.ForeignKeys[0].RefTable = UsersTable
-	UsersTable.ForeignKeys[0].RefTable = DepartmentsTable
+	UsersTable.ForeignKeys[0].RefTable = InstitutionsTable
 	UserPetsTable.ForeignKeys[0].RefTable = PetsTable
 	UserPetsTable.ForeignKeys[1].RefTable = UsersTable
 	VouchersTable.ForeignKeys[0].RefTable = InstitutionsTable

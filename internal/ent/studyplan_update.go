@@ -35,23 +35,23 @@ func (spu *StudyPlanUpdate) SetName(s string) *StudyPlanUpdate {
 	return spu
 }
 
-// SetShareCode sets the "share_code" field.
-func (spu *StudyPlanUpdate) SetShareCode(s string) *StudyPlanUpdate {
-	spu.mutation.SetShareCode(s)
+// SetCode sets the "code" field.
+func (spu *StudyPlanUpdate) SetCode(s string) *StudyPlanUpdate {
+	spu.mutation.SetCode(s)
 	return spu
 }
 
-// SetNillableShareCode sets the "share_code" field if the given value is not nil.
-func (spu *StudyPlanUpdate) SetNillableShareCode(s *string) *StudyPlanUpdate {
+// SetNillableCode sets the "code" field if the given value is not nil.
+func (spu *StudyPlanUpdate) SetNillableCode(s *string) *StudyPlanUpdate {
 	if s != nil {
-		spu.SetShareCode(*s)
+		spu.SetCode(*s)
 	}
 	return spu
 }
 
-// ClearShareCode clears the value of the "share_code" field.
-func (spu *StudyPlanUpdate) ClearShareCode() *StudyPlanUpdate {
-	spu.mutation.ClearShareCode()
+// ClearCode clears the value of the "code" field.
+func (spu *StudyPlanUpdate) ClearCode() *StudyPlanUpdate {
+	spu.mutation.ClearCode()
 	return spu
 }
 
@@ -168,11 +168,11 @@ func (spu *StudyPlanUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if value, ok := spu.mutation.Name(); ok {
 		_spec.SetField(studyplan.FieldName, field.TypeString, value)
 	}
-	if value, ok := spu.mutation.ShareCode(); ok {
-		_spec.SetField(studyplan.FieldShareCode, field.TypeString, value)
+	if value, ok := spu.mutation.Code(); ok {
+		_spec.SetField(studyplan.FieldCode, field.TypeString, value)
 	}
-	if spu.mutation.ShareCodeCleared() {
-		_spec.ClearField(studyplan.FieldShareCode, field.TypeString)
+	if spu.mutation.CodeCleared() {
+		_spec.ClearField(studyplan.FieldCode, field.TypeString)
 	}
 	if spu.mutation.AuthorCleared() {
 		edge := &sqlgraph.EdgeSpec{
@@ -274,23 +274,23 @@ func (spuo *StudyPlanUpdateOne) SetName(s string) *StudyPlanUpdateOne {
 	return spuo
 }
 
-// SetShareCode sets the "share_code" field.
-func (spuo *StudyPlanUpdateOne) SetShareCode(s string) *StudyPlanUpdateOne {
-	spuo.mutation.SetShareCode(s)
+// SetCode sets the "code" field.
+func (spuo *StudyPlanUpdateOne) SetCode(s string) *StudyPlanUpdateOne {
+	spuo.mutation.SetCode(s)
 	return spuo
 }
 
-// SetNillableShareCode sets the "share_code" field if the given value is not nil.
-func (spuo *StudyPlanUpdateOne) SetNillableShareCode(s *string) *StudyPlanUpdateOne {
+// SetNillableCode sets the "code" field if the given value is not nil.
+func (spuo *StudyPlanUpdateOne) SetNillableCode(s *string) *StudyPlanUpdateOne {
 	if s != nil {
-		spuo.SetShareCode(*s)
+		spuo.SetCode(*s)
 	}
 	return spuo
 }
 
-// ClearShareCode clears the value of the "share_code" field.
-func (spuo *StudyPlanUpdateOne) ClearShareCode() *StudyPlanUpdateOne {
-	spuo.mutation.ClearShareCode()
+// ClearCode clears the value of the "code" field.
+func (spuo *StudyPlanUpdateOne) ClearCode() *StudyPlanUpdateOne {
+	spuo.mutation.ClearCode()
 	return spuo
 }
 
@@ -437,11 +437,11 @@ func (spuo *StudyPlanUpdateOne) sqlSave(ctx context.Context) (_node *StudyPlan, 
 	if value, ok := spuo.mutation.Name(); ok {
 		_spec.SetField(studyplan.FieldName, field.TypeString, value)
 	}
-	if value, ok := spuo.mutation.ShareCode(); ok {
-		_spec.SetField(studyplan.FieldShareCode, field.TypeString, value)
+	if value, ok := spuo.mutation.Code(); ok {
+		_spec.SetField(studyplan.FieldCode, field.TypeString, value)
 	}
-	if spuo.mutation.ShareCodeCleared() {
-		_spec.ClearField(studyplan.FieldShareCode, field.TypeString)
+	if spuo.mutation.CodeCleared() {
+		_spec.ClearField(studyplan.FieldCode, field.TypeString)
 	}
 	if spuo.mutation.AuthorCleared() {
 		edge := &sqlgraph.EdgeSpec{

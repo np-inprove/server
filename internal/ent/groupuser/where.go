@@ -6,6 +6,7 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"github.com/np-inprove/server/internal/ent/predicate"
+	"github.com/np-inprove/server/internal/entity/group"
 )
 
 // GroupID applies equality check predicate on the "group_id" field. It's identical to GroupIDEQ.
@@ -59,23 +60,33 @@ func UserIDNotIn(vs ...int) predicate.GroupUser {
 }
 
 // RoleEQ applies the EQ predicate on the "role" field.
-func RoleEQ(v Role) predicate.GroupUser {
-	return predicate.GroupUser(sql.FieldEQ(FieldRole, v))
+func RoleEQ(v group.Role) predicate.GroupUser {
+	vc := v
+	return predicate.GroupUser(sql.FieldEQ(FieldRole, vc))
 }
 
 // RoleNEQ applies the NEQ predicate on the "role" field.
-func RoleNEQ(v Role) predicate.GroupUser {
-	return predicate.GroupUser(sql.FieldNEQ(FieldRole, v))
+func RoleNEQ(v group.Role) predicate.GroupUser {
+	vc := v
+	return predicate.GroupUser(sql.FieldNEQ(FieldRole, vc))
 }
 
 // RoleIn applies the In predicate on the "role" field.
-func RoleIn(vs ...Role) predicate.GroupUser {
-	return predicate.GroupUser(sql.FieldIn(FieldRole, vs...))
+func RoleIn(vs ...group.Role) predicate.GroupUser {
+	v := make([]any, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.GroupUser(sql.FieldIn(FieldRole, v...))
 }
 
 // RoleNotIn applies the NotIn predicate on the "role" field.
-func RoleNotIn(vs ...Role) predicate.GroupUser {
-	return predicate.GroupUser(sql.FieldNotIn(FieldRole, vs...))
+func RoleNotIn(vs ...group.Role) predicate.GroupUser {
+	v := make([]any, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.GroupUser(sql.FieldNotIn(FieldRole, v...))
 }
 
 // HasGroup applies the HasEdge predicate on the "group" edge.

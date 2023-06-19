@@ -14,8 +14,8 @@ const (
 	FieldID = "id"
 	// FieldName holds the string denoting the name field in the database.
 	FieldName = "name"
-	// FieldShareCode holds the string denoting the share_code field in the database.
-	FieldShareCode = "share_code"
+	// FieldCode holds the string denoting the code field in the database.
+	FieldCode = "code"
 	// EdgeAuthor holds the string denoting the author edge name in mutations.
 	EdgeAuthor = "author"
 	// EdgeMilestones holds the string denoting the milestones edge name in mutations.
@@ -42,7 +42,7 @@ const (
 var Columns = []string{
 	FieldID,
 	FieldName,
-	FieldShareCode,
+	FieldCode,
 }
 
 // ForeignKeys holds the SQL foreign-keys that are owned by the "study_plans"
@@ -84,9 +84,9 @@ func ByName(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldName, opts...).ToFunc()
 }
 
-// ByShareCode orders the results by the share_code field.
-func ByShareCode(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldShareCode, opts...).ToFunc()
+// ByCode orders the results by the code field.
+func ByCode(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldCode, opts...).ToFunc()
 }
 
 // ByAuthorField orders the results by author field.

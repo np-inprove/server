@@ -2,14 +2,11 @@ package auth
 
 import (
 	"context"
-	"encoding/json"
-	"errors"
 	"fmt"
 	"github.com/lestrrat-go/jwx/v2/jwk"
 	"github.com/lestrrat-go/jwx/v2/jwt"
-	"github.com/np-inprove/server/internal/ent"
 	"github.com/np-inprove/server/internal/entity"
-	"github.com/np-inprove/server/internal/hash"
+	"github.com/np-inprove/server/internal/fixture"
 	"github.com/stretchr/testify/mock"
 	"testing"
 
@@ -18,20 +15,10 @@ import (
 	"github.com/stretchr/testify/suite"
 )
 
-var (
-	repoInternalErr = errors.New("repo err")
-	repoNotFoundErr = new(ent.NotFoundError)
-
-	password              = "example"
-	encodedPasswordString = "{\"h\":\"15BrHhXrHhYM2yMFMrghE9gnY950dHNF1klveR5EdeY=\",\"s\":\"J7lr7qPnc/S4iGgdJQWSK2xVELHLE9N4+KIdcdBdHhM=\",\"t\":1,\"m\":65536,\"k\":32}"
-	jwkString             = "{\"kty\": \"EC\",\"d\": \"AFDDClQjKNoNfFGZB9iLP2gRmAJXBa-mp_XIdYMJjNKLIRELS03WArued737uRt9ayopD6AEQZOiRSLs8o9LrT5B\",\"use\": \"sig\",\"crv\": \"P-521\",\"x\": \"AZGgvUEwezY2RHU7l4m1aF5vp8Vj8CUo_nyqUzVVwoVjFz_mbZM4ZznXrAvuLKlAqagI2bHHj-97W7Blp3VaI0A5\",\"y\": \"AdmmlsSae6qoGTPsUYj7gSOGMJcaRdHpcyvQ3hdq5owJnyozbRib5mUYXwsV_voIKBTSkeztQSRagiILwqiEy5-y\",\"alg\": \"ES512\"}"
-)
-
 type UseCaseTestSuite struct {
 	suite.Suite
-	publicKey       jwk.Key
-	privateKey      jwk.Key
-	encodedPassword hash.Encoded
+	publicKey  jwk.Key
+	privateKey jwk.Key
 }
 
 func TestUseCaseTestSuite(t *testing.T) {
@@ -39,9 +26,8 @@ func TestUseCaseTestSuite(t *testing.T) {
 }
 
 func (suite *UseCaseTestSuite) SetupSuite() {
-	suite.privateKey, _ = jwk.ParseKey([]byte(jwkString))
+	suite.privateKey, _ = jwk.ParseKey([]byte(fixture.AuthJWKString))
 	suite.publicKey, _ = suite.privateKey.PublicKey()
-	_ = json.Unmarshal([]byte(encodedPasswordString), &suite.encodedPassword)
 }
 
 func (suite *UseCaseTestSuite) TestNewUseCase() {
@@ -55,10 +41,10 @@ func (suite *UseCaseTestSuite) TestNewUseCase() {
 	tests := []struct {
 		name string
 		args args
-		want usecase
+		want useCase
 	}{
 		{
-			name: "New folder",
+			name: "New use case",
 			args: args{
 				repository: func() Repository {
 					return new(mocks.MockRepository)
@@ -73,7 +59,7 @@ func (suite *UseCaseTestSuite) TestNewUseCase() {
 					return suite.privateKey
 				},
 			},
-			want: usecase{repo: new(mocks.MockRepository), cfg: new(config.Config), publicKey: suite.publicKey, privateKey: suite.privateKey},
+			want: useCase{repo: new(mocks.MockRepository), cfg: new(config.Config), publicKey: suite.publicKey, privateKey: suite.privateKey},
 		},
 	}
 
@@ -108,10 +94,10 @@ func (suite *UseCaseTestSuite) TestWhoAmI() {
 			},
 			configure: func(repository *mocks.MockRepository) {
 				repository.On("FindJWTRevocation", mock.Anything, mock.Anything).
-					Return(&entity.JWTRevocation{}, repoInternalErr)
+					Return(&entity.JWTRevocation{}, fixture.RepoInternalErr)
 			},
 			want: nil,
-			err:  fmt.Errorf("failed to find jwt revocation: %w", repoInternalErr),
+			err:  fmt.Errorf("failed to find jwt revocation: %w", fixture.RepoInternalErr),
 		},
 		{
 			name: "Token revoked",
@@ -134,12 +120,12 @@ func (suite *UseCaseTestSuite) TestWhoAmI() {
 			},
 			configure: func(repository *mocks.MockRepository) {
 				repository.On("FindJWTRevocation", mock.Anything, mock.Anything).
-					Return(&entity.JWTRevocation{}, repoNotFoundErr)
+					Return(&entity.JWTRevocation{}, fixture.RepoNotFoundErr)
 				repository.On("FindUserByEmail", mock.Anything, mock.Anything).
-					Return(nil, repoNotFoundErr)
+					Return(nil, fixture.RepoNotFoundErr)
 			},
 			want: nil,
-			err:  fmt.Errorf("failed to find user: %w", repoNotFoundErr),
+			err:  fmt.Errorf("failed to find user: %w", fixture.RepoNotFoundErr),
 		},
 		{
 			name: "Success",
@@ -149,7 +135,7 @@ func (suite *UseCaseTestSuite) TestWhoAmI() {
 			},
 			configure: func(repository *mocks.MockRepository) {
 				repository.On("FindJWTRevocation", mock.Anything, mock.Anything).
-					Return(&entity.JWTRevocation{}, repoNotFoundErr)
+					Return(&entity.JWTRevocation{}, fixture.RepoNotFoundErr)
 				repository.On("FindUserByEmail", mock.Anything, mock.Anything).
 					Return(&entity.User{}, nil)
 			},
@@ -193,7 +179,7 @@ func (suite *UseCaseTestSuite) TestLogin() {
 			},
 			configure: func(repository *mocks.MockRepository) {
 				repository.On("FindUserByEmail", mock.Anything, mock.Anything).
-					Return(nil, repoNotFoundErr)
+					Return(nil, fixture.RepoNotFoundErr)
 			},
 			assert: func(ret *entity.Session) {
 				suite.Nil(ret)
@@ -204,28 +190,28 @@ func (suite *UseCaseTestSuite) TestLogin() {
 			name: "Find user internal repo error",
 			args: args{
 				ctx:      context.Background(),
-				email:    "example@example.com",
-				password: "example",
+				email:    fixture.UserJohn.Email,
+				password: fixture.UserJohnPassword,
 			},
 			configure: func(repository *mocks.MockRepository) {
 				repository.On("FindUserByEmail", mock.Anything, mock.Anything).
-					Return(nil, repoInternalErr)
+					Return(nil, fixture.RepoInternalErr)
 			},
 			assert: func(ret *entity.Session) {
 				suite.Nil(ret)
 			},
-			err: fmt.Errorf("failed to find user: %w", repoInternalErr),
+			err: fmt.Errorf("failed to find user: %w", fixture.RepoInternalErr),
 		},
 		{
 			name: "Hash verification failed",
 			args: args{
 				ctx:      context.Background(),
-				email:    "example@example.com",
+				email:    fixture.UserJohn.Email,
 				password: "wrong password",
 			},
 			configure: func(repository *mocks.MockRepository) {
 				repository.On("FindUserByEmail", mock.Anything, mock.Anything).
-					Return(&entity.User{Password: suite.encodedPassword}, nil)
+					Return(fixture.UserJohn, nil)
 			},
 			assert: func(ret *entity.Session) {
 				suite.Nil(ret)
@@ -236,23 +222,15 @@ func (suite *UseCaseTestSuite) TestLogin() {
 			name: "Success",
 			args: args{
 				ctx:      context.Background(),
-				email:    "example@example.com",
-				password: password,
+				email:    fixture.UserJohn.Email,
+				password: fixture.UserJohnPassword,
 			},
 			configure: func(repository *mocks.MockRepository) {
 				repository.On("FindUserByEmail", mock.Anything, mock.Anything).
-					Return(&entity.User{
-						Email:    "example@example.com",
-						Password: suite.encodedPassword,
-						GodMode:  false,
-					}, nil)
+					Return(fixture.UserJohn, nil)
 			},
 			assert: func(ret *entity.Session) {
-				suite.Equal(ret.User, &entity.User{
-					Email:    "example@example.com",
-					Password: suite.encodedPassword,
-					GodMode:  false,
-				})
+				suite.Equal(ret.User, fixture.UserJohn)
 				suite.NotEmpty(ret.Token)
 			},
 			err: nil,
@@ -265,7 +243,7 @@ func (suite *UseCaseTestSuite) TestLogin() {
 			uc := NewUseCase(repo, nil, suite.publicKey, suite.privateKey)
 			tc.configure(repo)
 			ret, err := uc.Login(tc.args.ctx, tc.args.email, tc.args.password)
-			suite.Equal(err, tc.err)
+			suite.Equal(tc.err, err)
 			tc.assert(ret)
 		})
 	}
@@ -273,37 +251,83 @@ func (suite *UseCaseTestSuite) TestLogin() {
 
 func (suite *UseCaseTestSuite) TestRegister() {
 	type args struct {
-		ctx       context.Context
-		firstName string
-		lastName  string
-		email     string
-		password  string
+		ctx        context.Context
+		inviteCode string
+		firstName  string
+		lastName   string
+		email      string
+		password   string
 	}
 
 	tests := []struct {
 		name      string
 		args      args
 		configure func(repository *mocks.MockRepository)
-		assert    func(ret *entity.Session, repository *mocks.MockRepository)
+		assert    func(repository *mocks.MockRepository)
 		err       error
 	}{
 		{
-			name: "Success",
+			name: "Invalid invite",
 			args: args{
-				ctx:       context.Background(),
-				firstName: "John",
-				lastName:  "Smith",
-				email:     "me@example.com",
-				password:  password,
+				ctx:        context.Background(),
+				inviteCode: "definitely not a valid invite code",
+				firstName:  fixture.UserJohn.FirstName,
+				lastName:   fixture.UserJohn.LastName,
+				email:      fixture.UserJohn.Email,
+				password:   fixture.UserJohnPassword,
 			},
 			configure: func(repository *mocks.MockRepository) {
-				repository.On("FindInstitutionByDomains", mock.Anything, mock.Anything).
-					Return(&entity.Institution{}, nil)
-				repository.On("CreateUser", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
-					Return(&entity.User{Email: "me@example.com", GodMode: false}, nil)
+				repository.On("FindInstitutionInviteLinkWithInstitution", mock.Anything, mock.Anything).
+					Return(nil, fixture.RepoNotFoundErr)
 			},
-			assert: func(ret *entity.Session, repository *mocks.MockRepository) {
-				repository.AssertCalled(suite.T(), "CreateUser", context.Background(), "John", "Smith", "me@example.com", mock.Anything)
+			assert: func(repository *mocks.MockRepository) {
+			},
+			err: ErrInvalidInvite,
+		},
+		{
+			name: "Repo internal error",
+			args: args{
+				ctx:        context.Background(),
+				inviteCode: fixture.InstitutionInviteLinkNP.Code,
+				firstName:  fixture.UserJohn.FirstName,
+				lastName:   fixture.UserJohn.LastName,
+				email:      fixture.UserJohn.Email,
+				password:   fixture.UserJohnPassword,
+			},
+			configure: func(repository *mocks.MockRepository) {
+				repository.On("FindInstitutionInviteLinkWithInstitution", mock.Anything, mock.Anything).
+					Return(nil, fixture.RepoInternalErr)
+			},
+			assert: func(repository *mocks.MockRepository) {
+			},
+			err: fixture.RepoInternalErr,
+		},
+		{
+			name: "Success",
+			args: args{
+				ctx:        context.Background(),
+				inviteCode: fixture.InstitutionInviteLinkNP.Code,
+				firstName:  fixture.UserJohn.FirstName,
+				lastName:   fixture.UserJohn.LastName,
+				email:      fixture.UserJohn.Email,
+				password:   fixture.UserJohnPassword,
+			},
+			configure: func(repository *mocks.MockRepository) {
+				repository.On("FindInstitutionInviteLinkWithInstitution", mock.Anything, mock.Anything).
+					Return(fixture.InstitutionInviteLinkNP, nil)
+				repository.On("CreateUser", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
+					Return(fixture.UserJohn, nil)
+			},
+			assert: func(repository *mocks.MockRepository) {
+				repository.AssertCalled(suite.T(), "CreateUser",
+					context.Background(),
+					fixture.InstitutionInviteLinkNP.Edges.Institution.ID,
+					fixture.InstitutionInviteLinkNP.Role,
+					fixture.UserJohn.FirstName,
+					fixture.UserJohn.LastName,
+					fixture.UserJohn.Email,
+					mock.Anything,
+				)
 			},
 		},
 	}
@@ -313,9 +337,9 @@ func (suite *UseCaseTestSuite) TestRegister() {
 			repo := new(mocks.MockRepository)
 			uc := NewUseCase(repo, nil, suite.publicKey, suite.privateKey)
 			tc.configure(repo)
-			ret, err := uc.Register(tc.args.ctx, tc.args.firstName, tc.args.lastName, tc.args.email, tc.args.password)
+			_, err := uc.Register(tc.args.ctx, tc.args.inviteCode, tc.args.firstName, tc.args.lastName, tc.args.email, tc.args.password)
 			suite.Equal(err, tc.err)
-			tc.assert(ret, repo)
+			tc.assert(repo)
 		})
 	}
 }

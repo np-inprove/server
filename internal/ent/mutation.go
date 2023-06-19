@@ -13,12 +13,13 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"github.com/np-inprove/server/internal/ent/accessory"
 	"github.com/np-inprove/server/internal/ent/deadline"
-	"github.com/np-inprove/server/internal/ent/department"
 	"github.com/np-inprove/server/internal/ent/event"
 	"github.com/np-inprove/server/internal/ent/forumpost"
-	"github.com/np-inprove/server/internal/ent/group"
+	entgroup "github.com/np-inprove/server/internal/ent/group"
+	"github.com/np-inprove/server/internal/ent/groupinvitelink"
 	"github.com/np-inprove/server/internal/ent/groupuser"
-	"github.com/np-inprove/server/internal/ent/institution"
+	entinstitution "github.com/np-inprove/server/internal/ent/institution"
+	"github.com/np-inprove/server/internal/ent/institutioninvitelink"
 	"github.com/np-inprove/server/internal/ent/jwtrevocation"
 	"github.com/np-inprove/server/internal/ent/milestone"
 	"github.com/np-inprove/server/internal/ent/pet"
@@ -29,6 +30,8 @@ import (
 	"github.com/np-inprove/server/internal/ent/user"
 	"github.com/np-inprove/server/internal/ent/userpet"
 	"github.com/np-inprove/server/internal/ent/voucher"
+	"github.com/np-inprove/server/internal/entity/group"
+	"github.com/np-inprove/server/internal/entity/institution"
 	"github.com/np-inprove/server/internal/hash"
 )
 
@@ -41,23 +44,24 @@ const (
 	OpUpdateOne = ent.OpUpdateOne
 
 	// Node types.
-	TypeAccessory     = "Accessory"
-	TypeDeadline      = "Deadline"
-	TypeDepartment    = "Department"
-	TypeEvent         = "Event"
-	TypeForumPost     = "ForumPost"
-	TypeGroup         = "Group"
-	TypeGroupUser     = "GroupUser"
-	TypeInstitution   = "Institution"
-	TypeJWTRevocation = "JWTRevocation"
-	TypeMilestone     = "Milestone"
-	TypePet           = "Pet"
-	TypeReaction      = "Reaction"
-	TypeRedemption    = "Redemption"
-	TypeStudyPlan     = "StudyPlan"
-	TypeUser          = "User"
-	TypeUserPet       = "UserPet"
-	TypeVoucher       = "Voucher"
+	TypeAccessory             = "Accessory"
+	TypeDeadline              = "Deadline"
+	TypeEvent                 = "Event"
+	TypeForumPost             = "ForumPost"
+	TypeGroup                 = "Group"
+	TypeGroupInviteLink       = "GroupInviteLink"
+	TypeGroupUser             = "GroupUser"
+	TypeInstitution           = "Institution"
+	TypeInstitutionInviteLink = "InstitutionInviteLink"
+	TypeJWTRevocation         = "JWTRevocation"
+	TypeMilestone             = "Milestone"
+	TypePet                   = "Pet"
+	TypeReaction              = "Reaction"
+	TypeRedemption            = "Redemption"
+	TypeStudyPlan             = "StudyPlan"
+	TypeUser                  = "User"
+	TypeUserPet               = "UserPet"
+	TypeVoucher               = "Voucher"
 )
 
 // AccessoryMutation represents an operation that mutates the Accessory nodes in the graph.
@@ -1293,680 +1297,6 @@ func (m *DeadlineMutation) ResetEdge(name string) error {
 		return nil
 	}
 	return fmt.Errorf("unknown Deadline edge %s", name)
-}
-
-// DepartmentMutation represents an operation that mutates the Department nodes in the graph.
-type DepartmentMutation struct {
-	config
-	op                 Op
-	typ                string
-	id                 *int
-	name               *string
-	short_name         *string
-	clearedFields      map[string]struct{}
-	institution        *int
-	clearedinstitution bool
-	parent             *int
-	clearedparent      bool
-	children           map[int]struct{}
-	removedchildren    map[int]struct{}
-	clearedchildren    bool
-	users              map[int]struct{}
-	removedusers       map[int]struct{}
-	clearedusers       bool
-	done               bool
-	oldValue           func(context.Context) (*Department, error)
-	predicates         []predicate.Department
-}
-
-var _ ent.Mutation = (*DepartmentMutation)(nil)
-
-// departmentOption allows management of the mutation configuration using functional options.
-type departmentOption func(*DepartmentMutation)
-
-// newDepartmentMutation creates new mutation for the Department entity.
-func newDepartmentMutation(c config, op Op, opts ...departmentOption) *DepartmentMutation {
-	m := &DepartmentMutation{
-		config:        c,
-		op:            op,
-		typ:           TypeDepartment,
-		clearedFields: make(map[string]struct{}),
-	}
-	for _, opt := range opts {
-		opt(m)
-	}
-	return m
-}
-
-// withDepartmentID sets the ID field of the mutation.
-func withDepartmentID(id int) departmentOption {
-	return func(m *DepartmentMutation) {
-		var (
-			err   error
-			once  sync.Once
-			value *Department
-		)
-		m.oldValue = func(ctx context.Context) (*Department, error) {
-			once.Do(func() {
-				if m.done {
-					err = errors.New("querying old values post mutation is not allowed")
-				} else {
-					value, err = m.Client().Department.Get(ctx, id)
-				}
-			})
-			return value, err
-		}
-		m.id = &id
-	}
-}
-
-// withDepartment sets the old Department of the mutation.
-func withDepartment(node *Department) departmentOption {
-	return func(m *DepartmentMutation) {
-		m.oldValue = func(context.Context) (*Department, error) {
-			return node, nil
-		}
-		m.id = &node.ID
-	}
-}
-
-// Client returns a new `ent.Client` from the mutation. If the mutation was
-// executed in a transaction (ent.Tx), a transactional client is returned.
-func (m DepartmentMutation) Client() *Client {
-	client := &Client{config: m.config}
-	client.init()
-	return client
-}
-
-// Tx returns an `ent.Tx` for mutations that were executed in transactions;
-// it returns an error otherwise.
-func (m DepartmentMutation) Tx() (*Tx, error) {
-	if _, ok := m.driver.(*txDriver); !ok {
-		return nil, errors.New("ent: mutation is not running in a transaction")
-	}
-	tx := &Tx{config: m.config}
-	tx.init()
-	return tx, nil
-}
-
-// ID returns the ID value in the mutation. Note that the ID is only available
-// if it was provided to the builder or after it was returned from the database.
-func (m *DepartmentMutation) ID() (id int, exists bool) {
-	if m.id == nil {
-		return
-	}
-	return *m.id, true
-}
-
-// IDs queries the database and returns the entity ids that match the mutation's predicate.
-// That means, if the mutation is applied within a transaction with an isolation level such
-// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
-// or updated by the mutation.
-func (m *DepartmentMutation) IDs(ctx context.Context) ([]int, error) {
-	switch {
-	case m.op.Is(OpUpdateOne | OpDeleteOne):
-		id, exists := m.ID()
-		if exists {
-			return []int{id}, nil
-		}
-		fallthrough
-	case m.op.Is(OpUpdate | OpDelete):
-		return m.Client().Department.Query().Where(m.predicates...).IDs(ctx)
-	default:
-		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
-	}
-}
-
-// SetName sets the "name" field.
-func (m *DepartmentMutation) SetName(s string) {
-	m.name = &s
-}
-
-// Name returns the value of the "name" field in the mutation.
-func (m *DepartmentMutation) Name() (r string, exists bool) {
-	v := m.name
-	if v == nil {
-		return
-	}
-	return *v, true
-}
-
-// OldName returns the old "name" field's value of the Department entity.
-// If the Department object wasn't provided to the builder, the object is fetched from the database.
-// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *DepartmentMutation) OldName(ctx context.Context) (v string, err error) {
-	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldName is only allowed on UpdateOne operations")
-	}
-	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldName requires an ID field in the mutation")
-	}
-	oldValue, err := m.oldValue(ctx)
-	if err != nil {
-		return v, fmt.Errorf("querying old value for OldName: %w", err)
-	}
-	return oldValue.Name, nil
-}
-
-// ResetName resets all changes to the "name" field.
-func (m *DepartmentMutation) ResetName() {
-	m.name = nil
-}
-
-// SetShortName sets the "short_name" field.
-func (m *DepartmentMutation) SetShortName(s string) {
-	m.short_name = &s
-}
-
-// ShortName returns the value of the "short_name" field in the mutation.
-func (m *DepartmentMutation) ShortName() (r string, exists bool) {
-	v := m.short_name
-	if v == nil {
-		return
-	}
-	return *v, true
-}
-
-// OldShortName returns the old "short_name" field's value of the Department entity.
-// If the Department object wasn't provided to the builder, the object is fetched from the database.
-// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *DepartmentMutation) OldShortName(ctx context.Context) (v string, err error) {
-	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldShortName is only allowed on UpdateOne operations")
-	}
-	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldShortName requires an ID field in the mutation")
-	}
-	oldValue, err := m.oldValue(ctx)
-	if err != nil {
-		return v, fmt.Errorf("querying old value for OldShortName: %w", err)
-	}
-	return oldValue.ShortName, nil
-}
-
-// ResetShortName resets all changes to the "short_name" field.
-func (m *DepartmentMutation) ResetShortName() {
-	m.short_name = nil
-}
-
-// SetInstitutionID sets the "institution" edge to the Institution entity by id.
-func (m *DepartmentMutation) SetInstitutionID(id int) {
-	m.institution = &id
-}
-
-// ClearInstitution clears the "institution" edge to the Institution entity.
-func (m *DepartmentMutation) ClearInstitution() {
-	m.clearedinstitution = true
-}
-
-// InstitutionCleared reports if the "institution" edge to the Institution entity was cleared.
-func (m *DepartmentMutation) InstitutionCleared() bool {
-	return m.clearedinstitution
-}
-
-// InstitutionID returns the "institution" edge ID in the mutation.
-func (m *DepartmentMutation) InstitutionID() (id int, exists bool) {
-	if m.institution != nil {
-		return *m.institution, true
-	}
-	return
-}
-
-// InstitutionIDs returns the "institution" edge IDs in the mutation.
-// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
-// InstitutionID instead. It exists only for internal usage by the builders.
-func (m *DepartmentMutation) InstitutionIDs() (ids []int) {
-	if id := m.institution; id != nil {
-		ids = append(ids, *id)
-	}
-	return
-}
-
-// ResetInstitution resets all changes to the "institution" edge.
-func (m *DepartmentMutation) ResetInstitution() {
-	m.institution = nil
-	m.clearedinstitution = false
-}
-
-// SetParentID sets the "parent" edge to the Department entity by id.
-func (m *DepartmentMutation) SetParentID(id int) {
-	m.parent = &id
-}
-
-// ClearParent clears the "parent" edge to the Department entity.
-func (m *DepartmentMutation) ClearParent() {
-	m.clearedparent = true
-}
-
-// ParentCleared reports if the "parent" edge to the Department entity was cleared.
-func (m *DepartmentMutation) ParentCleared() bool {
-	return m.clearedparent
-}
-
-// ParentID returns the "parent" edge ID in the mutation.
-func (m *DepartmentMutation) ParentID() (id int, exists bool) {
-	if m.parent != nil {
-		return *m.parent, true
-	}
-	return
-}
-
-// ParentIDs returns the "parent" edge IDs in the mutation.
-// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
-// ParentID instead. It exists only for internal usage by the builders.
-func (m *DepartmentMutation) ParentIDs() (ids []int) {
-	if id := m.parent; id != nil {
-		ids = append(ids, *id)
-	}
-	return
-}
-
-// ResetParent resets all changes to the "parent" edge.
-func (m *DepartmentMutation) ResetParent() {
-	m.parent = nil
-	m.clearedparent = false
-}
-
-// AddChildIDs adds the "children" edge to the Department entity by ids.
-func (m *DepartmentMutation) AddChildIDs(ids ...int) {
-	if m.children == nil {
-		m.children = make(map[int]struct{})
-	}
-	for i := range ids {
-		m.children[ids[i]] = struct{}{}
-	}
-}
-
-// ClearChildren clears the "children" edge to the Department entity.
-func (m *DepartmentMutation) ClearChildren() {
-	m.clearedchildren = true
-}
-
-// ChildrenCleared reports if the "children" edge to the Department entity was cleared.
-func (m *DepartmentMutation) ChildrenCleared() bool {
-	return m.clearedchildren
-}
-
-// RemoveChildIDs removes the "children" edge to the Department entity by IDs.
-func (m *DepartmentMutation) RemoveChildIDs(ids ...int) {
-	if m.removedchildren == nil {
-		m.removedchildren = make(map[int]struct{})
-	}
-	for i := range ids {
-		delete(m.children, ids[i])
-		m.removedchildren[ids[i]] = struct{}{}
-	}
-}
-
-// RemovedChildren returns the removed IDs of the "children" edge to the Department entity.
-func (m *DepartmentMutation) RemovedChildrenIDs() (ids []int) {
-	for id := range m.removedchildren {
-		ids = append(ids, id)
-	}
-	return
-}
-
-// ChildrenIDs returns the "children" edge IDs in the mutation.
-func (m *DepartmentMutation) ChildrenIDs() (ids []int) {
-	for id := range m.children {
-		ids = append(ids, id)
-	}
-	return
-}
-
-// ResetChildren resets all changes to the "children" edge.
-func (m *DepartmentMutation) ResetChildren() {
-	m.children = nil
-	m.clearedchildren = false
-	m.removedchildren = nil
-}
-
-// AddUserIDs adds the "users" edge to the User entity by ids.
-func (m *DepartmentMutation) AddUserIDs(ids ...int) {
-	if m.users == nil {
-		m.users = make(map[int]struct{})
-	}
-	for i := range ids {
-		m.users[ids[i]] = struct{}{}
-	}
-}
-
-// ClearUsers clears the "users" edge to the User entity.
-func (m *DepartmentMutation) ClearUsers() {
-	m.clearedusers = true
-}
-
-// UsersCleared reports if the "users" edge to the User entity was cleared.
-func (m *DepartmentMutation) UsersCleared() bool {
-	return m.clearedusers
-}
-
-// RemoveUserIDs removes the "users" edge to the User entity by IDs.
-func (m *DepartmentMutation) RemoveUserIDs(ids ...int) {
-	if m.removedusers == nil {
-		m.removedusers = make(map[int]struct{})
-	}
-	for i := range ids {
-		delete(m.users, ids[i])
-		m.removedusers[ids[i]] = struct{}{}
-	}
-}
-
-// RemovedUsers returns the removed IDs of the "users" edge to the User entity.
-func (m *DepartmentMutation) RemovedUsersIDs() (ids []int) {
-	for id := range m.removedusers {
-		ids = append(ids, id)
-	}
-	return
-}
-
-// UsersIDs returns the "users" edge IDs in the mutation.
-func (m *DepartmentMutation) UsersIDs() (ids []int) {
-	for id := range m.users {
-		ids = append(ids, id)
-	}
-	return
-}
-
-// ResetUsers resets all changes to the "users" edge.
-func (m *DepartmentMutation) ResetUsers() {
-	m.users = nil
-	m.clearedusers = false
-	m.removedusers = nil
-}
-
-// Where appends a list predicates to the DepartmentMutation builder.
-func (m *DepartmentMutation) Where(ps ...predicate.Department) {
-	m.predicates = append(m.predicates, ps...)
-}
-
-// WhereP appends storage-level predicates to the DepartmentMutation builder. Using this method,
-// users can use type-assertion to append predicates that do not depend on any generated package.
-func (m *DepartmentMutation) WhereP(ps ...func(*sql.Selector)) {
-	p := make([]predicate.Department, len(ps))
-	for i := range ps {
-		p[i] = ps[i]
-	}
-	m.Where(p...)
-}
-
-// Op returns the operation name.
-func (m *DepartmentMutation) Op() Op {
-	return m.op
-}
-
-// SetOp allows setting the mutation operation.
-func (m *DepartmentMutation) SetOp(op Op) {
-	m.op = op
-}
-
-// Type returns the node type of this mutation (Department).
-func (m *DepartmentMutation) Type() string {
-	return m.typ
-}
-
-// Fields returns all fields that were changed during this mutation. Note that in
-// order to get all numeric fields that were incremented/decremented, call
-// AddedFields().
-func (m *DepartmentMutation) Fields() []string {
-	fields := make([]string, 0, 2)
-	if m.name != nil {
-		fields = append(fields, department.FieldName)
-	}
-	if m.short_name != nil {
-		fields = append(fields, department.FieldShortName)
-	}
-	return fields
-}
-
-// Field returns the value of a field with the given name. The second boolean
-// return value indicates that this field was not set, or was not defined in the
-// schema.
-func (m *DepartmentMutation) Field(name string) (ent.Value, bool) {
-	switch name {
-	case department.FieldName:
-		return m.Name()
-	case department.FieldShortName:
-		return m.ShortName()
-	}
-	return nil, false
-}
-
-// OldField returns the old value of the field from the database. An error is
-// returned if the mutation operation is not UpdateOne, or the query to the
-// database failed.
-func (m *DepartmentMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
-	switch name {
-	case department.FieldName:
-		return m.OldName(ctx)
-	case department.FieldShortName:
-		return m.OldShortName(ctx)
-	}
-	return nil, fmt.Errorf("unknown Department field %s", name)
-}
-
-// SetField sets the value of a field with the given name. It returns an error if
-// the field is not defined in the schema, or if the type mismatched the field
-// type.
-func (m *DepartmentMutation) SetField(name string, value ent.Value) error {
-	switch name {
-	case department.FieldName:
-		v, ok := value.(string)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.SetName(v)
-		return nil
-	case department.FieldShortName:
-		v, ok := value.(string)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.SetShortName(v)
-		return nil
-	}
-	return fmt.Errorf("unknown Department field %s", name)
-}
-
-// AddedFields returns all numeric fields that were incremented/decremented during
-// this mutation.
-func (m *DepartmentMutation) AddedFields() []string {
-	return nil
-}
-
-// AddedField returns the numeric value that was incremented/decremented on a field
-// with the given name. The second boolean return value indicates that this field
-// was not set, or was not defined in the schema.
-func (m *DepartmentMutation) AddedField(name string) (ent.Value, bool) {
-	return nil, false
-}
-
-// AddField adds the value to the field with the given name. It returns an error if
-// the field is not defined in the schema, or if the type mismatched the field
-// type.
-func (m *DepartmentMutation) AddField(name string, value ent.Value) error {
-	switch name {
-	}
-	return fmt.Errorf("unknown Department numeric field %s", name)
-}
-
-// ClearedFields returns all nullable fields that were cleared during this
-// mutation.
-func (m *DepartmentMutation) ClearedFields() []string {
-	return nil
-}
-
-// FieldCleared returns a boolean indicating if a field with the given name was
-// cleared in this mutation.
-func (m *DepartmentMutation) FieldCleared(name string) bool {
-	_, ok := m.clearedFields[name]
-	return ok
-}
-
-// ClearField clears the value of the field with the given name. It returns an
-// error if the field is not defined in the schema.
-func (m *DepartmentMutation) ClearField(name string) error {
-	return fmt.Errorf("unknown Department nullable field %s", name)
-}
-
-// ResetField resets all changes in the mutation for the field with the given name.
-// It returns an error if the field is not defined in the schema.
-func (m *DepartmentMutation) ResetField(name string) error {
-	switch name {
-	case department.FieldName:
-		m.ResetName()
-		return nil
-	case department.FieldShortName:
-		m.ResetShortName()
-		return nil
-	}
-	return fmt.Errorf("unknown Department field %s", name)
-}
-
-// AddedEdges returns all edge names that were set/added in this mutation.
-func (m *DepartmentMutation) AddedEdges() []string {
-	edges := make([]string, 0, 4)
-	if m.institution != nil {
-		edges = append(edges, department.EdgeInstitution)
-	}
-	if m.parent != nil {
-		edges = append(edges, department.EdgeParent)
-	}
-	if m.children != nil {
-		edges = append(edges, department.EdgeChildren)
-	}
-	if m.users != nil {
-		edges = append(edges, department.EdgeUsers)
-	}
-	return edges
-}
-
-// AddedIDs returns all IDs (to other nodes) that were added for the given edge
-// name in this mutation.
-func (m *DepartmentMutation) AddedIDs(name string) []ent.Value {
-	switch name {
-	case department.EdgeInstitution:
-		if id := m.institution; id != nil {
-			return []ent.Value{*id}
-		}
-	case department.EdgeParent:
-		if id := m.parent; id != nil {
-			return []ent.Value{*id}
-		}
-	case department.EdgeChildren:
-		ids := make([]ent.Value, 0, len(m.children))
-		for id := range m.children {
-			ids = append(ids, id)
-		}
-		return ids
-	case department.EdgeUsers:
-		ids := make([]ent.Value, 0, len(m.users))
-		for id := range m.users {
-			ids = append(ids, id)
-		}
-		return ids
-	}
-	return nil
-}
-
-// RemovedEdges returns all edge names that were removed in this mutation.
-func (m *DepartmentMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 4)
-	if m.removedchildren != nil {
-		edges = append(edges, department.EdgeChildren)
-	}
-	if m.removedusers != nil {
-		edges = append(edges, department.EdgeUsers)
-	}
-	return edges
-}
-
-// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
-// the given name in this mutation.
-func (m *DepartmentMutation) RemovedIDs(name string) []ent.Value {
-	switch name {
-	case department.EdgeChildren:
-		ids := make([]ent.Value, 0, len(m.removedchildren))
-		for id := range m.removedchildren {
-			ids = append(ids, id)
-		}
-		return ids
-	case department.EdgeUsers:
-		ids := make([]ent.Value, 0, len(m.removedusers))
-		for id := range m.removedusers {
-			ids = append(ids, id)
-		}
-		return ids
-	}
-	return nil
-}
-
-// ClearedEdges returns all edge names that were cleared in this mutation.
-func (m *DepartmentMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 4)
-	if m.clearedinstitution {
-		edges = append(edges, department.EdgeInstitution)
-	}
-	if m.clearedparent {
-		edges = append(edges, department.EdgeParent)
-	}
-	if m.clearedchildren {
-		edges = append(edges, department.EdgeChildren)
-	}
-	if m.clearedusers {
-		edges = append(edges, department.EdgeUsers)
-	}
-	return edges
-}
-
-// EdgeCleared returns a boolean which indicates if the edge with the given name
-// was cleared in this mutation.
-func (m *DepartmentMutation) EdgeCleared(name string) bool {
-	switch name {
-	case department.EdgeInstitution:
-		return m.clearedinstitution
-	case department.EdgeParent:
-		return m.clearedparent
-	case department.EdgeChildren:
-		return m.clearedchildren
-	case department.EdgeUsers:
-		return m.clearedusers
-	}
-	return false
-}
-
-// ClearEdge clears the value of the edge with the given name. It returns an error
-// if that edge is not defined in the schema.
-func (m *DepartmentMutation) ClearEdge(name string) error {
-	switch name {
-	case department.EdgeInstitution:
-		m.ClearInstitution()
-		return nil
-	case department.EdgeParent:
-		m.ClearParent()
-		return nil
-	}
-	return fmt.Errorf("unknown Department unique edge %s", name)
-}
-
-// ResetEdge resets all changes to the edge with the given name in this mutation.
-// It returns an error if the edge is not defined in the schema.
-func (m *DepartmentMutation) ResetEdge(name string) error {
-	switch name {
-	case department.EdgeInstitution:
-		m.ResetInstitution()
-		return nil
-	case department.EdgeParent:
-		m.ResetParent()
-		return nil
-	case department.EdgeChildren:
-		m.ResetChildren()
-		return nil
-	case department.EdgeUsers:
-		m.ResetUsers()
-		return nil
-	}
-	return fmt.Errorf("unknown Department edge %s", name)
 }
 
 // EventMutation represents an operation that mutates the Event nodes in the graph.
@@ -3447,10 +2777,9 @@ type GroupMutation struct {
 	op                 Op
 	typ                string
 	id                 *int
-	_path              *string
 	name               *string
+	short_name         *string
 	description        *string
-	group_type         *group.GroupType
 	clearedFields      map[string]struct{}
 	users              map[int]struct{}
 	removedusers       map[int]struct{}
@@ -3464,6 +2793,9 @@ type GroupMutation struct {
 	deadlines          map[int]struct{}
 	removeddeadlines   map[int]struct{}
 	cleareddeadlines   bool
+	invites            map[int]struct{}
+	removedinvites     map[int]struct{}
+	clearedinvites     bool
 	institution        *int
 	clearedinstitution bool
 	done               bool
@@ -3569,42 +2901,6 @@ func (m *GroupMutation) IDs(ctx context.Context) ([]int, error) {
 	}
 }
 
-// SetPath sets the "path" field.
-func (m *GroupMutation) SetPath(s string) {
-	m._path = &s
-}
-
-// Path returns the value of the "path" field in the mutation.
-func (m *GroupMutation) Path() (r string, exists bool) {
-	v := m._path
-	if v == nil {
-		return
-	}
-	return *v, true
-}
-
-// OldPath returns the old "path" field's value of the Group entity.
-// If the Group object wasn't provided to the builder, the object is fetched from the database.
-// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *GroupMutation) OldPath(ctx context.Context) (v string, err error) {
-	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldPath is only allowed on UpdateOne operations")
-	}
-	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldPath requires an ID field in the mutation")
-	}
-	oldValue, err := m.oldValue(ctx)
-	if err != nil {
-		return v, fmt.Errorf("querying old value for OldPath: %w", err)
-	}
-	return oldValue.Path, nil
-}
-
-// ResetPath resets all changes to the "path" field.
-func (m *GroupMutation) ResetPath() {
-	m._path = nil
-}
-
 // SetName sets the "name" field.
 func (m *GroupMutation) SetName(s string) {
 	m.name = &s
@@ -3641,6 +2937,42 @@ func (m *GroupMutation) ResetName() {
 	m.name = nil
 }
 
+// SetShortName sets the "short_name" field.
+func (m *GroupMutation) SetShortName(s string) {
+	m.short_name = &s
+}
+
+// ShortName returns the value of the "short_name" field in the mutation.
+func (m *GroupMutation) ShortName() (r string, exists bool) {
+	v := m.short_name
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldShortName returns the old "short_name" field's value of the Group entity.
+// If the Group object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GroupMutation) OldShortName(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldShortName is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldShortName requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldShortName: %w", err)
+	}
+	return oldValue.ShortName, nil
+}
+
+// ResetShortName resets all changes to the "short_name" field.
+func (m *GroupMutation) ResetShortName() {
+	m.short_name = nil
+}
+
 // SetDescription sets the "description" field.
 func (m *GroupMutation) SetDescription(s string) {
 	m.description = &s
@@ -3675,42 +3007,6 @@ func (m *GroupMutation) OldDescription(ctx context.Context) (v string, err error
 // ResetDescription resets all changes to the "description" field.
 func (m *GroupMutation) ResetDescription() {
 	m.description = nil
-}
-
-// SetGroupType sets the "group_type" field.
-func (m *GroupMutation) SetGroupType(gt group.GroupType) {
-	m.group_type = &gt
-}
-
-// GroupType returns the value of the "group_type" field in the mutation.
-func (m *GroupMutation) GroupType() (r group.GroupType, exists bool) {
-	v := m.group_type
-	if v == nil {
-		return
-	}
-	return *v, true
-}
-
-// OldGroupType returns the old "group_type" field's value of the Group entity.
-// If the Group object wasn't provided to the builder, the object is fetched from the database.
-// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *GroupMutation) OldGroupType(ctx context.Context) (v group.GroupType, err error) {
-	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldGroupType is only allowed on UpdateOne operations")
-	}
-	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldGroupType requires an ID field in the mutation")
-	}
-	oldValue, err := m.oldValue(ctx)
-	if err != nil {
-		return v, fmt.Errorf("querying old value for OldGroupType: %w", err)
-	}
-	return oldValue.GroupType, nil
-}
-
-// ResetGroupType resets all changes to the "group_type" field.
-func (m *GroupMutation) ResetGroupType() {
-	m.group_type = nil
 }
 
 // AddUserIDs adds the "users" edge to the User entity by ids.
@@ -3929,6 +3225,60 @@ func (m *GroupMutation) ResetDeadlines() {
 	m.removeddeadlines = nil
 }
 
+// AddInviteIDs adds the "invites" edge to the GroupInviteLink entity by ids.
+func (m *GroupMutation) AddInviteIDs(ids ...int) {
+	if m.invites == nil {
+		m.invites = make(map[int]struct{})
+	}
+	for i := range ids {
+		m.invites[ids[i]] = struct{}{}
+	}
+}
+
+// ClearInvites clears the "invites" edge to the GroupInviteLink entity.
+func (m *GroupMutation) ClearInvites() {
+	m.clearedinvites = true
+}
+
+// InvitesCleared reports if the "invites" edge to the GroupInviteLink entity was cleared.
+func (m *GroupMutation) InvitesCleared() bool {
+	return m.clearedinvites
+}
+
+// RemoveInviteIDs removes the "invites" edge to the GroupInviteLink entity by IDs.
+func (m *GroupMutation) RemoveInviteIDs(ids ...int) {
+	if m.removedinvites == nil {
+		m.removedinvites = make(map[int]struct{})
+	}
+	for i := range ids {
+		delete(m.invites, ids[i])
+		m.removedinvites[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedInvites returns the removed IDs of the "invites" edge to the GroupInviteLink entity.
+func (m *GroupMutation) RemovedInvitesIDs() (ids []int) {
+	for id := range m.removedinvites {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// InvitesIDs returns the "invites" edge IDs in the mutation.
+func (m *GroupMutation) InvitesIDs() (ids []int) {
+	for id := range m.invites {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetInvites resets all changes to the "invites" edge.
+func (m *GroupMutation) ResetInvites() {
+	m.invites = nil
+	m.clearedinvites = false
+	m.removedinvites = nil
+}
+
 // SetInstitutionID sets the "institution" edge to the Institution entity by id.
 func (m *GroupMutation) SetInstitutionID(id int) {
 	m.institution = &id
@@ -4002,18 +3352,15 @@ func (m *GroupMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *GroupMutation) Fields() []string {
-	fields := make([]string, 0, 4)
-	if m._path != nil {
-		fields = append(fields, group.FieldPath)
-	}
+	fields := make([]string, 0, 3)
 	if m.name != nil {
-		fields = append(fields, group.FieldName)
+		fields = append(fields, entgroup.FieldName)
+	}
+	if m.short_name != nil {
+		fields = append(fields, entgroup.FieldShortName)
 	}
 	if m.description != nil {
-		fields = append(fields, group.FieldDescription)
-	}
-	if m.group_type != nil {
-		fields = append(fields, group.FieldGroupType)
+		fields = append(fields, entgroup.FieldDescription)
 	}
 	return fields
 }
@@ -4023,14 +3370,12 @@ func (m *GroupMutation) Fields() []string {
 // schema.
 func (m *GroupMutation) Field(name string) (ent.Value, bool) {
 	switch name {
-	case group.FieldPath:
-		return m.Path()
-	case group.FieldName:
+	case entgroup.FieldName:
 		return m.Name()
-	case group.FieldDescription:
+	case entgroup.FieldShortName:
+		return m.ShortName()
+	case entgroup.FieldDescription:
 		return m.Description()
-	case group.FieldGroupType:
-		return m.GroupType()
 	}
 	return nil, false
 }
@@ -4040,14 +3385,12 @@ func (m *GroupMutation) Field(name string) (ent.Value, bool) {
 // database failed.
 func (m *GroupMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
 	switch name {
-	case group.FieldPath:
-		return m.OldPath(ctx)
-	case group.FieldName:
+	case entgroup.FieldName:
 		return m.OldName(ctx)
-	case group.FieldDescription:
+	case entgroup.FieldShortName:
+		return m.OldShortName(ctx)
+	case entgroup.FieldDescription:
 		return m.OldDescription(ctx)
-	case group.FieldGroupType:
-		return m.OldGroupType(ctx)
 	}
 	return nil, fmt.Errorf("unknown Group field %s", name)
 }
@@ -4057,33 +3400,26 @@ func (m *GroupMutation) OldField(ctx context.Context, name string) (ent.Value, e
 // type.
 func (m *GroupMutation) SetField(name string, value ent.Value) error {
 	switch name {
-	case group.FieldPath:
-		v, ok := value.(string)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.SetPath(v)
-		return nil
-	case group.FieldName:
+	case entgroup.FieldName:
 		v, ok := value.(string)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetName(v)
 		return nil
-	case group.FieldDescription:
+	case entgroup.FieldShortName:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetShortName(v)
+		return nil
+	case entgroup.FieldDescription:
 		v, ok := value.(string)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetDescription(v)
-		return nil
-	case group.FieldGroupType:
-		v, ok := value.(group.GroupType)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.SetGroupType(v)
 		return nil
 	}
 	return fmt.Errorf("unknown Group field %s", name)
@@ -4134,17 +3470,14 @@ func (m *GroupMutation) ClearField(name string) error {
 // It returns an error if the field is not defined in the schema.
 func (m *GroupMutation) ResetField(name string) error {
 	switch name {
-	case group.FieldPath:
-		m.ResetPath()
-		return nil
-	case group.FieldName:
+	case entgroup.FieldName:
 		m.ResetName()
 		return nil
-	case group.FieldDescription:
-		m.ResetDescription()
+	case entgroup.FieldShortName:
+		m.ResetShortName()
 		return nil
-	case group.FieldGroupType:
-		m.ResetGroupType()
+	case entgroup.FieldDescription:
+		m.ResetDescription()
 		return nil
 	}
 	return fmt.Errorf("unknown Group field %s", name)
@@ -4152,21 +3485,24 @@ func (m *GroupMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *GroupMutation) AddedEdges() []string {
-	edges := make([]string, 0, 5)
+	edges := make([]string, 0, 6)
 	if m.users != nil {
-		edges = append(edges, group.EdgeUsers)
+		edges = append(edges, entgroup.EdgeUsers)
 	}
 	if m.events != nil {
-		edges = append(edges, group.EdgeEvents)
+		edges = append(edges, entgroup.EdgeEvents)
 	}
 	if m.forum_posts != nil {
-		edges = append(edges, group.EdgeForumPosts)
+		edges = append(edges, entgroup.EdgeForumPosts)
 	}
 	if m.deadlines != nil {
-		edges = append(edges, group.EdgeDeadlines)
+		edges = append(edges, entgroup.EdgeDeadlines)
+	}
+	if m.invites != nil {
+		edges = append(edges, entgroup.EdgeInvites)
 	}
 	if m.institution != nil {
-		edges = append(edges, group.EdgeInstitution)
+		edges = append(edges, entgroup.EdgeInstitution)
 	}
 	return edges
 }
@@ -4175,31 +3511,37 @@ func (m *GroupMutation) AddedEdges() []string {
 // name in this mutation.
 func (m *GroupMutation) AddedIDs(name string) []ent.Value {
 	switch name {
-	case group.EdgeUsers:
+	case entgroup.EdgeUsers:
 		ids := make([]ent.Value, 0, len(m.users))
 		for id := range m.users {
 			ids = append(ids, id)
 		}
 		return ids
-	case group.EdgeEvents:
+	case entgroup.EdgeEvents:
 		ids := make([]ent.Value, 0, len(m.events))
 		for id := range m.events {
 			ids = append(ids, id)
 		}
 		return ids
-	case group.EdgeForumPosts:
+	case entgroup.EdgeForumPosts:
 		ids := make([]ent.Value, 0, len(m.forum_posts))
 		for id := range m.forum_posts {
 			ids = append(ids, id)
 		}
 		return ids
-	case group.EdgeDeadlines:
+	case entgroup.EdgeDeadlines:
 		ids := make([]ent.Value, 0, len(m.deadlines))
 		for id := range m.deadlines {
 			ids = append(ids, id)
 		}
 		return ids
-	case group.EdgeInstitution:
+	case entgroup.EdgeInvites:
+		ids := make([]ent.Value, 0, len(m.invites))
+		for id := range m.invites {
+			ids = append(ids, id)
+		}
+		return ids
+	case entgroup.EdgeInstitution:
 		if id := m.institution; id != nil {
 			return []ent.Value{*id}
 		}
@@ -4209,18 +3551,21 @@ func (m *GroupMutation) AddedIDs(name string) []ent.Value {
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *GroupMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 5)
+	edges := make([]string, 0, 6)
 	if m.removedusers != nil {
-		edges = append(edges, group.EdgeUsers)
+		edges = append(edges, entgroup.EdgeUsers)
 	}
 	if m.removedevents != nil {
-		edges = append(edges, group.EdgeEvents)
+		edges = append(edges, entgroup.EdgeEvents)
 	}
 	if m.removedforum_posts != nil {
-		edges = append(edges, group.EdgeForumPosts)
+		edges = append(edges, entgroup.EdgeForumPosts)
 	}
 	if m.removeddeadlines != nil {
-		edges = append(edges, group.EdgeDeadlines)
+		edges = append(edges, entgroup.EdgeDeadlines)
+	}
+	if m.removedinvites != nil {
+		edges = append(edges, entgroup.EdgeInvites)
 	}
 	return edges
 }
@@ -4229,27 +3574,33 @@ func (m *GroupMutation) RemovedEdges() []string {
 // the given name in this mutation.
 func (m *GroupMutation) RemovedIDs(name string) []ent.Value {
 	switch name {
-	case group.EdgeUsers:
+	case entgroup.EdgeUsers:
 		ids := make([]ent.Value, 0, len(m.removedusers))
 		for id := range m.removedusers {
 			ids = append(ids, id)
 		}
 		return ids
-	case group.EdgeEvents:
+	case entgroup.EdgeEvents:
 		ids := make([]ent.Value, 0, len(m.removedevents))
 		for id := range m.removedevents {
 			ids = append(ids, id)
 		}
 		return ids
-	case group.EdgeForumPosts:
+	case entgroup.EdgeForumPosts:
 		ids := make([]ent.Value, 0, len(m.removedforum_posts))
 		for id := range m.removedforum_posts {
 			ids = append(ids, id)
 		}
 		return ids
-	case group.EdgeDeadlines:
+	case entgroup.EdgeDeadlines:
 		ids := make([]ent.Value, 0, len(m.removeddeadlines))
 		for id := range m.removeddeadlines {
+			ids = append(ids, id)
+		}
+		return ids
+	case entgroup.EdgeInvites:
+		ids := make([]ent.Value, 0, len(m.removedinvites))
+		for id := range m.removedinvites {
 			ids = append(ids, id)
 		}
 		return ids
@@ -4259,21 +3610,24 @@ func (m *GroupMutation) RemovedIDs(name string) []ent.Value {
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *GroupMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 5)
+	edges := make([]string, 0, 6)
 	if m.clearedusers {
-		edges = append(edges, group.EdgeUsers)
+		edges = append(edges, entgroup.EdgeUsers)
 	}
 	if m.clearedevents {
-		edges = append(edges, group.EdgeEvents)
+		edges = append(edges, entgroup.EdgeEvents)
 	}
 	if m.clearedforum_posts {
-		edges = append(edges, group.EdgeForumPosts)
+		edges = append(edges, entgroup.EdgeForumPosts)
 	}
 	if m.cleareddeadlines {
-		edges = append(edges, group.EdgeDeadlines)
+		edges = append(edges, entgroup.EdgeDeadlines)
+	}
+	if m.clearedinvites {
+		edges = append(edges, entgroup.EdgeInvites)
 	}
 	if m.clearedinstitution {
-		edges = append(edges, group.EdgeInstitution)
+		edges = append(edges, entgroup.EdgeInstitution)
 	}
 	return edges
 }
@@ -4282,15 +3636,17 @@ func (m *GroupMutation) ClearedEdges() []string {
 // was cleared in this mutation.
 func (m *GroupMutation) EdgeCleared(name string) bool {
 	switch name {
-	case group.EdgeUsers:
+	case entgroup.EdgeUsers:
 		return m.clearedusers
-	case group.EdgeEvents:
+	case entgroup.EdgeEvents:
 		return m.clearedevents
-	case group.EdgeForumPosts:
+	case entgroup.EdgeForumPosts:
 		return m.clearedforum_posts
-	case group.EdgeDeadlines:
+	case entgroup.EdgeDeadlines:
 		return m.cleareddeadlines
-	case group.EdgeInstitution:
+	case entgroup.EdgeInvites:
+		return m.clearedinvites
+	case entgroup.EdgeInstitution:
 		return m.clearedinstitution
 	}
 	return false
@@ -4300,7 +3656,7 @@ func (m *GroupMutation) EdgeCleared(name string) bool {
 // if that edge is not defined in the schema.
 func (m *GroupMutation) ClearEdge(name string) error {
 	switch name {
-	case group.EdgeInstitution:
+	case entgroup.EdgeInstitution:
 		m.ClearInstitution()
 		return nil
 	}
@@ -4311,23 +3667,473 @@ func (m *GroupMutation) ClearEdge(name string) error {
 // It returns an error if the edge is not defined in the schema.
 func (m *GroupMutation) ResetEdge(name string) error {
 	switch name {
-	case group.EdgeUsers:
+	case entgroup.EdgeUsers:
 		m.ResetUsers()
 		return nil
-	case group.EdgeEvents:
+	case entgroup.EdgeEvents:
 		m.ResetEvents()
 		return nil
-	case group.EdgeForumPosts:
+	case entgroup.EdgeForumPosts:
 		m.ResetForumPosts()
 		return nil
-	case group.EdgeDeadlines:
+	case entgroup.EdgeDeadlines:
 		m.ResetDeadlines()
 		return nil
-	case group.EdgeInstitution:
+	case entgroup.EdgeInvites:
+		m.ResetInvites()
+		return nil
+	case entgroup.EdgeInstitution:
 		m.ResetInstitution()
 		return nil
 	}
 	return fmt.Errorf("unknown Group edge %s", name)
+}
+
+// GroupInviteLinkMutation represents an operation that mutates the GroupInviteLink nodes in the graph.
+type GroupInviteLinkMutation struct {
+	config
+	op            Op
+	typ           string
+	id            *int
+	code          *string
+	role          *group.Role
+	clearedFields map[string]struct{}
+	group         *int
+	clearedgroup  bool
+	done          bool
+	oldValue      func(context.Context) (*GroupInviteLink, error)
+	predicates    []predicate.GroupInviteLink
+}
+
+var _ ent.Mutation = (*GroupInviteLinkMutation)(nil)
+
+// groupinvitelinkOption allows management of the mutation configuration using functional options.
+type groupinvitelinkOption func(*GroupInviteLinkMutation)
+
+// newGroupInviteLinkMutation creates new mutation for the GroupInviteLink entity.
+func newGroupInviteLinkMutation(c config, op Op, opts ...groupinvitelinkOption) *GroupInviteLinkMutation {
+	m := &GroupInviteLinkMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeGroupInviteLink,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withGroupInviteLinkID sets the ID field of the mutation.
+func withGroupInviteLinkID(id int) groupinvitelinkOption {
+	return func(m *GroupInviteLinkMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *GroupInviteLink
+		)
+		m.oldValue = func(ctx context.Context) (*GroupInviteLink, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().GroupInviteLink.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withGroupInviteLink sets the old GroupInviteLink of the mutation.
+func withGroupInviteLink(node *GroupInviteLink) groupinvitelinkOption {
+	return func(m *GroupInviteLinkMutation) {
+		m.oldValue = func(context.Context) (*GroupInviteLink, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m GroupInviteLinkMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m GroupInviteLinkMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *GroupInviteLinkMutation) ID() (id int, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *GroupInviteLinkMutation) IDs(ctx context.Context) ([]int, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []int{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().GroupInviteLink.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetCode sets the "code" field.
+func (m *GroupInviteLinkMutation) SetCode(s string) {
+	m.code = &s
+}
+
+// Code returns the value of the "code" field in the mutation.
+func (m *GroupInviteLinkMutation) Code() (r string, exists bool) {
+	v := m.code
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCode returns the old "code" field's value of the GroupInviteLink entity.
+// If the GroupInviteLink object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GroupInviteLinkMutation) OldCode(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCode is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCode requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCode: %w", err)
+	}
+	return oldValue.Code, nil
+}
+
+// ResetCode resets all changes to the "code" field.
+func (m *GroupInviteLinkMutation) ResetCode() {
+	m.code = nil
+}
+
+// SetRole sets the "role" field.
+func (m *GroupInviteLinkMutation) SetRole(gr group.Role) {
+	m.role = &gr
+}
+
+// Role returns the value of the "role" field in the mutation.
+func (m *GroupInviteLinkMutation) Role() (r group.Role, exists bool) {
+	v := m.role
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldRole returns the old "role" field's value of the GroupInviteLink entity.
+// If the GroupInviteLink object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GroupInviteLinkMutation) OldRole(ctx context.Context) (v group.Role, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldRole is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldRole requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldRole: %w", err)
+	}
+	return oldValue.Role, nil
+}
+
+// ResetRole resets all changes to the "role" field.
+func (m *GroupInviteLinkMutation) ResetRole() {
+	m.role = nil
+}
+
+// SetGroupID sets the "group" edge to the Group entity by id.
+func (m *GroupInviteLinkMutation) SetGroupID(id int) {
+	m.group = &id
+}
+
+// ClearGroup clears the "group" edge to the Group entity.
+func (m *GroupInviteLinkMutation) ClearGroup() {
+	m.clearedgroup = true
+}
+
+// GroupCleared reports if the "group" edge to the Group entity was cleared.
+func (m *GroupInviteLinkMutation) GroupCleared() bool {
+	return m.clearedgroup
+}
+
+// GroupID returns the "group" edge ID in the mutation.
+func (m *GroupInviteLinkMutation) GroupID() (id int, exists bool) {
+	if m.group != nil {
+		return *m.group, true
+	}
+	return
+}
+
+// GroupIDs returns the "group" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// GroupID instead. It exists only for internal usage by the builders.
+func (m *GroupInviteLinkMutation) GroupIDs() (ids []int) {
+	if id := m.group; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetGroup resets all changes to the "group" edge.
+func (m *GroupInviteLinkMutation) ResetGroup() {
+	m.group = nil
+	m.clearedgroup = false
+}
+
+// Where appends a list predicates to the GroupInviteLinkMutation builder.
+func (m *GroupInviteLinkMutation) Where(ps ...predicate.GroupInviteLink) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the GroupInviteLinkMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *GroupInviteLinkMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.GroupInviteLink, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *GroupInviteLinkMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *GroupInviteLinkMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (GroupInviteLink).
+func (m *GroupInviteLinkMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *GroupInviteLinkMutation) Fields() []string {
+	fields := make([]string, 0, 2)
+	if m.code != nil {
+		fields = append(fields, groupinvitelink.FieldCode)
+	}
+	if m.role != nil {
+		fields = append(fields, groupinvitelink.FieldRole)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *GroupInviteLinkMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case groupinvitelink.FieldCode:
+		return m.Code()
+	case groupinvitelink.FieldRole:
+		return m.Role()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *GroupInviteLinkMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case groupinvitelink.FieldCode:
+		return m.OldCode(ctx)
+	case groupinvitelink.FieldRole:
+		return m.OldRole(ctx)
+	}
+	return nil, fmt.Errorf("unknown GroupInviteLink field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *GroupInviteLinkMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case groupinvitelink.FieldCode:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCode(v)
+		return nil
+	case groupinvitelink.FieldRole:
+		v, ok := value.(group.Role)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetRole(v)
+		return nil
+	}
+	return fmt.Errorf("unknown GroupInviteLink field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *GroupInviteLinkMutation) AddedFields() []string {
+	return nil
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *GroupInviteLinkMutation) AddedField(name string) (ent.Value, bool) {
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *GroupInviteLinkMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	}
+	return fmt.Errorf("unknown GroupInviteLink numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *GroupInviteLinkMutation) ClearedFields() []string {
+	return nil
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *GroupInviteLinkMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *GroupInviteLinkMutation) ClearField(name string) error {
+	return fmt.Errorf("unknown GroupInviteLink nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *GroupInviteLinkMutation) ResetField(name string) error {
+	switch name {
+	case groupinvitelink.FieldCode:
+		m.ResetCode()
+		return nil
+	case groupinvitelink.FieldRole:
+		m.ResetRole()
+		return nil
+	}
+	return fmt.Errorf("unknown GroupInviteLink field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *GroupInviteLinkMutation) AddedEdges() []string {
+	edges := make([]string, 0, 1)
+	if m.group != nil {
+		edges = append(edges, groupinvitelink.EdgeGroup)
+	}
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *GroupInviteLinkMutation) AddedIDs(name string) []ent.Value {
+	switch name {
+	case groupinvitelink.EdgeGroup:
+		if id := m.group; id != nil {
+			return []ent.Value{*id}
+		}
+	}
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *GroupInviteLinkMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 1)
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *GroupInviteLinkMutation) RemovedIDs(name string) []ent.Value {
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *GroupInviteLinkMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 1)
+	if m.clearedgroup {
+		edges = append(edges, groupinvitelink.EdgeGroup)
+	}
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *GroupInviteLinkMutation) EdgeCleared(name string) bool {
+	switch name {
+	case groupinvitelink.EdgeGroup:
+		return m.clearedgroup
+	}
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *GroupInviteLinkMutation) ClearEdge(name string) error {
+	switch name {
+	case groupinvitelink.EdgeGroup:
+		m.ClearGroup()
+		return nil
+	}
+	return fmt.Errorf("unknown GroupInviteLink unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *GroupInviteLinkMutation) ResetEdge(name string) error {
+	switch name {
+	case groupinvitelink.EdgeGroup:
+		m.ResetGroup()
+		return nil
+	}
+	return fmt.Errorf("unknown GroupInviteLink edge %s", name)
 }
 
 // GroupUserMutation represents an operation that mutates the GroupUser nodes in the graph.
@@ -4335,7 +4141,7 @@ type GroupUserMutation struct {
 	config
 	op            Op
 	typ           string
-	role          *groupuser.Role
+	role          *group.Role
 	clearedFields map[string]struct{}
 	group         *int
 	clearedgroup  bool
@@ -4423,12 +4229,12 @@ func (m *GroupUserMutation) ResetUserID() {
 }
 
 // SetRole sets the "role" field.
-func (m *GroupUserMutation) SetRole(gr groupuser.Role) {
+func (m *GroupUserMutation) SetRole(gr group.Role) {
 	m.role = &gr
 }
 
 // Role returns the value of the "role" field in the mutation.
-func (m *GroupUserMutation) Role() (r groupuser.Role, exists bool) {
+func (m *GroupUserMutation) Role() (r group.Role, exists bool) {
 	v := m.role
 	if v == nil {
 		return
@@ -4582,7 +4388,7 @@ func (m *GroupUserMutation) SetField(name string, value ent.Value) error {
 		m.SetUserID(v)
 		return nil
 	case groupuser.FieldRole:
-		v, ok := value.(groupuser.Role)
+		v, ok := value.(group.Role)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
@@ -4753,8 +4559,7 @@ type InstitutionMutation struct {
 	id                 *int
 	name               *string
 	short_name         *string
-	admin_domain       *string
-	student_domain     *string
+	_Description       *string
 	clearedFields      map[string]struct{}
 	vouchers           map[int]struct{}
 	removedvouchers    map[int]struct{}
@@ -4762,12 +4567,15 @@ type InstitutionMutation struct {
 	accessories        map[int]struct{}
 	removedaccessories map[int]struct{}
 	clearedaccessories bool
-	departments        map[int]struct{}
-	removeddepartments map[int]struct{}
-	cleareddepartments bool
 	groups             map[int]struct{}
 	removedgroups      map[int]struct{}
 	clearedgroups      bool
+	invites            map[int]struct{}
+	removedinvites     map[int]struct{}
+	clearedinvites     bool
+	users              map[int]struct{}
+	removedusers       map[int]struct{}
+	clearedusers       bool
 	done               bool
 	oldValue           func(context.Context) (*Institution, error)
 	predicates         []predicate.Institution
@@ -4943,76 +4751,40 @@ func (m *InstitutionMutation) ResetShortName() {
 	m.short_name = nil
 }
 
-// SetAdminDomain sets the "admin_domain" field.
-func (m *InstitutionMutation) SetAdminDomain(s string) {
-	m.admin_domain = &s
+// SetDescription sets the "Description" field.
+func (m *InstitutionMutation) SetDescription(s string) {
+	m._Description = &s
 }
 
-// AdminDomain returns the value of the "admin_domain" field in the mutation.
-func (m *InstitutionMutation) AdminDomain() (r string, exists bool) {
-	v := m.admin_domain
+// Description returns the value of the "Description" field in the mutation.
+func (m *InstitutionMutation) Description() (r string, exists bool) {
+	v := m._Description
 	if v == nil {
 		return
 	}
 	return *v, true
 }
 
-// OldAdminDomain returns the old "admin_domain" field's value of the Institution entity.
+// OldDescription returns the old "Description" field's value of the Institution entity.
 // If the Institution object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *InstitutionMutation) OldAdminDomain(ctx context.Context) (v string, err error) {
+func (m *InstitutionMutation) OldDescription(ctx context.Context) (v string, err error) {
 	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldAdminDomain is only allowed on UpdateOne operations")
+		return v, errors.New("OldDescription is only allowed on UpdateOne operations")
 	}
 	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldAdminDomain requires an ID field in the mutation")
+		return v, errors.New("OldDescription requires an ID field in the mutation")
 	}
 	oldValue, err := m.oldValue(ctx)
 	if err != nil {
-		return v, fmt.Errorf("querying old value for OldAdminDomain: %w", err)
+		return v, fmt.Errorf("querying old value for OldDescription: %w", err)
 	}
-	return oldValue.AdminDomain, nil
+	return oldValue.Description, nil
 }
 
-// ResetAdminDomain resets all changes to the "admin_domain" field.
-func (m *InstitutionMutation) ResetAdminDomain() {
-	m.admin_domain = nil
-}
-
-// SetStudentDomain sets the "student_domain" field.
-func (m *InstitutionMutation) SetStudentDomain(s string) {
-	m.student_domain = &s
-}
-
-// StudentDomain returns the value of the "student_domain" field in the mutation.
-func (m *InstitutionMutation) StudentDomain() (r string, exists bool) {
-	v := m.student_domain
-	if v == nil {
-		return
-	}
-	return *v, true
-}
-
-// OldStudentDomain returns the old "student_domain" field's value of the Institution entity.
-// If the Institution object wasn't provided to the builder, the object is fetched from the database.
-// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *InstitutionMutation) OldStudentDomain(ctx context.Context) (v string, err error) {
-	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldStudentDomain is only allowed on UpdateOne operations")
-	}
-	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldStudentDomain requires an ID field in the mutation")
-	}
-	oldValue, err := m.oldValue(ctx)
-	if err != nil {
-		return v, fmt.Errorf("querying old value for OldStudentDomain: %w", err)
-	}
-	return oldValue.StudentDomain, nil
-}
-
-// ResetStudentDomain resets all changes to the "student_domain" field.
-func (m *InstitutionMutation) ResetStudentDomain() {
-	m.student_domain = nil
+// ResetDescription resets all changes to the "Description" field.
+func (m *InstitutionMutation) ResetDescription() {
+	m._Description = nil
 }
 
 // AddVoucherIDs adds the "vouchers" edge to the Voucher entity by ids.
@@ -5123,60 +4895,6 @@ func (m *InstitutionMutation) ResetAccessories() {
 	m.removedaccessories = nil
 }
 
-// AddDepartmentIDs adds the "departments" edge to the Department entity by ids.
-func (m *InstitutionMutation) AddDepartmentIDs(ids ...int) {
-	if m.departments == nil {
-		m.departments = make(map[int]struct{})
-	}
-	for i := range ids {
-		m.departments[ids[i]] = struct{}{}
-	}
-}
-
-// ClearDepartments clears the "departments" edge to the Department entity.
-func (m *InstitutionMutation) ClearDepartments() {
-	m.cleareddepartments = true
-}
-
-// DepartmentsCleared reports if the "departments" edge to the Department entity was cleared.
-func (m *InstitutionMutation) DepartmentsCleared() bool {
-	return m.cleareddepartments
-}
-
-// RemoveDepartmentIDs removes the "departments" edge to the Department entity by IDs.
-func (m *InstitutionMutation) RemoveDepartmentIDs(ids ...int) {
-	if m.removeddepartments == nil {
-		m.removeddepartments = make(map[int]struct{})
-	}
-	for i := range ids {
-		delete(m.departments, ids[i])
-		m.removeddepartments[ids[i]] = struct{}{}
-	}
-}
-
-// RemovedDepartments returns the removed IDs of the "departments" edge to the Department entity.
-func (m *InstitutionMutation) RemovedDepartmentsIDs() (ids []int) {
-	for id := range m.removeddepartments {
-		ids = append(ids, id)
-	}
-	return
-}
-
-// DepartmentsIDs returns the "departments" edge IDs in the mutation.
-func (m *InstitutionMutation) DepartmentsIDs() (ids []int) {
-	for id := range m.departments {
-		ids = append(ids, id)
-	}
-	return
-}
-
-// ResetDepartments resets all changes to the "departments" edge.
-func (m *InstitutionMutation) ResetDepartments() {
-	m.departments = nil
-	m.cleareddepartments = false
-	m.removeddepartments = nil
-}
-
 // AddGroupIDs adds the "groups" edge to the Group entity by ids.
 func (m *InstitutionMutation) AddGroupIDs(ids ...int) {
 	if m.groups == nil {
@@ -5231,6 +4949,114 @@ func (m *InstitutionMutation) ResetGroups() {
 	m.removedgroups = nil
 }
 
+// AddInviteIDs adds the "invites" edge to the InstitutionInviteLink entity by ids.
+func (m *InstitutionMutation) AddInviteIDs(ids ...int) {
+	if m.invites == nil {
+		m.invites = make(map[int]struct{})
+	}
+	for i := range ids {
+		m.invites[ids[i]] = struct{}{}
+	}
+}
+
+// ClearInvites clears the "invites" edge to the InstitutionInviteLink entity.
+func (m *InstitutionMutation) ClearInvites() {
+	m.clearedinvites = true
+}
+
+// InvitesCleared reports if the "invites" edge to the InstitutionInviteLink entity was cleared.
+func (m *InstitutionMutation) InvitesCleared() bool {
+	return m.clearedinvites
+}
+
+// RemoveInviteIDs removes the "invites" edge to the InstitutionInviteLink entity by IDs.
+func (m *InstitutionMutation) RemoveInviteIDs(ids ...int) {
+	if m.removedinvites == nil {
+		m.removedinvites = make(map[int]struct{})
+	}
+	for i := range ids {
+		delete(m.invites, ids[i])
+		m.removedinvites[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedInvites returns the removed IDs of the "invites" edge to the InstitutionInviteLink entity.
+func (m *InstitutionMutation) RemovedInvitesIDs() (ids []int) {
+	for id := range m.removedinvites {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// InvitesIDs returns the "invites" edge IDs in the mutation.
+func (m *InstitutionMutation) InvitesIDs() (ids []int) {
+	for id := range m.invites {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetInvites resets all changes to the "invites" edge.
+func (m *InstitutionMutation) ResetInvites() {
+	m.invites = nil
+	m.clearedinvites = false
+	m.removedinvites = nil
+}
+
+// AddUserIDs adds the "users" edge to the User entity by ids.
+func (m *InstitutionMutation) AddUserIDs(ids ...int) {
+	if m.users == nil {
+		m.users = make(map[int]struct{})
+	}
+	for i := range ids {
+		m.users[ids[i]] = struct{}{}
+	}
+}
+
+// ClearUsers clears the "users" edge to the User entity.
+func (m *InstitutionMutation) ClearUsers() {
+	m.clearedusers = true
+}
+
+// UsersCleared reports if the "users" edge to the User entity was cleared.
+func (m *InstitutionMutation) UsersCleared() bool {
+	return m.clearedusers
+}
+
+// RemoveUserIDs removes the "users" edge to the User entity by IDs.
+func (m *InstitutionMutation) RemoveUserIDs(ids ...int) {
+	if m.removedusers == nil {
+		m.removedusers = make(map[int]struct{})
+	}
+	for i := range ids {
+		delete(m.users, ids[i])
+		m.removedusers[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedUsers returns the removed IDs of the "users" edge to the User entity.
+func (m *InstitutionMutation) RemovedUsersIDs() (ids []int) {
+	for id := range m.removedusers {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// UsersIDs returns the "users" edge IDs in the mutation.
+func (m *InstitutionMutation) UsersIDs() (ids []int) {
+	for id := range m.users {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetUsers resets all changes to the "users" edge.
+func (m *InstitutionMutation) ResetUsers() {
+	m.users = nil
+	m.clearedusers = false
+	m.removedusers = nil
+}
+
 // Where appends a list predicates to the InstitutionMutation builder.
 func (m *InstitutionMutation) Where(ps ...predicate.Institution) {
 	m.predicates = append(m.predicates, ps...)
@@ -5265,18 +5091,15 @@ func (m *InstitutionMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *InstitutionMutation) Fields() []string {
-	fields := make([]string, 0, 4)
+	fields := make([]string, 0, 3)
 	if m.name != nil {
-		fields = append(fields, institution.FieldName)
+		fields = append(fields, entinstitution.FieldName)
 	}
 	if m.short_name != nil {
-		fields = append(fields, institution.FieldShortName)
+		fields = append(fields, entinstitution.FieldShortName)
 	}
-	if m.admin_domain != nil {
-		fields = append(fields, institution.FieldAdminDomain)
-	}
-	if m.student_domain != nil {
-		fields = append(fields, institution.FieldStudentDomain)
+	if m._Description != nil {
+		fields = append(fields, entinstitution.FieldDescription)
 	}
 	return fields
 }
@@ -5286,14 +5109,12 @@ func (m *InstitutionMutation) Fields() []string {
 // schema.
 func (m *InstitutionMutation) Field(name string) (ent.Value, bool) {
 	switch name {
-	case institution.FieldName:
+	case entinstitution.FieldName:
 		return m.Name()
-	case institution.FieldShortName:
+	case entinstitution.FieldShortName:
 		return m.ShortName()
-	case institution.FieldAdminDomain:
-		return m.AdminDomain()
-	case institution.FieldStudentDomain:
-		return m.StudentDomain()
+	case entinstitution.FieldDescription:
+		return m.Description()
 	}
 	return nil, false
 }
@@ -5303,14 +5124,12 @@ func (m *InstitutionMutation) Field(name string) (ent.Value, bool) {
 // database failed.
 func (m *InstitutionMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
 	switch name {
-	case institution.FieldName:
+	case entinstitution.FieldName:
 		return m.OldName(ctx)
-	case institution.FieldShortName:
+	case entinstitution.FieldShortName:
 		return m.OldShortName(ctx)
-	case institution.FieldAdminDomain:
-		return m.OldAdminDomain(ctx)
-	case institution.FieldStudentDomain:
-		return m.OldStudentDomain(ctx)
+	case entinstitution.FieldDescription:
+		return m.OldDescription(ctx)
 	}
 	return nil, fmt.Errorf("unknown Institution field %s", name)
 }
@@ -5320,33 +5139,26 @@ func (m *InstitutionMutation) OldField(ctx context.Context, name string) (ent.Va
 // type.
 func (m *InstitutionMutation) SetField(name string, value ent.Value) error {
 	switch name {
-	case institution.FieldName:
+	case entinstitution.FieldName:
 		v, ok := value.(string)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetName(v)
 		return nil
-	case institution.FieldShortName:
+	case entinstitution.FieldShortName:
 		v, ok := value.(string)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetShortName(v)
 		return nil
-	case institution.FieldAdminDomain:
+	case entinstitution.FieldDescription:
 		v, ok := value.(string)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
-		m.SetAdminDomain(v)
-		return nil
-	case institution.FieldStudentDomain:
-		v, ok := value.(string)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.SetStudentDomain(v)
+		m.SetDescription(v)
 		return nil
 	}
 	return fmt.Errorf("unknown Institution field %s", name)
@@ -5397,17 +5209,14 @@ func (m *InstitutionMutation) ClearField(name string) error {
 // It returns an error if the field is not defined in the schema.
 func (m *InstitutionMutation) ResetField(name string) error {
 	switch name {
-	case institution.FieldName:
+	case entinstitution.FieldName:
 		m.ResetName()
 		return nil
-	case institution.FieldShortName:
+	case entinstitution.FieldShortName:
 		m.ResetShortName()
 		return nil
-	case institution.FieldAdminDomain:
-		m.ResetAdminDomain()
-		return nil
-	case institution.FieldStudentDomain:
-		m.ResetStudentDomain()
+	case entinstitution.FieldDescription:
+		m.ResetDescription()
 		return nil
 	}
 	return fmt.Errorf("unknown Institution field %s", name)
@@ -5415,18 +5224,21 @@ func (m *InstitutionMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *InstitutionMutation) AddedEdges() []string {
-	edges := make([]string, 0, 4)
+	edges := make([]string, 0, 5)
 	if m.vouchers != nil {
-		edges = append(edges, institution.EdgeVouchers)
+		edges = append(edges, entinstitution.EdgeVouchers)
 	}
 	if m.accessories != nil {
-		edges = append(edges, institution.EdgeAccessories)
-	}
-	if m.departments != nil {
-		edges = append(edges, institution.EdgeDepartments)
+		edges = append(edges, entinstitution.EdgeAccessories)
 	}
 	if m.groups != nil {
-		edges = append(edges, institution.EdgeGroups)
+		edges = append(edges, entinstitution.EdgeGroups)
+	}
+	if m.invites != nil {
+		edges = append(edges, entinstitution.EdgeInvites)
+	}
+	if m.users != nil {
+		edges = append(edges, entinstitution.EdgeUsers)
 	}
 	return edges
 }
@@ -5435,27 +5247,33 @@ func (m *InstitutionMutation) AddedEdges() []string {
 // name in this mutation.
 func (m *InstitutionMutation) AddedIDs(name string) []ent.Value {
 	switch name {
-	case institution.EdgeVouchers:
+	case entinstitution.EdgeVouchers:
 		ids := make([]ent.Value, 0, len(m.vouchers))
 		for id := range m.vouchers {
 			ids = append(ids, id)
 		}
 		return ids
-	case institution.EdgeAccessories:
+	case entinstitution.EdgeAccessories:
 		ids := make([]ent.Value, 0, len(m.accessories))
 		for id := range m.accessories {
 			ids = append(ids, id)
 		}
 		return ids
-	case institution.EdgeDepartments:
-		ids := make([]ent.Value, 0, len(m.departments))
-		for id := range m.departments {
+	case entinstitution.EdgeGroups:
+		ids := make([]ent.Value, 0, len(m.groups))
+		for id := range m.groups {
 			ids = append(ids, id)
 		}
 		return ids
-	case institution.EdgeGroups:
-		ids := make([]ent.Value, 0, len(m.groups))
-		for id := range m.groups {
+	case entinstitution.EdgeInvites:
+		ids := make([]ent.Value, 0, len(m.invites))
+		for id := range m.invites {
+			ids = append(ids, id)
+		}
+		return ids
+	case entinstitution.EdgeUsers:
+		ids := make([]ent.Value, 0, len(m.users))
+		for id := range m.users {
 			ids = append(ids, id)
 		}
 		return ids
@@ -5465,18 +5283,21 @@ func (m *InstitutionMutation) AddedIDs(name string) []ent.Value {
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *InstitutionMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 4)
+	edges := make([]string, 0, 5)
 	if m.removedvouchers != nil {
-		edges = append(edges, institution.EdgeVouchers)
+		edges = append(edges, entinstitution.EdgeVouchers)
 	}
 	if m.removedaccessories != nil {
-		edges = append(edges, institution.EdgeAccessories)
-	}
-	if m.removeddepartments != nil {
-		edges = append(edges, institution.EdgeDepartments)
+		edges = append(edges, entinstitution.EdgeAccessories)
 	}
 	if m.removedgroups != nil {
-		edges = append(edges, institution.EdgeGroups)
+		edges = append(edges, entinstitution.EdgeGroups)
+	}
+	if m.removedinvites != nil {
+		edges = append(edges, entinstitution.EdgeInvites)
+	}
+	if m.removedusers != nil {
+		edges = append(edges, entinstitution.EdgeUsers)
 	}
 	return edges
 }
@@ -5485,27 +5306,33 @@ func (m *InstitutionMutation) RemovedEdges() []string {
 // the given name in this mutation.
 func (m *InstitutionMutation) RemovedIDs(name string) []ent.Value {
 	switch name {
-	case institution.EdgeVouchers:
+	case entinstitution.EdgeVouchers:
 		ids := make([]ent.Value, 0, len(m.removedvouchers))
 		for id := range m.removedvouchers {
 			ids = append(ids, id)
 		}
 		return ids
-	case institution.EdgeAccessories:
+	case entinstitution.EdgeAccessories:
 		ids := make([]ent.Value, 0, len(m.removedaccessories))
 		for id := range m.removedaccessories {
 			ids = append(ids, id)
 		}
 		return ids
-	case institution.EdgeDepartments:
-		ids := make([]ent.Value, 0, len(m.removeddepartments))
-		for id := range m.removeddepartments {
+	case entinstitution.EdgeGroups:
+		ids := make([]ent.Value, 0, len(m.removedgroups))
+		for id := range m.removedgroups {
 			ids = append(ids, id)
 		}
 		return ids
-	case institution.EdgeGroups:
-		ids := make([]ent.Value, 0, len(m.removedgroups))
-		for id := range m.removedgroups {
+	case entinstitution.EdgeInvites:
+		ids := make([]ent.Value, 0, len(m.removedinvites))
+		for id := range m.removedinvites {
+			ids = append(ids, id)
+		}
+		return ids
+	case entinstitution.EdgeUsers:
+		ids := make([]ent.Value, 0, len(m.removedusers))
+		for id := range m.removedusers {
 			ids = append(ids, id)
 		}
 		return ids
@@ -5515,18 +5342,21 @@ func (m *InstitutionMutation) RemovedIDs(name string) []ent.Value {
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *InstitutionMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 4)
+	edges := make([]string, 0, 5)
 	if m.clearedvouchers {
-		edges = append(edges, institution.EdgeVouchers)
+		edges = append(edges, entinstitution.EdgeVouchers)
 	}
 	if m.clearedaccessories {
-		edges = append(edges, institution.EdgeAccessories)
-	}
-	if m.cleareddepartments {
-		edges = append(edges, institution.EdgeDepartments)
+		edges = append(edges, entinstitution.EdgeAccessories)
 	}
 	if m.clearedgroups {
-		edges = append(edges, institution.EdgeGroups)
+		edges = append(edges, entinstitution.EdgeGroups)
+	}
+	if m.clearedinvites {
+		edges = append(edges, entinstitution.EdgeInvites)
+	}
+	if m.clearedusers {
+		edges = append(edges, entinstitution.EdgeUsers)
 	}
 	return edges
 }
@@ -5535,14 +5365,16 @@ func (m *InstitutionMutation) ClearedEdges() []string {
 // was cleared in this mutation.
 func (m *InstitutionMutation) EdgeCleared(name string) bool {
 	switch name {
-	case institution.EdgeVouchers:
+	case entinstitution.EdgeVouchers:
 		return m.clearedvouchers
-	case institution.EdgeAccessories:
+	case entinstitution.EdgeAccessories:
 		return m.clearedaccessories
-	case institution.EdgeDepartments:
-		return m.cleareddepartments
-	case institution.EdgeGroups:
+	case entinstitution.EdgeGroups:
 		return m.clearedgroups
+	case entinstitution.EdgeInvites:
+		return m.clearedinvites
+	case entinstitution.EdgeUsers:
+		return m.clearedusers
 	}
 	return false
 }
@@ -5559,20 +5391,470 @@ func (m *InstitutionMutation) ClearEdge(name string) error {
 // It returns an error if the edge is not defined in the schema.
 func (m *InstitutionMutation) ResetEdge(name string) error {
 	switch name {
-	case institution.EdgeVouchers:
+	case entinstitution.EdgeVouchers:
 		m.ResetVouchers()
 		return nil
-	case institution.EdgeAccessories:
+	case entinstitution.EdgeAccessories:
 		m.ResetAccessories()
 		return nil
-	case institution.EdgeDepartments:
-		m.ResetDepartments()
-		return nil
-	case institution.EdgeGroups:
+	case entinstitution.EdgeGroups:
 		m.ResetGroups()
+		return nil
+	case entinstitution.EdgeInvites:
+		m.ResetInvites()
+		return nil
+	case entinstitution.EdgeUsers:
+		m.ResetUsers()
 		return nil
 	}
 	return fmt.Errorf("unknown Institution edge %s", name)
+}
+
+// InstitutionInviteLinkMutation represents an operation that mutates the InstitutionInviteLink nodes in the graph.
+type InstitutionInviteLinkMutation struct {
+	config
+	op                 Op
+	typ                string
+	id                 *int
+	code               *string
+	role               *institution.Role
+	clearedFields      map[string]struct{}
+	institution        *int
+	clearedinstitution bool
+	done               bool
+	oldValue           func(context.Context) (*InstitutionInviteLink, error)
+	predicates         []predicate.InstitutionInviteLink
+}
+
+var _ ent.Mutation = (*InstitutionInviteLinkMutation)(nil)
+
+// institutioninvitelinkOption allows management of the mutation configuration using functional options.
+type institutioninvitelinkOption func(*InstitutionInviteLinkMutation)
+
+// newInstitutionInviteLinkMutation creates new mutation for the InstitutionInviteLink entity.
+func newInstitutionInviteLinkMutation(c config, op Op, opts ...institutioninvitelinkOption) *InstitutionInviteLinkMutation {
+	m := &InstitutionInviteLinkMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeInstitutionInviteLink,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withInstitutionInviteLinkID sets the ID field of the mutation.
+func withInstitutionInviteLinkID(id int) institutioninvitelinkOption {
+	return func(m *InstitutionInviteLinkMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *InstitutionInviteLink
+		)
+		m.oldValue = func(ctx context.Context) (*InstitutionInviteLink, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().InstitutionInviteLink.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withInstitutionInviteLink sets the old InstitutionInviteLink of the mutation.
+func withInstitutionInviteLink(node *InstitutionInviteLink) institutioninvitelinkOption {
+	return func(m *InstitutionInviteLinkMutation) {
+		m.oldValue = func(context.Context) (*InstitutionInviteLink, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m InstitutionInviteLinkMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m InstitutionInviteLinkMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *InstitutionInviteLinkMutation) ID() (id int, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *InstitutionInviteLinkMutation) IDs(ctx context.Context) ([]int, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []int{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().InstitutionInviteLink.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetCode sets the "code" field.
+func (m *InstitutionInviteLinkMutation) SetCode(s string) {
+	m.code = &s
+}
+
+// Code returns the value of the "code" field in the mutation.
+func (m *InstitutionInviteLinkMutation) Code() (r string, exists bool) {
+	v := m.code
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCode returns the old "code" field's value of the InstitutionInviteLink entity.
+// If the InstitutionInviteLink object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *InstitutionInviteLinkMutation) OldCode(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCode is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCode requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCode: %w", err)
+	}
+	return oldValue.Code, nil
+}
+
+// ResetCode resets all changes to the "code" field.
+func (m *InstitutionInviteLinkMutation) ResetCode() {
+	m.code = nil
+}
+
+// SetRole sets the "role" field.
+func (m *InstitutionInviteLinkMutation) SetRole(i institution.Role) {
+	m.role = &i
+}
+
+// Role returns the value of the "role" field in the mutation.
+func (m *InstitutionInviteLinkMutation) Role() (r institution.Role, exists bool) {
+	v := m.role
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldRole returns the old "role" field's value of the InstitutionInviteLink entity.
+// If the InstitutionInviteLink object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *InstitutionInviteLinkMutation) OldRole(ctx context.Context) (v institution.Role, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldRole is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldRole requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldRole: %w", err)
+	}
+	return oldValue.Role, nil
+}
+
+// ResetRole resets all changes to the "role" field.
+func (m *InstitutionInviteLinkMutation) ResetRole() {
+	m.role = nil
+}
+
+// SetInstitutionID sets the "institution" edge to the Institution entity by id.
+func (m *InstitutionInviteLinkMutation) SetInstitutionID(id int) {
+	m.institution = &id
+}
+
+// ClearInstitution clears the "institution" edge to the Institution entity.
+func (m *InstitutionInviteLinkMutation) ClearInstitution() {
+	m.clearedinstitution = true
+}
+
+// InstitutionCleared reports if the "institution" edge to the Institution entity was cleared.
+func (m *InstitutionInviteLinkMutation) InstitutionCleared() bool {
+	return m.clearedinstitution
+}
+
+// InstitutionID returns the "institution" edge ID in the mutation.
+func (m *InstitutionInviteLinkMutation) InstitutionID() (id int, exists bool) {
+	if m.institution != nil {
+		return *m.institution, true
+	}
+	return
+}
+
+// InstitutionIDs returns the "institution" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// InstitutionID instead. It exists only for internal usage by the builders.
+func (m *InstitutionInviteLinkMutation) InstitutionIDs() (ids []int) {
+	if id := m.institution; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetInstitution resets all changes to the "institution" edge.
+func (m *InstitutionInviteLinkMutation) ResetInstitution() {
+	m.institution = nil
+	m.clearedinstitution = false
+}
+
+// Where appends a list predicates to the InstitutionInviteLinkMutation builder.
+func (m *InstitutionInviteLinkMutation) Where(ps ...predicate.InstitutionInviteLink) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the InstitutionInviteLinkMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *InstitutionInviteLinkMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.InstitutionInviteLink, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *InstitutionInviteLinkMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *InstitutionInviteLinkMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (InstitutionInviteLink).
+func (m *InstitutionInviteLinkMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *InstitutionInviteLinkMutation) Fields() []string {
+	fields := make([]string, 0, 2)
+	if m.code != nil {
+		fields = append(fields, institutioninvitelink.FieldCode)
+	}
+	if m.role != nil {
+		fields = append(fields, institutioninvitelink.FieldRole)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *InstitutionInviteLinkMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case institutioninvitelink.FieldCode:
+		return m.Code()
+	case institutioninvitelink.FieldRole:
+		return m.Role()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *InstitutionInviteLinkMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case institutioninvitelink.FieldCode:
+		return m.OldCode(ctx)
+	case institutioninvitelink.FieldRole:
+		return m.OldRole(ctx)
+	}
+	return nil, fmt.Errorf("unknown InstitutionInviteLink field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *InstitutionInviteLinkMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case institutioninvitelink.FieldCode:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCode(v)
+		return nil
+	case institutioninvitelink.FieldRole:
+		v, ok := value.(institution.Role)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetRole(v)
+		return nil
+	}
+	return fmt.Errorf("unknown InstitutionInviteLink field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *InstitutionInviteLinkMutation) AddedFields() []string {
+	return nil
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *InstitutionInviteLinkMutation) AddedField(name string) (ent.Value, bool) {
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *InstitutionInviteLinkMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	}
+	return fmt.Errorf("unknown InstitutionInviteLink numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *InstitutionInviteLinkMutation) ClearedFields() []string {
+	return nil
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *InstitutionInviteLinkMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *InstitutionInviteLinkMutation) ClearField(name string) error {
+	return fmt.Errorf("unknown InstitutionInviteLink nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *InstitutionInviteLinkMutation) ResetField(name string) error {
+	switch name {
+	case institutioninvitelink.FieldCode:
+		m.ResetCode()
+		return nil
+	case institutioninvitelink.FieldRole:
+		m.ResetRole()
+		return nil
+	}
+	return fmt.Errorf("unknown InstitutionInviteLink field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *InstitutionInviteLinkMutation) AddedEdges() []string {
+	edges := make([]string, 0, 1)
+	if m.institution != nil {
+		edges = append(edges, institutioninvitelink.EdgeInstitution)
+	}
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *InstitutionInviteLinkMutation) AddedIDs(name string) []ent.Value {
+	switch name {
+	case institutioninvitelink.EdgeInstitution:
+		if id := m.institution; id != nil {
+			return []ent.Value{*id}
+		}
+	}
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *InstitutionInviteLinkMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 1)
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *InstitutionInviteLinkMutation) RemovedIDs(name string) []ent.Value {
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *InstitutionInviteLinkMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 1)
+	if m.clearedinstitution {
+		edges = append(edges, institutioninvitelink.EdgeInstitution)
+	}
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *InstitutionInviteLinkMutation) EdgeCleared(name string) bool {
+	switch name {
+	case institutioninvitelink.EdgeInstitution:
+		return m.clearedinstitution
+	}
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *InstitutionInviteLinkMutation) ClearEdge(name string) error {
+	switch name {
+	case institutioninvitelink.EdgeInstitution:
+		m.ClearInstitution()
+		return nil
+	}
+	return fmt.Errorf("unknown InstitutionInviteLink unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *InstitutionInviteLinkMutation) ResetEdge(name string) error {
+	switch name {
+	case institutioninvitelink.EdgeInstitution:
+		m.ResetInstitution()
+		return nil
+	}
+	return fmt.Errorf("unknown InstitutionInviteLink edge %s", name)
 }
 
 // JWTRevocationMutation represents an operation that mutates the JWTRevocation nodes in the graph.
@@ -7808,7 +8090,7 @@ type StudyPlanMutation struct {
 	typ               string
 	id                *int
 	name              *string
-	share_code        *string
+	code              *string
 	clearedFields     map[string]struct{}
 	author            *int
 	clearedauthor     bool
@@ -7954,53 +8236,53 @@ func (m *StudyPlanMutation) ResetName() {
 	m.name = nil
 }
 
-// SetShareCode sets the "share_code" field.
-func (m *StudyPlanMutation) SetShareCode(s string) {
-	m.share_code = &s
+// SetCode sets the "code" field.
+func (m *StudyPlanMutation) SetCode(s string) {
+	m.code = &s
 }
 
-// ShareCode returns the value of the "share_code" field in the mutation.
-func (m *StudyPlanMutation) ShareCode() (r string, exists bool) {
-	v := m.share_code
+// Code returns the value of the "code" field in the mutation.
+func (m *StudyPlanMutation) Code() (r string, exists bool) {
+	v := m.code
 	if v == nil {
 		return
 	}
 	return *v, true
 }
 
-// OldShareCode returns the old "share_code" field's value of the StudyPlan entity.
+// OldCode returns the old "code" field's value of the StudyPlan entity.
 // If the StudyPlan object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *StudyPlanMutation) OldShareCode(ctx context.Context) (v string, err error) {
+func (m *StudyPlanMutation) OldCode(ctx context.Context) (v string, err error) {
 	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldShareCode is only allowed on UpdateOne operations")
+		return v, errors.New("OldCode is only allowed on UpdateOne operations")
 	}
 	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldShareCode requires an ID field in the mutation")
+		return v, errors.New("OldCode requires an ID field in the mutation")
 	}
 	oldValue, err := m.oldValue(ctx)
 	if err != nil {
-		return v, fmt.Errorf("querying old value for OldShareCode: %w", err)
+		return v, fmt.Errorf("querying old value for OldCode: %w", err)
 	}
-	return oldValue.ShareCode, nil
+	return oldValue.Code, nil
 }
 
-// ClearShareCode clears the value of the "share_code" field.
-func (m *StudyPlanMutation) ClearShareCode() {
-	m.share_code = nil
-	m.clearedFields[studyplan.FieldShareCode] = struct{}{}
+// ClearCode clears the value of the "code" field.
+func (m *StudyPlanMutation) ClearCode() {
+	m.code = nil
+	m.clearedFields[studyplan.FieldCode] = struct{}{}
 }
 
-// ShareCodeCleared returns if the "share_code" field was cleared in this mutation.
-func (m *StudyPlanMutation) ShareCodeCleared() bool {
-	_, ok := m.clearedFields[studyplan.FieldShareCode]
+// CodeCleared returns if the "code" field was cleared in this mutation.
+func (m *StudyPlanMutation) CodeCleared() bool {
+	_, ok := m.clearedFields[studyplan.FieldCode]
 	return ok
 }
 
-// ResetShareCode resets all changes to the "share_code" field.
-func (m *StudyPlanMutation) ResetShareCode() {
-	m.share_code = nil
-	delete(m.clearedFields, studyplan.FieldShareCode)
+// ResetCode resets all changes to the "code" field.
+func (m *StudyPlanMutation) ResetCode() {
+	m.code = nil
+	delete(m.clearedFields, studyplan.FieldCode)
 }
 
 // SetAuthorID sets the "author" edge to the User entity by id.
@@ -8134,8 +8416,8 @@ func (m *StudyPlanMutation) Fields() []string {
 	if m.name != nil {
 		fields = append(fields, studyplan.FieldName)
 	}
-	if m.share_code != nil {
-		fields = append(fields, studyplan.FieldShareCode)
+	if m.code != nil {
+		fields = append(fields, studyplan.FieldCode)
 	}
 	return fields
 }
@@ -8147,8 +8429,8 @@ func (m *StudyPlanMutation) Field(name string) (ent.Value, bool) {
 	switch name {
 	case studyplan.FieldName:
 		return m.Name()
-	case studyplan.FieldShareCode:
-		return m.ShareCode()
+	case studyplan.FieldCode:
+		return m.Code()
 	}
 	return nil, false
 }
@@ -8160,8 +8442,8 @@ func (m *StudyPlanMutation) OldField(ctx context.Context, name string) (ent.Valu
 	switch name {
 	case studyplan.FieldName:
 		return m.OldName(ctx)
-	case studyplan.FieldShareCode:
-		return m.OldShareCode(ctx)
+	case studyplan.FieldCode:
+		return m.OldCode(ctx)
 	}
 	return nil, fmt.Errorf("unknown StudyPlan field %s", name)
 }
@@ -8178,12 +8460,12 @@ func (m *StudyPlanMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetName(v)
 		return nil
-	case studyplan.FieldShareCode:
+	case studyplan.FieldCode:
 		v, ok := value.(string)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
-		m.SetShareCode(v)
+		m.SetCode(v)
 		return nil
 	}
 	return fmt.Errorf("unknown StudyPlan field %s", name)
@@ -8215,8 +8497,8 @@ func (m *StudyPlanMutation) AddField(name string, value ent.Value) error {
 // mutation.
 func (m *StudyPlanMutation) ClearedFields() []string {
 	var fields []string
-	if m.FieldCleared(studyplan.FieldShareCode) {
-		fields = append(fields, studyplan.FieldShareCode)
+	if m.FieldCleared(studyplan.FieldCode) {
+		fields = append(fields, studyplan.FieldCode)
 	}
 	return fields
 }
@@ -8232,8 +8514,8 @@ func (m *StudyPlanMutation) FieldCleared(name string) bool {
 // error if the field is not defined in the schema.
 func (m *StudyPlanMutation) ClearField(name string) error {
 	switch name {
-	case studyplan.FieldShareCode:
-		m.ClearShareCode()
+	case studyplan.FieldCode:
+		m.ClearCode()
 		return nil
 	}
 	return fmt.Errorf("unknown StudyPlan nullable field %s", name)
@@ -8246,8 +8528,8 @@ func (m *StudyPlanMutation) ResetField(name string) error {
 	case studyplan.FieldName:
 		m.ResetName()
 		return nil
-	case studyplan.FieldShareCode:
-		m.ResetShareCode()
+	case studyplan.FieldCode:
+		m.ResetCode()
 		return nil
 	}
 	return fmt.Errorf("unknown StudyPlan field %s", name)
@@ -8371,9 +8653,10 @@ type UserMutation struct {
 	addpoints_awarded_count   *int
 	points_awarded_reset_time *time.Time
 	god_mode                  *bool
+	role                      *institution.Role
 	clearedFields             map[string]struct{}
-	department                *int
-	cleareddepartment         bool
+	institution               *int
+	clearedinstitution        bool
 	redemptions               map[int]struct{}
 	removedredemptions        map[int]struct{}
 	clearedredemptions        bool
@@ -8839,43 +9122,79 @@ func (m *UserMutation) ResetGodMode() {
 	m.god_mode = nil
 }
 
-// SetDepartmentID sets the "department" edge to the Department entity by id.
-func (m *UserMutation) SetDepartmentID(id int) {
-	m.department = &id
+// SetRole sets the "role" field.
+func (m *UserMutation) SetRole(i institution.Role) {
+	m.role = &i
 }
 
-// ClearDepartment clears the "department" edge to the Department entity.
-func (m *UserMutation) ClearDepartment() {
-	m.cleareddepartment = true
+// Role returns the value of the "role" field in the mutation.
+func (m *UserMutation) Role() (r institution.Role, exists bool) {
+	v := m.role
+	if v == nil {
+		return
+	}
+	return *v, true
 }
 
-// DepartmentCleared reports if the "department" edge to the Department entity was cleared.
-func (m *UserMutation) DepartmentCleared() bool {
-	return m.cleareddepartment
+// OldRole returns the old "role" field's value of the User entity.
+// If the User object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UserMutation) OldRole(ctx context.Context) (v institution.Role, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldRole is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldRole requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldRole: %w", err)
+	}
+	return oldValue.Role, nil
 }
 
-// DepartmentID returns the "department" edge ID in the mutation.
-func (m *UserMutation) DepartmentID() (id int, exists bool) {
-	if m.department != nil {
-		return *m.department, true
+// ResetRole resets all changes to the "role" field.
+func (m *UserMutation) ResetRole() {
+	m.role = nil
+}
+
+// SetInstitutionID sets the "institution" edge to the Institution entity by id.
+func (m *UserMutation) SetInstitutionID(id int) {
+	m.institution = &id
+}
+
+// ClearInstitution clears the "institution" edge to the Institution entity.
+func (m *UserMutation) ClearInstitution() {
+	m.clearedinstitution = true
+}
+
+// InstitutionCleared reports if the "institution" edge to the Institution entity was cleared.
+func (m *UserMutation) InstitutionCleared() bool {
+	return m.clearedinstitution
+}
+
+// InstitutionID returns the "institution" edge ID in the mutation.
+func (m *UserMutation) InstitutionID() (id int, exists bool) {
+	if m.institution != nil {
+		return *m.institution, true
 	}
 	return
 }
 
-// DepartmentIDs returns the "department" edge IDs in the mutation.
+// InstitutionIDs returns the "institution" edge IDs in the mutation.
 // Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
-// DepartmentID instead. It exists only for internal usage by the builders.
-func (m *UserMutation) DepartmentIDs() (ids []int) {
-	if id := m.department; id != nil {
+// InstitutionID instead. It exists only for internal usage by the builders.
+func (m *UserMutation) InstitutionIDs() (ids []int) {
+	if id := m.institution; id != nil {
 		ids = append(ids, *id)
 	}
 	return
 }
 
-// ResetDepartment resets all changes to the "department" edge.
-func (m *UserMutation) ResetDepartment() {
-	m.department = nil
-	m.cleareddepartment = false
+// ResetInstitution resets all changes to the "institution" edge.
+func (m *UserMutation) ResetInstitution() {
+	m.institution = nil
+	m.clearedinstitution = false
 }
 
 // AddRedemptionIDs adds the "redemptions" edge to the Redemption entity by ids.
@@ -9290,7 +9609,7 @@ func (m *UserMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *UserMutation) Fields() []string {
-	fields := make([]string, 0, 8)
+	fields := make([]string, 0, 9)
 	if m.first_name != nil {
 		fields = append(fields, user.FieldFirstName)
 	}
@@ -9314,6 +9633,9 @@ func (m *UserMutation) Fields() []string {
 	}
 	if m.god_mode != nil {
 		fields = append(fields, user.FieldGodMode)
+	}
+	if m.role != nil {
+		fields = append(fields, user.FieldRole)
 	}
 	return fields
 }
@@ -9339,6 +9661,8 @@ func (m *UserMutation) Field(name string) (ent.Value, bool) {
 		return m.PointsAwardedResetTime()
 	case user.FieldGodMode:
 		return m.GodMode()
+	case user.FieldRole:
+		return m.Role()
 	}
 	return nil, false
 }
@@ -9364,6 +9688,8 @@ func (m *UserMutation) OldField(ctx context.Context, name string) (ent.Value, er
 		return m.OldPointsAwardedResetTime(ctx)
 	case user.FieldGodMode:
 		return m.OldGodMode(ctx)
+	case user.FieldRole:
+		return m.OldRole(ctx)
 	}
 	return nil, fmt.Errorf("unknown User field %s", name)
 }
@@ -9428,6 +9754,13 @@ func (m *UserMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetGodMode(v)
+		return nil
+	case user.FieldRole:
+		v, ok := value.(institution.Role)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetRole(v)
 		return nil
 	}
 	return fmt.Errorf("unknown User field %s", name)
@@ -9538,6 +9871,9 @@ func (m *UserMutation) ResetField(name string) error {
 	case user.FieldGodMode:
 		m.ResetGodMode()
 		return nil
+	case user.FieldRole:
+		m.ResetRole()
+		return nil
 	}
 	return fmt.Errorf("unknown User field %s", name)
 }
@@ -9545,8 +9881,8 @@ func (m *UserMutation) ResetField(name string) error {
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *UserMutation) AddedEdges() []string {
 	edges := make([]string, 0, 8)
-	if m.department != nil {
-		edges = append(edges, user.EdgeDepartment)
+	if m.institution != nil {
+		edges = append(edges, user.EdgeInstitution)
 	}
 	if m.redemptions != nil {
 		edges = append(edges, user.EdgeRedemptions)
@@ -9576,8 +9912,8 @@ func (m *UserMutation) AddedEdges() []string {
 // name in this mutation.
 func (m *UserMutation) AddedIDs(name string) []ent.Value {
 	switch name {
-	case user.EdgeDepartment:
-		if id := m.department; id != nil {
+	case user.EdgeInstitution:
+		if id := m.institution; id != nil {
 			return []ent.Value{*id}
 		}
 	case user.EdgeRedemptions:
@@ -9706,8 +10042,8 @@ func (m *UserMutation) RemovedIDs(name string) []ent.Value {
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *UserMutation) ClearedEdges() []string {
 	edges := make([]string, 0, 8)
-	if m.cleareddepartment {
-		edges = append(edges, user.EdgeDepartment)
+	if m.clearedinstitution {
+		edges = append(edges, user.EdgeInstitution)
 	}
 	if m.clearedredemptions {
 		edges = append(edges, user.EdgeRedemptions)
@@ -9737,8 +10073,8 @@ func (m *UserMutation) ClearedEdges() []string {
 // was cleared in this mutation.
 func (m *UserMutation) EdgeCleared(name string) bool {
 	switch name {
-	case user.EdgeDepartment:
-		return m.cleareddepartment
+	case user.EdgeInstitution:
+		return m.clearedinstitution
 	case user.EdgeRedemptions:
 		return m.clearedredemptions
 	case user.EdgeForumPosts:
@@ -9761,8 +10097,8 @@ func (m *UserMutation) EdgeCleared(name string) bool {
 // if that edge is not defined in the schema.
 func (m *UserMutation) ClearEdge(name string) error {
 	switch name {
-	case user.EdgeDepartment:
-		m.ClearDepartment()
+	case user.EdgeInstitution:
+		m.ClearInstitution()
 		return nil
 	}
 	return fmt.Errorf("unknown User unique edge %s", name)
@@ -9772,8 +10108,8 @@ func (m *UserMutation) ClearEdge(name string) error {
 // It returns an error if the edge is not defined in the schema.
 func (m *UserMutation) ResetEdge(name string) error {
 	switch name {
-	case user.EdgeDepartment:
-		m.ResetDepartment()
+	case user.EdgeInstitution:
+		m.ResetInstitution()
 		return nil
 	case user.EdgeRedemptions:
 		m.ResetRedemptions()

@@ -8,9 +8,10 @@ import (
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
-	"github.com/np-inprove/server/internal/ent/group"
+	entgroup "github.com/np-inprove/server/internal/ent/group"
 	"github.com/np-inprove/server/internal/ent/groupuser"
 	"github.com/np-inprove/server/internal/ent/user"
+	"github.com/np-inprove/server/internal/entity/group"
 )
 
 // GroupUser is the model entity for the GroupUser schema.
@@ -20,8 +21,8 @@ type GroupUser struct {
 	GroupID int `json:"group_id,omitempty"`
 	// ID of the user
 	UserID int `json:"user_id,omitempty"`
-	// Role holds the value of the "role" field.
-	Role groupuser.Role `json:"role,omitempty"`
+	// Role of the user
+	Role group.Role `json:"role,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the GroupUserQuery when eager-loading is set.
 	Edges        GroupUserEdges `json:"edges"`
@@ -45,7 +46,7 @@ func (e GroupUserEdges) GroupOrErr() (*Group, error) {
 	if e.loadedTypes[0] {
 		if e.Group == nil {
 			// Edge was loaded but was not found.
-			return nil, &NotFoundError{label: group.Label}
+			return nil, &NotFoundError{label: entgroup.Label}
 		}
 		return e.Group, nil
 	}
@@ -105,7 +106,7 @@ func (gu *GroupUser) assignValues(columns []string, values []any) error {
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field role", values[i])
 			} else if value.Valid {
-				gu.Role = groupuser.Role(value.String)
+				gu.Role = group.Role(value.String)
 			}
 		default:
 			gu.selectValues.Set(columns[i], values[i])

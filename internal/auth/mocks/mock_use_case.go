@@ -82,25 +82,25 @@ func (_c *MockUseCase_Login_Call) RunAndReturn(run func(context.Context, string,
 	return _c
 }
 
-// Register provides a mock function with given fields: ctx, firstName, lastName, email, password
-func (_m *MockUseCase) Register(ctx context.Context, firstName string, lastName string, email string, password string) (*entity.Session, error) {
-	ret := _m.Called(ctx, firstName, lastName, email, password)
+// Register provides a mock function with given fields: ctx, inviteCode, firstName, lastName, email, password
+func (_m *MockUseCase) Register(ctx context.Context, inviteCode string, firstName string, lastName string, email string, password string) (*entity.Session, error) {
+	ret := _m.Called(ctx, inviteCode, firstName, lastName, email, password)
 
 	var r0 *entity.Session
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, string, string, string, string) (*entity.Session, error)); ok {
-		return rf(ctx, firstName, lastName, email, password)
+	if rf, ok := ret.Get(0).(func(context.Context, string, string, string, string, string) (*entity.Session, error)); ok {
+		return rf(ctx, inviteCode, firstName, lastName, email, password)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, string, string, string, string) *entity.Session); ok {
-		r0 = rf(ctx, firstName, lastName, email, password)
+	if rf, ok := ret.Get(0).(func(context.Context, string, string, string, string, string) *entity.Session); ok {
+		r0 = rf(ctx, inviteCode, firstName, lastName, email, password)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(*entity.Session)
 		}
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, string, string, string, string) error); ok {
-		r1 = rf(ctx, firstName, lastName, email, password)
+	if rf, ok := ret.Get(1).(func(context.Context, string, string, string, string, string) error); ok {
+		r1 = rf(ctx, inviteCode, firstName, lastName, email, password)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -115,17 +115,18 @@ type MockUseCase_Register_Call struct {
 
 // Register is a helper method to define mock.On call
 //   - ctx context.Context
+//   - inviteCode string
 //   - firstName string
 //   - lastName string
 //   - email string
 //   - password string
-func (_e *MockUseCase_Expecter) Register(ctx interface{}, firstName interface{}, lastName interface{}, email interface{}, password interface{}) *MockUseCase_Register_Call {
-	return &MockUseCase_Register_Call{Call: _e.mock.On("Register", ctx, firstName, lastName, email, password)}
+func (_e *MockUseCase_Expecter) Register(ctx interface{}, inviteCode interface{}, firstName interface{}, lastName interface{}, email interface{}, password interface{}) *MockUseCase_Register_Call {
+	return &MockUseCase_Register_Call{Call: _e.mock.On("Register", ctx, inviteCode, firstName, lastName, email, password)}
 }
 
-func (_c *MockUseCase_Register_Call) Run(run func(ctx context.Context, firstName string, lastName string, email string, password string)) *MockUseCase_Register_Call {
+func (_c *MockUseCase_Register_Call) Run(run func(ctx context.Context, inviteCode string, firstName string, lastName string, email string, password string)) *MockUseCase_Register_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(string), args[2].(string), args[3].(string), args[4].(string))
+		run(args[0].(context.Context), args[1].(string), args[2].(string), args[3].(string), args[4].(string), args[5].(string))
 	})
 	return _c
 }
@@ -135,7 +136,7 @@ func (_c *MockUseCase_Register_Call) Return(_a0 *entity.Session, _a1 error) *Moc
 	return _c
 }
 
-func (_c *MockUseCase_Register_Call) RunAndReturn(run func(context.Context, string, string, string, string) (*entity.Session, error)) *MockUseCase_Register_Call {
+func (_c *MockUseCase_Register_Call) RunAndReturn(run func(context.Context, string, string, string, string, string) (*entity.Session, error)) *MockUseCase_Register_Call {
 	_c.Call.Return(run)
 	return _c
 }

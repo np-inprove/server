@@ -8,6 +8,8 @@ import (
 	ent "github.com/np-inprove/server/internal/ent"
 	hash "github.com/np-inprove/server/internal/hash"
 
+	institution "github.com/np-inprove/server/internal/entity/institution"
+
 	mock "github.com/stretchr/testify/mock"
 
 	time "time"
@@ -84,32 +86,32 @@ func (_c *MockRepository_CreateJWTRevocation_Call) RunAndReturn(run func(context
 	return _c
 }
 
-// CreateUser provides a mock function with given fields: ctx, firstName, lastName, email, password, opts
-func (_m *MockRepository) CreateUser(ctx context.Context, firstName string, lastName string, email string, password hash.Encoded, opts ...user.Option) (*ent.User, error) {
+// CreateUser provides a mock function with given fields: ctx, instID, instRole, firstName, lastName, email, password, opts
+func (_m *MockRepository) CreateUser(ctx context.Context, instID int, instRole institution.Role, firstName string, lastName string, email string, password hash.Encoded, opts ...user.Option) (*ent.User, error) {
 	_va := make([]interface{}, len(opts))
 	for _i := range opts {
 		_va[_i] = opts[_i]
 	}
 	var _ca []interface{}
-	_ca = append(_ca, ctx, firstName, lastName, email, password)
+	_ca = append(_ca, ctx, instID, instRole, firstName, lastName, email, password)
 	_ca = append(_ca, _va...)
 	ret := _m.Called(_ca...)
 
 	var r0 *ent.User
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, string, string, string, hash.Encoded, ...user.Option) (*ent.User, error)); ok {
-		return rf(ctx, firstName, lastName, email, password, opts...)
+	if rf, ok := ret.Get(0).(func(context.Context, int, institution.Role, string, string, string, hash.Encoded, ...user.Option) (*ent.User, error)); ok {
+		return rf(ctx, instID, instRole, firstName, lastName, email, password, opts...)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, string, string, string, hash.Encoded, ...user.Option) *ent.User); ok {
-		r0 = rf(ctx, firstName, lastName, email, password, opts...)
+	if rf, ok := ret.Get(0).(func(context.Context, int, institution.Role, string, string, string, hash.Encoded, ...user.Option) *ent.User); ok {
+		r0 = rf(ctx, instID, instRole, firstName, lastName, email, password, opts...)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(*ent.User)
 		}
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, string, string, string, hash.Encoded, ...user.Option) error); ok {
-		r1 = rf(ctx, firstName, lastName, email, password, opts...)
+	if rf, ok := ret.Get(1).(func(context.Context, int, institution.Role, string, string, string, hash.Encoded, ...user.Option) error); ok {
+		r1 = rf(ctx, instID, instRole, firstName, lastName, email, password, opts...)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -124,25 +126,27 @@ type MockRepository_CreateUser_Call struct {
 
 // CreateUser is a helper method to define mock.On call
 //   - ctx context.Context
+//   - instID int
+//   - instRole institution.Role
 //   - firstName string
 //   - lastName string
 //   - email string
 //   - password hash.Encoded
 //   - opts ...user.Option
-func (_e *MockRepository_Expecter) CreateUser(ctx interface{}, firstName interface{}, lastName interface{}, email interface{}, password interface{}, opts ...interface{}) *MockRepository_CreateUser_Call {
+func (_e *MockRepository_Expecter) CreateUser(ctx interface{}, instID interface{}, instRole interface{}, firstName interface{}, lastName interface{}, email interface{}, password interface{}, opts ...interface{}) *MockRepository_CreateUser_Call {
 	return &MockRepository_CreateUser_Call{Call: _e.mock.On("CreateUser",
-		append([]interface{}{ctx, firstName, lastName, email, password}, opts...)...)}
+		append([]interface{}{ctx, instID, instRole, firstName, lastName, email, password}, opts...)...)}
 }
 
-func (_c *MockRepository_CreateUser_Call) Run(run func(ctx context.Context, firstName string, lastName string, email string, password hash.Encoded, opts ...user.Option)) *MockRepository_CreateUser_Call {
+func (_c *MockRepository_CreateUser_Call) Run(run func(ctx context.Context, instID int, instRole institution.Role, firstName string, lastName string, email string, password hash.Encoded, opts ...user.Option)) *MockRepository_CreateUser_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		variadicArgs := make([]user.Option, len(args)-5)
-		for i, a := range args[5:] {
+		variadicArgs := make([]user.Option, len(args)-7)
+		for i, a := range args[7:] {
 			if a != nil {
 				variadicArgs[i] = a.(user.Option)
 			}
 		}
-		run(args[0].(context.Context), args[1].(string), args[2].(string), args[3].(string), args[4].(hash.Encoded), variadicArgs...)
+		run(args[0].(context.Context), args[1].(int), args[2].(institution.Role), args[3].(string), args[4].(string), args[5].(string), args[6].(hash.Encoded), variadicArgs...)
 	})
 	return _c
 }
@@ -152,30 +156,30 @@ func (_c *MockRepository_CreateUser_Call) Return(_a0 *ent.User, _a1 error) *Mock
 	return _c
 }
 
-func (_c *MockRepository_CreateUser_Call) RunAndReturn(run func(context.Context, string, string, string, hash.Encoded, ...user.Option) (*ent.User, error)) *MockRepository_CreateUser_Call {
+func (_c *MockRepository_CreateUser_Call) RunAndReturn(run func(context.Context, int, institution.Role, string, string, string, hash.Encoded, ...user.Option) (*ent.User, error)) *MockRepository_CreateUser_Call {
 	_c.Call.Return(run)
 	return _c
 }
 
-// FindInstitutionByDomains provides a mock function with given fields: ctx, domain
-func (_m *MockRepository) FindInstitutionByDomains(ctx context.Context, domain string) (*ent.Institution, error) {
-	ret := _m.Called(ctx, domain)
+// FindInstitutionInviteLinkWithInstitution provides a mock function with given fields: ctx, code
+func (_m *MockRepository) FindInstitutionInviteLinkWithInstitution(ctx context.Context, code string) (*ent.InstitutionInviteLink, error) {
+	ret := _m.Called(ctx, code)
 
-	var r0 *ent.Institution
+	var r0 *ent.InstitutionInviteLink
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, string) (*ent.Institution, error)); ok {
-		return rf(ctx, domain)
+	if rf, ok := ret.Get(0).(func(context.Context, string) (*ent.InstitutionInviteLink, error)); ok {
+		return rf(ctx, code)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, string) *ent.Institution); ok {
-		r0 = rf(ctx, domain)
+	if rf, ok := ret.Get(0).(func(context.Context, string) *ent.InstitutionInviteLink); ok {
+		r0 = rf(ctx, code)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*ent.Institution)
+			r0 = ret.Get(0).(*ent.InstitutionInviteLink)
 		}
 	}
 
 	if rf, ok := ret.Get(1).(func(context.Context, string) error); ok {
-		r1 = rf(ctx, domain)
+		r1 = rf(ctx, code)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -183,31 +187,31 @@ func (_m *MockRepository) FindInstitutionByDomains(ctx context.Context, domain s
 	return r0, r1
 }
 
-// MockRepository_FindInstitutionByDomains_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'FindInstitutionByDomains'
-type MockRepository_FindInstitutionByDomains_Call struct {
+// MockRepository_FindInstitutionInviteLinkWithInstitution_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'FindInstitutionInviteLinkWithInstitution'
+type MockRepository_FindInstitutionInviteLinkWithInstitution_Call struct {
 	*mock.Call
 }
 
-// FindInstitutionByDomains is a helper method to define mock.On call
+// FindInstitutionInviteLinkWithInstitution is a helper method to define mock.On call
 //   - ctx context.Context
-//   - domain string
-func (_e *MockRepository_Expecter) FindInstitutionByDomains(ctx interface{}, domain interface{}) *MockRepository_FindInstitutionByDomains_Call {
-	return &MockRepository_FindInstitutionByDomains_Call{Call: _e.mock.On("FindInstitutionByDomains", ctx, domain)}
+//   - code string
+func (_e *MockRepository_Expecter) FindInstitutionInviteLinkWithInstitution(ctx interface{}, code interface{}) *MockRepository_FindInstitutionInviteLinkWithInstitution_Call {
+	return &MockRepository_FindInstitutionInviteLinkWithInstitution_Call{Call: _e.mock.On("FindInstitutionInviteLinkWithInstitution", ctx, code)}
 }
 
-func (_c *MockRepository_FindInstitutionByDomains_Call) Run(run func(ctx context.Context, domain string)) *MockRepository_FindInstitutionByDomains_Call {
+func (_c *MockRepository_FindInstitutionInviteLinkWithInstitution_Call) Run(run func(ctx context.Context, code string)) *MockRepository_FindInstitutionInviteLinkWithInstitution_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		run(args[0].(context.Context), args[1].(string))
 	})
 	return _c
 }
 
-func (_c *MockRepository_FindInstitutionByDomains_Call) Return(_a0 *ent.Institution, _a1 error) *MockRepository_FindInstitutionByDomains_Call {
+func (_c *MockRepository_FindInstitutionInviteLinkWithInstitution_Call) Return(_a0 *ent.InstitutionInviteLink, _a1 error) *MockRepository_FindInstitutionInviteLinkWithInstitution_Call {
 	_c.Call.Return(_a0, _a1)
 	return _c
 }
 
-func (_c *MockRepository_FindInstitutionByDomains_Call) RunAndReturn(run func(context.Context, string) (*ent.Institution, error)) *MockRepository_FindInstitutionByDomains_Call {
+func (_c *MockRepository_FindInstitutionInviteLinkWithInstitution_Call) RunAndReturn(run func(context.Context, string) (*ent.InstitutionInviteLink, error)) *MockRepository_FindInstitutionInviteLinkWithInstitution_Call {
 	_c.Call.Return(run)
 	return _c
 }

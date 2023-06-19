@@ -7,10 +7,11 @@ import (
 
 	"github.com/np-inprove/server/internal/apperror"
 	"github.com/np-inprove/server/internal/ent"
-	"github.com/np-inprove/server/internal/ent/institution"
+	"github.com/np-inprove/server/internal/ent/institutioninvitelink"
 	"github.com/np-inprove/server/internal/ent/jwtrevocation"
 	entuser "github.com/np-inprove/server/internal/ent/user"
 	"github.com/np-inprove/server/internal/entity"
+	"github.com/np-inprove/server/internal/entity/institution"
 	"github.com/np-inprove/server/internal/entity/user"
 	"github.com/np-inprove/server/internal/hash"
 )
@@ -32,6 +33,15 @@ func (e entRepository) FindUserByEmail(ctx context.Context, email string) (*enti
 	return u, nil
 }
 
+func (e entRepository) FindInstitutionInviteLinkWithInstitution(ctx context.Context, code string) (*entity.InstitutionInviteLink, error) {
+	link, err := e.client.InstitutionInviteLink.Query().Where(institutioninvitelink.Code(code)).WithInstitution().Only(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return link, nil
+}
+
 func (e entRepository) FindJWTRevocation(ctx context.Context, jti string) (*entity.JWTRevocation, error) {
 	r, err := e.client.JWTRevocation.Query().Where(jwtrevocation.Jti(jti)).Only(ctx)
 	if err != nil {
@@ -41,22 +51,15 @@ func (e entRepository) FindJWTRevocation(ctx context.Context, jti string) (*enti
 	return r, nil
 }
 
-func (e entRepository) FindInstitutionByDomains(ctx context.Context, domain string) (*entity.Institution, error) {
-	i, err := e.client.Institution.Query().Where(institution.Or(institution.StudentDomain(domain), institution.AdminDomain(domain))).First(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("failed to find institution by domains: %w", err)
-	}
-
-	return i, nil
-}
-
-func (e entRepository) CreateUser(ctx context.Context, firstName string, lastName string, email string, password hash.Encoded, opts ...user.Option) (*entity.User, error) {
+func (e entRepository) CreateUser(ctx context.Context, instID int, instRole institution.Role, firstName string, lastName string, email string, password hash.Encoded, opts ...user.Option) (*entity.User, error) {
 	var options user.Options
 	for _, opt := range opts {
 		opt(&options)
 	}
 
 	u, err := e.client.User.Create().
+		SetInstitutionID(instID).
+		SetRole(instRole).
 		SetFirstName(firstName).
 		SetLastName(lastName).
 		SetEmail(email).

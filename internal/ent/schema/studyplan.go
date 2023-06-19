@@ -17,9 +17,9 @@ func (StudyPlan) Fields() []ent.Field {
 		field.String("name").
 			NotEmpty().
 			Comment("Name of the study plan"),
-		field.String("share_code").
+		field.String("code").
 			Optional().
-			Comment("Short share code for the study plan"),
+			Comment("Code for sharing the study plan"),
 	}
 }
 

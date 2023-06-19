@@ -58,9 +58,9 @@ func Name(v string) predicate.StudyPlan {
 	return predicate.StudyPlan(sql.FieldEQ(FieldName, v))
 }
 
-// ShareCode applies equality check predicate on the "share_code" field. It's identical to ShareCodeEQ.
-func ShareCode(v string) predicate.StudyPlan {
-	return predicate.StudyPlan(sql.FieldEQ(FieldShareCode, v))
+// Code applies equality check predicate on the "code" field. It's identical to CodeEQ.
+func Code(v string) predicate.StudyPlan {
+	return predicate.StudyPlan(sql.FieldEQ(FieldCode, v))
 }
 
 // NameEQ applies the EQ predicate on the "name" field.
@@ -128,79 +128,79 @@ func NameContainsFold(v string) predicate.StudyPlan {
 	return predicate.StudyPlan(sql.FieldContainsFold(FieldName, v))
 }
 
-// ShareCodeEQ applies the EQ predicate on the "share_code" field.
-func ShareCodeEQ(v string) predicate.StudyPlan {
-	return predicate.StudyPlan(sql.FieldEQ(FieldShareCode, v))
+// CodeEQ applies the EQ predicate on the "code" field.
+func CodeEQ(v string) predicate.StudyPlan {
+	return predicate.StudyPlan(sql.FieldEQ(FieldCode, v))
 }
 
-// ShareCodeNEQ applies the NEQ predicate on the "share_code" field.
-func ShareCodeNEQ(v string) predicate.StudyPlan {
-	return predicate.StudyPlan(sql.FieldNEQ(FieldShareCode, v))
+// CodeNEQ applies the NEQ predicate on the "code" field.
+func CodeNEQ(v string) predicate.StudyPlan {
+	return predicate.StudyPlan(sql.FieldNEQ(FieldCode, v))
 }
 
-// ShareCodeIn applies the In predicate on the "share_code" field.
-func ShareCodeIn(vs ...string) predicate.StudyPlan {
-	return predicate.StudyPlan(sql.FieldIn(FieldShareCode, vs...))
+// CodeIn applies the In predicate on the "code" field.
+func CodeIn(vs ...string) predicate.StudyPlan {
+	return predicate.StudyPlan(sql.FieldIn(FieldCode, vs...))
 }
 
-// ShareCodeNotIn applies the NotIn predicate on the "share_code" field.
-func ShareCodeNotIn(vs ...string) predicate.StudyPlan {
-	return predicate.StudyPlan(sql.FieldNotIn(FieldShareCode, vs...))
+// CodeNotIn applies the NotIn predicate on the "code" field.
+func CodeNotIn(vs ...string) predicate.StudyPlan {
+	return predicate.StudyPlan(sql.FieldNotIn(FieldCode, vs...))
 }
 
-// ShareCodeGT applies the GT predicate on the "share_code" field.
-func ShareCodeGT(v string) predicate.StudyPlan {
-	return predicate.StudyPlan(sql.FieldGT(FieldShareCode, v))
+// CodeGT applies the GT predicate on the "code" field.
+func CodeGT(v string) predicate.StudyPlan {
+	return predicate.StudyPlan(sql.FieldGT(FieldCode, v))
 }
 
-// ShareCodeGTE applies the GTE predicate on the "share_code" field.
-func ShareCodeGTE(v string) predicate.StudyPlan {
-	return predicate.StudyPlan(sql.FieldGTE(FieldShareCode, v))
+// CodeGTE applies the GTE predicate on the "code" field.
+func CodeGTE(v string) predicate.StudyPlan {
+	return predicate.StudyPlan(sql.FieldGTE(FieldCode, v))
 }
 
-// ShareCodeLT applies the LT predicate on the "share_code" field.
-func ShareCodeLT(v string) predicate.StudyPlan {
-	return predicate.StudyPlan(sql.FieldLT(FieldShareCode, v))
+// CodeLT applies the LT predicate on the "code" field.
+func CodeLT(v string) predicate.StudyPlan {
+	return predicate.StudyPlan(sql.FieldLT(FieldCode, v))
 }
 
-// ShareCodeLTE applies the LTE predicate on the "share_code" field.
-func ShareCodeLTE(v string) predicate.StudyPlan {
-	return predicate.StudyPlan(sql.FieldLTE(FieldShareCode, v))
+// CodeLTE applies the LTE predicate on the "code" field.
+func CodeLTE(v string) predicate.StudyPlan {
+	return predicate.StudyPlan(sql.FieldLTE(FieldCode, v))
 }
 
-// ShareCodeContains applies the Contains predicate on the "share_code" field.
-func ShareCodeContains(v string) predicate.StudyPlan {
-	return predicate.StudyPlan(sql.FieldContains(FieldShareCode, v))
+// CodeContains applies the Contains predicate on the "code" field.
+func CodeContains(v string) predicate.StudyPlan {
+	return predicate.StudyPlan(sql.FieldContains(FieldCode, v))
 }
 
-// ShareCodeHasPrefix applies the HasPrefix predicate on the "share_code" field.
-func ShareCodeHasPrefix(v string) predicate.StudyPlan {
-	return predicate.StudyPlan(sql.FieldHasPrefix(FieldShareCode, v))
+// CodeHasPrefix applies the HasPrefix predicate on the "code" field.
+func CodeHasPrefix(v string) predicate.StudyPlan {
+	return predicate.StudyPlan(sql.FieldHasPrefix(FieldCode, v))
 }
 
-// ShareCodeHasSuffix applies the HasSuffix predicate on the "share_code" field.
-func ShareCodeHasSuffix(v string) predicate.StudyPlan {
-	return predicate.StudyPlan(sql.FieldHasSuffix(FieldShareCode, v))
+// CodeHasSuffix applies the HasSuffix predicate on the "code" field.
+func CodeHasSuffix(v string) predicate.StudyPlan {
+	return predicate.StudyPlan(sql.FieldHasSuffix(FieldCode, v))
 }
 
-// ShareCodeIsNil applies the IsNil predicate on the "share_code" field.
-func ShareCodeIsNil() predicate.StudyPlan {
-	return predicate.StudyPlan(sql.FieldIsNull(FieldShareCode))
+// CodeIsNil applies the IsNil predicate on the "code" field.
+func CodeIsNil() predicate.StudyPlan {
+	return predicate.StudyPlan(sql.FieldIsNull(FieldCode))
 }
 
-// ShareCodeNotNil applies the NotNil predicate on the "share_code" field.
-func ShareCodeNotNil() predicate.StudyPlan {
-	return predicate.StudyPlan(sql.FieldNotNull(FieldShareCode))
+// CodeNotNil applies the NotNil predicate on the "code" field.
+func CodeNotNil() predicate.StudyPlan {
+	return predicate.StudyPlan(sql.FieldNotNull(FieldCode))
 }
 
-// ShareCodeEqualFold applies the EqualFold predicate on the "share_code" field.
-func ShareCodeEqualFold(v string) predicate.StudyPlan {
-	return predicate.StudyPlan(sql.FieldEqualFold(FieldShareCode, v))
+// CodeEqualFold applies the EqualFold predicate on the "code" field.
+func CodeEqualFold(v string) predicate.StudyPlan {
+	return predicate.StudyPlan(sql.FieldEqualFold(FieldCode, v))
 }
 
-// ShareCodeContainsFold applies the ContainsFold predicate on the "share_code" field.
-func ShareCodeContainsFold(v string) predicate.StudyPlan {
-	return predicate.StudyPlan(sql.FieldContainsFold(FieldShareCode, v))
+// CodeContainsFold applies the ContainsFold predicate on the "code" field.
+func CodeContainsFold(v string) predicate.StudyPlan {
+	return predicate.StudyPlan(sql.FieldContainsFold(FieldCode, v))
 }
 
 // HasAuthor applies the HasEdge predicate on the "author" edge.

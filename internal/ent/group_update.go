@@ -13,8 +13,9 @@ import (
 	"github.com/np-inprove/server/internal/ent/deadline"
 	"github.com/np-inprove/server/internal/ent/event"
 	"github.com/np-inprove/server/internal/ent/forumpost"
-	"github.com/np-inprove/server/internal/ent/group"
-	"github.com/np-inprove/server/internal/ent/institution"
+	entgroup "github.com/np-inprove/server/internal/ent/group"
+	"github.com/np-inprove/server/internal/ent/groupinvitelink"
+	entinstitution "github.com/np-inprove/server/internal/ent/institution"
 	"github.com/np-inprove/server/internal/ent/predicate"
 	"github.com/np-inprove/server/internal/ent/user"
 )
@@ -32,27 +33,21 @@ func (gu *GroupUpdate) Where(ps ...predicate.Group) *GroupUpdate {
 	return gu
 }
 
-// SetPath sets the "path" field.
-func (gu *GroupUpdate) SetPath(s string) *GroupUpdate {
-	gu.mutation.SetPath(s)
-	return gu
-}
-
 // SetName sets the "name" field.
 func (gu *GroupUpdate) SetName(s string) *GroupUpdate {
 	gu.mutation.SetName(s)
 	return gu
 }
 
-// SetDescription sets the "description" field.
-func (gu *GroupUpdate) SetDescription(s string) *GroupUpdate {
-	gu.mutation.SetDescription(s)
+// SetShortName sets the "short_name" field.
+func (gu *GroupUpdate) SetShortName(s string) *GroupUpdate {
+	gu.mutation.SetShortName(s)
 	return gu
 }
 
-// SetGroupType sets the "group_type" field.
-func (gu *GroupUpdate) SetGroupType(gt group.GroupType) *GroupUpdate {
-	gu.mutation.SetGroupType(gt)
+// SetDescription sets the "description" field.
+func (gu *GroupUpdate) SetDescription(s string) *GroupUpdate {
+	gu.mutation.SetDescription(s)
 	return gu
 }
 
@@ -114,6 +109,21 @@ func (gu *GroupUpdate) AddDeadlines(d ...*Deadline) *GroupUpdate {
 		ids[i] = d[i].ID
 	}
 	return gu.AddDeadlineIDs(ids...)
+}
+
+// AddInviteIDs adds the "invites" edge to the GroupInviteLink entity by IDs.
+func (gu *GroupUpdate) AddInviteIDs(ids ...int) *GroupUpdate {
+	gu.mutation.AddInviteIDs(ids...)
+	return gu
+}
+
+// AddInvites adds the "invites" edges to the GroupInviteLink entity.
+func (gu *GroupUpdate) AddInvites(g ...*GroupInviteLink) *GroupUpdate {
+	ids := make([]int, len(g))
+	for i := range g {
+		ids[i] = g[i].ID
+	}
+	return gu.AddInviteIDs(ids...)
 }
 
 // SetInstitutionID sets the "institution" edge to the Institution entity by ID.
@@ -216,6 +226,27 @@ func (gu *GroupUpdate) RemoveDeadlines(d ...*Deadline) *GroupUpdate {
 	return gu.RemoveDeadlineIDs(ids...)
 }
 
+// ClearInvites clears all "invites" edges to the GroupInviteLink entity.
+func (gu *GroupUpdate) ClearInvites() *GroupUpdate {
+	gu.mutation.ClearInvites()
+	return gu
+}
+
+// RemoveInviteIDs removes the "invites" edge to GroupInviteLink entities by IDs.
+func (gu *GroupUpdate) RemoveInviteIDs(ids ...int) *GroupUpdate {
+	gu.mutation.RemoveInviteIDs(ids...)
+	return gu
+}
+
+// RemoveInvites removes "invites" edges to GroupInviteLink entities.
+func (gu *GroupUpdate) RemoveInvites(g ...*GroupInviteLink) *GroupUpdate {
+	ids := make([]int, len(g))
+	for i := range g {
+		ids[i] = g[i].ID
+	}
+	return gu.RemoveInviteIDs(ids...)
+}
+
 // ClearInstitution clears the "institution" edge to the Institution entity.
 func (gu *GroupUpdate) ClearInstitution() *GroupUpdate {
 	gu.mutation.ClearInstitution()
@@ -251,19 +282,14 @@ func (gu *GroupUpdate) ExecX(ctx context.Context) {
 
 // check runs all checks and user-defined validators on the builder.
 func (gu *GroupUpdate) check() error {
-	if v, ok := gu.mutation.Path(); ok {
-		if err := group.PathValidator(v); err != nil {
-			return &ValidationError{Name: "path", err: fmt.Errorf(`ent: validator failed for field "Group.path": %w`, err)}
-		}
-	}
 	if v, ok := gu.mutation.Name(); ok {
-		if err := group.NameValidator(v); err != nil {
+		if err := entgroup.NameValidator(v); err != nil {
 			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "Group.name": %w`, err)}
 		}
 	}
-	if v, ok := gu.mutation.GroupType(); ok {
-		if err := group.GroupTypeValidator(v); err != nil {
-			return &ValidationError{Name: "group_type", err: fmt.Errorf(`ent: validator failed for field "Group.group_type": %w`, err)}
+	if v, ok := gu.mutation.ShortName(); ok {
+		if err := entgroup.ShortNameValidator(v); err != nil {
+			return &ValidationError{Name: "short_name", err: fmt.Errorf(`ent: validator failed for field "Group.short_name": %w`, err)}
 		}
 	}
 	if _, ok := gu.mutation.InstitutionID(); gu.mutation.InstitutionCleared() && !ok {
@@ -276,7 +302,7 @@ func (gu *GroupUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if err := gu.check(); err != nil {
 		return n, err
 	}
-	_spec := sqlgraph.NewUpdateSpec(group.Table, group.Columns, sqlgraph.NewFieldSpec(group.FieldID, field.TypeInt))
+	_spec := sqlgraph.NewUpdateSpec(entgroup.Table, entgroup.Columns, sqlgraph.NewFieldSpec(entgroup.FieldID, field.TypeInt))
 	if ps := gu.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
@@ -284,24 +310,21 @@ func (gu *GroupUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			}
 		}
 	}
-	if value, ok := gu.mutation.Path(); ok {
-		_spec.SetField(group.FieldPath, field.TypeString, value)
-	}
 	if value, ok := gu.mutation.Name(); ok {
-		_spec.SetField(group.FieldName, field.TypeString, value)
+		_spec.SetField(entgroup.FieldName, field.TypeString, value)
+	}
+	if value, ok := gu.mutation.ShortName(); ok {
+		_spec.SetField(entgroup.FieldShortName, field.TypeString, value)
 	}
 	if value, ok := gu.mutation.Description(); ok {
-		_spec.SetField(group.FieldDescription, field.TypeString, value)
-	}
-	if value, ok := gu.mutation.GroupType(); ok {
-		_spec.SetField(group.FieldGroupType, field.TypeEnum, value)
+		_spec.SetField(entgroup.FieldDescription, field.TypeString, value)
 	}
 	if gu.mutation.UsersCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2M,
 			Inverse: false,
-			Table:   group.UsersTable,
-			Columns: group.UsersPrimaryKey,
+			Table:   entgroup.UsersTable,
+			Columns: entgroup.UsersPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeInt),
@@ -313,8 +336,8 @@ func (gu *GroupUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2M,
 			Inverse: false,
-			Table:   group.UsersTable,
-			Columns: group.UsersPrimaryKey,
+			Table:   entgroup.UsersTable,
+			Columns: entgroup.UsersPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeInt),
@@ -329,8 +352,8 @@ func (gu *GroupUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2M,
 			Inverse: false,
-			Table:   group.UsersTable,
-			Columns: group.UsersPrimaryKey,
+			Table:   entgroup.UsersTable,
+			Columns: entgroup.UsersPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeInt),
@@ -345,8 +368,8 @@ func (gu *GroupUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
-			Table:   group.EventsTable,
-			Columns: []string{group.EventsColumn},
+			Table:   entgroup.EventsTable,
+			Columns: []string{entgroup.EventsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(event.FieldID, field.TypeInt),
@@ -358,8 +381,8 @@ func (gu *GroupUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
-			Table:   group.EventsTable,
-			Columns: []string{group.EventsColumn},
+			Table:   entgroup.EventsTable,
+			Columns: []string{entgroup.EventsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(event.FieldID, field.TypeInt),
@@ -374,8 +397,8 @@ func (gu *GroupUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
-			Table:   group.EventsTable,
-			Columns: []string{group.EventsColumn},
+			Table:   entgroup.EventsTable,
+			Columns: []string{entgroup.EventsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(event.FieldID, field.TypeInt),
@@ -390,8 +413,8 @@ func (gu *GroupUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
-			Table:   group.ForumPostsTable,
-			Columns: []string{group.ForumPostsColumn},
+			Table:   entgroup.ForumPostsTable,
+			Columns: []string{entgroup.ForumPostsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(forumpost.FieldID, field.TypeInt),
@@ -403,8 +426,8 @@ func (gu *GroupUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
-			Table:   group.ForumPostsTable,
-			Columns: []string{group.ForumPostsColumn},
+			Table:   entgroup.ForumPostsTable,
+			Columns: []string{entgroup.ForumPostsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(forumpost.FieldID, field.TypeInt),
@@ -419,8 +442,8 @@ func (gu *GroupUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
-			Table:   group.ForumPostsTable,
-			Columns: []string{group.ForumPostsColumn},
+			Table:   entgroup.ForumPostsTable,
+			Columns: []string{entgroup.ForumPostsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(forumpost.FieldID, field.TypeInt),
@@ -435,8 +458,8 @@ func (gu *GroupUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
-			Table:   group.DeadlinesTable,
-			Columns: []string{group.DeadlinesColumn},
+			Table:   entgroup.DeadlinesTable,
+			Columns: []string{entgroup.DeadlinesColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(deadline.FieldID, field.TypeInt),
@@ -448,8 +471,8 @@ func (gu *GroupUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
-			Table:   group.DeadlinesTable,
-			Columns: []string{group.DeadlinesColumn},
+			Table:   entgroup.DeadlinesTable,
+			Columns: []string{entgroup.DeadlinesColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(deadline.FieldID, field.TypeInt),
@@ -464,11 +487,56 @@ func (gu *GroupUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
-			Table:   group.DeadlinesTable,
-			Columns: []string{group.DeadlinesColumn},
+			Table:   entgroup.DeadlinesTable,
+			Columns: []string{entgroup.DeadlinesColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(deadline.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if gu.mutation.InvitesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   entgroup.InvitesTable,
+			Columns: []string{entgroup.InvitesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(groupinvitelink.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := gu.mutation.RemovedInvitesIDs(); len(nodes) > 0 && !gu.mutation.InvitesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   entgroup.InvitesTable,
+			Columns: []string{entgroup.InvitesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(groupinvitelink.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := gu.mutation.InvitesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   entgroup.InvitesTable,
+			Columns: []string{entgroup.InvitesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(groupinvitelink.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -480,11 +548,11 @@ func (gu *GroupUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
-			Table:   group.InstitutionTable,
-			Columns: []string{group.InstitutionColumn},
+			Table:   entgroup.InstitutionTable,
+			Columns: []string{entgroup.InstitutionColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(institution.FieldID, field.TypeInt),
+				IDSpec: sqlgraph.NewFieldSpec(entinstitution.FieldID, field.TypeInt),
 			},
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
@@ -493,11 +561,11 @@ func (gu *GroupUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
-			Table:   group.InstitutionTable,
-			Columns: []string{group.InstitutionColumn},
+			Table:   entgroup.InstitutionTable,
+			Columns: []string{entgroup.InstitutionColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(institution.FieldID, field.TypeInt),
+				IDSpec: sqlgraph.NewFieldSpec(entinstitution.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -507,7 +575,7 @@ func (gu *GroupUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if n, err = sqlgraph.UpdateNodes(ctx, gu.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
-			err = &NotFoundError{group.Label}
+			err = &NotFoundError{entgroup.Label}
 		} else if sqlgraph.IsConstraintError(err) {
 			err = &ConstraintError{msg: err.Error(), wrap: err}
 		}
@@ -525,27 +593,21 @@ type GroupUpdateOne struct {
 	mutation *GroupMutation
 }
 
-// SetPath sets the "path" field.
-func (guo *GroupUpdateOne) SetPath(s string) *GroupUpdateOne {
-	guo.mutation.SetPath(s)
-	return guo
-}
-
 // SetName sets the "name" field.
 func (guo *GroupUpdateOne) SetName(s string) *GroupUpdateOne {
 	guo.mutation.SetName(s)
 	return guo
 }
 
-// SetDescription sets the "description" field.
-func (guo *GroupUpdateOne) SetDescription(s string) *GroupUpdateOne {
-	guo.mutation.SetDescription(s)
+// SetShortName sets the "short_name" field.
+func (guo *GroupUpdateOne) SetShortName(s string) *GroupUpdateOne {
+	guo.mutation.SetShortName(s)
 	return guo
 }
 
-// SetGroupType sets the "group_type" field.
-func (guo *GroupUpdateOne) SetGroupType(gt group.GroupType) *GroupUpdateOne {
-	guo.mutation.SetGroupType(gt)
+// SetDescription sets the "description" field.
+func (guo *GroupUpdateOne) SetDescription(s string) *GroupUpdateOne {
+	guo.mutation.SetDescription(s)
 	return guo
 }
 
@@ -607,6 +669,21 @@ func (guo *GroupUpdateOne) AddDeadlines(d ...*Deadline) *GroupUpdateOne {
 		ids[i] = d[i].ID
 	}
 	return guo.AddDeadlineIDs(ids...)
+}
+
+// AddInviteIDs adds the "invites" edge to the GroupInviteLink entity by IDs.
+func (guo *GroupUpdateOne) AddInviteIDs(ids ...int) *GroupUpdateOne {
+	guo.mutation.AddInviteIDs(ids...)
+	return guo
+}
+
+// AddInvites adds the "invites" edges to the GroupInviteLink entity.
+func (guo *GroupUpdateOne) AddInvites(g ...*GroupInviteLink) *GroupUpdateOne {
+	ids := make([]int, len(g))
+	for i := range g {
+		ids[i] = g[i].ID
+	}
+	return guo.AddInviteIDs(ids...)
 }
 
 // SetInstitutionID sets the "institution" edge to the Institution entity by ID.
@@ -709,6 +786,27 @@ func (guo *GroupUpdateOne) RemoveDeadlines(d ...*Deadline) *GroupUpdateOne {
 	return guo.RemoveDeadlineIDs(ids...)
 }
 
+// ClearInvites clears all "invites" edges to the GroupInviteLink entity.
+func (guo *GroupUpdateOne) ClearInvites() *GroupUpdateOne {
+	guo.mutation.ClearInvites()
+	return guo
+}
+
+// RemoveInviteIDs removes the "invites" edge to GroupInviteLink entities by IDs.
+func (guo *GroupUpdateOne) RemoveInviteIDs(ids ...int) *GroupUpdateOne {
+	guo.mutation.RemoveInviteIDs(ids...)
+	return guo
+}
+
+// RemoveInvites removes "invites" edges to GroupInviteLink entities.
+func (guo *GroupUpdateOne) RemoveInvites(g ...*GroupInviteLink) *GroupUpdateOne {
+	ids := make([]int, len(g))
+	for i := range g {
+		ids[i] = g[i].ID
+	}
+	return guo.RemoveInviteIDs(ids...)
+}
+
 // ClearInstitution clears the "institution" edge to the Institution entity.
 func (guo *GroupUpdateOne) ClearInstitution() *GroupUpdateOne {
 	guo.mutation.ClearInstitution()
@@ -757,19 +855,14 @@ func (guo *GroupUpdateOne) ExecX(ctx context.Context) {
 
 // check runs all checks and user-defined validators on the builder.
 func (guo *GroupUpdateOne) check() error {
-	if v, ok := guo.mutation.Path(); ok {
-		if err := group.PathValidator(v); err != nil {
-			return &ValidationError{Name: "path", err: fmt.Errorf(`ent: validator failed for field "Group.path": %w`, err)}
-		}
-	}
 	if v, ok := guo.mutation.Name(); ok {
-		if err := group.NameValidator(v); err != nil {
+		if err := entgroup.NameValidator(v); err != nil {
 			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "Group.name": %w`, err)}
 		}
 	}
-	if v, ok := guo.mutation.GroupType(); ok {
-		if err := group.GroupTypeValidator(v); err != nil {
-			return &ValidationError{Name: "group_type", err: fmt.Errorf(`ent: validator failed for field "Group.group_type": %w`, err)}
+	if v, ok := guo.mutation.ShortName(); ok {
+		if err := entgroup.ShortNameValidator(v); err != nil {
+			return &ValidationError{Name: "short_name", err: fmt.Errorf(`ent: validator failed for field "Group.short_name": %w`, err)}
 		}
 	}
 	if _, ok := guo.mutation.InstitutionID(); guo.mutation.InstitutionCleared() && !ok {
@@ -782,7 +875,7 @@ func (guo *GroupUpdateOne) sqlSave(ctx context.Context) (_node *Group, err error
 	if err := guo.check(); err != nil {
 		return _node, err
 	}
-	_spec := sqlgraph.NewUpdateSpec(group.Table, group.Columns, sqlgraph.NewFieldSpec(group.FieldID, field.TypeInt))
+	_spec := sqlgraph.NewUpdateSpec(entgroup.Table, entgroup.Columns, sqlgraph.NewFieldSpec(entgroup.FieldID, field.TypeInt))
 	id, ok := guo.mutation.ID()
 	if !ok {
 		return nil, &ValidationError{Name: "id", err: errors.New(`ent: missing "Group.id" for update`)}
@@ -790,12 +883,12 @@ func (guo *GroupUpdateOne) sqlSave(ctx context.Context) (_node *Group, err error
 	_spec.Node.ID.Value = id
 	if fields := guo.fields; len(fields) > 0 {
 		_spec.Node.Columns = make([]string, 0, len(fields))
-		_spec.Node.Columns = append(_spec.Node.Columns, group.FieldID)
+		_spec.Node.Columns = append(_spec.Node.Columns, entgroup.FieldID)
 		for _, f := range fields {
-			if !group.ValidColumn(f) {
+			if !entgroup.ValidColumn(f) {
 				return nil, &ValidationError{Name: f, err: fmt.Errorf("ent: invalid field %q for query", f)}
 			}
-			if f != group.FieldID {
+			if f != entgroup.FieldID {
 				_spec.Node.Columns = append(_spec.Node.Columns, f)
 			}
 		}
@@ -807,24 +900,21 @@ func (guo *GroupUpdateOne) sqlSave(ctx context.Context) (_node *Group, err error
 			}
 		}
 	}
-	if value, ok := guo.mutation.Path(); ok {
-		_spec.SetField(group.FieldPath, field.TypeString, value)
-	}
 	if value, ok := guo.mutation.Name(); ok {
-		_spec.SetField(group.FieldName, field.TypeString, value)
+		_spec.SetField(entgroup.FieldName, field.TypeString, value)
+	}
+	if value, ok := guo.mutation.ShortName(); ok {
+		_spec.SetField(entgroup.FieldShortName, field.TypeString, value)
 	}
 	if value, ok := guo.mutation.Description(); ok {
-		_spec.SetField(group.FieldDescription, field.TypeString, value)
-	}
-	if value, ok := guo.mutation.GroupType(); ok {
-		_spec.SetField(group.FieldGroupType, field.TypeEnum, value)
+		_spec.SetField(entgroup.FieldDescription, field.TypeString, value)
 	}
 	if guo.mutation.UsersCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2M,
 			Inverse: false,
-			Table:   group.UsersTable,
-			Columns: group.UsersPrimaryKey,
+			Table:   entgroup.UsersTable,
+			Columns: entgroup.UsersPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeInt),
@@ -836,8 +926,8 @@ func (guo *GroupUpdateOne) sqlSave(ctx context.Context) (_node *Group, err error
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2M,
 			Inverse: false,
-			Table:   group.UsersTable,
-			Columns: group.UsersPrimaryKey,
+			Table:   entgroup.UsersTable,
+			Columns: entgroup.UsersPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeInt),
@@ -852,8 +942,8 @@ func (guo *GroupUpdateOne) sqlSave(ctx context.Context) (_node *Group, err error
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2M,
 			Inverse: false,
-			Table:   group.UsersTable,
-			Columns: group.UsersPrimaryKey,
+			Table:   entgroup.UsersTable,
+			Columns: entgroup.UsersPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeInt),
@@ -868,8 +958,8 @@ func (guo *GroupUpdateOne) sqlSave(ctx context.Context) (_node *Group, err error
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
-			Table:   group.EventsTable,
-			Columns: []string{group.EventsColumn},
+			Table:   entgroup.EventsTable,
+			Columns: []string{entgroup.EventsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(event.FieldID, field.TypeInt),
@@ -881,8 +971,8 @@ func (guo *GroupUpdateOne) sqlSave(ctx context.Context) (_node *Group, err error
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
-			Table:   group.EventsTable,
-			Columns: []string{group.EventsColumn},
+			Table:   entgroup.EventsTable,
+			Columns: []string{entgroup.EventsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(event.FieldID, field.TypeInt),
@@ -897,8 +987,8 @@ func (guo *GroupUpdateOne) sqlSave(ctx context.Context) (_node *Group, err error
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
-			Table:   group.EventsTable,
-			Columns: []string{group.EventsColumn},
+			Table:   entgroup.EventsTable,
+			Columns: []string{entgroup.EventsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(event.FieldID, field.TypeInt),
@@ -913,8 +1003,8 @@ func (guo *GroupUpdateOne) sqlSave(ctx context.Context) (_node *Group, err error
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
-			Table:   group.ForumPostsTable,
-			Columns: []string{group.ForumPostsColumn},
+			Table:   entgroup.ForumPostsTable,
+			Columns: []string{entgroup.ForumPostsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(forumpost.FieldID, field.TypeInt),
@@ -926,8 +1016,8 @@ func (guo *GroupUpdateOne) sqlSave(ctx context.Context) (_node *Group, err error
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
-			Table:   group.ForumPostsTable,
-			Columns: []string{group.ForumPostsColumn},
+			Table:   entgroup.ForumPostsTable,
+			Columns: []string{entgroup.ForumPostsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(forumpost.FieldID, field.TypeInt),
@@ -942,8 +1032,8 @@ func (guo *GroupUpdateOne) sqlSave(ctx context.Context) (_node *Group, err error
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
-			Table:   group.ForumPostsTable,
-			Columns: []string{group.ForumPostsColumn},
+			Table:   entgroup.ForumPostsTable,
+			Columns: []string{entgroup.ForumPostsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(forumpost.FieldID, field.TypeInt),
@@ -958,8 +1048,8 @@ func (guo *GroupUpdateOne) sqlSave(ctx context.Context) (_node *Group, err error
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
-			Table:   group.DeadlinesTable,
-			Columns: []string{group.DeadlinesColumn},
+			Table:   entgroup.DeadlinesTable,
+			Columns: []string{entgroup.DeadlinesColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(deadline.FieldID, field.TypeInt),
@@ -971,8 +1061,8 @@ func (guo *GroupUpdateOne) sqlSave(ctx context.Context) (_node *Group, err error
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
-			Table:   group.DeadlinesTable,
-			Columns: []string{group.DeadlinesColumn},
+			Table:   entgroup.DeadlinesTable,
+			Columns: []string{entgroup.DeadlinesColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(deadline.FieldID, field.TypeInt),
@@ -987,11 +1077,56 @@ func (guo *GroupUpdateOne) sqlSave(ctx context.Context) (_node *Group, err error
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
-			Table:   group.DeadlinesTable,
-			Columns: []string{group.DeadlinesColumn},
+			Table:   entgroup.DeadlinesTable,
+			Columns: []string{entgroup.DeadlinesColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(deadline.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if guo.mutation.InvitesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   entgroup.InvitesTable,
+			Columns: []string{entgroup.InvitesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(groupinvitelink.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := guo.mutation.RemovedInvitesIDs(); len(nodes) > 0 && !guo.mutation.InvitesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   entgroup.InvitesTable,
+			Columns: []string{entgroup.InvitesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(groupinvitelink.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := guo.mutation.InvitesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   entgroup.InvitesTable,
+			Columns: []string{entgroup.InvitesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(groupinvitelink.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -1003,11 +1138,11 @@ func (guo *GroupUpdateOne) sqlSave(ctx context.Context) (_node *Group, err error
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
-			Table:   group.InstitutionTable,
-			Columns: []string{group.InstitutionColumn},
+			Table:   entgroup.InstitutionTable,
+			Columns: []string{entgroup.InstitutionColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(institution.FieldID, field.TypeInt),
+				IDSpec: sqlgraph.NewFieldSpec(entinstitution.FieldID, field.TypeInt),
 			},
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
@@ -1016,11 +1151,11 @@ func (guo *GroupUpdateOne) sqlSave(ctx context.Context) (_node *Group, err error
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
-			Table:   group.InstitutionTable,
-			Columns: []string{group.InstitutionColumn},
+			Table:   entgroup.InstitutionTable,
+			Columns: []string{entgroup.InstitutionColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(institution.FieldID, field.TypeInt),
+				IDSpec: sqlgraph.NewFieldSpec(entinstitution.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -1033,7 +1168,7 @@ func (guo *GroupUpdateOne) sqlSave(ctx context.Context) (_node *Group, err error
 	_spec.ScanValues = _node.scanValues
 	if err = sqlgraph.UpdateNode(ctx, guo.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
-			err = &NotFoundError{group.Label}
+			err = &NotFoundError{entgroup.Label}
 		} else if sqlgraph.IsConstraintError(err) {
 			err = &ConstraintError{msg: err.Error(), wrap: err}
 		}

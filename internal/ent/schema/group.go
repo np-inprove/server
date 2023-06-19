@@ -14,17 +14,14 @@ type Group struct {
 // Fields of the Group.
 func (Group) Fields() []ent.Field {
 	return []ent.Field{
-		field.String("path").
-			NotEmpty().
-			Unique().
-			Comment("URL path of the group (example: csf01-2023)"),
 		field.String("name").
 			NotEmpty().
 			Comment("Name of the group (example: CSF01 2023)"),
+		field.String("short_name").
+			NotEmpty().
+			Comment("Short nameof the group (example: csf01-2023)"),
 		field.String("description").
 			Comment("Description of the group"),
-		field.Enum("group_type").
-			Values("special_interest_group", "module_group", "cca", "mentor_class"),
 	}
 }
 
@@ -40,10 +37,12 @@ func (Group) Edges() []ent.Edge {
 			Comment("Forum posts from the group"),
 		edge.To("deadlines", Deadline.Type).
 			Comment("Deadlines created by users from the group"),
+		edge.To("invites", GroupInviteLink.Type).
+			Comment("Invites for the group"),
 		edge.From("institution", Institution.Type).
 			Ref("groups").
-			Unique().
 			Required().
+			Unique().
 			Comment("Institution owning this group"),
 	}
 }

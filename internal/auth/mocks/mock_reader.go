@@ -22,25 +22,25 @@ func (_m *MockReader) EXPECT() *MockReader_Expecter {
 	return &MockReader_Expecter{mock: &_m.Mock}
 }
 
-// FindInstitutionByDomains provides a mock function with given fields: ctx, domain
-func (_m *MockReader) FindInstitutionByDomains(ctx context.Context, domain string) (*ent.Institution, error) {
-	ret := _m.Called(ctx, domain)
+// FindInstitutionInviteLinkWithInstitution provides a mock function with given fields: ctx, code
+func (_m *MockReader) FindInstitutionInviteLinkWithInstitution(ctx context.Context, code string) (*ent.InstitutionInviteLink, error) {
+	ret := _m.Called(ctx, code)
 
-	var r0 *ent.Institution
+	var r0 *ent.InstitutionInviteLink
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, string) (*ent.Institution, error)); ok {
-		return rf(ctx, domain)
+	if rf, ok := ret.Get(0).(func(context.Context, string) (*ent.InstitutionInviteLink, error)); ok {
+		return rf(ctx, code)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, string) *ent.Institution); ok {
-		r0 = rf(ctx, domain)
+	if rf, ok := ret.Get(0).(func(context.Context, string) *ent.InstitutionInviteLink); ok {
+		r0 = rf(ctx, code)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*ent.Institution)
+			r0 = ret.Get(0).(*ent.InstitutionInviteLink)
 		}
 	}
 
 	if rf, ok := ret.Get(1).(func(context.Context, string) error); ok {
-		r1 = rf(ctx, domain)
+		r1 = rf(ctx, code)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -48,31 +48,31 @@ func (_m *MockReader) FindInstitutionByDomains(ctx context.Context, domain strin
 	return r0, r1
 }
 
-// MockReader_FindInstitutionByDomains_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'FindInstitutionByDomains'
-type MockReader_FindInstitutionByDomains_Call struct {
+// MockReader_FindInstitutionInviteLinkWithInstitution_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'FindInstitutionInviteLinkWithInstitution'
+type MockReader_FindInstitutionInviteLinkWithInstitution_Call struct {
 	*mock.Call
 }
 
-// FindInstitutionByDomains is a helper method to define mock.On call
+// FindInstitutionInviteLinkWithInstitution is a helper method to define mock.On call
 //   - ctx context.Context
-//   - domain string
-func (_e *MockReader_Expecter) FindInstitutionByDomains(ctx interface{}, domain interface{}) *MockReader_FindInstitutionByDomains_Call {
-	return &MockReader_FindInstitutionByDomains_Call{Call: _e.mock.On("FindInstitutionByDomains", ctx, domain)}
+//   - code string
+func (_e *MockReader_Expecter) FindInstitutionInviteLinkWithInstitution(ctx interface{}, code interface{}) *MockReader_FindInstitutionInviteLinkWithInstitution_Call {
+	return &MockReader_FindInstitutionInviteLinkWithInstitution_Call{Call: _e.mock.On("FindInstitutionInviteLinkWithInstitution", ctx, code)}
 }
 
-func (_c *MockReader_FindInstitutionByDomains_Call) Run(run func(ctx context.Context, domain string)) *MockReader_FindInstitutionByDomains_Call {
+func (_c *MockReader_FindInstitutionInviteLinkWithInstitution_Call) Run(run func(ctx context.Context, code string)) *MockReader_FindInstitutionInviteLinkWithInstitution_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		run(args[0].(context.Context), args[1].(string))
 	})
 	return _c
 }
 
-func (_c *MockReader_FindInstitutionByDomains_Call) Return(_a0 *ent.Institution, _a1 error) *MockReader_FindInstitutionByDomains_Call {
+func (_c *MockReader_FindInstitutionInviteLinkWithInstitution_Call) Return(_a0 *ent.InstitutionInviteLink, _a1 error) *MockReader_FindInstitutionInviteLinkWithInstitution_Call {
 	_c.Call.Return(_a0, _a1)
 	return _c
 }
 
-func (_c *MockReader_FindInstitutionByDomains_Call) RunAndReturn(run func(context.Context, string) (*ent.Institution, error)) *MockReader_FindInstitutionByDomains_Call {
+func (_c *MockReader_FindInstitutionInviteLinkWithInstitution_Call) RunAndReturn(run func(context.Context, string) (*ent.InstitutionInviteLink, error)) *MockReader_FindInstitutionInviteLinkWithInstitution_Call {
 	_c.Call.Return(run)
 	return _c
 }

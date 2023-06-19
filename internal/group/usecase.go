@@ -5,17 +5,17 @@ import (
 	"fmt"
 	"github.com/np-inprove/server/internal/entity"
 	"github.com/np-inprove/server/internal/entity/group"
-	"strings"
+	"github.com/np-inprove/server/internal/entity/institution"
 )
 
 type UseCase interface {
-	ListGroups(ctx context.Context, email string) ([]*entity.Group, error)
-	ListGroupTypes() ([]*entity.GroupType, error)
+	ListPrincipalGroups(ctx context.Context, principal string) ([]*entity.Group, error)
 
 	// CreateGroup should be an admin only function
-	CreateGroup(ctx context.Context, adminEmail, groupType string, opts ...group.Option) (*entity.Group, error)
+	CreateGroup(ctx context.Context, principal string, opts ...group.Option) (*entity.Group, error)
+
 	// DeleteGroup should be an admin only function
-	DeleteGroup(ctx context.Context, adminEmail string, path string) error
+	DeleteGroup(ctx context.Context, principal string, shortName string) error
 }
 
 type useCase struct {
@@ -26,21 +26,22 @@ func NewUseCase(r Repository) UseCase {
 	return useCase{repo: r}
 }
 
-func (u useCase) ListGroups(ctx context.Context, email string) ([]*entity.Group, error) {
-	return u.repo.FindGroupsByUser(ctx, email)
+func (u useCase) ListPrincipalGroups(ctx context.Context, principal string) ([]*entity.Group, error) {
+	return u.repo.FindGroupsByUser(ctx, principal)
 }
 
-func (u useCase) ListGroupTypes() ([]*entity.GroupType, error) {
-	return u.repo.FindGroupTypes()
-}
-
-func (u useCase) CreateGroup(ctx context.Context, adminEmail, groupType string, opts ...group.Option) (*entity.Group, error) {
-	if err := group.TypeValidator(entity.GroupType(groupType)); err != nil {
-		return nil, ErrInvalidGroupType
+func (u useCase) CreateGroup(ctx context.Context, principal string, opts ...group.Option) (*entity.Group, error) {
+	usr, err := u.repo.FindUserWithInstitution(ctx, principal)
+	if err != nil {
+		return nil, fmt.Errorf("failed to find user: %w", err)
 	}
 
-	if ok, err := u.validateAdmin(ctx, adminEmail); err != nil || !ok {
-		return nil, err
+	if usr.Edges.Institution == nil {
+		return nil, fmt.Errorf("user edges not loaded")
+	}
+
+	if usr.Role != institution.RoleAdmin {
+		return nil, ErrUnauthorized
 	}
 
 	var options group.Options
@@ -48,7 +49,12 @@ func (u useCase) CreateGroup(ctx context.Context, adminEmail, groupType string, 
 		opt(&options)
 	}
 
-	grp, err := u.repo.CreateGroup(ctx, entity.GroupType(groupType), opts...)
+	inst := usr.Edges.Institution
+	if _, err := u.repo.FindGroupByInstitutionIDAndShortName(ctx, inst.ID, options.ShortName); err == nil {
+		return nil, ErrGroupShortNameConflict
+	}
+
+	grp, err := u.repo.CreateGroup(ctx, inst.ID, opts...)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create group: %w", err)
 	}
@@ -56,27 +62,19 @@ func (u useCase) CreateGroup(ctx context.Context, adminEmail, groupType string, 
 	return grp, nil
 }
 
-func (u useCase) DeleteGroup(ctx context.Context, adminEmail string, path string) error {
-	if ok, err := u.validateAdmin(ctx, adminEmail); err != nil || !ok {
-		return err
+func (u useCase) DeleteGroup(ctx context.Context, principal string, shortName string) error {
+	grpusr, err := u.repo.FindGroupUser(ctx, principal, shortName)
+	if err != nil {
+		return fmt.Errorf("failed to find group user: %w", err)
 	}
 
-	if err := u.repo.DeleteGroup(ctx, path); err != nil {
+	if grpusr.Role != group.RoleOwner {
+		return ErrUnauthorized
+	}
+
+	if err := u.repo.DeleteGroup(ctx, grpusr.GroupID); err != nil {
 		return fmt.Errorf("failed to delete group: %w", err)
 	}
 
 	return nil
-}
-
-func (u useCase) validateAdmin(ctx context.Context, email string) (bool, error) {
-	domain := strings.Split(email, "@")[1] // This should not panic
-	inst, err := u.repo.FindInstitutionByAdminDomain(ctx, email)
-	if err != nil {
-		return false, fmt.Errorf("failed to institution by admin domain: %w", err)
-	}
-	if domain != inst.AdminDomain {
-		return false, ErrUserNotAdmin
-
-	}
-	return true, nil
 }
