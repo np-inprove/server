@@ -248,3 +248,98 @@ func (suite *UseCaseTestSuite) TestLogin() {
 		})
 	}
 }
+
+func (suite *UseCaseTestSuite) TestRegister() {
+	type args struct {
+		ctx        context.Context
+		inviteCode string
+		firstName  string
+		lastName   string
+		email      string
+		password   string
+	}
+
+	tests := []struct {
+		name      string
+		args      args
+		configure func(repository *mocks.MockRepository)
+		assert    func(repository *mocks.MockRepository)
+		err       error
+	}{
+		{
+			name: "Invalid invite",
+			args: args{
+				ctx:        context.Background(),
+				inviteCode: "definitely not a valid invite code",
+				firstName:  fixture.UserJohn.FirstName,
+				lastName:   fixture.UserJohn.LastName,
+				email:      fixture.UserJohn.Email,
+				password:   fixture.UserJohnPassword,
+			},
+			configure: func(repository *mocks.MockRepository) {
+				repository.On("FindInstitutionInviteLinkWithInstitution", mock.Anything, mock.Anything).
+					Return(nil, fixture.RepoNotFoundErr)
+			},
+			assert: func(repository *mocks.MockRepository) {
+			},
+			err: ErrInvalidInvite,
+		},
+		{
+			name: "Repo internal error",
+			args: args{
+				ctx:        context.Background(),
+				inviteCode: fixture.InstitutionInviteLinkNP.Code,
+				firstName:  fixture.UserJohn.FirstName,
+				lastName:   fixture.UserJohn.LastName,
+				email:      fixture.UserJohn.Email,
+				password:   fixture.UserJohnPassword,
+			},
+			configure: func(repository *mocks.MockRepository) {
+				repository.On("FindInstitutionInviteLinkWithInstitution", mock.Anything, mock.Anything).
+					Return(nil, fixture.RepoInternalErr)
+			},
+			assert: func(repository *mocks.MockRepository) {
+			},
+			err: fixture.RepoInternalErr,
+		},
+		{
+			name: "Success",
+			args: args{
+				ctx:        context.Background(),
+				inviteCode: fixture.InstitutionInviteLinkNP.Code,
+				firstName:  fixture.UserJohn.FirstName,
+				lastName:   fixture.UserJohn.LastName,
+				email:      fixture.UserJohn.Email,
+				password:   fixture.UserJohnPassword,
+			},
+			configure: func(repository *mocks.MockRepository) {
+				repository.On("FindInstitutionInviteLinkWithInstitution", mock.Anything, mock.Anything).
+					Return(fixture.InstitutionInviteLinkNP, nil)
+				repository.On("CreateUser", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
+					Return(fixture.UserJohn, nil)
+			},
+			assert: func(repository *mocks.MockRepository) {
+				repository.AssertCalled(suite.T(), "CreateUser",
+					context.Background(),
+					fixture.InstitutionInviteLinkNP.Edges.Institution.ID,
+					fixture.InstitutionInviteLinkNP.Role,
+					fixture.UserJohn.FirstName,
+					fixture.UserJohn.LastName,
+					fixture.UserJohn.Email,
+					mock.Anything,
+				)
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		suite.Run(tc.name, func() {
+			repo := new(mocks.MockRepository)
+			uc := NewUseCase(repo, nil, suite.publicKey, suite.privateKey)
+			tc.configure(repo)
+			_, err := uc.Register(tc.args.ctx, tc.args.inviteCode, tc.args.firstName, tc.args.lastName, tc.args.email, tc.args.password)
+			suite.Equal(err, tc.err)
+			tc.assert(repo)
+		})
+	}
+}

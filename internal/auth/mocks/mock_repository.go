@@ -8,6 +8,8 @@ import (
 	ent "github.com/np-inprove/server/internal/ent"
 	hash "github.com/np-inprove/server/internal/hash"
 
+	institution "github.com/np-inprove/server/internal/entity/institution"
+
 	mock "github.com/stretchr/testify/mock"
 
 	time "time"
@@ -84,32 +86,32 @@ func (_c *MockRepository_CreateJWTRevocation_Call) RunAndReturn(run func(context
 	return _c
 }
 
-// CreateUser provides a mock function with given fields: ctx, instID, firstName, lastName, email, password, opts
-func (_m *MockRepository) CreateUser(ctx context.Context, instID int, firstName string, lastName string, email string, password hash.Encoded, opts ...user.Option) (*ent.User, error) {
+// CreateUser provides a mock function with given fields: ctx, instID, instRole, firstName, lastName, email, password, opts
+func (_m *MockRepository) CreateUser(ctx context.Context, instID int, instRole institution.Role, firstName string, lastName string, email string, password hash.Encoded, opts ...user.Option) (*ent.User, error) {
 	_va := make([]interface{}, len(opts))
 	for _i := range opts {
 		_va[_i] = opts[_i]
 	}
 	var _ca []interface{}
-	_ca = append(_ca, ctx, instID, firstName, lastName, email, password)
+	_ca = append(_ca, ctx, instID, instRole, firstName, lastName, email, password)
 	_ca = append(_ca, _va...)
 	ret := _m.Called(_ca...)
 
 	var r0 *ent.User
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, int, string, string, string, hash.Encoded, ...user.Option) (*ent.User, error)); ok {
-		return rf(ctx, instID, firstName, lastName, email, password, opts...)
+	if rf, ok := ret.Get(0).(func(context.Context, int, institution.Role, string, string, string, hash.Encoded, ...user.Option) (*ent.User, error)); ok {
+		return rf(ctx, instID, instRole, firstName, lastName, email, password, opts...)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, int, string, string, string, hash.Encoded, ...user.Option) *ent.User); ok {
-		r0 = rf(ctx, instID, firstName, lastName, email, password, opts...)
+	if rf, ok := ret.Get(0).(func(context.Context, int, institution.Role, string, string, string, hash.Encoded, ...user.Option) *ent.User); ok {
+		r0 = rf(ctx, instID, instRole, firstName, lastName, email, password, opts...)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(*ent.User)
 		}
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, int, string, string, string, hash.Encoded, ...user.Option) error); ok {
-		r1 = rf(ctx, instID, firstName, lastName, email, password, opts...)
+	if rf, ok := ret.Get(1).(func(context.Context, int, institution.Role, string, string, string, hash.Encoded, ...user.Option) error); ok {
+		r1 = rf(ctx, instID, instRole, firstName, lastName, email, password, opts...)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -125,25 +127,26 @@ type MockRepository_CreateUser_Call struct {
 // CreateUser is a helper method to define mock.On call
 //   - ctx context.Context
 //   - instID int
+//   - instRole institution.Role
 //   - firstName string
 //   - lastName string
 //   - email string
 //   - password hash.Encoded
 //   - opts ...user.Option
-func (_e *MockRepository_Expecter) CreateUser(ctx interface{}, instID interface{}, firstName interface{}, lastName interface{}, email interface{}, password interface{}, opts ...interface{}) *MockRepository_CreateUser_Call {
+func (_e *MockRepository_Expecter) CreateUser(ctx interface{}, instID interface{}, instRole interface{}, firstName interface{}, lastName interface{}, email interface{}, password interface{}, opts ...interface{}) *MockRepository_CreateUser_Call {
 	return &MockRepository_CreateUser_Call{Call: _e.mock.On("CreateUser",
-		append([]interface{}{ctx, instID, firstName, lastName, email, password}, opts...)...)}
+		append([]interface{}{ctx, instID, instRole, firstName, lastName, email, password}, opts...)...)}
 }
 
-func (_c *MockRepository_CreateUser_Call) Run(run func(ctx context.Context, instID int, firstName string, lastName string, email string, password hash.Encoded, opts ...user.Option)) *MockRepository_CreateUser_Call {
+func (_c *MockRepository_CreateUser_Call) Run(run func(ctx context.Context, instID int, instRole institution.Role, firstName string, lastName string, email string, password hash.Encoded, opts ...user.Option)) *MockRepository_CreateUser_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		variadicArgs := make([]user.Option, len(args)-6)
-		for i, a := range args[6:] {
+		variadicArgs := make([]user.Option, len(args)-7)
+		for i, a := range args[7:] {
 			if a != nil {
 				variadicArgs[i] = a.(user.Option)
 			}
 		}
-		run(args[0].(context.Context), args[1].(int), args[2].(string), args[3].(string), args[4].(string), args[5].(hash.Encoded), variadicArgs...)
+		run(args[0].(context.Context), args[1].(int), args[2].(institution.Role), args[3].(string), args[4].(string), args[5].(string), args[6].(hash.Encoded), variadicArgs...)
 	})
 	return _c
 }
@@ -153,7 +156,7 @@ func (_c *MockRepository_CreateUser_Call) Return(_a0 *ent.User, _a1 error) *Mock
 	return _c
 }
 
-func (_c *MockRepository_CreateUser_Call) RunAndReturn(run func(context.Context, int, string, string, string, hash.Encoded, ...user.Option) (*ent.User, error)) *MockRepository_CreateUser_Call {
+func (_c *MockRepository_CreateUser_Call) RunAndReturn(run func(context.Context, int, institution.Role, string, string, string, hash.Encoded, ...user.Option) (*ent.User, error)) *MockRepository_CreateUser_Call {
 	_c.Call.Return(run)
 	return _c
 }

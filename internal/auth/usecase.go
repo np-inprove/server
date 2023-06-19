@@ -99,7 +99,7 @@ func (u useCase) Register(ctx context.Context, inviteCode string, firstName stri
 	}
 
 	inst := invite.Edges.Institution
-	user, err := u.repo.CreateUser(ctx, inst.ID, firstName, lastName, email, h)
+	user, err := u.repo.CreateUser(ctx, inst.ID, invite.Role, firstName, lastName, email, h)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create user: %w", err)
 	}

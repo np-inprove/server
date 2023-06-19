@@ -3,14 +3,15 @@ package auth
 import (
 	"context"
 	"fmt"
-	"github.com/np-inprove/server/internal/ent/institutioninvitelink"
 	"time"
 
 	"github.com/np-inprove/server/internal/apperror"
 	"github.com/np-inprove/server/internal/ent"
+	"github.com/np-inprove/server/internal/ent/institutioninvitelink"
 	"github.com/np-inprove/server/internal/ent/jwtrevocation"
 	entuser "github.com/np-inprove/server/internal/ent/user"
 	"github.com/np-inprove/server/internal/entity"
+	"github.com/np-inprove/server/internal/entity/institution"
 	"github.com/np-inprove/server/internal/entity/user"
 	"github.com/np-inprove/server/internal/hash"
 )
@@ -50,13 +51,15 @@ func (e entRepository) FindJWTRevocation(ctx context.Context, jti string) (*enti
 	return r, nil
 }
 
-func (e entRepository) CreateUser(ctx context.Context, instID int, firstName string, lastName string, email string, password hash.Encoded, opts ...user.Option) (*entity.User, error) {
+func (e entRepository) CreateUser(ctx context.Context, instID int, instRole institution.Role, firstName string, lastName string, email string, password hash.Encoded, opts ...user.Option) (*entity.User, error) {
 	var options user.Options
 	for _, opt := range opts {
 		opt(&options)
 	}
 
 	u, err := e.client.User.Create().
+		SetInstitutionID(instID).
+		SetRole(instRole).
 		SetFirstName(firstName).
 		SetLastName(lastName).
 		SetEmail(email).
