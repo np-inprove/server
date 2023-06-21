@@ -82,15 +82,37 @@ var (
 			},
 		},
 	}
+	// ForumsColumns holds the columns for the "forums" table.
+	ForumsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "name", Type: field.TypeString},
+		{Name: "short_name", Type: field.TypeString},
+		{Name: "description", Type: field.TypeString},
+		{Name: "group_forums", Type: field.TypeInt},
+	}
+	// ForumsTable holds the schema information for the "forums" table.
+	ForumsTable = &schema.Table{
+		Name:       "forums",
+		Columns:    ForumsColumns,
+		PrimaryKey: []*schema.Column{ForumsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "forums_groups_forums",
+				Columns:    []*schema.Column{ForumsColumns[4]},
+				RefColumns: []*schema.Column{GroupsColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+	}
 	// ForumPostsColumns holds the columns for the "forum_posts" table.
 	ForumPostsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
 		{Name: "title", Type: field.TypeString},
 		{Name: "content", Type: field.TypeString},
 		{Name: "mentioned_users_json", Type: field.TypeJSON},
+		{Name: "forum_posts", Type: field.TypeInt},
 		{Name: "forum_post_author", Type: field.TypeInt},
 		{Name: "forum_post_children", Type: field.TypeInt, Nullable: true},
-		{Name: "group_forum_posts", Type: field.TypeInt},
 	}
 	// ForumPostsTable holds the schema information for the "forum_posts" table.
 	ForumPostsTable = &schema.Table{
@@ -99,22 +121,22 @@ var (
 		PrimaryKey: []*schema.Column{ForumPostsColumns[0]},
 		ForeignKeys: []*schema.ForeignKey{
 			{
-				Symbol:     "forum_posts_users_author",
+				Symbol:     "forum_posts_forums_posts",
 				Columns:    []*schema.Column{ForumPostsColumns[4]},
+				RefColumns: []*schema.Column{ForumsColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+			{
+				Symbol:     "forum_posts_users_author",
+				Columns:    []*schema.Column{ForumPostsColumns[5]},
 				RefColumns: []*schema.Column{UsersColumns[0]},
 				OnDelete:   schema.NoAction,
 			},
 			{
 				Symbol:     "forum_posts_forum_posts_children",
-				Columns:    []*schema.Column{ForumPostsColumns[5]},
+				Columns:    []*schema.Column{ForumPostsColumns[6]},
 				RefColumns: []*schema.Column{ForumPostsColumns[0]},
 				OnDelete:   schema.SetNull,
-			},
-			{
-				Symbol:     "forum_posts_groups_forum_posts",
-				Columns:    []*schema.Column{ForumPostsColumns[6]},
-				RefColumns: []*schema.Column{GroupsColumns[0]},
-				OnDelete:   schema.NoAction,
 			},
 		},
 	}
@@ -461,6 +483,7 @@ var (
 		AccessoriesTable,
 		DeadlinesTable,
 		EventsTable,
+		ForumsTable,
 		ForumPostsTable,
 		GroupsTable,
 		GroupInviteLinksTable,
@@ -485,9 +508,10 @@ func init() {
 	DeadlinesTable.ForeignKeys[0].RefTable = UsersTable
 	DeadlinesTable.ForeignKeys[1].RefTable = GroupsTable
 	EventsTable.ForeignKeys[0].RefTable = GroupsTable
-	ForumPostsTable.ForeignKeys[0].RefTable = UsersTable
-	ForumPostsTable.ForeignKeys[1].RefTable = ForumPostsTable
-	ForumPostsTable.ForeignKeys[2].RefTable = GroupsTable
+	ForumsTable.ForeignKeys[0].RefTable = GroupsTable
+	ForumPostsTable.ForeignKeys[0].RefTable = ForumsTable
+	ForumPostsTable.ForeignKeys[1].RefTable = UsersTable
+	ForumPostsTable.ForeignKeys[2].RefTable = ForumPostsTable
 	GroupsTable.ForeignKeys[0].RefTable = InstitutionsTable
 	GroupInviteLinksTable.ForeignKeys[0].RefTable = GroupsTable
 	GroupUsersTable.ForeignKeys[0].RefTable = GroupsTable

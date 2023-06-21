@@ -19,7 +19,7 @@ type Group struct {
 	ID int `json:"id,omitempty"`
 	// Name of the group (example: CSF01 2023)
 	Name string `json:"name,omitempty"`
-	// Short nameof the group (example: csf01-2023)
+	// Short name of the group (example: csf01-2023)
 	ShortName string `json:"short_name,omitempty"`
 	// Description of the group
 	Description string `json:"description,omitempty"`
@@ -36,8 +36,8 @@ type GroupEdges struct {
 	Users []*User `json:"users,omitempty"`
 	// Events from the group
 	Events []*Event `json:"events,omitempty"`
-	// Forum posts from the group
-	ForumPosts []*ForumPost `json:"forum_posts,omitempty"`
+	// Forum from the group
+	Forums []*Forum `json:"forums,omitempty"`
 	// Deadlines created by users from the group
 	Deadlines []*Deadline `json:"deadlines,omitempty"`
 	// Invites for the group
@@ -69,13 +69,13 @@ func (e GroupEdges) EventsOrErr() ([]*Event, error) {
 	return nil, &NotLoadedError{edge: "events"}
 }
 
-// ForumPostsOrErr returns the ForumPosts value or an error if the edge
+// ForumsOrErr returns the Forums value or an error if the edge
 // was not loaded in eager-loading.
-func (e GroupEdges) ForumPostsOrErr() ([]*ForumPost, error) {
+func (e GroupEdges) ForumsOrErr() ([]*Forum, error) {
 	if e.loadedTypes[2] {
-		return e.ForumPosts, nil
+		return e.Forums, nil
 	}
-	return nil, &NotLoadedError{edge: "forum_posts"}
+	return nil, &NotLoadedError{edge: "forums"}
 }
 
 // DeadlinesOrErr returns the Deadlines value or an error if the edge
@@ -198,9 +198,9 @@ func (gr *Group) QueryEvents() *EventQuery {
 	return NewGroupClient(gr.config).QueryEvents(gr)
 }
 
-// QueryForumPosts queries the "forum_posts" edge of the Group entity.
-func (gr *Group) QueryForumPosts() *ForumPostQuery {
-	return NewGroupClient(gr.config).QueryForumPosts(gr)
+// QueryForums queries the "forums" edge of the Group entity.
+func (gr *Group) QueryForums() *ForumQuery {
+	return NewGroupClient(gr.config).QueryForums(gr)
 }
 
 // QueryDeadlines queries the "deadlines" edge of the Group entity.

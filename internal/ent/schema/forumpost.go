@@ -32,8 +32,8 @@ func (ForumPost) Edges() []ent.Edge {
 			Unique().
 			Required().
 			Comment("Author of the forum post"),
-		edge.From("group", Group.Type).
-			Ref("forum_posts").
+		edge.From("forum", Forum.Type).
+			Ref("posts").
 			Unique().
 			Required(),
 		edge.To("children", ForumPost.Type).

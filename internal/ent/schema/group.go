@@ -19,7 +19,7 @@ func (Group) Fields() []ent.Field {
 			Comment("Name of the group (example: CSF01 2023)"),
 		field.String("short_name").
 			NotEmpty().
-			Comment("Short nameof the group (example: csf01-2023)"),
+			Comment("Short name of the group (example: csf01-2023)"),
 		field.String("description").
 			Comment("Description of the group"),
 	}
@@ -33,8 +33,8 @@ func (Group) Edges() []ent.Edge {
 			Comment("Users that are in the group"),
 		edge.To("events", Event.Type).
 			Comment("Events from the group"),
-		edge.To("forum_posts", ForumPost.Type).
-			Comment("Forum posts from the group"),
+		edge.To("forums", Forum.Type).
+			Comment("Forum from the group"),
 		edge.To("deadlines", Deadline.Type).
 			Comment("Deadlines created by users from the group"),
 		edge.To("invites", GroupInviteLink.Type).

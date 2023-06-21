@@ -11,8 +11,8 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/dialect/sql/sqljson"
 	"entgo.io/ent/schema/field"
+	"github.com/np-inprove/server/internal/ent/forum"
 	"github.com/np-inprove/server/internal/ent/forumpost"
-	entgroup "github.com/np-inprove/server/internal/ent/group"
 	"github.com/np-inprove/server/internal/ent/predicate"
 	"github.com/np-inprove/server/internal/ent/user"
 )
@@ -65,15 +65,15 @@ func (fpu *ForumPostUpdate) SetAuthor(u *User) *ForumPostUpdate {
 	return fpu.SetAuthorID(u.ID)
 }
 
-// SetGroupID sets the "group" edge to the Group entity by ID.
-func (fpu *ForumPostUpdate) SetGroupID(id int) *ForumPostUpdate {
-	fpu.mutation.SetGroupID(id)
+// SetForumID sets the "forum" edge to the Forum entity by ID.
+func (fpu *ForumPostUpdate) SetForumID(id int) *ForumPostUpdate {
+	fpu.mutation.SetForumID(id)
 	return fpu
 }
 
-// SetGroup sets the "group" edge to the Group entity.
-func (fpu *ForumPostUpdate) SetGroup(g *Group) *ForumPostUpdate {
-	return fpu.SetGroupID(g.ID)
+// SetForum sets the "forum" edge to the Forum entity.
+func (fpu *ForumPostUpdate) SetForum(f *Forum) *ForumPostUpdate {
+	return fpu.SetForumID(f.ID)
 }
 
 // SetParentID sets the "parent" edge to the ForumPost entity by ID.
@@ -136,9 +136,9 @@ func (fpu *ForumPostUpdate) ClearAuthor() *ForumPostUpdate {
 	return fpu
 }
 
-// ClearGroup clears the "group" edge to the Group entity.
-func (fpu *ForumPostUpdate) ClearGroup() *ForumPostUpdate {
-	fpu.mutation.ClearGroup()
+// ClearForum clears the "forum" edge to the Forum entity.
+func (fpu *ForumPostUpdate) ClearForum() *ForumPostUpdate {
+	fpu.mutation.ClearForum()
 	return fpu
 }
 
@@ -232,8 +232,8 @@ func (fpu *ForumPostUpdate) check() error {
 	if _, ok := fpu.mutation.AuthorID(); fpu.mutation.AuthorCleared() && !ok {
 		return errors.New(`ent: clearing a required unique edge "ForumPost.author"`)
 	}
-	if _, ok := fpu.mutation.GroupID(); fpu.mutation.GroupCleared() && !ok {
-		return errors.New(`ent: clearing a required unique edge "ForumPost.group"`)
+	if _, ok := fpu.mutation.ForumID(); fpu.mutation.ForumCleared() && !ok {
+		return errors.New(`ent: clearing a required unique edge "ForumPost.forum"`)
 	}
 	return nil
 }
@@ -293,28 +293,28 @@ func (fpu *ForumPostUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if fpu.mutation.GroupCleared() {
+	if fpu.mutation.ForumCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
-			Table:   forumpost.GroupTable,
-			Columns: []string{forumpost.GroupColumn},
+			Table:   forumpost.ForumTable,
+			Columns: []string{forumpost.ForumColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(entgroup.FieldID, field.TypeInt),
+				IDSpec: sqlgraph.NewFieldSpec(forum.FieldID, field.TypeInt),
 			},
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := fpu.mutation.GroupIDs(); len(nodes) > 0 {
+	if nodes := fpu.mutation.ForumIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
-			Table:   forumpost.GroupTable,
-			Columns: []string{forumpost.GroupColumn},
+			Table:   forumpost.ForumTable,
+			Columns: []string{forumpost.ForumColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(entgroup.FieldID, field.TypeInt),
+				IDSpec: sqlgraph.NewFieldSpec(forum.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -496,15 +496,15 @@ func (fpuo *ForumPostUpdateOne) SetAuthor(u *User) *ForumPostUpdateOne {
 	return fpuo.SetAuthorID(u.ID)
 }
 
-// SetGroupID sets the "group" edge to the Group entity by ID.
-func (fpuo *ForumPostUpdateOne) SetGroupID(id int) *ForumPostUpdateOne {
-	fpuo.mutation.SetGroupID(id)
+// SetForumID sets the "forum" edge to the Forum entity by ID.
+func (fpuo *ForumPostUpdateOne) SetForumID(id int) *ForumPostUpdateOne {
+	fpuo.mutation.SetForumID(id)
 	return fpuo
 }
 
-// SetGroup sets the "group" edge to the Group entity.
-func (fpuo *ForumPostUpdateOne) SetGroup(g *Group) *ForumPostUpdateOne {
-	return fpuo.SetGroupID(g.ID)
+// SetForum sets the "forum" edge to the Forum entity.
+func (fpuo *ForumPostUpdateOne) SetForum(f *Forum) *ForumPostUpdateOne {
+	return fpuo.SetForumID(f.ID)
 }
 
 // SetParentID sets the "parent" edge to the ForumPost entity by ID.
@@ -567,9 +567,9 @@ func (fpuo *ForumPostUpdateOne) ClearAuthor() *ForumPostUpdateOne {
 	return fpuo
 }
 
-// ClearGroup clears the "group" edge to the Group entity.
-func (fpuo *ForumPostUpdateOne) ClearGroup() *ForumPostUpdateOne {
-	fpuo.mutation.ClearGroup()
+// ClearForum clears the "forum" edge to the Forum entity.
+func (fpuo *ForumPostUpdateOne) ClearForum() *ForumPostUpdateOne {
+	fpuo.mutation.ClearForum()
 	return fpuo
 }
 
@@ -676,8 +676,8 @@ func (fpuo *ForumPostUpdateOne) check() error {
 	if _, ok := fpuo.mutation.AuthorID(); fpuo.mutation.AuthorCleared() && !ok {
 		return errors.New(`ent: clearing a required unique edge "ForumPost.author"`)
 	}
-	if _, ok := fpuo.mutation.GroupID(); fpuo.mutation.GroupCleared() && !ok {
-		return errors.New(`ent: clearing a required unique edge "ForumPost.group"`)
+	if _, ok := fpuo.mutation.ForumID(); fpuo.mutation.ForumCleared() && !ok {
+		return errors.New(`ent: clearing a required unique edge "ForumPost.forum"`)
 	}
 	return nil
 }
@@ -754,28 +754,28 @@ func (fpuo *ForumPostUpdateOne) sqlSave(ctx context.Context) (_node *ForumPost, 
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if fpuo.mutation.GroupCleared() {
+	if fpuo.mutation.ForumCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
-			Table:   forumpost.GroupTable,
-			Columns: []string{forumpost.GroupColumn},
+			Table:   forumpost.ForumTable,
+			Columns: []string{forumpost.ForumColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(entgroup.FieldID, field.TypeInt),
+				IDSpec: sqlgraph.NewFieldSpec(forum.FieldID, field.TypeInt),
 			},
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := fpuo.mutation.GroupIDs(); len(nodes) > 0 {
+	if nodes := fpuo.mutation.ForumIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
-			Table:   forumpost.GroupTable,
-			Columns: []string{forumpost.GroupColumn},
+			Table:   forumpost.ForumTable,
+			Columns: []string{forumpost.ForumColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(entgroup.FieldID, field.TypeInt),
+				IDSpec: sqlgraph.NewFieldSpec(forum.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

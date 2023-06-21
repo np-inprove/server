@@ -6,6 +6,7 @@ import (
 	"github.com/np-inprove/server/internal/ent/accessory"
 	"github.com/np-inprove/server/internal/ent/deadline"
 	"github.com/np-inprove/server/internal/ent/event"
+	"github.com/np-inprove/server/internal/ent/forum"
 	"github.com/np-inprove/server/internal/ent/forumpost"
 	entgroup "github.com/np-inprove/server/internal/ent/group"
 	"github.com/np-inprove/server/internal/ent/groupinvitelink"
@@ -50,6 +51,16 @@ func init() {
 	eventDescName := eventFields[0].Descriptor()
 	// event.NameValidator is a validator for the "name" field. It is called by the builders before save.
 	event.NameValidator = eventDescName.Validators[0].(func(string) error)
+	forumFields := schema.Forum{}.Fields()
+	_ = forumFields
+	// forumDescName is the schema descriptor for name field.
+	forumDescName := forumFields[0].Descriptor()
+	// forum.NameValidator is a validator for the "name" field. It is called by the builders before save.
+	forum.NameValidator = forumDescName.Validators[0].(func(string) error)
+	// forumDescShortName is the schema descriptor for short_name field.
+	forumDescShortName := forumFields[1].Descriptor()
+	// forum.ShortNameValidator is a validator for the "short_name" field. It is called by the builders before save.
+	forum.ShortNameValidator = forumDescShortName.Validators[0].(func(string) error)
 	forumpostFields := schema.ForumPost{}.Fields()
 	_ = forumpostFields
 	// forumpostDescTitle is the schema descriptor for title field.

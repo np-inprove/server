@@ -309,21 +309,21 @@ func HasEventsWith(preds ...predicate.Event) predicate.Group {
 	})
 }
 
-// HasForumPosts applies the HasEdge predicate on the "forum_posts" edge.
-func HasForumPosts() predicate.Group {
+// HasForums applies the HasEdge predicate on the "forums" edge.
+func HasForums() predicate.Group {
 	return predicate.Group(func(s *sql.Selector) {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, ForumPostsTable, ForumPostsColumn),
+			sqlgraph.Edge(sqlgraph.O2M, false, ForumsTable, ForumsColumn),
 		)
 		sqlgraph.HasNeighbors(s, step)
 	})
 }
 
-// HasForumPostsWith applies the HasEdge predicate on the "forum_posts" edge with a given conditions (other predicates).
-func HasForumPostsWith(preds ...predicate.ForumPost) predicate.Group {
+// HasForumsWith applies the HasEdge predicate on the "forums" edge with a given conditions (other predicates).
+func HasForumsWith(preds ...predicate.Forum) predicate.Group {
 	return predicate.Group(func(s *sql.Selector) {
-		step := newForumPostsStep()
+		step := newForumsStep()
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)

@@ -22,8 +22,8 @@ const (
 	EdgeUsers = "users"
 	// EdgeEvents holds the string denoting the events edge name in mutations.
 	EdgeEvents = "events"
-	// EdgeForumPosts holds the string denoting the forum_posts edge name in mutations.
-	EdgeForumPosts = "forum_posts"
+	// EdgeForums holds the string denoting the forums edge name in mutations.
+	EdgeForums = "forums"
 	// EdgeDeadlines holds the string denoting the deadlines edge name in mutations.
 	EdgeDeadlines = "deadlines"
 	// EdgeInvites holds the string denoting the invites edge name in mutations.
@@ -46,13 +46,13 @@ const (
 	EventsInverseTable = "events"
 	// EventsColumn is the table column denoting the events relation/edge.
 	EventsColumn = "group_events"
-	// ForumPostsTable is the table that holds the forum_posts relation/edge.
-	ForumPostsTable = "forum_posts"
-	// ForumPostsInverseTable is the table name for the ForumPost entity.
-	// It exists in this package in order to avoid circular dependency with the "forumpost" package.
-	ForumPostsInverseTable = "forum_posts"
-	// ForumPostsColumn is the table column denoting the forum_posts relation/edge.
-	ForumPostsColumn = "group_forum_posts"
+	// ForumsTable is the table that holds the forums relation/edge.
+	ForumsTable = "forums"
+	// ForumsInverseTable is the table name for the Forum entity.
+	// It exists in this package in order to avoid circular dependency with the "forum" package.
+	ForumsInverseTable = "forums"
+	// ForumsColumn is the table column denoting the forums relation/edge.
+	ForumsColumn = "group_forums"
 	// DeadlinesTable is the table that holds the deadlines relation/edge.
 	DeadlinesTable = "deadlines"
 	// DeadlinesInverseTable is the table name for the Deadline entity.
@@ -176,17 +176,17 @@ func ByEvents(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 	}
 }
 
-// ByForumPostsCount orders the results by forum_posts count.
-func ByForumPostsCount(opts ...sql.OrderTermOption) OrderOption {
+// ByForumsCount orders the results by forums count.
+func ByForumsCount(opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborsCount(s, newForumPostsStep(), opts...)
+		sqlgraph.OrderByNeighborsCount(s, newForumsStep(), opts...)
 	}
 }
 
-// ByForumPosts orders the results by forum_posts terms.
-func ByForumPosts(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+// ByForums orders the results by forums terms.
+func ByForums(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newForumPostsStep(), append([]sql.OrderTerm{term}, terms...)...)
+		sqlgraph.OrderByNeighborTerms(s, newForumsStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
 
@@ -252,11 +252,11 @@ func newEventsStep() *sqlgraph.Step {
 		sqlgraph.Edge(sqlgraph.O2M, false, EventsTable, EventsColumn),
 	)
 }
-func newForumPostsStep() *sqlgraph.Step {
+func newForumsStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
-		sqlgraph.To(ForumPostsInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.O2M, false, ForumPostsTable, ForumPostsColumn),
+		sqlgraph.To(ForumsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, ForumsTable, ForumsColumn),
 	)
 }
 func newDeadlinesStep() *sqlgraph.Step {

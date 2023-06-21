@@ -11,8 +11,8 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
+	"github.com/np-inprove/server/internal/ent/forum"
 	"github.com/np-inprove/server/internal/ent/forumpost"
-	entgroup "github.com/np-inprove/server/internal/ent/group"
 	"github.com/np-inprove/server/internal/ent/predicate"
 	"github.com/np-inprove/server/internal/ent/reaction"
 	"github.com/np-inprove/server/internal/ent/user"
@@ -26,7 +26,7 @@ type ForumPostQuery struct {
 	inters           []Interceptor
 	predicates       []predicate.ForumPost
 	withAuthor       *UserQuery
-	withGroup        *GroupQuery
+	withForum        *ForumQuery
 	withParent       *ForumPostQuery
 	withChildren     *ForumPostQuery
 	withReactedUsers *UserQuery
@@ -90,9 +90,9 @@ func (fpq *ForumPostQuery) QueryAuthor() *UserQuery {
 	return query
 }
 
-// QueryGroup chains the current query on the "group" edge.
-func (fpq *ForumPostQuery) QueryGroup() *GroupQuery {
-	query := (&GroupClient{config: fpq.config}).Query()
+// QueryForum chains the current query on the "forum" edge.
+func (fpq *ForumPostQuery) QueryForum() *ForumQuery {
+	query := (&ForumClient{config: fpq.config}).Query()
 	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
 		if err := fpq.prepareQuery(ctx); err != nil {
 			return nil, err
@@ -103,8 +103,8 @@ func (fpq *ForumPostQuery) QueryGroup() *GroupQuery {
 		}
 		step := sqlgraph.NewStep(
 			sqlgraph.From(forumpost.Table, forumpost.FieldID, selector),
-			sqlgraph.To(entgroup.Table, entgroup.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, forumpost.GroupTable, forumpost.GroupColumn),
+			sqlgraph.To(forum.Table, forum.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, forumpost.ForumTable, forumpost.ForumColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(fpq.driver.Dialect(), step)
 		return fromU, nil
@@ -393,7 +393,7 @@ func (fpq *ForumPostQuery) Clone() *ForumPostQuery {
 		inters:           append([]Interceptor{}, fpq.inters...),
 		predicates:       append([]predicate.ForumPost{}, fpq.predicates...),
 		withAuthor:       fpq.withAuthor.Clone(),
-		withGroup:        fpq.withGroup.Clone(),
+		withForum:        fpq.withForum.Clone(),
 		withParent:       fpq.withParent.Clone(),
 		withChildren:     fpq.withChildren.Clone(),
 		withReactedUsers: fpq.withReactedUsers.Clone(),
@@ -415,14 +415,14 @@ func (fpq *ForumPostQuery) WithAuthor(opts ...func(*UserQuery)) *ForumPostQuery 
 	return fpq
 }
 
-// WithGroup tells the query-builder to eager-load the nodes that are connected to
-// the "group" edge. The optional arguments are used to configure the query builder of the edge.
-func (fpq *ForumPostQuery) WithGroup(opts ...func(*GroupQuery)) *ForumPostQuery {
-	query := (&GroupClient{config: fpq.config}).Query()
+// WithForum tells the query-builder to eager-load the nodes that are connected to
+// the "forum" edge. The optional arguments are used to configure the query builder of the edge.
+func (fpq *ForumPostQuery) WithForum(opts ...func(*ForumQuery)) *ForumPostQuery {
+	query := (&ForumClient{config: fpq.config}).Query()
 	for _, opt := range opts {
 		opt(query)
 	}
-	fpq.withGroup = query
+	fpq.withForum = query
 	return fpq
 }
 
@@ -551,14 +551,14 @@ func (fpq *ForumPostQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*F
 		_spec       = fpq.querySpec()
 		loadedTypes = [6]bool{
 			fpq.withAuthor != nil,
-			fpq.withGroup != nil,
+			fpq.withForum != nil,
 			fpq.withParent != nil,
 			fpq.withChildren != nil,
 			fpq.withReactedUsers != nil,
 			fpq.withReactions != nil,
 		}
 	)
-	if fpq.withAuthor != nil || fpq.withGroup != nil || fpq.withParent != nil {
+	if fpq.withAuthor != nil || fpq.withForum != nil || fpq.withParent != nil {
 		withFKs = true
 	}
 	if withFKs {
@@ -588,9 +588,9 @@ func (fpq *ForumPostQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*F
 			return nil, err
 		}
 	}
-	if query := fpq.withGroup; query != nil {
-		if err := fpq.loadGroup(ctx, query, nodes, nil,
-			func(n *ForumPost, e *Group) { n.Edges.Group = e }); err != nil {
+	if query := fpq.withForum; query != nil {
+		if err := fpq.loadForum(ctx, query, nodes, nil,
+			func(n *ForumPost, e *Forum) { n.Edges.Forum = e }); err != nil {
 			return nil, err
 		}
 	}
@@ -656,14 +656,14 @@ func (fpq *ForumPostQuery) loadAuthor(ctx context.Context, query *UserQuery, nod
 	}
 	return nil
 }
-func (fpq *ForumPostQuery) loadGroup(ctx context.Context, query *GroupQuery, nodes []*ForumPost, init func(*ForumPost), assign func(*ForumPost, *Group)) error {
+func (fpq *ForumPostQuery) loadForum(ctx context.Context, query *ForumQuery, nodes []*ForumPost, init func(*ForumPost), assign func(*ForumPost, *Forum)) error {
 	ids := make([]int, 0, len(nodes))
 	nodeids := make(map[int][]*ForumPost)
 	for i := range nodes {
-		if nodes[i].group_forum_posts == nil {
+		if nodes[i].forum_posts == nil {
 			continue
 		}
-		fk := *nodes[i].group_forum_posts
+		fk := *nodes[i].forum_posts
 		if _, ok := nodeids[fk]; !ok {
 			ids = append(ids, fk)
 		}
@@ -672,7 +672,7 @@ func (fpq *ForumPostQuery) loadGroup(ctx context.Context, query *GroupQuery, nod
 	if len(ids) == 0 {
 		return nil
 	}
-	query.Where(entgroup.IDIn(ids...))
+	query.Where(forum.IDIn(ids...))
 	neighbors, err := query.All(ctx)
 	if err != nil {
 		return err
@@ -680,7 +680,7 @@ func (fpq *ForumPostQuery) loadGroup(ctx context.Context, query *GroupQuery, nod
 	for _, n := range neighbors {
 		nodes, ok := nodeids[n.ID]
 		if !ok {
-			return fmt.Errorf(`unexpected foreign-key "group_forum_posts" returned %v`, n.ID)
+			return fmt.Errorf(`unexpected foreign-key "forum_posts" returned %v`, n.ID)
 		}
 		for i := range nodes {
 			assign(nodes[i], n)

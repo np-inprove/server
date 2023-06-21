@@ -20,8 +20,8 @@ const (
 	FieldMentionedUsersJSON = "mentioned_users_json"
 	// EdgeAuthor holds the string denoting the author edge name in mutations.
 	EdgeAuthor = "author"
-	// EdgeGroup holds the string denoting the group edge name in mutations.
-	EdgeGroup = "group"
+	// EdgeForum holds the string denoting the forum edge name in mutations.
+	EdgeForum = "forum"
 	// EdgeParent holds the string denoting the parent edge name in mutations.
 	EdgeParent = "parent"
 	// EdgeChildren holds the string denoting the children edge name in mutations.
@@ -39,13 +39,13 @@ const (
 	AuthorInverseTable = "users"
 	// AuthorColumn is the table column denoting the author relation/edge.
 	AuthorColumn = "forum_post_author"
-	// GroupTable is the table that holds the group relation/edge.
-	GroupTable = "forum_posts"
-	// GroupInverseTable is the table name for the Group entity.
-	// It exists in this package in order to avoid circular dependency with the "entgroup" package.
-	GroupInverseTable = "groups"
-	// GroupColumn is the table column denoting the group relation/edge.
-	GroupColumn = "group_forum_posts"
+	// ForumTable is the table that holds the forum relation/edge.
+	ForumTable = "forum_posts"
+	// ForumInverseTable is the table name for the Forum entity.
+	// It exists in this package in order to avoid circular dependency with the "forum" package.
+	ForumInverseTable = "forums"
+	// ForumColumn is the table column denoting the forum relation/edge.
+	ForumColumn = "forum_posts"
 	// ParentTable is the table that holds the parent relation/edge.
 	ParentTable = "forum_posts"
 	// ParentColumn is the table column denoting the parent relation/edge.
@@ -79,9 +79,9 @@ var Columns = []string{
 // ForeignKeys holds the SQL foreign-keys that are owned by the "forum_posts"
 // table and are not defined as standalone fields in the schema.
 var ForeignKeys = []string{
+	"forum_posts",
 	"forum_post_author",
 	"forum_post_children",
-	"group_forum_posts",
 }
 
 var (
@@ -137,10 +137,10 @@ func ByAuthorField(field string, opts ...sql.OrderTermOption) OrderOption {
 	}
 }
 
-// ByGroupField orders the results by group field.
-func ByGroupField(field string, opts ...sql.OrderTermOption) OrderOption {
+// ByForumField orders the results by forum field.
+func ByForumField(field string, opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newGroupStep(), sql.OrderByField(field, opts...))
+		sqlgraph.OrderByNeighborTerms(s, newForumStep(), sql.OrderByField(field, opts...))
 	}
 }
 
@@ -199,11 +199,11 @@ func newAuthorStep() *sqlgraph.Step {
 		sqlgraph.Edge(sqlgraph.M2O, false, AuthorTable, AuthorColumn),
 	)
 }
-func newGroupStep() *sqlgraph.Step {
+func newForumStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
-		sqlgraph.To(GroupInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.M2O, true, GroupTable, GroupColumn),
+		sqlgraph.To(ForumInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.M2O, true, ForumTable, ForumColumn),
 	)
 }
 func newParentStep() *sqlgraph.Step {

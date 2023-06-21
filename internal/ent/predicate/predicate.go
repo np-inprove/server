@@ -15,6 +15,9 @@ type Deadline func(*sql.Selector)
 // Event is the predicate function for event builders.
 type Event func(*sql.Selector)
 
+// Forum is the predicate function for forum builders.
+type Forum func(*sql.Selector)
+
 // ForumPost is the predicate function for forumpost builders.
 type ForumPost func(*sql.Selector)
 

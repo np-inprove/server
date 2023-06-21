@@ -17,6 +17,7 @@ import (
 	"github.com/np-inprove/server/internal/ent/accessory"
 	"github.com/np-inprove/server/internal/ent/deadline"
 	"github.com/np-inprove/server/internal/ent/event"
+	"github.com/np-inprove/server/internal/ent/forum"
 	"github.com/np-inprove/server/internal/ent/forumpost"
 	entgroup "github.com/np-inprove/server/internal/ent/group"
 	"github.com/np-inprove/server/internal/ent/groupinvitelink"
@@ -45,6 +46,8 @@ type Client struct {
 	Deadline *DeadlineClient
 	// Event is the client for interacting with the Event builders.
 	Event *EventClient
+	// Forum is the client for interacting with the Forum builders.
+	Forum *ForumClient
 	// ForumPost is the client for interacting with the ForumPost builders.
 	ForumPost *ForumPostClient
 	// Group is the client for interacting with the Group builders.
@@ -91,6 +94,7 @@ func (c *Client) init() {
 	c.Accessory = NewAccessoryClient(c.config)
 	c.Deadline = NewDeadlineClient(c.config)
 	c.Event = NewEventClient(c.config)
+	c.Forum = NewForumClient(c.config)
 	c.ForumPost = NewForumPostClient(c.config)
 	c.Group = NewGroupClient(c.config)
 	c.GroupInviteLink = NewGroupInviteLinkClient(c.config)
@@ -191,6 +195,7 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 		Accessory:             NewAccessoryClient(cfg),
 		Deadline:              NewDeadlineClient(cfg),
 		Event:                 NewEventClient(cfg),
+		Forum:                 NewForumClient(cfg),
 		ForumPost:             NewForumPostClient(cfg),
 		Group:                 NewGroupClient(cfg),
 		GroupInviteLink:       NewGroupInviteLinkClient(cfg),
@@ -228,6 +233,7 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 		Accessory:             NewAccessoryClient(cfg),
 		Deadline:              NewDeadlineClient(cfg),
 		Event:                 NewEventClient(cfg),
+		Forum:                 NewForumClient(cfg),
 		ForumPost:             NewForumPostClient(cfg),
 		Group:                 NewGroupClient(cfg),
 		GroupInviteLink:       NewGroupInviteLinkClient(cfg),
@@ -272,10 +278,10 @@ func (c *Client) Close() error {
 // In order to add hooks to a specific client, call: `client.Node.Use(...)`.
 func (c *Client) Use(hooks ...Hook) {
 	for _, n := range []interface{ Use(...Hook) }{
-		c.Accessory, c.Deadline, c.Event, c.ForumPost, c.Group, c.GroupInviteLink,
-		c.GroupUser, c.Institution, c.InstitutionInviteLink, c.JWTRevocation,
-		c.Milestone, c.Pet, c.Reaction, c.Redemption, c.StudyPlan, c.User, c.UserPet,
-		c.Voucher,
+		c.Accessory, c.Deadline, c.Event, c.Forum, c.ForumPost, c.Group,
+		c.GroupInviteLink, c.GroupUser, c.Institution, c.InstitutionInviteLink,
+		c.JWTRevocation, c.Milestone, c.Pet, c.Reaction, c.Redemption, c.StudyPlan,
+		c.User, c.UserPet, c.Voucher,
 	} {
 		n.Use(hooks...)
 	}
@@ -285,10 +291,10 @@ func (c *Client) Use(hooks ...Hook) {
 // In order to add interceptors to a specific client, call: `client.Node.Intercept(...)`.
 func (c *Client) Intercept(interceptors ...Interceptor) {
 	for _, n := range []interface{ Intercept(...Interceptor) }{
-		c.Accessory, c.Deadline, c.Event, c.ForumPost, c.Group, c.GroupInviteLink,
-		c.GroupUser, c.Institution, c.InstitutionInviteLink, c.JWTRevocation,
-		c.Milestone, c.Pet, c.Reaction, c.Redemption, c.StudyPlan, c.User, c.UserPet,
-		c.Voucher,
+		c.Accessory, c.Deadline, c.Event, c.Forum, c.ForumPost, c.Group,
+		c.GroupInviteLink, c.GroupUser, c.Institution, c.InstitutionInviteLink,
+		c.JWTRevocation, c.Milestone, c.Pet, c.Reaction, c.Redemption, c.StudyPlan,
+		c.User, c.UserPet, c.Voucher,
 	} {
 		n.Intercept(interceptors...)
 	}
@@ -303,6 +309,8 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.Deadline.mutate(ctx, m)
 	case *EventMutation:
 		return c.Event.mutate(ctx, m)
+	case *ForumMutation:
+		return c.Forum.mutate(ctx, m)
 	case *ForumPostMutation:
 		return c.ForumPost.mutate(ctx, m)
 	case *GroupMutation:
@@ -788,6 +796,156 @@ func (c *EventClient) mutate(ctx context.Context, m *EventMutation) (Value, erro
 	}
 }
 
+// ForumClient is a client for the Forum schema.
+type ForumClient struct {
+	config
+}
+
+// NewForumClient returns a client for the Forum from the given config.
+func NewForumClient(c config) *ForumClient {
+	return &ForumClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `forum.Hooks(f(g(h())))`.
+func (c *ForumClient) Use(hooks ...Hook) {
+	c.hooks.Forum = append(c.hooks.Forum, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `forum.Intercept(f(g(h())))`.
+func (c *ForumClient) Intercept(interceptors ...Interceptor) {
+	c.inters.Forum = append(c.inters.Forum, interceptors...)
+}
+
+// Create returns a builder for creating a Forum entity.
+func (c *ForumClient) Create() *ForumCreate {
+	mutation := newForumMutation(c.config, OpCreate)
+	return &ForumCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of Forum entities.
+func (c *ForumClient) CreateBulk(builders ...*ForumCreate) *ForumCreateBulk {
+	return &ForumCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for Forum.
+func (c *ForumClient) Update() *ForumUpdate {
+	mutation := newForumMutation(c.config, OpUpdate)
+	return &ForumUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *ForumClient) UpdateOne(f *Forum) *ForumUpdateOne {
+	mutation := newForumMutation(c.config, OpUpdateOne, withForum(f))
+	return &ForumUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *ForumClient) UpdateOneID(id int) *ForumUpdateOne {
+	mutation := newForumMutation(c.config, OpUpdateOne, withForumID(id))
+	return &ForumUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for Forum.
+func (c *ForumClient) Delete() *ForumDelete {
+	mutation := newForumMutation(c.config, OpDelete)
+	return &ForumDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *ForumClient) DeleteOne(f *Forum) *ForumDeleteOne {
+	return c.DeleteOneID(f.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *ForumClient) DeleteOneID(id int) *ForumDeleteOne {
+	builder := c.Delete().Where(forum.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &ForumDeleteOne{builder}
+}
+
+// Query returns a query builder for Forum.
+func (c *ForumClient) Query() *ForumQuery {
+	return &ForumQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeForum},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a Forum entity by its id.
+func (c *ForumClient) Get(ctx context.Context, id int) (*Forum, error) {
+	return c.Query().Where(forum.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *ForumClient) GetX(ctx context.Context, id int) *Forum {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryGroup queries the group edge of a Forum.
+func (c *ForumClient) QueryGroup(f *Forum) *GroupQuery {
+	query := (&GroupClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := f.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(forum.Table, forum.FieldID, id),
+			sqlgraph.To(entgroup.Table, entgroup.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, forum.GroupTable, forum.GroupColumn),
+		)
+		fromV = sqlgraph.Neighbors(f.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryPosts queries the posts edge of a Forum.
+func (c *ForumClient) QueryPosts(f *Forum) *ForumPostQuery {
+	query := (&ForumPostClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := f.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(forum.Table, forum.FieldID, id),
+			sqlgraph.To(forumpost.Table, forumpost.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, forum.PostsTable, forum.PostsColumn),
+		)
+		fromV = sqlgraph.Neighbors(f.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *ForumClient) Hooks() []Hook {
+	return c.hooks.Forum
+}
+
+// Interceptors returns the client interceptors.
+func (c *ForumClient) Interceptors() []Interceptor {
+	return c.inters.Forum
+}
+
+func (c *ForumClient) mutate(ctx context.Context, m *ForumMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&ForumCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&ForumUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&ForumUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&ForumDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown Forum mutation op: %q", m.Op())
+	}
+}
+
 // ForumPostClient is a client for the ForumPost schema.
 type ForumPostClient struct {
 	config
@@ -897,15 +1055,15 @@ func (c *ForumPostClient) QueryAuthor(fp *ForumPost) *UserQuery {
 	return query
 }
 
-// QueryGroup queries the group edge of a ForumPost.
-func (c *ForumPostClient) QueryGroup(fp *ForumPost) *GroupQuery {
-	query := (&GroupClient{config: c.config}).Query()
+// QueryForum queries the forum edge of a ForumPost.
+func (c *ForumPostClient) QueryForum(fp *ForumPost) *ForumQuery {
+	query := (&ForumClient{config: c.config}).Query()
 	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
 		id := fp.ID
 		step := sqlgraph.NewStep(
 			sqlgraph.From(forumpost.Table, forumpost.FieldID, id),
-			sqlgraph.To(entgroup.Table, entgroup.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, forumpost.GroupTable, forumpost.GroupColumn),
+			sqlgraph.To(forum.Table, forum.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, forumpost.ForumTable, forumpost.ForumColumn),
 		)
 		fromV = sqlgraph.Neighbors(fp.driver.Dialect(), step)
 		return fromV, nil
@@ -1127,15 +1285,15 @@ func (c *GroupClient) QueryEvents(gr *Group) *EventQuery {
 	return query
 }
 
-// QueryForumPosts queries the forum_posts edge of a Group.
-func (c *GroupClient) QueryForumPosts(gr *Group) *ForumPostQuery {
-	query := (&ForumPostClient{config: c.config}).Query()
+// QueryForums queries the forums edge of a Group.
+func (c *GroupClient) QueryForums(gr *Group) *ForumQuery {
+	query := (&ForumClient{config: c.config}).Query()
 	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
 		id := gr.ID
 		step := sqlgraph.NewStep(
 			sqlgraph.From(entgroup.Table, entgroup.FieldID, id),
-			sqlgraph.To(forumpost.Table, forumpost.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, entgroup.ForumPostsTable, entgroup.ForumPostsColumn),
+			sqlgraph.To(forum.Table, forum.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, entgroup.ForumsTable, entgroup.ForumsColumn),
 		)
 		fromV = sqlgraph.Neighbors(gr.driver.Dialect(), step)
 		return fromV, nil
@@ -3166,12 +3324,12 @@ func (c *VoucherClient) mutate(ctx context.Context, m *VoucherMutation) (Value, 
 // hooks and interceptors per client, for fast access.
 type (
 	hooks struct {
-		Accessory, Deadline, Event, ForumPost, Group, GroupInviteLink, GroupUser,
+		Accessory, Deadline, Event, Forum, ForumPost, Group, GroupInviteLink, GroupUser,
 		Institution, InstitutionInviteLink, JWTRevocation, Milestone, Pet, Reaction,
 		Redemption, StudyPlan, User, UserPet, Voucher []ent.Hook
 	}
 	inters struct {
-		Accessory, Deadline, Event, ForumPost, Group, GroupInviteLink, GroupUser,
+		Accessory, Deadline, Event, Forum, ForumPost, Group, GroupInviteLink, GroupUser,
 		Institution, InstitutionInviteLink, JWTRevocation, Milestone, Pet, Reaction,
 		Redemption, StudyPlan, User, UserPet, Voucher []ent.Interceptor
 	}

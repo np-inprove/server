@@ -9,8 +9,8 @@ import (
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
+	"github.com/np-inprove/server/internal/ent/forum"
 	"github.com/np-inprove/server/internal/ent/forumpost"
-	entgroup "github.com/np-inprove/server/internal/ent/group"
 	"github.com/np-inprove/server/internal/ent/user"
 )
 
@@ -28,9 +28,9 @@ type ForumPost struct {
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the ForumPostQuery when eager-loading is set.
 	Edges               ForumPostEdges `json:"edges"`
+	forum_posts         *int
 	forum_post_author   *int
 	forum_post_children *int
-	group_forum_posts   *int
 	selectValues        sql.SelectValues
 }
 
@@ -38,8 +38,8 @@ type ForumPost struct {
 type ForumPostEdges struct {
 	// Author of the forum post
 	Author *User `json:"author,omitempty"`
-	// Group holds the value of the group edge.
-	Group *Group `json:"group,omitempty"`
+	// Forum holds the value of the forum edge.
+	Forum *Forum `json:"forum,omitempty"`
 	// Parent holds the value of the parent edge.
 	Parent *ForumPost `json:"parent,omitempty"`
 	// Children holds the value of the children edge.
@@ -66,17 +66,17 @@ func (e ForumPostEdges) AuthorOrErr() (*User, error) {
 	return nil, &NotLoadedError{edge: "author"}
 }
 
-// GroupOrErr returns the Group value or an error if the edge
+// ForumOrErr returns the Forum value or an error if the edge
 // was not loaded in eager-loading, or loaded but was not found.
-func (e ForumPostEdges) GroupOrErr() (*Group, error) {
+func (e ForumPostEdges) ForumOrErr() (*Forum, error) {
 	if e.loadedTypes[1] {
-		if e.Group == nil {
+		if e.Forum == nil {
 			// Edge was loaded but was not found.
-			return nil, &NotFoundError{label: entgroup.Label}
+			return nil, &NotFoundError{label: forum.Label}
 		}
-		return e.Group, nil
+		return e.Forum, nil
 	}
-	return nil, &NotLoadedError{edge: "group"}
+	return nil, &NotLoadedError{edge: "forum"}
 }
 
 // ParentOrErr returns the Parent value or an error if the edge
@@ -130,11 +130,11 @@ func (*ForumPost) scanValues(columns []string) ([]any, error) {
 			values[i] = new(sql.NullInt64)
 		case forumpost.FieldTitle, forumpost.FieldContent:
 			values[i] = new(sql.NullString)
-		case forumpost.ForeignKeys[0]: // forum_post_author
+		case forumpost.ForeignKeys[0]: // forum_posts
 			values[i] = new(sql.NullInt64)
-		case forumpost.ForeignKeys[1]: // forum_post_children
+		case forumpost.ForeignKeys[1]: // forum_post_author
 			values[i] = new(sql.NullInt64)
-		case forumpost.ForeignKeys[2]: // group_forum_posts
+		case forumpost.ForeignKeys[2]: // forum_post_children
 			values[i] = new(sql.NullInt64)
 		default:
 			values[i] = new(sql.UnknownType)
@@ -179,24 +179,24 @@ func (fp *ForumPost) assignValues(columns []string, values []any) error {
 			}
 		case forumpost.ForeignKeys[0]:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for edge-field forum_posts", value)
+			} else if value.Valid {
+				fp.forum_posts = new(int)
+				*fp.forum_posts = int(value.Int64)
+			}
+		case forumpost.ForeignKeys[1]:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for edge-field forum_post_author", value)
 			} else if value.Valid {
 				fp.forum_post_author = new(int)
 				*fp.forum_post_author = int(value.Int64)
 			}
-		case forumpost.ForeignKeys[1]:
+		case forumpost.ForeignKeys[2]:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for edge-field forum_post_children", value)
 			} else if value.Valid {
 				fp.forum_post_children = new(int)
 				*fp.forum_post_children = int(value.Int64)
-			}
-		case forumpost.ForeignKeys[2]:
-			if value, ok := values[i].(*sql.NullInt64); !ok {
-				return fmt.Errorf("unexpected type %T for edge-field group_forum_posts", value)
-			} else if value.Valid {
-				fp.group_forum_posts = new(int)
-				*fp.group_forum_posts = int(value.Int64)
 			}
 		default:
 			fp.selectValues.Set(columns[i], values[i])
@@ -216,9 +216,9 @@ func (fp *ForumPost) QueryAuthor() *UserQuery {
 	return NewForumPostClient(fp.config).QueryAuthor(fp)
 }
 
-// QueryGroup queries the "group" edge of the ForumPost entity.
-func (fp *ForumPost) QueryGroup() *GroupQuery {
-	return NewForumPostClient(fp.config).QueryGroup(fp)
+// QueryForum queries the "forum" edge of the ForumPost entity.
+func (fp *ForumPost) QueryForum() *ForumQuery {
+	return NewForumPostClient(fp.config).QueryForum(fp)
 }
 
 // QueryParent queries the "parent" edge of the ForumPost entity.

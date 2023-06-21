@@ -12,7 +12,7 @@ import (
 	"entgo.io/ent/schema/field"
 	"github.com/np-inprove/server/internal/ent/deadline"
 	"github.com/np-inprove/server/internal/ent/event"
-	"github.com/np-inprove/server/internal/ent/forumpost"
+	"github.com/np-inprove/server/internal/ent/forum"
 	entgroup "github.com/np-inprove/server/internal/ent/group"
 	"github.com/np-inprove/server/internal/ent/groupinvitelink"
 	entinstitution "github.com/np-inprove/server/internal/ent/institution"
@@ -75,19 +75,19 @@ func (gc *GroupCreate) AddEvents(e ...*Event) *GroupCreate {
 	return gc.AddEventIDs(ids...)
 }
 
-// AddForumPostIDs adds the "forum_posts" edge to the ForumPost entity by IDs.
-func (gc *GroupCreate) AddForumPostIDs(ids ...int) *GroupCreate {
-	gc.mutation.AddForumPostIDs(ids...)
+// AddForumIDs adds the "forums" edge to the Forum entity by IDs.
+func (gc *GroupCreate) AddForumIDs(ids ...int) *GroupCreate {
+	gc.mutation.AddForumIDs(ids...)
 	return gc
 }
 
-// AddForumPosts adds the "forum_posts" edges to the ForumPost entity.
-func (gc *GroupCreate) AddForumPosts(f ...*ForumPost) *GroupCreate {
+// AddForums adds the "forums" edges to the Forum entity.
+func (gc *GroupCreate) AddForums(f ...*Forum) *GroupCreate {
 	ids := make([]int, len(f))
 	for i := range f {
 		ids[i] = f[i].ID
 	}
-	return gc.AddForumPostIDs(ids...)
+	return gc.AddForumIDs(ids...)
 }
 
 // AddDeadlineIDs adds the "deadlines" edge to the Deadline entity by IDs.
@@ -258,15 +258,15 @@ func (gc *GroupCreate) createSpec() (*Group, *sqlgraph.CreateSpec) {
 		}
 		_spec.Edges = append(_spec.Edges, edge)
 	}
-	if nodes := gc.mutation.ForumPostsIDs(); len(nodes) > 0 {
+	if nodes := gc.mutation.ForumsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
-			Table:   entgroup.ForumPostsTable,
-			Columns: []string{entgroup.ForumPostsColumn},
+			Table:   entgroup.ForumsTable,
+			Columns: []string{entgroup.ForumsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(forumpost.FieldID, field.TypeInt),
+				IDSpec: sqlgraph.NewFieldSpec(forum.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

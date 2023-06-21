@@ -10,8 +10,8 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
+	"github.com/np-inprove/server/internal/ent/forum"
 	"github.com/np-inprove/server/internal/ent/forumpost"
-	entgroup "github.com/np-inprove/server/internal/ent/group"
 	"github.com/np-inprove/server/internal/ent/user"
 )
 
@@ -52,15 +52,15 @@ func (fpc *ForumPostCreate) SetAuthor(u *User) *ForumPostCreate {
 	return fpc.SetAuthorID(u.ID)
 }
 
-// SetGroupID sets the "group" edge to the Group entity by ID.
-func (fpc *ForumPostCreate) SetGroupID(id int) *ForumPostCreate {
-	fpc.mutation.SetGroupID(id)
+// SetForumID sets the "forum" edge to the Forum entity by ID.
+func (fpc *ForumPostCreate) SetForumID(id int) *ForumPostCreate {
+	fpc.mutation.SetForumID(id)
 	return fpc
 }
 
-// SetGroup sets the "group" edge to the Group entity.
-func (fpc *ForumPostCreate) SetGroup(g *Group) *ForumPostCreate {
-	return fpc.SetGroupID(g.ID)
+// SetForum sets the "forum" edge to the Forum entity.
+func (fpc *ForumPostCreate) SetForum(f *Forum) *ForumPostCreate {
+	return fpc.SetForumID(f.ID)
 }
 
 // SetParentID sets the "parent" edge to the ForumPost entity by ID.
@@ -168,8 +168,8 @@ func (fpc *ForumPostCreate) check() error {
 	if _, ok := fpc.mutation.AuthorID(); !ok {
 		return &ValidationError{Name: "author", err: errors.New(`ent: missing required edge "ForumPost.author"`)}
 	}
-	if _, ok := fpc.mutation.GroupID(); !ok {
-		return &ValidationError{Name: "group", err: errors.New(`ent: missing required edge "ForumPost.group"`)}
+	if _, ok := fpc.mutation.ForumID(); !ok {
+		return &ValidationError{Name: "forum", err: errors.New(`ent: missing required edge "ForumPost.forum"`)}
 	}
 	return nil
 }
@@ -227,21 +227,21 @@ func (fpc *ForumPostCreate) createSpec() (*ForumPost, *sqlgraph.CreateSpec) {
 		_node.forum_post_author = &nodes[0]
 		_spec.Edges = append(_spec.Edges, edge)
 	}
-	if nodes := fpc.mutation.GroupIDs(); len(nodes) > 0 {
+	if nodes := fpc.mutation.ForumIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
-			Table:   forumpost.GroupTable,
-			Columns: []string{forumpost.GroupColumn},
+			Table:   forumpost.ForumTable,
+			Columns: []string{forumpost.ForumColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(entgroup.FieldID, field.TypeInt),
+				IDSpec: sqlgraph.NewFieldSpec(forum.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
-		_node.group_forum_posts = &nodes[0]
+		_node.forum_posts = &nodes[0]
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	if nodes := fpc.mutation.ParentIDs(); len(nodes) > 0 {

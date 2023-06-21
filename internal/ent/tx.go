@@ -18,6 +18,8 @@ type Tx struct {
 	Deadline *DeadlineClient
 	// Event is the client for interacting with the Event builders.
 	Event *EventClient
+	// Forum is the client for interacting with the Forum builders.
+	Forum *ForumClient
 	// ForumPost is the client for interacting with the ForumPost builders.
 	ForumPost *ForumPostClient
 	// Group is the client for interacting with the Group builders.
@@ -182,6 +184,7 @@ func (tx *Tx) init() {
 	tx.Accessory = NewAccessoryClient(tx.config)
 	tx.Deadline = NewDeadlineClient(tx.config)
 	tx.Event = NewEventClient(tx.config)
+	tx.Forum = NewForumClient(tx.config)
 	tx.ForumPost = NewForumPostClient(tx.config)
 	tx.Group = NewGroupClient(tx.config)
 	tx.GroupInviteLink = NewGroupInviteLinkClient(tx.config)

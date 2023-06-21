@@ -15,6 +15,7 @@ import (
 	"github.com/np-inprove/server/internal/ent/accessory"
 	"github.com/np-inprove/server/internal/ent/deadline"
 	"github.com/np-inprove/server/internal/ent/event"
+	"github.com/np-inprove/server/internal/ent/forum"
 	"github.com/np-inprove/server/internal/ent/forumpost"
 
 	entgroup "github.com/np-inprove/server/internal/ent/group"
@@ -95,6 +96,7 @@ func checkColumn(table, column string) error {
 			accessory.Table:             accessory.ValidColumn,
 			deadline.Table:              deadline.ValidColumn,
 			event.Table:                 event.ValidColumn,
+			forum.Table:                 forum.ValidColumn,
 			forumpost.Table:             forumpost.ValidColumn,
 			entgroup.Table:              entgroup.ValidColumn,
 			groupinvitelink.Table:       groupinvitelink.ValidColumn,

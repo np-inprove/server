@@ -14,6 +14,7 @@ import (
 	"github.com/np-inprove/server/internal/ent/accessory"
 	"github.com/np-inprove/server/internal/ent/deadline"
 	"github.com/np-inprove/server/internal/ent/event"
+	"github.com/np-inprove/server/internal/ent/forum"
 	"github.com/np-inprove/server/internal/ent/forumpost"
 	entgroup "github.com/np-inprove/server/internal/ent/group"
 	"github.com/np-inprove/server/internal/ent/groupinvitelink"
@@ -47,6 +48,7 @@ const (
 	TypeAccessory             = "Accessory"
 	TypeDeadline              = "Deadline"
 	TypeEvent                 = "Event"
+	TypeForum                 = "Forum"
 	TypeForumPost             = "ForumPost"
 	TypeGroup                 = "Group"
 	TypeGroupInviteLink       = "GroupInviteLink"
@@ -1968,6 +1970,592 @@ func (m *EventMutation) ResetEdge(name string) error {
 	return fmt.Errorf("unknown Event edge %s", name)
 }
 
+// ForumMutation represents an operation that mutates the Forum nodes in the graph.
+type ForumMutation struct {
+	config
+	op            Op
+	typ           string
+	id            *int
+	name          *string
+	short_name    *string
+	description   *string
+	clearedFields map[string]struct{}
+	group         *int
+	clearedgroup  bool
+	posts         map[int]struct{}
+	removedposts  map[int]struct{}
+	clearedposts  bool
+	done          bool
+	oldValue      func(context.Context) (*Forum, error)
+	predicates    []predicate.Forum
+}
+
+var _ ent.Mutation = (*ForumMutation)(nil)
+
+// forumOption allows management of the mutation configuration using functional options.
+type forumOption func(*ForumMutation)
+
+// newForumMutation creates new mutation for the Forum entity.
+func newForumMutation(c config, op Op, opts ...forumOption) *ForumMutation {
+	m := &ForumMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeForum,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withForumID sets the ID field of the mutation.
+func withForumID(id int) forumOption {
+	return func(m *ForumMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *Forum
+		)
+		m.oldValue = func(ctx context.Context) (*Forum, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().Forum.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withForum sets the old Forum of the mutation.
+func withForum(node *Forum) forumOption {
+	return func(m *ForumMutation) {
+		m.oldValue = func(context.Context) (*Forum, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m ForumMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m ForumMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *ForumMutation) ID() (id int, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *ForumMutation) IDs(ctx context.Context) ([]int, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []int{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().Forum.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetName sets the "name" field.
+func (m *ForumMutation) SetName(s string) {
+	m.name = &s
+}
+
+// Name returns the value of the "name" field in the mutation.
+func (m *ForumMutation) Name() (r string, exists bool) {
+	v := m.name
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldName returns the old "name" field's value of the Forum entity.
+// If the Forum object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ForumMutation) OldName(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldName is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldName requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldName: %w", err)
+	}
+	return oldValue.Name, nil
+}
+
+// ResetName resets all changes to the "name" field.
+func (m *ForumMutation) ResetName() {
+	m.name = nil
+}
+
+// SetShortName sets the "short_name" field.
+func (m *ForumMutation) SetShortName(s string) {
+	m.short_name = &s
+}
+
+// ShortName returns the value of the "short_name" field in the mutation.
+func (m *ForumMutation) ShortName() (r string, exists bool) {
+	v := m.short_name
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldShortName returns the old "short_name" field's value of the Forum entity.
+// If the Forum object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ForumMutation) OldShortName(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldShortName is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldShortName requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldShortName: %w", err)
+	}
+	return oldValue.ShortName, nil
+}
+
+// ResetShortName resets all changes to the "short_name" field.
+func (m *ForumMutation) ResetShortName() {
+	m.short_name = nil
+}
+
+// SetDescription sets the "description" field.
+func (m *ForumMutation) SetDescription(s string) {
+	m.description = &s
+}
+
+// Description returns the value of the "description" field in the mutation.
+func (m *ForumMutation) Description() (r string, exists bool) {
+	v := m.description
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDescription returns the old "description" field's value of the Forum entity.
+// If the Forum object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ForumMutation) OldDescription(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDescription is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDescription requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDescription: %w", err)
+	}
+	return oldValue.Description, nil
+}
+
+// ResetDescription resets all changes to the "description" field.
+func (m *ForumMutation) ResetDescription() {
+	m.description = nil
+}
+
+// SetGroupID sets the "group" edge to the Group entity by id.
+func (m *ForumMutation) SetGroupID(id int) {
+	m.group = &id
+}
+
+// ClearGroup clears the "group" edge to the Group entity.
+func (m *ForumMutation) ClearGroup() {
+	m.clearedgroup = true
+}
+
+// GroupCleared reports if the "group" edge to the Group entity was cleared.
+func (m *ForumMutation) GroupCleared() bool {
+	return m.clearedgroup
+}
+
+// GroupID returns the "group" edge ID in the mutation.
+func (m *ForumMutation) GroupID() (id int, exists bool) {
+	if m.group != nil {
+		return *m.group, true
+	}
+	return
+}
+
+// GroupIDs returns the "group" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// GroupID instead. It exists only for internal usage by the builders.
+func (m *ForumMutation) GroupIDs() (ids []int) {
+	if id := m.group; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetGroup resets all changes to the "group" edge.
+func (m *ForumMutation) ResetGroup() {
+	m.group = nil
+	m.clearedgroup = false
+}
+
+// AddPostIDs adds the "posts" edge to the ForumPost entity by ids.
+func (m *ForumMutation) AddPostIDs(ids ...int) {
+	if m.posts == nil {
+		m.posts = make(map[int]struct{})
+	}
+	for i := range ids {
+		m.posts[ids[i]] = struct{}{}
+	}
+}
+
+// ClearPosts clears the "posts" edge to the ForumPost entity.
+func (m *ForumMutation) ClearPosts() {
+	m.clearedposts = true
+}
+
+// PostsCleared reports if the "posts" edge to the ForumPost entity was cleared.
+func (m *ForumMutation) PostsCleared() bool {
+	return m.clearedposts
+}
+
+// RemovePostIDs removes the "posts" edge to the ForumPost entity by IDs.
+func (m *ForumMutation) RemovePostIDs(ids ...int) {
+	if m.removedposts == nil {
+		m.removedposts = make(map[int]struct{})
+	}
+	for i := range ids {
+		delete(m.posts, ids[i])
+		m.removedposts[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedPosts returns the removed IDs of the "posts" edge to the ForumPost entity.
+func (m *ForumMutation) RemovedPostsIDs() (ids []int) {
+	for id := range m.removedposts {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// PostsIDs returns the "posts" edge IDs in the mutation.
+func (m *ForumMutation) PostsIDs() (ids []int) {
+	for id := range m.posts {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetPosts resets all changes to the "posts" edge.
+func (m *ForumMutation) ResetPosts() {
+	m.posts = nil
+	m.clearedposts = false
+	m.removedposts = nil
+}
+
+// Where appends a list predicates to the ForumMutation builder.
+func (m *ForumMutation) Where(ps ...predicate.Forum) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the ForumMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *ForumMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.Forum, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *ForumMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *ForumMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (Forum).
+func (m *ForumMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *ForumMutation) Fields() []string {
+	fields := make([]string, 0, 3)
+	if m.name != nil {
+		fields = append(fields, forum.FieldName)
+	}
+	if m.short_name != nil {
+		fields = append(fields, forum.FieldShortName)
+	}
+	if m.description != nil {
+		fields = append(fields, forum.FieldDescription)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *ForumMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case forum.FieldName:
+		return m.Name()
+	case forum.FieldShortName:
+		return m.ShortName()
+	case forum.FieldDescription:
+		return m.Description()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *ForumMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case forum.FieldName:
+		return m.OldName(ctx)
+	case forum.FieldShortName:
+		return m.OldShortName(ctx)
+	case forum.FieldDescription:
+		return m.OldDescription(ctx)
+	}
+	return nil, fmt.Errorf("unknown Forum field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *ForumMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case forum.FieldName:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetName(v)
+		return nil
+	case forum.FieldShortName:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetShortName(v)
+		return nil
+	case forum.FieldDescription:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDescription(v)
+		return nil
+	}
+	return fmt.Errorf("unknown Forum field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *ForumMutation) AddedFields() []string {
+	return nil
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *ForumMutation) AddedField(name string) (ent.Value, bool) {
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *ForumMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	}
+	return fmt.Errorf("unknown Forum numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *ForumMutation) ClearedFields() []string {
+	return nil
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *ForumMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *ForumMutation) ClearField(name string) error {
+	return fmt.Errorf("unknown Forum nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *ForumMutation) ResetField(name string) error {
+	switch name {
+	case forum.FieldName:
+		m.ResetName()
+		return nil
+	case forum.FieldShortName:
+		m.ResetShortName()
+		return nil
+	case forum.FieldDescription:
+		m.ResetDescription()
+		return nil
+	}
+	return fmt.Errorf("unknown Forum field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *ForumMutation) AddedEdges() []string {
+	edges := make([]string, 0, 2)
+	if m.group != nil {
+		edges = append(edges, forum.EdgeGroup)
+	}
+	if m.posts != nil {
+		edges = append(edges, forum.EdgePosts)
+	}
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *ForumMutation) AddedIDs(name string) []ent.Value {
+	switch name {
+	case forum.EdgeGroup:
+		if id := m.group; id != nil {
+			return []ent.Value{*id}
+		}
+	case forum.EdgePosts:
+		ids := make([]ent.Value, 0, len(m.posts))
+		for id := range m.posts {
+			ids = append(ids, id)
+		}
+		return ids
+	}
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *ForumMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 2)
+	if m.removedposts != nil {
+		edges = append(edges, forum.EdgePosts)
+	}
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *ForumMutation) RemovedIDs(name string) []ent.Value {
+	switch name {
+	case forum.EdgePosts:
+		ids := make([]ent.Value, 0, len(m.removedposts))
+		for id := range m.removedposts {
+			ids = append(ids, id)
+		}
+		return ids
+	}
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *ForumMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 2)
+	if m.clearedgroup {
+		edges = append(edges, forum.EdgeGroup)
+	}
+	if m.clearedposts {
+		edges = append(edges, forum.EdgePosts)
+	}
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *ForumMutation) EdgeCleared(name string) bool {
+	switch name {
+	case forum.EdgeGroup:
+		return m.clearedgroup
+	case forum.EdgePosts:
+		return m.clearedposts
+	}
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *ForumMutation) ClearEdge(name string) error {
+	switch name {
+	case forum.EdgeGroup:
+		m.ClearGroup()
+		return nil
+	}
+	return fmt.Errorf("unknown Forum unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *ForumMutation) ResetEdge(name string) error {
+	switch name {
+	case forum.EdgeGroup:
+		m.ResetGroup()
+		return nil
+	case forum.EdgePosts:
+		m.ResetPosts()
+		return nil
+	}
+	return fmt.Errorf("unknown Forum edge %s", name)
+}
+
 // ForumPostMutation represents an operation that mutates the ForumPost nodes in the graph.
 type ForumPostMutation struct {
 	config
@@ -1981,8 +2569,8 @@ type ForumPostMutation struct {
 	clearedFields              map[string]struct{}
 	author                     *int
 	clearedauthor              bool
-	group                      *int
-	clearedgroup               bool
+	forum                      *int
+	clearedforum               bool
 	parent                     *int
 	clearedparent              bool
 	children                   map[int]struct{}
@@ -2256,43 +2844,43 @@ func (m *ForumPostMutation) ResetAuthor() {
 	m.clearedauthor = false
 }
 
-// SetGroupID sets the "group" edge to the Group entity by id.
-func (m *ForumPostMutation) SetGroupID(id int) {
-	m.group = &id
+// SetForumID sets the "forum" edge to the Forum entity by id.
+func (m *ForumPostMutation) SetForumID(id int) {
+	m.forum = &id
 }
 
-// ClearGroup clears the "group" edge to the Group entity.
-func (m *ForumPostMutation) ClearGroup() {
-	m.clearedgroup = true
+// ClearForum clears the "forum" edge to the Forum entity.
+func (m *ForumPostMutation) ClearForum() {
+	m.clearedforum = true
 }
 
-// GroupCleared reports if the "group" edge to the Group entity was cleared.
-func (m *ForumPostMutation) GroupCleared() bool {
-	return m.clearedgroup
+// ForumCleared reports if the "forum" edge to the Forum entity was cleared.
+func (m *ForumPostMutation) ForumCleared() bool {
+	return m.clearedforum
 }
 
-// GroupID returns the "group" edge ID in the mutation.
-func (m *ForumPostMutation) GroupID() (id int, exists bool) {
-	if m.group != nil {
-		return *m.group, true
+// ForumID returns the "forum" edge ID in the mutation.
+func (m *ForumPostMutation) ForumID() (id int, exists bool) {
+	if m.forum != nil {
+		return *m.forum, true
 	}
 	return
 }
 
-// GroupIDs returns the "group" edge IDs in the mutation.
+// ForumIDs returns the "forum" edge IDs in the mutation.
 // Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
-// GroupID instead. It exists only for internal usage by the builders.
-func (m *ForumPostMutation) GroupIDs() (ids []int) {
-	if id := m.group; id != nil {
+// ForumID instead. It exists only for internal usage by the builders.
+func (m *ForumPostMutation) ForumIDs() (ids []int) {
+	if id := m.forum; id != nil {
 		ids = append(ids, *id)
 	}
 	return
 }
 
-// ResetGroup resets all changes to the "group" edge.
-func (m *ForumPostMutation) ResetGroup() {
-	m.group = nil
-	m.clearedgroup = false
+// ResetForum resets all changes to the "forum" edge.
+func (m *ForumPostMutation) ResetForum() {
+	m.forum = nil
+	m.clearedforum = false
 }
 
 // SetParentID sets the "parent" edge to the ForumPost entity by id.
@@ -2613,8 +3201,8 @@ func (m *ForumPostMutation) AddedEdges() []string {
 	if m.author != nil {
 		edges = append(edges, forumpost.EdgeAuthor)
 	}
-	if m.group != nil {
-		edges = append(edges, forumpost.EdgeGroup)
+	if m.forum != nil {
+		edges = append(edges, forumpost.EdgeForum)
 	}
 	if m.parent != nil {
 		edges = append(edges, forumpost.EdgeParent)
@@ -2636,8 +3224,8 @@ func (m *ForumPostMutation) AddedIDs(name string) []ent.Value {
 		if id := m.author; id != nil {
 			return []ent.Value{*id}
 		}
-	case forumpost.EdgeGroup:
-		if id := m.group; id != nil {
+	case forumpost.EdgeForum:
+		if id := m.forum; id != nil {
 			return []ent.Value{*id}
 		}
 	case forumpost.EdgeParent:
@@ -2698,8 +3286,8 @@ func (m *ForumPostMutation) ClearedEdges() []string {
 	if m.clearedauthor {
 		edges = append(edges, forumpost.EdgeAuthor)
 	}
-	if m.clearedgroup {
-		edges = append(edges, forumpost.EdgeGroup)
+	if m.clearedforum {
+		edges = append(edges, forumpost.EdgeForum)
 	}
 	if m.clearedparent {
 		edges = append(edges, forumpost.EdgeParent)
@@ -2719,8 +3307,8 @@ func (m *ForumPostMutation) EdgeCleared(name string) bool {
 	switch name {
 	case forumpost.EdgeAuthor:
 		return m.clearedauthor
-	case forumpost.EdgeGroup:
-		return m.clearedgroup
+	case forumpost.EdgeForum:
+		return m.clearedforum
 	case forumpost.EdgeParent:
 		return m.clearedparent
 	case forumpost.EdgeChildren:
@@ -2738,8 +3326,8 @@ func (m *ForumPostMutation) ClearEdge(name string) error {
 	case forumpost.EdgeAuthor:
 		m.ClearAuthor()
 		return nil
-	case forumpost.EdgeGroup:
-		m.ClearGroup()
+	case forumpost.EdgeForum:
+		m.ClearForum()
 		return nil
 	case forumpost.EdgeParent:
 		m.ClearParent()
@@ -2755,8 +3343,8 @@ func (m *ForumPostMutation) ResetEdge(name string) error {
 	case forumpost.EdgeAuthor:
 		m.ResetAuthor()
 		return nil
-	case forumpost.EdgeGroup:
-		m.ResetGroup()
+	case forumpost.EdgeForum:
+		m.ResetForum()
 		return nil
 	case forumpost.EdgeParent:
 		m.ResetParent()
@@ -2787,9 +3375,9 @@ type GroupMutation struct {
 	events             map[int]struct{}
 	removedevents      map[int]struct{}
 	clearedevents      bool
-	forum_posts        map[int]struct{}
-	removedforum_posts map[int]struct{}
-	clearedforum_posts bool
+	forums             map[int]struct{}
+	removedforums      map[int]struct{}
+	clearedforums      bool
 	deadlines          map[int]struct{}
 	removeddeadlines   map[int]struct{}
 	cleareddeadlines   bool
@@ -3117,58 +3705,58 @@ func (m *GroupMutation) ResetEvents() {
 	m.removedevents = nil
 }
 
-// AddForumPostIDs adds the "forum_posts" edge to the ForumPost entity by ids.
-func (m *GroupMutation) AddForumPostIDs(ids ...int) {
-	if m.forum_posts == nil {
-		m.forum_posts = make(map[int]struct{})
+// AddForumIDs adds the "forums" edge to the Forum entity by ids.
+func (m *GroupMutation) AddForumIDs(ids ...int) {
+	if m.forums == nil {
+		m.forums = make(map[int]struct{})
 	}
 	for i := range ids {
-		m.forum_posts[ids[i]] = struct{}{}
+		m.forums[ids[i]] = struct{}{}
 	}
 }
 
-// ClearForumPosts clears the "forum_posts" edge to the ForumPost entity.
-func (m *GroupMutation) ClearForumPosts() {
-	m.clearedforum_posts = true
+// ClearForums clears the "forums" edge to the Forum entity.
+func (m *GroupMutation) ClearForums() {
+	m.clearedforums = true
 }
 
-// ForumPostsCleared reports if the "forum_posts" edge to the ForumPost entity was cleared.
-func (m *GroupMutation) ForumPostsCleared() bool {
-	return m.clearedforum_posts
+// ForumsCleared reports if the "forums" edge to the Forum entity was cleared.
+func (m *GroupMutation) ForumsCleared() bool {
+	return m.clearedforums
 }
 
-// RemoveForumPostIDs removes the "forum_posts" edge to the ForumPost entity by IDs.
-func (m *GroupMutation) RemoveForumPostIDs(ids ...int) {
-	if m.removedforum_posts == nil {
-		m.removedforum_posts = make(map[int]struct{})
+// RemoveForumIDs removes the "forums" edge to the Forum entity by IDs.
+func (m *GroupMutation) RemoveForumIDs(ids ...int) {
+	if m.removedforums == nil {
+		m.removedforums = make(map[int]struct{})
 	}
 	for i := range ids {
-		delete(m.forum_posts, ids[i])
-		m.removedforum_posts[ids[i]] = struct{}{}
+		delete(m.forums, ids[i])
+		m.removedforums[ids[i]] = struct{}{}
 	}
 }
 
-// RemovedForumPosts returns the removed IDs of the "forum_posts" edge to the ForumPost entity.
-func (m *GroupMutation) RemovedForumPostsIDs() (ids []int) {
-	for id := range m.removedforum_posts {
+// RemovedForums returns the removed IDs of the "forums" edge to the Forum entity.
+func (m *GroupMutation) RemovedForumsIDs() (ids []int) {
+	for id := range m.removedforums {
 		ids = append(ids, id)
 	}
 	return
 }
 
-// ForumPostsIDs returns the "forum_posts" edge IDs in the mutation.
-func (m *GroupMutation) ForumPostsIDs() (ids []int) {
-	for id := range m.forum_posts {
+// ForumsIDs returns the "forums" edge IDs in the mutation.
+func (m *GroupMutation) ForumsIDs() (ids []int) {
+	for id := range m.forums {
 		ids = append(ids, id)
 	}
 	return
 }
 
-// ResetForumPosts resets all changes to the "forum_posts" edge.
-func (m *GroupMutation) ResetForumPosts() {
-	m.forum_posts = nil
-	m.clearedforum_posts = false
-	m.removedforum_posts = nil
+// ResetForums resets all changes to the "forums" edge.
+func (m *GroupMutation) ResetForums() {
+	m.forums = nil
+	m.clearedforums = false
+	m.removedforums = nil
 }
 
 // AddDeadlineIDs adds the "deadlines" edge to the Deadline entity by ids.
@@ -3492,8 +4080,8 @@ func (m *GroupMutation) AddedEdges() []string {
 	if m.events != nil {
 		edges = append(edges, entgroup.EdgeEvents)
 	}
-	if m.forum_posts != nil {
-		edges = append(edges, entgroup.EdgeForumPosts)
+	if m.forums != nil {
+		edges = append(edges, entgroup.EdgeForums)
 	}
 	if m.deadlines != nil {
 		edges = append(edges, entgroup.EdgeDeadlines)
@@ -3523,9 +4111,9 @@ func (m *GroupMutation) AddedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
-	case entgroup.EdgeForumPosts:
-		ids := make([]ent.Value, 0, len(m.forum_posts))
-		for id := range m.forum_posts {
+	case entgroup.EdgeForums:
+		ids := make([]ent.Value, 0, len(m.forums))
+		for id := range m.forums {
 			ids = append(ids, id)
 		}
 		return ids
@@ -3558,8 +4146,8 @@ func (m *GroupMutation) RemovedEdges() []string {
 	if m.removedevents != nil {
 		edges = append(edges, entgroup.EdgeEvents)
 	}
-	if m.removedforum_posts != nil {
-		edges = append(edges, entgroup.EdgeForumPosts)
+	if m.removedforums != nil {
+		edges = append(edges, entgroup.EdgeForums)
 	}
 	if m.removeddeadlines != nil {
 		edges = append(edges, entgroup.EdgeDeadlines)
@@ -3586,9 +4174,9 @@ func (m *GroupMutation) RemovedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
-	case entgroup.EdgeForumPosts:
-		ids := make([]ent.Value, 0, len(m.removedforum_posts))
-		for id := range m.removedforum_posts {
+	case entgroup.EdgeForums:
+		ids := make([]ent.Value, 0, len(m.removedforums))
+		for id := range m.removedforums {
 			ids = append(ids, id)
 		}
 		return ids
@@ -3617,8 +4205,8 @@ func (m *GroupMutation) ClearedEdges() []string {
 	if m.clearedevents {
 		edges = append(edges, entgroup.EdgeEvents)
 	}
-	if m.clearedforum_posts {
-		edges = append(edges, entgroup.EdgeForumPosts)
+	if m.clearedforums {
+		edges = append(edges, entgroup.EdgeForums)
 	}
 	if m.cleareddeadlines {
 		edges = append(edges, entgroup.EdgeDeadlines)
@@ -3640,8 +4228,8 @@ func (m *GroupMutation) EdgeCleared(name string) bool {
 		return m.clearedusers
 	case entgroup.EdgeEvents:
 		return m.clearedevents
-	case entgroup.EdgeForumPosts:
-		return m.clearedforum_posts
+	case entgroup.EdgeForums:
+		return m.clearedforums
 	case entgroup.EdgeDeadlines:
 		return m.cleareddeadlines
 	case entgroup.EdgeInvites:
@@ -3673,8 +4261,8 @@ func (m *GroupMutation) ResetEdge(name string) error {
 	case entgroup.EdgeEvents:
 		m.ResetEvents()
 		return nil
-	case entgroup.EdgeForumPosts:
-		m.ResetForumPosts()
+	case entgroup.EdgeForums:
+		m.ResetForums()
 		return nil
 	case entgroup.EdgeDeadlines:
 		m.ResetDeadlines()

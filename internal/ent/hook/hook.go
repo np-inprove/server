@@ -45,6 +45,18 @@ func (f EventFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.EventMutation", m)
 }
 
+// The ForumFunc type is an adapter to allow the use of ordinary
+// function as Forum mutator.
+type ForumFunc func(context.Context, *ent.ForumMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f ForumFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.ForumMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.ForumMutation", m)
+}
+
 // The ForumPostFunc type is an adapter to allow the use of ordinary
 // function as ForumPost mutator.
 type ForumPostFunc func(context.Context, *ent.ForumPostMutation) (ent.Value, error)
