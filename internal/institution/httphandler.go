@@ -1,6 +1,7 @@
 package institution
 
 import (
+	"github.com/lestrrat-go/jwx/v2/jwt"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
@@ -22,22 +23,31 @@ func NewHTTPHandler(u UseCase, c *config.Config, j *jwtauth.JWTAuth) chi.Router 
 	h := httpHandler{u, c, j}
 	r := chi.NewRouter()
 
-	// Authenticated routes
-	r.Group(func(r chi.Router) {
-		r.Use(jwtauth.Verify(j, func(r *http.Request) string {
-			c, err := r.Cookie(c.AppJWTCookieName())
-			if err != nil {
-				return ""
-			}
-			return c.Value
-		}))
+	r.Use(jwtauth.Verify(j, func(r *http.Request) string {
+		c, err := r.Cookie(c.AppJWTCookieName())
+		if err != nil {
+			return ""
+		}
+		return c.Value
+	}))
 
+	// God-mode authenticated routes
+	r.Group(func(r chi.Router) {
 		r.Use(middleware.GodAuthenticator)
 
 		r.Get("/", h.ListInstitutions)
 		r.Post("/", h.CreateInstitution)
 		r.Delete("/{shortName}", h.DeleteInstitution)
 		r.Put("/{shortName}", h.UpdateInstitution)
+	})
+
+	// Normal authenticated routes
+	r.Group(func(r chi.Router) {
+		r.Use(middleware.Authenticator)
+
+		r.Get("/invites", h.ListInviteLinks)
+		r.Post("/invites", h.CreateInviteLink)
+		r.Delete("/invites/{code}", h.DeleteInviteLink)
 	})
 
 	return r
@@ -102,11 +112,17 @@ func (h httpHandler) DeleteInstitution(w http.ResponseWriter, r *http.Request) {
 
 func (h httpHandler) UpdateInstitution(w http.ResponseWriter, r *http.Request) {
 	p := &payload.UpdateInstitutionRequest{}
-	shortName := chi.URLParam(r, "shortName")
+	if err := render.Decode(r, p); err != nil {
+		_ = render.Render(w, r, apperror.ErrBadRequest(err))
+		return
+	}
+
 	if v := p.Validate(); !v.Validate() {
 		_ = render.Render(w, r, apperror.ErrValidation(v.Errors))
 		return
 	}
+
+	shortName := chi.URLParam(r, "shortName")
 
 	inst, err := h.service.UpdateInstitution(r.Context(), shortName, p.Name, p.ShortName, p.Description)
 	if err != nil {
@@ -114,11 +130,80 @@ func (h httpHandler) UpdateInstitution(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	render.Status(r, http.StatusNoContent)
 	_ = render.Render(w, r, payload.Institution{
 		ID:          inst.ID,
 		Name:        inst.Name,
 		ShortName:   inst.ShortName,
 		Description: inst.Description,
 	})
+}
+
+func (h httpHandler) ListInviteLinks(w http.ResponseWriter, r *http.Request) {
+	shortName := chi.URLParam(r, "shortName")
+
+	token := r.Context().Value(jwtauth.TokenCtxKey)
+	email := token.(jwt.Token).Subject()
+
+	links, err := h.service.ListInviteLinks(r.Context(), email, shortName)
+	if err != nil {
+		_ = render.Render(w, r, mapDomainErr(err))
+		return
+	}
+
+	p := make([]render.Renderer, len(links))
+	for i, v := range links {
+		p[i] = payload.InstitutionInviteLink{
+			ID:   v.ID,
+			Code: v.Code,
+			Role: v.Role,
+		}
+	}
+
+	_ = render.RenderList(w, r, p)
+}
+
+func (h httpHandler) CreateInviteLink(w http.ResponseWriter, r *http.Request) {
+	p := &payload.CreateInviteLinkRequest{}
+
+	if err := render.Decode(r, p); err != nil {
+		_ = render.Render(w, r, apperror.ErrBadRequest(err))
+		return
+	}
+
+	if v := p.Validate(); !v.Validate() {
+		_ = render.Render(w, r, apperror.ErrValidation(v.Errors))
+		return
+	}
+
+	shortName := chi.URLParam(r, "shortName")
+	token := r.Context().Value(jwtauth.TokenCtxKey)
+	email := token.(jwt.Token).Subject()
+
+	link, err := h.service.CreateInviteLink(r.Context(), email, shortName, p.Role)
+	if err != nil {
+		_ = render.Render(w, r, mapDomainErr(err))
+		return
+	}
+
+	_ = render.Render(w, r, payload.InstitutionInviteLink{
+		ID:   link.ID,
+		Code: link.Code,
+		Role: link.Role,
+	})
+}
+
+func (h httpHandler) DeleteInviteLink(w http.ResponseWriter, r *http.Request) {
+	shortName := chi.URLParam(r, "shortName")
+	code := chi.URLParam(r, "code")
+
+	token := r.Context().Value(jwtauth.TokenCtxKey)
+	email := token.(jwt.Token).Subject()
+
+	err := h.service.DeleteInviteLink(r.Context(), email, shortName, code)
+	if err != nil {
+		_ = render.Render(w, r, mapDomainErr(err))
+		return
+	}
+
+	render.Status(r, http.StatusNoContent)
 }

@@ -3,6 +3,9 @@ package institution
 import (
 	"context"
 	"fmt"
+	"github.com/np-inprove/server/internal/ent/institutioninvitelink"
+	"github.com/np-inprove/server/internal/ent/user"
+	"github.com/np-inprove/server/internal/entity/institution"
 
 	"github.com/np-inprove/server/internal/apperror"
 	"github.com/np-inprove/server/internal/ent"
@@ -125,4 +128,69 @@ func (e entRepository) WithTx(
 	}
 
 	return ret, nil
+}
+
+func (e entRepository) FindInstitutionWithInvites(ctx context.Context, shortName string) (*entity.Institution, error) {
+	inst, err := e.client.Institution.Query().Where(entinstitution.ShortName(shortName)).WithInvites().Only(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to find institution: %w", err)
+	}
+	return inst, nil
+}
+
+func (e entRepository) FindUserWithInstitution(ctx context.Context, principal string) (*entity.User, error) {
+	usr, err := e.client.User.Query().
+		Where(
+			user.Email(principal),
+		).
+		WithInstitution().
+		Only(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to find user with institution: %w", err)
+	}
+
+	return usr, nil
+}
+
+func (e entRepository) FindInviteLinks(ctx context.Context, id int) ([]*entity.InstitutionInviteLink, error) {
+	links, err := e.client.Institution.Query().Where(entinstitution.ID(id)).QueryInvites().All(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to find institution invite links: %w", err)
+	}
+	return links, nil
+}
+
+func (e entRepository) FindInviteLink(ctx context.Context, id int, code string) (*entity.InstitutionInviteLink, error) {
+	link, err := e.client.Institution.Query().
+		Where(
+			entinstitution.ID(id),
+		).
+		QueryInvites().
+		Where(
+			institutioninvitelink.Code(code),
+		).Only(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to find institution invite link: %w", err)
+	}
+	return link, nil
+}
+
+func (e entRepository) CreateInviteLink(ctx context.Context, id int, code string, role institution.Role) (*entity.InstitutionInviteLink, error) {
+	link, err := e.client.InstitutionInviteLink.Create().
+		SetInstitutionID(id).
+		SetCode(code).
+		SetRole(role).
+		Save(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create institution invite link: %w", err)
+	}
+	return link, nil
+}
+
+func (e entRepository) DeleteInviteLink(ctx context.Context, id int) error {
+	err := e.client.InstitutionInviteLink.DeleteOneID(id)
+	if err != nil {
+		return fmt.Errorf("failed to delete institution invite link: %w", err)
+	}
+	return nil
 }

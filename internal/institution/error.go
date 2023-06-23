@@ -10,6 +10,7 @@ import (
 var (
 	ErrInstitutionShortNameConflict = errors.New("short name conflicts with existing institution")
 	ErrInstitutionNotFound          = errors.New("institution does not exist")
+	ErrUnauthorized                 = errors.New("unauthorized")
 )
 
 func mapDomainErr(err error) *apperror.ErrResponse {
@@ -36,6 +37,20 @@ func mapDomainErr(err error) *apperror.ErrResponse {
 			Fields: validate.Errors{
 				"shortName": map[string]string{
 					"notFound": "Institution does not exist",
+				},
+			},
+		}
+	}
+
+	if errors.Is(err, ErrUnauthorized) {
+		return &apperror.ErrResponse{
+			Err:            err,
+			HTTPStatusCode: http.StatusUnauthorized,
+			AppErrCode:     40302,
+			AppErrMessage:  "You must be an admin to perform this action",
+			Fields: validate.Errors{
+				"user": map[string]string{
+					"unauthorized": "You must be an admin to perform this action",
 				},
 			},
 		}
