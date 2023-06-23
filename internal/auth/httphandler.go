@@ -112,21 +112,21 @@ func (h httpHandler) Register(w http.ResponseWriter, r *http.Request) {
 func (h httpHandler) WhoAmI(w http.ResponseWriter, r *http.Request) {
 	token := r.Context().Value(jwtauth.TokenCtxKey)
 
-	User, err := h.service.WhoAmI(r.Context(), token.(jwt.Token))
+	user, err := h.service.WhoAmI(r.Context(), token.(jwt.Token))
 	if err != nil {
 		_ = render.Render(w, r, apperror.ErrLoggedOut)
 		return
 	}
 
 	_ = render.Render(w, r, payload.User{
-		FirstName:              User.FirstName,
-		LastName:               User.LastName,
-		Email:                  User.Email,
-		Points:                 User.Points,
-		PointsAwardedCount:     User.PointsAwardedCount,
-		PointsAwardedResetTime: User.PointsAwardedResetTime,
-		GodMode:                User.GodMode,
-		Role:                   s.User.Role,
+		FirstName:              user.FirstName,
+		LastName:               user.LastName,
+		Email:                  user.Email,
+		Points:                 user.Points,
+		PointsAwardedCount:     user.PointsAwardedCount,
+		PointsAwardedResetTime: user.PointsAwardedResetTime,
+		GodMode:                user.GodMode,
+		Role:                   user.Role,
 	})
 }
 
