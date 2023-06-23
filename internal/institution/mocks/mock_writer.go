@@ -6,6 +6,7 @@ import (
 	context "context"
 
 	ent "github.com/np-inprove/server/internal/ent"
+	entityinstitution "github.com/np-inprove/server/internal/entity/institution"
 
 	mock "github.com/stretchr/testify/mock"
 )
@@ -80,6 +81,63 @@ func (_c *MockWriter_CreateInstitution_Call) RunAndReturn(run func(context.Conte
 	return _c
 }
 
+// CreateInviteLink provides a mock function with given fields: ctx, id, code, role
+func (_m *MockWriter) CreateInviteLink(ctx context.Context, id int, code string, role entityinstitution.Role) (*ent.InstitutionInviteLink, error) {
+	ret := _m.Called(ctx, id, code, role)
+
+	var r0 *ent.InstitutionInviteLink
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, int, string, entityinstitution.Role) (*ent.InstitutionInviteLink, error)); ok {
+		return rf(ctx, id, code, role)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, int, string, entityinstitution.Role) *ent.InstitutionInviteLink); ok {
+		r0 = rf(ctx, id, code, role)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*ent.InstitutionInviteLink)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, int, string, entityinstitution.Role) error); ok {
+		r1 = rf(ctx, id, code, role)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// MockWriter_CreateInviteLink_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'CreateInviteLink'
+type MockWriter_CreateInviteLink_Call struct {
+	*mock.Call
+}
+
+// CreateInviteLink is a helper method to define mock.On call
+//   - ctx context.Context
+//   - id int
+//   - code string
+//   - role entityinstitution.Role
+func (_e *MockWriter_Expecter) CreateInviteLink(ctx interface{}, id interface{}, code interface{}, role interface{}) *MockWriter_CreateInviteLink_Call {
+	return &MockWriter_CreateInviteLink_Call{Call: _e.mock.On("CreateInviteLink", ctx, id, code, role)}
+}
+
+func (_c *MockWriter_CreateInviteLink_Call) Run(run func(ctx context.Context, id int, code string, role entityinstitution.Role)) *MockWriter_CreateInviteLink_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(int), args[2].(string), args[3].(entityinstitution.Role))
+	})
+	return _c
+}
+
+func (_c *MockWriter_CreateInviteLink_Call) Return(_a0 *ent.InstitutionInviteLink, _a1 error) *MockWriter_CreateInviteLink_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *MockWriter_CreateInviteLink_Call) RunAndReturn(run func(context.Context, int, string, entityinstitution.Role) (*ent.InstitutionInviteLink, error)) *MockWriter_CreateInviteLink_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // DeleteInstitution provides a mock function with given fields: ctx, id
 func (_m *MockWriter) DeleteInstitution(ctx context.Context, id int) error {
 	ret := _m.Called(ctx, id)
@@ -119,6 +177,49 @@ func (_c *MockWriter_DeleteInstitution_Call) Return(_a0 error) *MockWriter_Delet
 }
 
 func (_c *MockWriter_DeleteInstitution_Call) RunAndReturn(run func(context.Context, int) error) *MockWriter_DeleteInstitution_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// DeleteInviteLink provides a mock function with given fields: ctx, id
+func (_m *MockWriter) DeleteInviteLink(ctx context.Context, id int) error {
+	ret := _m.Called(ctx, id)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, int) error); ok {
+		r0 = rf(ctx, id)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// MockWriter_DeleteInviteLink_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'DeleteInviteLink'
+type MockWriter_DeleteInviteLink_Call struct {
+	*mock.Call
+}
+
+// DeleteInviteLink is a helper method to define mock.On call
+//   - ctx context.Context
+//   - id int
+func (_e *MockWriter_Expecter) DeleteInviteLink(ctx interface{}, id interface{}) *MockWriter_DeleteInviteLink_Call {
+	return &MockWriter_DeleteInviteLink_Call{Call: _e.mock.On("DeleteInviteLink", ctx, id)}
+}
+
+func (_c *MockWriter_DeleteInviteLink_Call) Run(run func(ctx context.Context, id int)) *MockWriter_DeleteInviteLink_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(int))
+	})
+	return _c
+}
+
+func (_c *MockWriter_DeleteInviteLink_Call) Return(_a0 error) *MockWriter_DeleteInviteLink_Call {
+	_c.Call.Return(_a0)
+	return _c
+}
+
+func (_c *MockWriter_DeleteInviteLink_Call) RunAndReturn(run func(context.Context, int) error) *MockWriter_DeleteInviteLink_Call {
 	_c.Call.Return(run)
 	return _c
 }

@@ -73,6 +73,7 @@ func (h httpHandler) Login(w http.ResponseWriter, r *http.Request) {
 		PointsAwardedCount:     s.User.PointsAwardedCount,
 		PointsAwardedResetTime: s.User.PointsAwardedResetTime,
 		GodMode:                s.User.GodMode,
+		Role:                   s.User.Role,
 	})
 }
 
@@ -104,6 +105,7 @@ func (h httpHandler) Register(w http.ResponseWriter, r *http.Request) {
 		PointsAwardedCount:     s.User.PointsAwardedCount,
 		PointsAwardedResetTime: s.User.PointsAwardedResetTime,
 		GodMode:                s.User.GodMode,
+		Role:                   s.User.Role,
 	})
 }
 
@@ -124,6 +126,7 @@ func (h httpHandler) WhoAmI(w http.ResponseWriter, r *http.Request) {
 		PointsAwardedCount:     User.PointsAwardedCount,
 		PointsAwardedResetTime: User.PointsAwardedResetTime,
 		GodMode:                User.GodMode,
+		Role:                   s.User.Role,
 	})
 }
 

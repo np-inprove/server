@@ -6,6 +6,7 @@ import (
 	context "context"
 
 	ent "github.com/np-inprove/server/internal/ent"
+	entityinstitution "github.com/np-inprove/server/internal/entity/institution"
 
 	mock "github.com/stretchr/testify/mock"
 )
@@ -80,6 +81,63 @@ func (_c *MockUseCase_CreateInstitution_Call) RunAndReturn(run func(context.Cont
 	return _c
 }
 
+// CreateInviteLink provides a mock function with given fields: ctx, principal, shortName, role
+func (_m *MockUseCase) CreateInviteLink(ctx context.Context, principal string, shortName string, role entityinstitution.Role) (*ent.InstitutionInviteLink, error) {
+	ret := _m.Called(ctx, principal, shortName, role)
+
+	var r0 *ent.InstitutionInviteLink
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, string, string, entityinstitution.Role) (*ent.InstitutionInviteLink, error)); ok {
+		return rf(ctx, principal, shortName, role)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, string, string, entityinstitution.Role) *ent.InstitutionInviteLink); ok {
+		r0 = rf(ctx, principal, shortName, role)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*ent.InstitutionInviteLink)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, string, string, entityinstitution.Role) error); ok {
+		r1 = rf(ctx, principal, shortName, role)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// MockUseCase_CreateInviteLink_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'CreateInviteLink'
+type MockUseCase_CreateInviteLink_Call struct {
+	*mock.Call
+}
+
+// CreateInviteLink is a helper method to define mock.On call
+//   - ctx context.Context
+//   - principal string
+//   - shortName string
+//   - role entityinstitution.Role
+func (_e *MockUseCase_Expecter) CreateInviteLink(ctx interface{}, principal interface{}, shortName interface{}, role interface{}) *MockUseCase_CreateInviteLink_Call {
+	return &MockUseCase_CreateInviteLink_Call{Call: _e.mock.On("CreateInviteLink", ctx, principal, shortName, role)}
+}
+
+func (_c *MockUseCase_CreateInviteLink_Call) Run(run func(ctx context.Context, principal string, shortName string, role entityinstitution.Role)) *MockUseCase_CreateInviteLink_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(string), args[2].(string), args[3].(entityinstitution.Role))
+	})
+	return _c
+}
+
+func (_c *MockUseCase_CreateInviteLink_Call) Return(_a0 *ent.InstitutionInviteLink, _a1 error) *MockUseCase_CreateInviteLink_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *MockUseCase_CreateInviteLink_Call) RunAndReturn(run func(context.Context, string, string, entityinstitution.Role) (*ent.InstitutionInviteLink, error)) *MockUseCase_CreateInviteLink_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // DeleteInstitution provides a mock function with given fields: ctx, shortName
 func (_m *MockUseCase) DeleteInstitution(ctx context.Context, shortName string) error {
 	ret := _m.Called(ctx, shortName)
@@ -119,6 +177,51 @@ func (_c *MockUseCase_DeleteInstitution_Call) Return(_a0 error) *MockUseCase_Del
 }
 
 func (_c *MockUseCase_DeleteInstitution_Call) RunAndReturn(run func(context.Context, string) error) *MockUseCase_DeleteInstitution_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// DeleteInviteLink provides a mock function with given fields: ctx, principal, shortName, code
+func (_m *MockUseCase) DeleteInviteLink(ctx context.Context, principal string, shortName string, code string) error {
+	ret := _m.Called(ctx, principal, shortName, code)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, string, string, string) error); ok {
+		r0 = rf(ctx, principal, shortName, code)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// MockUseCase_DeleteInviteLink_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'DeleteInviteLink'
+type MockUseCase_DeleteInviteLink_Call struct {
+	*mock.Call
+}
+
+// DeleteInviteLink is a helper method to define mock.On call
+//   - ctx context.Context
+//   - principal string
+//   - shortName string
+//   - code string
+func (_e *MockUseCase_Expecter) DeleteInviteLink(ctx interface{}, principal interface{}, shortName interface{}, code interface{}) *MockUseCase_DeleteInviteLink_Call {
+	return &MockUseCase_DeleteInviteLink_Call{Call: _e.mock.On("DeleteInviteLink", ctx, principal, shortName, code)}
+}
+
+func (_c *MockUseCase_DeleteInviteLink_Call) Run(run func(ctx context.Context, principal string, shortName string, code string)) *MockUseCase_DeleteInviteLink_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(string), args[2].(string), args[3].(string))
+	})
+	return _c
+}
+
+func (_c *MockUseCase_DeleteInviteLink_Call) Return(_a0 error) *MockUseCase_DeleteInviteLink_Call {
+	_c.Call.Return(_a0)
+	return _c
+}
+
+func (_c *MockUseCase_DeleteInviteLink_Call) RunAndReturn(run func(context.Context, string, string, string) error) *MockUseCase_DeleteInviteLink_Call {
 	_c.Call.Return(run)
 	return _c
 }
@@ -173,6 +276,62 @@ func (_c *MockUseCase_ListInstitutions_Call) Return(_a0 []*ent.Institution, _a1 
 }
 
 func (_c *MockUseCase_ListInstitutions_Call) RunAndReturn(run func(context.Context) ([]*ent.Institution, error)) *MockUseCase_ListInstitutions_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// ListInviteLinks provides a mock function with given fields: ctx, principal, shortName
+func (_m *MockUseCase) ListInviteLinks(ctx context.Context, principal string, shortName string) ([]*ent.InstitutionInviteLink, error) {
+	ret := _m.Called(ctx, principal, shortName)
+
+	var r0 []*ent.InstitutionInviteLink
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, string, string) ([]*ent.InstitutionInviteLink, error)); ok {
+		return rf(ctx, principal, shortName)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, string, string) []*ent.InstitutionInviteLink); ok {
+		r0 = rf(ctx, principal, shortName)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]*ent.InstitutionInviteLink)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, string, string) error); ok {
+		r1 = rf(ctx, principal, shortName)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// MockUseCase_ListInviteLinks_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'ListInviteLinks'
+type MockUseCase_ListInviteLinks_Call struct {
+	*mock.Call
+}
+
+// ListInviteLinks is a helper method to define mock.On call
+//   - ctx context.Context
+//   - principal string
+//   - shortName string
+func (_e *MockUseCase_Expecter) ListInviteLinks(ctx interface{}, principal interface{}, shortName interface{}) *MockUseCase_ListInviteLinks_Call {
+	return &MockUseCase_ListInviteLinks_Call{Call: _e.mock.On("ListInviteLinks", ctx, principal, shortName)}
+}
+
+func (_c *MockUseCase_ListInviteLinks_Call) Run(run func(ctx context.Context, principal string, shortName string)) *MockUseCase_ListInviteLinks_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(string), args[2].(string))
+	})
+	return _c
+}
+
+func (_c *MockUseCase_ListInviteLinks_Call) Return(_a0 []*ent.InstitutionInviteLink, _a1 error) *MockUseCase_ListInviteLinks_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *MockUseCase_ListInviteLinks_Call) RunAndReturn(run func(context.Context, string, string) ([]*ent.InstitutionInviteLink, error)) *MockUseCase_ListInviteLinks_Call {
 	_c.Call.Return(run)
 	return _c
 }

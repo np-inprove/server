@@ -6,6 +6,7 @@ import (
 	context "context"
 
 	ent "github.com/np-inprove/server/internal/ent"
+	entityinstitution "github.com/np-inprove/server/internal/entity/institution"
 
 	mock "github.com/stretchr/testify/mock"
 )
@@ -80,6 +81,63 @@ func (_c *MockRepository_CreateInstitution_Call) RunAndReturn(run func(context.C
 	return _c
 }
 
+// CreateInviteLink provides a mock function with given fields: ctx, id, code, role
+func (_m *MockRepository) CreateInviteLink(ctx context.Context, id int, code string, role entityinstitution.Role) (*ent.InstitutionInviteLink, error) {
+	ret := _m.Called(ctx, id, code, role)
+
+	var r0 *ent.InstitutionInviteLink
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, int, string, entityinstitution.Role) (*ent.InstitutionInviteLink, error)); ok {
+		return rf(ctx, id, code, role)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, int, string, entityinstitution.Role) *ent.InstitutionInviteLink); ok {
+		r0 = rf(ctx, id, code, role)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*ent.InstitutionInviteLink)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, int, string, entityinstitution.Role) error); ok {
+		r1 = rf(ctx, id, code, role)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// MockRepository_CreateInviteLink_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'CreateInviteLink'
+type MockRepository_CreateInviteLink_Call struct {
+	*mock.Call
+}
+
+// CreateInviteLink is a helper method to define mock.On call
+//   - ctx context.Context
+//   - id int
+//   - code string
+//   - role entityinstitution.Role
+func (_e *MockRepository_Expecter) CreateInviteLink(ctx interface{}, id interface{}, code interface{}, role interface{}) *MockRepository_CreateInviteLink_Call {
+	return &MockRepository_CreateInviteLink_Call{Call: _e.mock.On("CreateInviteLink", ctx, id, code, role)}
+}
+
+func (_c *MockRepository_CreateInviteLink_Call) Run(run func(ctx context.Context, id int, code string, role entityinstitution.Role)) *MockRepository_CreateInviteLink_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(int), args[2].(string), args[3].(entityinstitution.Role))
+	})
+	return _c
+}
+
+func (_c *MockRepository_CreateInviteLink_Call) Return(_a0 *ent.InstitutionInviteLink, _a1 error) *MockRepository_CreateInviteLink_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *MockRepository_CreateInviteLink_Call) RunAndReturn(run func(context.Context, int, string, entityinstitution.Role) (*ent.InstitutionInviteLink, error)) *MockRepository_CreateInviteLink_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // DeleteInstitution provides a mock function with given fields: ctx, id
 func (_m *MockRepository) DeleteInstitution(ctx context.Context, id int) error {
 	ret := _m.Called(ctx, id)
@@ -119,6 +177,49 @@ func (_c *MockRepository_DeleteInstitution_Call) Return(_a0 error) *MockReposito
 }
 
 func (_c *MockRepository_DeleteInstitution_Call) RunAndReturn(run func(context.Context, int) error) *MockRepository_DeleteInstitution_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// DeleteInviteLink provides a mock function with given fields: ctx, id
+func (_m *MockRepository) DeleteInviteLink(ctx context.Context, id int) error {
+	ret := _m.Called(ctx, id)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, int) error); ok {
+		r0 = rf(ctx, id)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// MockRepository_DeleteInviteLink_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'DeleteInviteLink'
+type MockRepository_DeleteInviteLink_Call struct {
+	*mock.Call
+}
+
+// DeleteInviteLink is a helper method to define mock.On call
+//   - ctx context.Context
+//   - id int
+func (_e *MockRepository_Expecter) DeleteInviteLink(ctx interface{}, id interface{}) *MockRepository_DeleteInviteLink_Call {
+	return &MockRepository_DeleteInviteLink_Call{Call: _e.mock.On("DeleteInviteLink", ctx, id)}
+}
+
+func (_c *MockRepository_DeleteInviteLink_Call) Run(run func(ctx context.Context, id int)) *MockRepository_DeleteInviteLink_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(int))
+	})
+	return _c
+}
+
+func (_c *MockRepository_DeleteInviteLink_Call) Return(_a0 error) *MockRepository_DeleteInviteLink_Call {
+	_c.Call.Return(_a0)
+	return _c
+}
+
+func (_c *MockRepository_DeleteInviteLink_Call) RunAndReturn(run func(context.Context, int) error) *MockRepository_DeleteInviteLink_Call {
 	_c.Call.Return(run)
 	return _c
 }
@@ -178,6 +279,61 @@ func (_c *MockRepository_FindInstitution_Call) RunAndReturn(run func(context.Con
 	return _c
 }
 
+// FindInstitutionWithInvites provides a mock function with given fields: ctx, shortName
+func (_m *MockRepository) FindInstitutionWithInvites(ctx context.Context, shortName string) (*ent.Institution, error) {
+	ret := _m.Called(ctx, shortName)
+
+	var r0 *ent.Institution
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, string) (*ent.Institution, error)); ok {
+		return rf(ctx, shortName)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, string) *ent.Institution); ok {
+		r0 = rf(ctx, shortName)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*ent.Institution)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, string) error); ok {
+		r1 = rf(ctx, shortName)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// MockRepository_FindInstitutionWithInvites_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'FindInstitutionWithInvites'
+type MockRepository_FindInstitutionWithInvites_Call struct {
+	*mock.Call
+}
+
+// FindInstitutionWithInvites is a helper method to define mock.On call
+//   - ctx context.Context
+//   - shortName string
+func (_e *MockRepository_Expecter) FindInstitutionWithInvites(ctx interface{}, shortName interface{}) *MockRepository_FindInstitutionWithInvites_Call {
+	return &MockRepository_FindInstitutionWithInvites_Call{Call: _e.mock.On("FindInstitutionWithInvites", ctx, shortName)}
+}
+
+func (_c *MockRepository_FindInstitutionWithInvites_Call) Run(run func(ctx context.Context, shortName string)) *MockRepository_FindInstitutionWithInvites_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(string))
+	})
+	return _c
+}
+
+func (_c *MockRepository_FindInstitutionWithInvites_Call) Return(_a0 *ent.Institution, _a1 error) *MockRepository_FindInstitutionWithInvites_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *MockRepository_FindInstitutionWithInvites_Call) RunAndReturn(run func(context.Context, string) (*ent.Institution, error)) *MockRepository_FindInstitutionWithInvites_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // FindInstitutions provides a mock function with given fields: ctx
 func (_m *MockRepository) FindInstitutions(ctx context.Context) ([]*ent.Institution, error) {
 	ret := _m.Called(ctx)
@@ -228,6 +384,172 @@ func (_c *MockRepository_FindInstitutions_Call) Return(_a0 []*ent.Institution, _
 }
 
 func (_c *MockRepository_FindInstitutions_Call) RunAndReturn(run func(context.Context) ([]*ent.Institution, error)) *MockRepository_FindInstitutions_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// FindInviteLink provides a mock function with given fields: ctx, id, code
+func (_m *MockRepository) FindInviteLink(ctx context.Context, id int, code string) (*ent.InstitutionInviteLink, error) {
+	ret := _m.Called(ctx, id, code)
+
+	var r0 *ent.InstitutionInviteLink
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, int, string) (*ent.InstitutionInviteLink, error)); ok {
+		return rf(ctx, id, code)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, int, string) *ent.InstitutionInviteLink); ok {
+		r0 = rf(ctx, id, code)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*ent.InstitutionInviteLink)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, int, string) error); ok {
+		r1 = rf(ctx, id, code)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// MockRepository_FindInviteLink_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'FindInviteLink'
+type MockRepository_FindInviteLink_Call struct {
+	*mock.Call
+}
+
+// FindInviteLink is a helper method to define mock.On call
+//   - ctx context.Context
+//   - id int
+//   - code string
+func (_e *MockRepository_Expecter) FindInviteLink(ctx interface{}, id interface{}, code interface{}) *MockRepository_FindInviteLink_Call {
+	return &MockRepository_FindInviteLink_Call{Call: _e.mock.On("FindInviteLink", ctx, id, code)}
+}
+
+func (_c *MockRepository_FindInviteLink_Call) Run(run func(ctx context.Context, id int, code string)) *MockRepository_FindInviteLink_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(int), args[2].(string))
+	})
+	return _c
+}
+
+func (_c *MockRepository_FindInviteLink_Call) Return(_a0 *ent.InstitutionInviteLink, _a1 error) *MockRepository_FindInviteLink_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *MockRepository_FindInviteLink_Call) RunAndReturn(run func(context.Context, int, string) (*ent.InstitutionInviteLink, error)) *MockRepository_FindInviteLink_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// FindInviteLinks provides a mock function with given fields: ctx, id
+func (_m *MockRepository) FindInviteLinks(ctx context.Context, id int) ([]*ent.InstitutionInviteLink, error) {
+	ret := _m.Called(ctx, id)
+
+	var r0 []*ent.InstitutionInviteLink
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, int) ([]*ent.InstitutionInviteLink, error)); ok {
+		return rf(ctx, id)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, int) []*ent.InstitutionInviteLink); ok {
+		r0 = rf(ctx, id)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]*ent.InstitutionInviteLink)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, int) error); ok {
+		r1 = rf(ctx, id)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// MockRepository_FindInviteLinks_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'FindInviteLinks'
+type MockRepository_FindInviteLinks_Call struct {
+	*mock.Call
+}
+
+// FindInviteLinks is a helper method to define mock.On call
+//   - ctx context.Context
+//   - id int
+func (_e *MockRepository_Expecter) FindInviteLinks(ctx interface{}, id interface{}) *MockRepository_FindInviteLinks_Call {
+	return &MockRepository_FindInviteLinks_Call{Call: _e.mock.On("FindInviteLinks", ctx, id)}
+}
+
+func (_c *MockRepository_FindInviteLinks_Call) Run(run func(ctx context.Context, id int)) *MockRepository_FindInviteLinks_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(int))
+	})
+	return _c
+}
+
+func (_c *MockRepository_FindInviteLinks_Call) Return(_a0 []*ent.InstitutionInviteLink, _a1 error) *MockRepository_FindInviteLinks_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *MockRepository_FindInviteLinks_Call) RunAndReturn(run func(context.Context, int) ([]*ent.InstitutionInviteLink, error)) *MockRepository_FindInviteLinks_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// FindUserWithInstitution provides a mock function with given fields: ctx, principal
+func (_m *MockRepository) FindUserWithInstitution(ctx context.Context, principal string) (*ent.User, error) {
+	ret := _m.Called(ctx, principal)
+
+	var r0 *ent.User
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, string) (*ent.User, error)); ok {
+		return rf(ctx, principal)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, string) *ent.User); ok {
+		r0 = rf(ctx, principal)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*ent.User)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, string) error); ok {
+		r1 = rf(ctx, principal)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// MockRepository_FindUserWithInstitution_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'FindUserWithInstitution'
+type MockRepository_FindUserWithInstitution_Call struct {
+	*mock.Call
+}
+
+// FindUserWithInstitution is a helper method to define mock.On call
+//   - ctx context.Context
+//   - principal string
+func (_e *MockRepository_Expecter) FindUserWithInstitution(ctx interface{}, principal interface{}) *MockRepository_FindUserWithInstitution_Call {
+	return &MockRepository_FindUserWithInstitution_Call{Call: _e.mock.On("FindUserWithInstitution", ctx, principal)}
+}
+
+func (_c *MockRepository_FindUserWithInstitution_Call) Run(run func(ctx context.Context, principal string)) *MockRepository_FindUserWithInstitution_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(string))
+	})
+	return _c
+}
+
+func (_c *MockRepository_FindUserWithInstitution_Call) Return(_a0 *ent.User, _a1 error) *MockRepository_FindUserWithInstitution_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *MockRepository_FindUserWithInstitution_Call) RunAndReturn(run func(context.Context, string) (*ent.User, error)) *MockRepository_FindUserWithInstitution_Call {
 	_c.Call.Return(run)
 	return _c
 }
