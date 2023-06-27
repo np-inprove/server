@@ -22,7 +22,7 @@ require (
 	github.com/stretchr/testify v1.8.4
 	go.uber.org/zap v1.24.0
 	golang.org/x/crypto v0.9.0
-	golang.org/x/exp v0.0.0-20230522175609-2e198f4a06a1
+	golang.org/x/exp v0.0.0-20230626212559-97b1e661b5df
 )
 
 require (
@@ -51,7 +51,7 @@ require (
 	github.com/mitchellh/reflectwalk v1.0.2 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/zclconf/go-cty v1.8.0 // indirect
-	golang.org/x/mod v0.10.0 // indirect
+	golang.org/x/mod v0.11.0 // indirect
 	golang.org/x/sys v0.8.0 // indirect
 	golang.org/x/text v0.9.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
