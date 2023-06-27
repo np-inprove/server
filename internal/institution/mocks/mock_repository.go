@@ -498,8 +498,8 @@ func (_c *MockRepository_FindInviteLinks_Call) RunAndReturn(run func(context.Con
 	return _c
 }
 
-// FindUserWithInstitution provides a mock function with given fields: ctx, principal
-func (_m *MockRepository) FindUserWithInstitution(ctx context.Context, principal string) (*ent.User, error) {
+// FindUser provides a mock function with given fields: ctx, principal
+func (_m *MockRepository) FindUser(ctx context.Context, principal string) (*ent.User, error) {
 	ret := _m.Called(ctx, principal)
 
 	var r0 *ent.User
@@ -524,31 +524,31 @@ func (_m *MockRepository) FindUserWithInstitution(ctx context.Context, principal
 	return r0, r1
 }
 
-// MockRepository_FindUserWithInstitution_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'FindUserWithInstitution'
-type MockRepository_FindUserWithInstitution_Call struct {
+// MockRepository_FindUser_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'FindUser'
+type MockRepository_FindUser_Call struct {
 	*mock.Call
 }
 
-// FindUserWithInstitution is a helper method to define mock.On call
+// FindUser is a helper method to define mock.On call
 //   - ctx context.Context
 //   - principal string
-func (_e *MockRepository_Expecter) FindUserWithInstitution(ctx interface{}, principal interface{}) *MockRepository_FindUserWithInstitution_Call {
-	return &MockRepository_FindUserWithInstitution_Call{Call: _e.mock.On("FindUserWithInstitution", ctx, principal)}
+func (_e *MockRepository_Expecter) FindUser(ctx interface{}, principal interface{}) *MockRepository_FindUser_Call {
+	return &MockRepository_FindUser_Call{Call: _e.mock.On("FindUser", ctx, principal)}
 }
 
-func (_c *MockRepository_FindUserWithInstitution_Call) Run(run func(ctx context.Context, principal string)) *MockRepository_FindUserWithInstitution_Call {
+func (_c *MockRepository_FindUser_Call) Run(run func(ctx context.Context, principal string)) *MockRepository_FindUser_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		run(args[0].(context.Context), args[1].(string))
 	})
 	return _c
 }
 
-func (_c *MockRepository_FindUserWithInstitution_Call) Return(_a0 *ent.User, _a1 error) *MockRepository_FindUserWithInstitution_Call {
+func (_c *MockRepository_FindUser_Call) Return(_a0 *ent.User, _a1 error) *MockRepository_FindUser_Call {
 	_c.Call.Return(_a0, _a1)
 	return _c
 }
 
-func (_c *MockRepository_FindUserWithInstitution_Call) RunAndReturn(run func(context.Context, string) (*ent.User, error)) *MockRepository_FindUserWithInstitution_Call {
+func (_c *MockRepository_FindUser_Call) RunAndReturn(run func(context.Context, string) (*ent.User, error)) *MockRepository_FindUser_Call {
 	_c.Call.Return(run)
 	return _c
 }

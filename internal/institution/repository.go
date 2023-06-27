@@ -14,7 +14,7 @@ type Reader interface {
 	FindInstitutionWithInvites(ctx context.Context, shortName string) (*entity.Institution, error)
 	FindInviteLinkWithInstitution(ctx context.Context, code string) (*entity.InstitutionInviteLink, error)
 	FindInviteLinks(ctx context.Context, id int) ([]*entity.InstitutionInviteLink, error)
-	FindUserWithInstitution(ctx context.Context, principal string) (*entity.User, error)
+	FindUser(ctx context.Context, principal string) (*entity.User, error)
 }
 
 type Writer interface {

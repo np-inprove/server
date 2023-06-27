@@ -100,7 +100,7 @@ func (u useCase) UpdateInstitution(ctx context.Context, principal, name, shortNa
 }
 
 func (u useCase) ListInviteLinks(ctx context.Context, principal, shortName string) ([]*entity.InstitutionInviteLink, error) {
-	_, err := u.authorizedForInvite(ctx, principal, shortName)
+	err := u.authorizedForInvite(ctx, principal, shortName)
 	if err != nil {
 		return nil, err
 	}
@@ -114,9 +114,14 @@ func (u useCase) ListInviteLinks(ctx context.Context, principal, shortName strin
 }
 
 func (u useCase) CreateInviteLink(ctx context.Context, principal, shortName string, role institution.Role) (*entity.InstitutionInviteLink, error) {
-	inst, err := u.authorizedForInvite(ctx, principal, shortName)
+	err := u.authorizedForInvite(ctx, principal, shortName)
 	if err != nil {
 		return nil, err
+	}
+
+	inst, err := u.repo.FindInstitution(ctx, shortName)
+	if err != nil {
+		return nil, fmt.Errorf("failed to find institution")
 	}
 
 	code := make([]rune, 8)
@@ -133,7 +138,7 @@ func (u useCase) CreateInviteLink(ctx context.Context, principal, shortName stri
 }
 
 func (u useCase) DeleteInviteLink(ctx context.Context, principal, shortName, code string) error {
-	_, err := u.authorizedForInvite(ctx, principal, shortName)
+	err := u.authorizedForInvite(ctx, principal, shortName)
 	if err != nil {
 		return err
 	}
@@ -162,23 +167,23 @@ func (u useCase) findInstitution(ctx context.Context, shortName string) (*entity
 	return inst, err
 }
 
-func (u useCase) authorizedForInvite(ctx context.Context, principal, shortName string) (*entity.Institution, error) {
-	usr, err := u.repo.FindUserWithInstitution(ctx, principal)
+func (u useCase) authorizedForInvite(ctx context.Context, principal, shortName string) error {
+	usr, err := u.repo.FindUser(ctx, principal)
 	if err != nil {
-		return nil, fmt.Errorf("failed to find user: %w", err)
+		return fmt.Errorf("failed to find user: %w", err)
 	}
 
 	if usr.Edges.Institution == nil {
-		return nil, fmt.Errorf("invariant")
+		return fmt.Errorf("invariant")
 	}
 
 	if usr.Role != institution.RoleAdmin {
-		return nil, ErrUnauthorized
+		return ErrUnauthorized
 	}
 
 	if !usr.GodMode && usr.Edges.Institution.ShortName != shortName { // If user does not have God mode, check for short name
-		return nil, ErrUnauthorized
+		return ErrUnauthorized
 	}
 
-	return usr.Edges.Institution, nil
+	return nil
 }

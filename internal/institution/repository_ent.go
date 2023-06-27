@@ -138,12 +138,11 @@ func (e entRepository) FindInstitutionWithInvites(ctx context.Context, shortName
 	return inst, nil
 }
 
-func (e entRepository) FindUserWithInstitution(ctx context.Context, principal string) (*entity.User, error) {
+func (e entRepository) FindUser(ctx context.Context, principal string) (*entity.User, error) {
 	usr, err := e.client.User.Query().
 		Where(
 			user.Email(principal),
 		).
-		WithInstitution().
 		Only(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find user with institution: %w", err)

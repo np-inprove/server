@@ -41,10 +41,6 @@ func NewHTTPHandler(u UseCase, c *config.Config, j *jwtauth.JWTAuth) chi.Router 
 		r.Put("/{shortName}", h.UpdateInstitution)
 	})
 
-	r.Group(func(r chi.Router) {
-		r.Get("/{shortName}/invites/{code}", h.GetInviteLink)
-	})
-
 	// Normal authenticated routes
 	r.Group(func(r chi.Router) {
 		r.Use(middleware.Authenticator)
@@ -211,7 +207,4 @@ func (h httpHandler) DeleteInviteLink(w http.ResponseWriter, r *http.Request) {
 	}
 
 	render.Status(r, http.StatusNoContent)
-}
-
-func (h httpHandler) GetInviteLink(w http.ResponseWriter, r *http.Request) {
 }
