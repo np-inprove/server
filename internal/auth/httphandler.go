@@ -26,6 +26,7 @@ func NewHTTPHandler(u UseCase, c *config.Config, j *jwtauth.JWTAuth) chi.Router 
 
 	r.Post("/login", a.Login)
 	r.Post("/register", a.Register)
+	r.Get("/invites/{code}", a.CheckInviteCode)
 
 	// Authenticated routes
 	r.Group(func(r chi.Router) {
@@ -106,6 +107,28 @@ func (h httpHandler) Register(w http.ResponseWriter, r *http.Request) {
 		PointsAwardedResetTime: s.User.PointsAwardedResetTime,
 		GodMode:                s.User.GodMode,
 		Role:                   s.User.Role,
+	})
+}
+
+func (h httpHandler) CheckInviteCode(w http.ResponseWriter, r *http.Request) {
+	code := chi.URLParam(r, "code")
+
+	link, err := h.service.CheckInviteCode(r.Context(), code)
+	if err != nil {
+		_ = render.Render(w, r, mapDomainErr(err))
+		return
+	}
+
+	_ = render.Render(w, r, payload.InstitutionInviteLink{
+		ID:   link.ID,
+		Code: link.Code,
+		Role: link.Role,
+		Institution: payload.Institution{
+			ID:          link.Edges.Institution.ID,
+			Name:        link.Edges.Institution.Name,
+			ShortName:   link.Edges.Institution.ShortName,
+			Description: link.Edges.Institution.Description,
+		},
 	})
 }
 

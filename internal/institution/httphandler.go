@@ -214,23 +214,4 @@ func (h httpHandler) DeleteInviteLink(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h httpHandler) GetInviteLink(w http.ResponseWriter, r *http.Request) {
-	code := chi.URLParam(r, "code")
-
-	link, err := h.service.GetInviteLinkWithInstitution(r.Context(), code)
-	if err != nil {
-		_ = render.Render(w, r, mapDomainErr(err))
-		return
-	}
-
-	_ = render.Render(w, r, payload.InstitutionInviteLink{
-		ID:   link.ID,
-		Code: link.Code,
-		Role: link.Role,
-		Institution: payload.Institution{
-			ID:          link.Edges.Institution.ID,
-			Name:        link.Edges.Institution.Name,
-			ShortName:   link.Edges.Institution.ShortName,
-			Description: link.Edges.Institution.Description,
-		},
-	})
 }

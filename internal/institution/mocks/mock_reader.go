@@ -187,7 +187,7 @@ func (_c *MockReader_FindInstitutions_Call) RunAndReturn(run func(context.Contex
 	return _c
 }
 
-// FindInviteLink provides a mock function with given fields: ctx, code
+// FindInviteLinkWithInstitution provides a mock function with given fields: ctx, code
 func (_m *MockReader) FindInviteLinkWithInstitution(ctx context.Context, code string) (*ent.InstitutionInviteLink, error) {
 	ret := _m.Called(ctx, code)
 
@@ -213,31 +213,31 @@ func (_m *MockReader) FindInviteLinkWithInstitution(ctx context.Context, code st
 	return r0, r1
 }
 
-// MockReader_FindInviteLink_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'FindInviteLink'
-type MockReader_FindInviteLink_Call struct {
+// MockReader_FindInviteLinkWithInstitution_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'FindInviteLinkWithInstitution'
+type MockReader_FindInviteLinkWithInstitution_Call struct {
 	*mock.Call
 }
 
-// FindInviteLink is a helper method to define mock.On call
+// FindInviteLinkWithInstitution is a helper method to define mock.On call
 //   - ctx context.Context
 //   - code string
-func (_e *MockReader_Expecter) FindInviteLink(ctx interface{}, code interface{}) *MockReader_FindInviteLink_Call {
-	return &MockReader_FindInviteLink_Call{Call: _e.mock.On("FindInviteLink", ctx, code)}
+func (_e *MockReader_Expecter) FindInviteLinkWithInstitution(ctx interface{}, code interface{}) *MockReader_FindInviteLinkWithInstitution_Call {
+	return &MockReader_FindInviteLinkWithInstitution_Call{Call: _e.mock.On("FindInviteLinkWithInstitution", ctx, code)}
 }
 
-func (_c *MockReader_FindInviteLink_Call) Run(run func(ctx context.Context, code string)) *MockReader_FindInviteLink_Call {
+func (_c *MockReader_FindInviteLinkWithInstitution_Call) Run(run func(ctx context.Context, code string)) *MockReader_FindInviteLinkWithInstitution_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		run(args[0].(context.Context), args[1].(string))
 	})
 	return _c
 }
 
-func (_c *MockReader_FindInviteLink_Call) Return(_a0 *ent.InstitutionInviteLink, _a1 error) *MockReader_FindInviteLink_Call {
+func (_c *MockReader_FindInviteLinkWithInstitution_Call) Return(_a0 *ent.InstitutionInviteLink, _a1 error) *MockReader_FindInviteLinkWithInstitution_Call {
 	_c.Call.Return(_a0, _a1)
 	return _c
 }
 
-func (_c *MockReader_FindInviteLink_Call) RunAndReturn(run func(context.Context, string) (*ent.InstitutionInviteLink, error)) *MockReader_FindInviteLink_Call {
+func (_c *MockReader_FindInviteLinkWithInstitution_Call) RunAndReturn(run func(context.Context, string) (*ent.InstitutionInviteLink, error)) *MockReader_FindInviteLinkWithInstitution_Call {
 	_c.Call.Return(run)
 	return _c
 }

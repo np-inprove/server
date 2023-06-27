@@ -26,6 +26,61 @@ func (_m *MockUseCase) EXPECT() *MockUseCase_Expecter {
 	return &MockUseCase_Expecter{mock: &_m.Mock}
 }
 
+// CheckInviteCode provides a mock function with given fields: ctx, inviteCode
+func (_m *MockUseCase) CheckInviteCode(ctx context.Context, inviteCode string) (*ent.InstitutionInviteLink, error) {
+	ret := _m.Called(ctx, inviteCode)
+
+	var r0 *ent.InstitutionInviteLink
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, string) (*ent.InstitutionInviteLink, error)); ok {
+		return rf(ctx, inviteCode)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, string) *ent.InstitutionInviteLink); ok {
+		r0 = rf(ctx, inviteCode)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*ent.InstitutionInviteLink)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, string) error); ok {
+		r1 = rf(ctx, inviteCode)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// MockUseCase_CheckInviteCode_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'CheckInviteCode'
+type MockUseCase_CheckInviteCode_Call struct {
+	*mock.Call
+}
+
+// CheckInviteCode is a helper method to define mock.On call
+//   - ctx context.Context
+//   - inviteCode string
+func (_e *MockUseCase_Expecter) CheckInviteCode(ctx interface{}, inviteCode interface{}) *MockUseCase_CheckInviteCode_Call {
+	return &MockUseCase_CheckInviteCode_Call{Call: _e.mock.On("CheckInviteCode", ctx, inviteCode)}
+}
+
+func (_c *MockUseCase_CheckInviteCode_Call) Run(run func(ctx context.Context, inviteCode string)) *MockUseCase_CheckInviteCode_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(string))
+	})
+	return _c
+}
+
+func (_c *MockUseCase_CheckInviteCode_Call) Return(_a0 *ent.InstitutionInviteLink, _a1 error) *MockUseCase_CheckInviteCode_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *MockUseCase_CheckInviteCode_Call) RunAndReturn(run func(context.Context, string) (*ent.InstitutionInviteLink, error)) *MockUseCase_CheckInviteCode_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // Login provides a mock function with given fields: ctx, email, password
 func (_m *MockUseCase) Login(ctx context.Context, email string, password string) (*entity.Session, error) {
 	ret := _m.Called(ctx, email, password)

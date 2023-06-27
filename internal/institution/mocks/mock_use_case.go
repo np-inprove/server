@@ -226,61 +226,6 @@ func (_c *MockUseCase_DeleteInviteLink_Call) RunAndReturn(run func(context.Conte
 	return _c
 }
 
-// GetInviteLink provides a mock function with given fields: ctx, code
-func (_m *MockUseCase) GetInviteLinkWithInstitution(ctx context.Context, code string) (*ent.InstitutionInviteLink, error) {
-	ret := _m.Called(ctx, code)
-
-	var r0 *ent.InstitutionInviteLink
-	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, string) (*ent.InstitutionInviteLink, error)); ok {
-		return rf(ctx, code)
-	}
-	if rf, ok := ret.Get(0).(func(context.Context, string) *ent.InstitutionInviteLink); ok {
-		r0 = rf(ctx, code)
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*ent.InstitutionInviteLink)
-		}
-	}
-
-	if rf, ok := ret.Get(1).(func(context.Context, string) error); ok {
-		r1 = rf(ctx, code)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
-}
-
-// MockUseCase_GetInviteLink_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetInviteLink'
-type MockUseCase_GetInviteLink_Call struct {
-	*mock.Call
-}
-
-// GetInviteLink is a helper method to define mock.On call
-//   - ctx context.Context
-//   - code string
-func (_e *MockUseCase_Expecter) GetInviteLink(ctx interface{}, code interface{}) *MockUseCase_GetInviteLink_Call {
-	return &MockUseCase_GetInviteLink_Call{Call: _e.mock.On("GetInviteLink", ctx, code)}
-}
-
-func (_c *MockUseCase_GetInviteLink_Call) Run(run func(ctx context.Context, code string)) *MockUseCase_GetInviteLink_Call {
-	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(string))
-	})
-	return _c
-}
-
-func (_c *MockUseCase_GetInviteLink_Call) Return(_a0 *ent.InstitutionInviteLink, _a1 error) *MockUseCase_GetInviteLink_Call {
-	_c.Call.Return(_a0, _a1)
-	return _c
-}
-
-func (_c *MockUseCase_GetInviteLink_Call) RunAndReturn(run func(context.Context, string) (*ent.InstitutionInviteLink, error)) *MockUseCase_GetInviteLink_Call {
-	_c.Call.Return(run)
-	return _c
-}
-
 // ListInstitutions provides a mock function with given fields: ctx
 func (_m *MockUseCase) ListInstitutions(ctx context.Context) ([]*ent.Institution, error) {
 	ret := _m.Called(ctx)

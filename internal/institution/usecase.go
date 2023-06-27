@@ -22,7 +22,6 @@ type UseCase interface {
 	UpdateInstitution(ctx context.Context, principal, name, shortName, description string) (*entity.Institution, error)
 	DeleteInstitution(ctx context.Context, shortName string) error
 
-	GetInviteLinkWithInstitution(ctx context.Context, code string) (*entity.InstitutionInviteLink, error)
 	// ListInviteLinks shows invite links for an institution identified by shortName.
 	// If the user (identified by principal), has God mode enabled, then all links will be accessible.
 	// Else, only users with a role of Admin can list links for the institution they are associated with.
@@ -98,18 +97,6 @@ func (u useCase) UpdateInstitution(ctx context.Context, principal, name, shortNa
 	}
 
 	return inst, nil
-}
-
-func (u useCase) GetInviteLinkWithInstitution(ctx context.Context, code string) (*entity.InstitutionInviteLink, error) {
-	link, err := u.repo.FindInviteLinkWithInstitution(ctx, code)
-	if err != nil {
-		if apperror.IsNotFound(err) {
-			return nil, ErrInviteLinkNotFound
-		}
-		return nil, fmt.Errorf("failed to get invite link: %w", err)
-	}
-
-	return link, nil
 }
 
 func (u useCase) ListInviteLinks(ctx context.Context, principal, shortName string) ([]*entity.InstitutionInviteLink, error) {

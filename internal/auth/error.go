@@ -12,7 +12,6 @@ var (
 	ErrInvalidPassword = errors.New("password provided did not match hash")
 	ErrUserNotFound    = errors.New("failed to find user")
 	ErrUserConflict    = errors.New("failed to register new user as email already used")
-	ErrDomainNotFound  = errors.New("no institution is registered with provided domain")
 	ErrTokenRevoked    = errors.New("token is revoked")
 	ErrInvalidInvite   = errors.New("invalid invite code provided")
 )
@@ -55,20 +54,6 @@ func mapDomainErr(err error) render.Renderer {
 			Fields: validate.Errors{
 				"email": map[string]string{
 					"conflict": "A user exists with this email",
-				},
-			},
-		}
-	}
-
-	if errors.Is(err, ErrDomainNotFound) {
-		return &apperror.ErrResponse{
-			Err:            nil,
-			HTTPStatusCode: http.StatusBadRequest,
-			AppErrCode:     http.StatusBadRequest,
-			AppErrMessage:  "An institution does not exist for this domain. Please get your institution administrator to register first.",
-			Fields: validate.Errors{
-				"email": map[string]string{
-					"domain": "Email domain not found",
 				},
 			},
 		}
