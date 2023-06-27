@@ -173,10 +173,6 @@ func (u useCase) authorizedForInvite(ctx context.Context, principal, shortName s
 		return fmt.Errorf("failed to find user: %w", err)
 	}
 
-	if usr.Edges.Institution == nil {
-		return fmt.Errorf("invariant")
-	}
-
 	if usr.Role != institution.RoleAdmin {
 		return ErrUnauthorized
 	}
