@@ -12,7 +12,7 @@ type Reader interface {
 	FindInstitution(ctx context.Context, shortName string) (*entity.Institution, error)
 	FindInstitutions(ctx context.Context) ([]*entity.Institution, error)
 	FindInstitutionWithInvites(ctx context.Context, shortName string) (*entity.Institution, error)
-	FindInviteLink(ctx context.Context, id int, code string) (*entity.InstitutionInviteLink, error)
+	FindInviteLinkWithInstitution(ctx context.Context, code string) (*entity.InstitutionInviteLink, error)
 	FindInviteLinks(ctx context.Context, id int) ([]*entity.InstitutionInviteLink, error)
 	FindUserWithInstitution(ctx context.Context, principal string) (*entity.User, error)
 }

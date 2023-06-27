@@ -39,9 +39,10 @@ func (u UpdateInstitutionRequest) Validate() *validate.Validation {
 }
 
 type InstitutionInviteLink struct {
-	ID   int              `json:"id,omitempty"`
-	Code string           `json:"code,omitempty"`
-	Role institution.Role `json:"role,omitempty"`
+	ID          int              `json:"id,omitempty"`
+	Code        string           `json:"code,omitempty"`
+	Role        institution.Role `json:"role,omitempty"`
+	Institution Institution      `json:"institution,omitempty"`
 }
 
 func (i InstitutionInviteLink) Render(_ http.ResponseWriter, _ *http.Request) error {

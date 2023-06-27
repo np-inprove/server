@@ -134,7 +134,7 @@ func main() {
 
 	server := http.Server{Addr: cfg.HTTPAddr(), Handler: r}
 
-	appLogger.Info("registering auth services",
+	appLogger.Info("registering services",
 		logger.String("area", "auth"),
 	)
 
@@ -149,8 +149,8 @@ func main() {
 
 	r.Mount("/auth", authHandler)
 
-	appLogger.Info("registering god-mode services",
-		logger.String("area", "god"),
+	appLogger.Info("registering services",
+		logger.String("area", "institution"),
 	)
 
 	instRepo := institution.NewEntRepository(appLogger, client)
@@ -159,8 +159,8 @@ func main() {
 
 	r.Mount("/institutions", instHandler)
 
-	appLogger.Info("registering dashboard services",
-		logger.String("area", "dashboard"),
+	appLogger.Info("registering services",
+		logger.String("area", "group"),
 	)
 
 	groupRepo := group.NewEntRepository(client)

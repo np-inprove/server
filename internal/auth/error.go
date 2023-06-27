@@ -2,6 +2,7 @@ package auth
 
 import (
 	"errors"
+	"github.com/go-chi/render"
 	"github.com/gookit/validate"
 	"github.com/np-inprove/server/internal/apperror"
 	"net/http"
@@ -16,7 +17,7 @@ var (
 	ErrInvalidInvite   = errors.New("invalid invite code provided")
 )
 
-func mapDomainErr(err error) *apperror.ErrResponse {
+func mapDomainErr(err error) render.Renderer {
 	if errors.Is(err, ErrInvalidPassword) {
 		return &apperror.ErrResponse{
 			Err:            nil,

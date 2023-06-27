@@ -160,15 +160,13 @@ func (e entRepository) FindInviteLinks(ctx context.Context, id int) ([]*entity.I
 	return links, nil
 }
 
-func (e entRepository) FindInviteLink(ctx context.Context, id int, code string) (*entity.InstitutionInviteLink, error) {
-	link, err := e.client.Institution.Query().
-		Where(
-			entinstitution.ID(id),
-		).
-		QueryInvites().
+func (e entRepository) FindInviteLinkWithInstitution(ctx context.Context, code string) (*entity.InstitutionInviteLink, error) {
+	link, err := e.client.InstitutionInviteLink.Query().
 		Where(
 			institutioninvitelink.Code(code),
-		).Only(ctx)
+		).
+		WithInstitution().
+		Only(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find institution invite link: %w", err)
 	}
@@ -188,7 +186,7 @@ func (e entRepository) CreateInviteLink(ctx context.Context, id int, code string
 }
 
 func (e entRepository) DeleteInviteLink(ctx context.Context, id int) error {
-	err := e.client.InstitutionInviteLink.DeleteOneID(id)
+	err := e.client.InstitutionInviteLink.DeleteOneID(id).Exec(ctx)
 	if err != nil {
 		return fmt.Errorf("failed to delete institution invite link: %w", err)
 	}

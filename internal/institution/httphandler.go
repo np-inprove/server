@@ -41,13 +41,17 @@ func NewHTTPHandler(u UseCase, c *config.Config, j *jwtauth.JWTAuth) chi.Router 
 		r.Put("/{shortName}", h.UpdateInstitution)
 	})
 
+	r.Group(func(r chi.Router) {
+		r.Get("/{shortName}/invites/{code}", h.GetInviteLink)
+	})
+
 	// Normal authenticated routes
 	r.Group(func(r chi.Router) {
 		r.Use(middleware.Authenticator)
 
-		r.Get("/invites", h.ListInviteLinks)
-		r.Post("/invites", h.CreateInviteLink)
-		r.Delete("/invites/{code}", h.DeleteInviteLink)
+		r.Get("/{shortName}/invites", h.ListInviteLinks)
+		r.Post("/{shortName}/invites", h.CreateInviteLink)
+		r.Delete("/{shortName}/invites/{code}", h.DeleteInviteLink)
 	})
 
 	return r
@@ -63,9 +67,10 @@ func (h httpHandler) ListInstitutions(w http.ResponseWriter, r *http.Request) {
 	l := make([]render.Renderer, len(insts))
 	for i, inst := range insts {
 		l[i] = payload.Institution{
-			ID:        inst.ID,
-			Name:      inst.Name,
-			ShortName: inst.ShortName,
+			ID:          inst.ID,
+			Name:        inst.Name,
+			ShortName:   inst.ShortName,
+			Description: inst.Description,
 		}
 	}
 
@@ -206,4 +211,26 @@ func (h httpHandler) DeleteInviteLink(w http.ResponseWriter, r *http.Request) {
 	}
 
 	render.Status(r, http.StatusNoContent)
+}
+
+func (h httpHandler) GetInviteLink(w http.ResponseWriter, r *http.Request) {
+	code := chi.URLParam(r, "code")
+
+	link, err := h.service.GetInviteLinkWithInstitution(r.Context(), code)
+	if err != nil {
+		_ = render.Render(w, r, mapDomainErr(err))
+		return
+	}
+
+	_ = render.Render(w, r, payload.InstitutionInviteLink{
+		ID:   link.ID,
+		Code: link.Code,
+		Role: link.Role,
+		Institution: payload.Institution{
+			ID:          link.Edges.Institution.ID,
+			Name:        link.Edges.Institution.Name,
+			ShortName:   link.Edges.Institution.ShortName,
+			Description: link.Edges.Institution.Description,
+		},
+	})
 }

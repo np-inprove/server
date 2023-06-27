@@ -58,7 +58,7 @@ var ErrLoggedOut = &ErrResponse{
 	AppErrMessage:  http.StatusText(http.StatusUnauthorized),
 }
 
-func ErrInternal(err error) *ErrResponse {
+func ErrInternal(err error) render.Renderer {
 	return &ErrResponse{
 		Err:            err,
 		HTTPStatusCode: http.StatusInternalServerError,

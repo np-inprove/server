@@ -187,25 +187,25 @@ func (_c *MockReader_FindInstitutions_Call) RunAndReturn(run func(context.Contex
 	return _c
 }
 
-// FindInviteLink provides a mock function with given fields: ctx, id, code
-func (_m *MockReader) FindInviteLink(ctx context.Context, id int, code string) (*ent.InstitutionInviteLink, error) {
-	ret := _m.Called(ctx, id, code)
+// FindInviteLink provides a mock function with given fields: ctx, code
+func (_m *MockReader) FindInviteLinkWithInstitution(ctx context.Context, code string) (*ent.InstitutionInviteLink, error) {
+	ret := _m.Called(ctx, code)
 
 	var r0 *ent.InstitutionInviteLink
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, int, string) (*ent.InstitutionInviteLink, error)); ok {
-		return rf(ctx, id, code)
+	if rf, ok := ret.Get(0).(func(context.Context, string) (*ent.InstitutionInviteLink, error)); ok {
+		return rf(ctx, code)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, int, string) *ent.InstitutionInviteLink); ok {
-		r0 = rf(ctx, id, code)
+	if rf, ok := ret.Get(0).(func(context.Context, string) *ent.InstitutionInviteLink); ok {
+		r0 = rf(ctx, code)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(*ent.InstitutionInviteLink)
 		}
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, int, string) error); ok {
-		r1 = rf(ctx, id, code)
+	if rf, ok := ret.Get(1).(func(context.Context, string) error); ok {
+		r1 = rf(ctx, code)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -220,15 +220,14 @@ type MockReader_FindInviteLink_Call struct {
 
 // FindInviteLink is a helper method to define mock.On call
 //   - ctx context.Context
-//   - id int
 //   - code string
-func (_e *MockReader_Expecter) FindInviteLink(ctx interface{}, id interface{}, code interface{}) *MockReader_FindInviteLink_Call {
-	return &MockReader_FindInviteLink_Call{Call: _e.mock.On("FindInviteLink", ctx, id, code)}
+func (_e *MockReader_Expecter) FindInviteLink(ctx interface{}, code interface{}) *MockReader_FindInviteLink_Call {
+	return &MockReader_FindInviteLink_Call{Call: _e.mock.On("FindInviteLink", ctx, code)}
 }
 
-func (_c *MockReader_FindInviteLink_Call) Run(run func(ctx context.Context, id int, code string)) *MockReader_FindInviteLink_Call {
+func (_c *MockReader_FindInviteLink_Call) Run(run func(ctx context.Context, code string)) *MockReader_FindInviteLink_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(int), args[2].(string))
+		run(args[0].(context.Context), args[1].(string))
 	})
 	return _c
 }
@@ -238,7 +237,7 @@ func (_c *MockReader_FindInviteLink_Call) Return(_a0 *ent.InstitutionInviteLink,
 	return _c
 }
 
-func (_c *MockReader_FindInviteLink_Call) RunAndReturn(run func(context.Context, int, string) (*ent.InstitutionInviteLink, error)) *MockReader_FindInviteLink_Call {
+func (_c *MockReader_FindInviteLink_Call) RunAndReturn(run func(context.Context, string) (*ent.InstitutionInviteLink, error)) *MockReader_FindInviteLink_Call {
 	_c.Call.Return(run)
 	return _c
 }

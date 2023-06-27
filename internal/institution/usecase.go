@@ -22,6 +22,7 @@ type UseCase interface {
 	UpdateInstitution(ctx context.Context, principal, name, shortName, description string) (*entity.Institution, error)
 	DeleteInstitution(ctx context.Context, shortName string) error
 
+	GetInviteLinkWithInstitution(ctx context.Context, code string) (*entity.InstitutionInviteLink, error)
 	// ListInviteLinks shows invite links for an institution identified by shortName.
 	// If the user (identified by principal), has God mode enabled, then all links will be accessible.
 	// Else, only users with a role of Admin can list links for the institution they are associated with.
@@ -85,18 +86,30 @@ func (u useCase) DeleteInstitution(ctx context.Context, shortName string) error 
 	return nil
 }
 
-func (u useCase) UpdateInstitution(ctx context.Context, principal, shortName, name, description string) (*entity.Institution, error) {
+func (u useCase) UpdateInstitution(ctx context.Context, principal, name, shortName, description string) (*entity.Institution, error) {
 	inst, err := u.findInstitution(ctx, principal)
 	if err != nil {
 		return nil, err
 	}
 
-	inst, err = u.repo.UpdateInstitution(ctx, inst.ID, shortName, name, description)
+	inst, err = u.repo.UpdateInstitution(ctx, inst.ID, name, shortName, description)
 	if err != nil {
 		return nil, fmt.Errorf("failed to update institution %w", err)
 	}
 
 	return inst, nil
+}
+
+func (u useCase) GetInviteLinkWithInstitution(ctx context.Context, code string) (*entity.InstitutionInviteLink, error) {
+	link, err := u.repo.FindInviteLinkWithInstitution(ctx, code)
+	if err != nil {
+		if apperror.IsNotFound(err) {
+			return nil, ErrInviteLinkNotFound
+		}
+		return nil, fmt.Errorf("failed to get invite link: %w", err)
+	}
+
+	return link, nil
 }
 
 func (u useCase) ListInviteLinks(ctx context.Context, principal, shortName string) ([]*entity.InstitutionInviteLink, error) {
@@ -120,7 +133,7 @@ func (u useCase) CreateInviteLink(ctx context.Context, principal, shortName stri
 	}
 
 	code := make([]rune, 8)
-	for _, i := range code {
+	for i := range code {
 		code[i] = letters[rand.Intn(len(letters))]
 	}
 
@@ -133,12 +146,12 @@ func (u useCase) CreateInviteLink(ctx context.Context, principal, shortName stri
 }
 
 func (u useCase) DeleteInviteLink(ctx context.Context, principal, shortName, code string) error {
-	inst, err := u.authorizedForInvite(ctx, principal, shortName)
+	_, err := u.authorizedForInvite(ctx, principal, shortName)
 	if err != nil {
 		return err
 	}
 
-	link, err := u.repo.FindInviteLink(ctx, inst.ID, code)
+	link, err := u.repo.FindInviteLinkWithInstitution(ctx, code)
 	if err != nil {
 		return fmt.Errorf("failed to find invite link: %w", err)
 	}

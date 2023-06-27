@@ -2,6 +2,7 @@ package group
 
 import (
 	"errors"
+	"github.com/go-chi/render"
 	"github.com/np-inprove/server/internal/apperror"
 	"net/http"
 )
@@ -12,7 +13,7 @@ var (
 	ErrUnauthorized           = errors.New("not authorized")
 )
 
-func mapDomainErr(err error) *apperror.ErrResponse {
+func mapDomainErr(err error) render.Renderer {
 	if errors.Is(err, ErrInstitutionNotFound) {
 		return &apperror.ErrResponse{
 			Err:            err,
