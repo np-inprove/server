@@ -37,6 +37,7 @@ func NewHTTPHandler(u UseCase, c *config.Config, j *jwtauth.JWTAuth) chi.Router 
 
 		r.Get("/", a.ListGroups)
 		r.Post("/", a.CreateGroup)
+		r.Put("/{path}", a.UpdateGroup)
 		r.Delete("/{path}", a.DeleteGroup)
 	})
 
@@ -86,6 +87,41 @@ func (h httpHandler) CreateGroup(w http.ResponseWriter, r *http.Request) {
 		group.ShortName(p.ShortName),
 		group.Description(p.Description),
 	)
+	if err != nil {
+		_ = render.Render(w, r, mapDomainErr(err))
+		return
+	}
+
+	_ = render.Render(w, r, payload.Group{
+		ID:          res.ID,
+		ShortName:   res.ShortName,
+		Name:        res.Name,
+		Description: res.Description,
+	})
+}
+
+func (h httpHandler) UpdateGroup(w http.ResponseWriter, r *http.Request) {
+	p := &payload.UpdateGroupRequest{}
+	if err := render.Decode(r, p); err != nil {
+		_ = render.Render(w, r, apperror.ErrBadRequest(err))
+		return
+	}
+
+	if v := p.Validate(); !v.Validate() {
+		_ = render.Render(w, r, apperror.ErrValidation(v.Errors))
+		return
+	}
+
+	shortName := chi.URLParam(r, "path")
+	token := r.Context().Value(jwtauth.TokenCtxKey)
+	email := token.(jwt.Token).Subject()
+
+	res, err := h.service.UpdateGroup(r.Context(), email, shortName,
+		group.Name(p.Name),
+		group.ShortName(p.ShortName),
+		group.Description(p.Description),
+	)
+
 	if err != nil {
 		_ = render.Render(w, r, mapDomainErr(err))
 		return

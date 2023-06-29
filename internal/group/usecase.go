@@ -14,6 +14,9 @@ type UseCase interface {
 	// CreateGroup should be an admin only function
 	CreateGroup(ctx context.Context, principal string, opts ...group.Option) (*entity.Group, error)
 
+	// UpdateGroup should be an admin only function
+	UpdateGroup(ctx context.Context, principal string, shortName string, opts ...group.Option) (*entity.Group, error)
+
 	// DeleteGroup should be an admin only function
 	DeleteGroup(ctx context.Context, principal string, shortName string) error
 }
@@ -54,9 +57,27 @@ func (u useCase) CreateGroup(ctx context.Context, principal string, opts ...grou
 		return nil, ErrGroupShortNameConflict
 	}
 
-	grp, err := u.repo.CreateGroup(ctx, inst.ID, opts...)
+	grp, err := u.repo.CreateGroup(ctx, inst.ID, usr, opts...)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create group: %w", err)
+	}
+
+	return grp, nil
+}
+
+func (u useCase) UpdateGroup(ctx context.Context, principal string, shortName string, opts ...group.Option) (*entity.Group, error) {
+	grpusr, err := u.repo.FindGroupUser(ctx, principal, shortName)
+	if err != nil {
+		return nil, fmt.Errorf("failed to find group user: %w", err)
+	}
+
+	if grpusr.Role != group.RoleOwner {
+		return nil, ErrUnauthorized
+	}
+
+	grp, err := u.repo.UpdateGroup(ctx, grpusr.GroupID, opts...)
+	if err != nil {
+		return nil, fmt.Errorf("failed to update group: %w", err)
 	}
 
 	return grp, nil

@@ -8,7 +8,7 @@ import (
 type Group struct {
 	ID          int    `json:"id,omitempty"`
 	Name        string `json:"name,omitempty"`
-	ShortName   string `json:"path,omitempty"`
+	ShortName   string `json:"shortName,omitempty"`
 	Description string `json:"description,omitempty"`
 }
 
@@ -24,4 +24,14 @@ type CreateGroupRequest struct {
 
 func (c CreateGroupRequest) Validate() *validate.Validation {
 	return validate.Struct(c)
+}
+
+type UpdateGroupRequest struct {
+	Name        string `json:"name,omitempty" validate:"required|minLen:3"`
+	ShortName   string `json:"shortName,omitempty" validate:"required|alphaDash"`
+	Description string `json:"description,omitempty"`
+}
+
+func (u UpdateGroupRequest) Validate() *validate.Validation {
+	return validate.Struct(u)
 }
