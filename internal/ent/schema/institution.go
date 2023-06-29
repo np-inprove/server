@@ -23,6 +23,7 @@ func (Institution) Fields() []ent.Field {
 			Unique().
 			Comment("Short name of the institution (example: np)"),
 		field.String("Description").
+			Optional().
 			Comment("Description of the institution"),
 	}
 }

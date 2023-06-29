@@ -44,6 +44,14 @@ func (ic *InstitutionCreate) SetDescription(s string) *InstitutionCreate {
 	return ic
 }
 
+// SetNillableDescription sets the "Description" field if the given value is not nil.
+func (ic *InstitutionCreate) SetNillableDescription(s *string) *InstitutionCreate {
+	if s != nil {
+		ic.SetDescription(*s)
+	}
+	return ic
+}
+
 // AddVoucherIDs adds the "vouchers" edge to the Voucher entity by IDs.
 func (ic *InstitutionCreate) AddVoucherIDs(ids ...int) *InstitutionCreate {
 	ic.mutation.AddVoucherIDs(ids...)
@@ -168,9 +176,6 @@ func (ic *InstitutionCreate) check() error {
 		if err := entinstitution.ShortNameValidator(v); err != nil {
 			return &ValidationError{Name: "short_name", err: fmt.Errorf(`ent: validator failed for field "Institution.short_name": %w`, err)}
 		}
-	}
-	if _, ok := ic.mutation.Description(); !ok {
-		return &ValidationError{Name: "Description", err: errors.New(`ent: missing required field "Institution.Description"`)}
 	}
 	return nil
 }
@@ -379,6 +384,12 @@ func (u *InstitutionUpsert) UpdateDescription() *InstitutionUpsert {
 	return u
 }
 
+// ClearDescription clears the value of the "Description" field.
+func (u *InstitutionUpsert) ClearDescription() *InstitutionUpsert {
+	u.SetNull(entinstitution.FieldDescription)
+	return u
+}
+
 // UpdateNewValues updates the mutable fields using the new values that were set on create.
 // Using this option is equivalent to using:
 //
@@ -458,6 +469,13 @@ func (u *InstitutionUpsertOne) SetDescription(v string) *InstitutionUpsertOne {
 func (u *InstitutionUpsertOne) UpdateDescription() *InstitutionUpsertOne {
 	return u.Update(func(s *InstitutionUpsert) {
 		s.UpdateDescription()
+	})
+}
+
+// ClearDescription clears the value of the "Description" field.
+func (u *InstitutionUpsertOne) ClearDescription() *InstitutionUpsertOne {
+	return u.Update(func(s *InstitutionUpsert) {
+		s.ClearDescription()
 	})
 }
 
@@ -699,6 +717,13 @@ func (u *InstitutionUpsertBulk) SetDescription(v string) *InstitutionUpsertBulk 
 func (u *InstitutionUpsertBulk) UpdateDescription() *InstitutionUpsertBulk {
 	return u.Update(func(s *InstitutionUpsert) {
 		s.UpdateDescription()
+	})
+}
+
+// ClearDescription clears the value of the "Description" field.
+func (u *InstitutionUpsertBulk) ClearDescription() *InstitutionUpsertBulk {
+	return u.Update(func(s *InstitutionUpsert) {
+		s.ClearDescription()
 	})
 }
 

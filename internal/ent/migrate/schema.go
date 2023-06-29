@@ -214,7 +214,7 @@ var (
 		{Name: "id", Type: field.TypeInt, Increment: true},
 		{Name: "name", Type: field.TypeString},
 		{Name: "short_name", Type: field.TypeString, Unique: true},
-		{Name: "description", Type: field.TypeString},
+		{Name: "description", Type: field.TypeString, Nullable: true},
 	}
 	// InstitutionsTable holds the schema information for the "institutions" table.
 	InstitutionsTable = &schema.Table{
