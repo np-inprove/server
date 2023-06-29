@@ -3,6 +3,7 @@ package group
 import (
 	"context"
 	"fmt"
+	"github.com/charmbracelet/log"
 	"github.com/np-inprove/server/internal/ent"
 	entgroup "github.com/np-inprove/server/internal/ent/group"
 	"github.com/np-inprove/server/internal/ent/groupuser"
@@ -78,11 +79,12 @@ func (e entRepository) FindGroupUser(ctx context.Context, principal string, shor
 	return grpusr, nil
 }
 
-func (e entRepository) CreateGroup(ctx context.Context, institutionID int, opts ...group.Option) (*entity.Group, error) {
+func (e entRepository) CreateGroup(ctx context.Context, institutionID int, usr *ent.User, opts ...group.Option) (*entity.Group, error) {
 	var options group.Options
 	for _, opt := range opts {
 		opt(&options)
 	}
+	log.Info(usr)
 
 	g, err := e.client.Group.
 		Create().
@@ -93,6 +95,16 @@ func (e entRepository) CreateGroup(ctx context.Context, institutionID int, opts 
 		Save(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create group: %w", err)
+	}
+
+	_, err = e.client.GroupUser.
+		Create().
+		SetUser(usr).
+		SetGroup(g).
+		SetRole(group.RoleOwner).
+		Save(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to add creator owner to group: %w", err)
 	}
 
 	return g, nil
@@ -127,6 +139,7 @@ func (e entRepository) UpdateGroup(ctx context.Context, id int, opts ...group.Op
 }
 
 func (e entRepository) DeleteGroup(ctx context.Context, id int) error {
+	log.Info(id)
 	err := e.client.Group.DeleteOneID(id).Exec(ctx)
 	if err != nil {
 		return fmt.Errorf("failed to delete group: %w", err)

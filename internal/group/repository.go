@@ -15,7 +15,7 @@ type Reader interface {
 }
 
 type Writer interface {
-	CreateGroup(ctx context.Context, institutionID int, opts ...group.Option) (*entity.Group, error)
+	CreateGroup(ctx context.Context, institutionID int, usr *entity.User, opts ...group.Option) (*entity.Group, error)
 	UpdateGroup(ctx context.Context, id int, opts ...group.Option) (*entity.Group, error)
 	DeleteGroup(ctx context.Context, id int) error
 }
