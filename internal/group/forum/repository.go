@@ -8,15 +8,16 @@ import (
 )
 
 type Reader interface {
-	FindForumsByUser(ctx context.Context, principal string) ([]*entity.Forum, error)
-	FindForumByGroupIDAndShortName(ctx context.Context, institutionID int, shortName string) (*entity.Forum, error)
+	FindForumsByGroup(ctx context.Context, principal string) ([]*entity.Forum, error)
+	FindForumByGroupIDAndShortName(ctx context.Context, groupID int, shortName string) (*entity.Forum, error)
+	FindForum(ctx context.Context, shortName string) (*entity.Forum, error)
 
-	FindUserWithForum(ctx context.Context, principal string) (*entity.User, error)
+	FindGroupUser(ctx context.Context, principal, shortName string) (*entity.GroupUser, error)
 }
 
 type Writer interface {
-	CreateForum(ctx context.Context, forumID int, opts ...forum.Options) (*entity.Forum, error)
-	EditForum(ctx context.Context, id int, opts ...forum.Options) (*entity.Forum, error)
+	CreateForum(ctx context.Context, forumID int, opts ...forum.Option) (*entity.Forum, error)
+	UpdateForum(ctx context.Context, id int, opts ...forum.Option) (*entity.Forum, error)
 	DeleteForum(ctx context.Context, id int) error
 }
 

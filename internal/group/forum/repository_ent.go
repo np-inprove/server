@@ -58,7 +58,7 @@ func (e entRepository) CreateForum(ctx context.Context, name, shortName, descrip
 	return forum, nil
 }
 
-func (e entRepository) EditForum(ctx context.Context, id int, name, shortName, description string) (*entity.Forum, error) {
+func (e entRepository) UpdateForum(ctx context.Context, id int, name, shortName, description string) (*entity.Forum, error) {
 	c := e.client
 	if cc, ok := entutils.ExtractTx(ctx); ok {
 		c = cc
