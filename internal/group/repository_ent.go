@@ -139,7 +139,6 @@ func (e entRepository) UpdateGroup(ctx context.Context, id int, opts ...group.Op
 }
 
 func (e entRepository) DeleteGroup(ctx context.Context, id int) error {
-	log.Info(id)
 	err := e.client.Group.DeleteOneID(id).Exec(ctx)
 	if err != nil {
 		return fmt.Errorf("failed to delete group: %w", err)
