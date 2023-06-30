@@ -4,28 +4,51 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/np-inprove/server/internal/apperror"
 	"github.com/np-inprove/server/internal/ent"
 	entforum "github.com/np-inprove/server/internal/ent/forum"
+	entgroup "github.com/np-inprove/server/internal/ent/group"
+	"github.com/np-inprove/server/internal/ent/groupuser"
+	"github.com/np-inprove/server/internal/ent/predicate"
+	"github.com/np-inprove/server/internal/ent/user"
 	"github.com/np-inprove/server/internal/entity"
-	"github.com/np-inprove/server/internal/entutils"
-	"github.com/np-inprove/server/internal/logger"
+	"github.com/np-inprove/server/internal/entity/forum"
 )
 
 type entRepository struct {
-	log    logger.AppLogger
 	client *ent.Client
 }
 
-func NewEntRepository(l logger.AppLogger, c *ent.Client) Repository {
-	return entRepository{l, c}
+func NewEntRepository(e *ent.Client) Repository {
+	return &entRepository{client: e}
 }
 
-func (e entRepository) FindForums(ctx context.Context) ([]*entity.Forum, error) {
-	forum, err := e.client.Forum.Query().All(ctx)
+func (e entRepository) FindForumsByUser(ctx context.Context, principal string) ([]*entity.Forum, error) {
+	forum, err := e.client.Forum.Query().
+		Where(
+			entforum.HasGroupWith(
+				predicate.Group(user.Email(principal)),
+			)).
+		All(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("failed to find all forums: %w", err)
+		return nil, fmt.Errorf("failed to find forums by user email: %w", err)
 	}
+
+	return forum, nil
+}
+
+func (e entRepository) FindForumByGroupIDAndShortName(ctx context.Context, groupID int, shortName string) (*entity.Forum, error) {
+	forum, err := e.client.Forum.Query().
+		Where(
+			entforum.HasGroupWith(
+				entgroup.ID(groupID),
+			),
+			entforum.ShortName(shortName),
+		).
+		Only(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to find forums by user email: %w", err)
+	}
+
 	return forum, nil
 }
 
@@ -37,37 +60,48 @@ func (e entRepository) FindForum(ctx context.Context, shortName string) (*entity
 	return inst, nil
 }
 
-func (e entRepository) CreateForum(ctx context.Context, name, shortName, description string) (*entity.Forum, error) {
-	c := e.client
-	if cc, ok := entutils.ExtractTx(ctx); ok {
-		c = cc
+func (e entRepository) FindGroupUser(ctx context.Context, principal string, shortName string) (*entity.GroupUser, error) {
+	grpusr, err := e.client.GroupUser.Query().
+		Where(
+			groupuser.HasUserWith(user.Email(principal)),
+			groupuser.HasGroupWith(entgroup.ShortName(shortName)),
+		).Only(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to find group user: %w", err)
 	}
 
-	forum, err := c.Forum.Create().
-		SetName(name).
-		SetShortName(shortName).
-		SetDescription(description).
+	return grpusr, nil
+}
+
+func (e entRepository) CreateForum(ctx context.Context, groupID int, opts ...forum.Option) (*entity.Forum, error) {
+	var options forum.Options
+	for _, opt := range opts {
+		opt(&options)
+	}
+
+	forum, err := e.client.Forum.
+		Create().
+		SetName(options.Name).
+		SetShortName(options.ShortName).
+		SetDescription(options.Description).
+		SetGroupID(groupID).
 		Save(ctx)
 	if err != nil {
-		if apperror.IsConflict(err) {
-			return nil, ErrForumShortNameConflict //create error.go file
-		}
-		return nil, fmt.Errorf("failed to save forum: %w", err)
+		return nil, fmt.Errorf("failed to create group: %w", err)
 	}
-
 	return forum, nil
 }
 
-func (e entRepository) UpdateForum(ctx context.Context, id int, name, shortName, description string) (*entity.Forum, error) {
-	c := e.client
-	if cc, ok := entutils.ExtractTx(ctx); ok {
-		c = cc
+func (e entRepository) UpdateForum(ctx context.Context, id int, opts ...forum.Option) (*entity.Forum, error) {
+	var options forum.Options
+	for _, opt := range opts {
+		opt(&options)
 	}
 
-	forum, err := c.Forum.UpdateOneID(id).
-		SetName(name).
-		SetShortName(shortName).
-		SetDescription(description).
+	forum, err := e.client.Forum.UpdateOneID(id).
+		SetName(options.Name).
+		SetShortName(options.ShortName).
+		SetDescription(options.Description).
 		Save(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to update forum: %w", err)
@@ -83,5 +117,3 @@ func (e entRepository) DeleteForum(ctx context.Context, id int) error {
 	}
 	return err
 }
-
-func (e entRepository) FindUserWithForum()

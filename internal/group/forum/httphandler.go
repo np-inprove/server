@@ -38,8 +38,8 @@ func NewHTTPHandler( /* u UseCase, */ c *config.Config, j *jwtauth.JWTAuth) chi.
 
 		r.Get("/", a.ListForums)
 		r.Post("/", a.CreateForum)
-		r.Delete("/{path}", a.DeleteForum)
-		r.Put("/{path}", a.EditForum)
+		r.Delete("/{shortName}", a.DeleteForum)
+		r.Put("/{shortName}", a.UpdateForum)
 	})
 
 	return r
@@ -57,6 +57,6 @@ func (h httpHandler) DeleteForum(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func (h httpHandler) EditForum(w http.ResponseWriter, r *http.Request) {
+func (h httpHandler) UpdateForum(w http.ResponseWriter, r *http.Request) {
 
 }

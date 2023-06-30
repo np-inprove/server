@@ -31,7 +31,7 @@ func NewUseCase(r Repository) UseCase {
 }
 
 func (u useCase) ListPrincipalForums(ctx context.Context, principal string) ([]*entity.Forum, error) {
-	return u.repo.FindForumsByGroup(ctx, principal)
+	return u.repo.FindForumsByUser(ctx, principal)
 }
 
 func (u useCase) CreateForum(ctx context.Context, principal, shortName string, opts ...forum.Option) (*entity.Forum, error) {
@@ -77,7 +77,7 @@ func (u useCase) DeleteForum(ctx context.Context, principal string, shortName st
 	}
 
 	if err := u.repo.DeleteForum(ctx, usr.GroupID); err != nil {
-		return fmt.Errorf("failed to delete forum: w%")
+		return fmt.Errorf("failed to delete forum: %w", err)
 	}
 
 	return nil
