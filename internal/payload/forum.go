@@ -9,7 +9,7 @@ import (
 type Forum struct {
 	ID          int    `json:"id,omitempty"`
 	Name        string `json:"name,omitempty"`
-	ShortName   string `json:"path,omitempty"`
+	ShortName   string `json:"shortName,omitempty"`
 	Description string `json:"description,omitempty"`
 }
 
