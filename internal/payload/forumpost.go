@@ -6,34 +6,33 @@ import (
 	"github.com/gookit/validate"
 )
 
-type Forum struct {
-	GroupID     int    `json:"groupid,omitempty"`
-	ID          int    `json:"forumid,omitempty"`
-	Name        string `json:"name,omitempty"`
-	ShortName   string `json:"shortName,omitempty"`
-	Description string `json:"description,omitempty"`
+type ForumPost struct {
+	ID       int    `json:"id,omitempty"`
+	Title    string `json:"title,omitempty"`
+	Content  string `json:"content,omitempty"`
+	TimeDate string `json:"description,omitempty"`
 }
 
-func (f Forum) Render(_ http.ResponseWriter, _ *http.Request) error {
+func (fp ForumPost) Render(_ http.ResponseWriter, _ *http.Request) error {
 	return nil
 }
 
-type CreateForumRequest struct {
+type CreateForumPostRequest struct {
 	Name        string `json:"name,omitempty" validate:"required|minLen:3"`
 	ShortName   string `json:"shortName,omitempty" validate:"required|alphaDash"`
 	Description string `json:"description,omitempty"`
 }
 
-func (c CreateForumRequest) Validate() *validate.Validation {
+func (c CreateForumPostRequest) Validate() *validate.Validation {
 	return validate.Struct(c)
 }
 
-type UpdateForumRequest struct {
+type UpdateForumPostRequest struct {
 	Name        string `json:"name,omitempty" validate:"required|minLen:3"`
 	ShortName   string `json:"shortName,omitempty" validate:"required|alphaDash"`
 	Description string `json:"description,omitempty"`
 }
 
-func (u UpdateForumRequest) Validate() *validate.Validation {
+func (u UpdateForumPostRequest) Validate() *validate.Validation {
 	return validate.Struct(u)
 }

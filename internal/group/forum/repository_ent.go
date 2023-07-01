@@ -22,7 +22,7 @@ func NewEntRepository(e *ent.Client) Repository {
 	return &entRepository{client: e}
 }
 
-func (e entRepository) FindForumsByUser(ctx context.Context, principal string) ([]*entity.Forum, error) {
+func (e entRepository) FindForumsByGroup(ctx context.Context, principal string) ([]*entity.Forum, error) {
 	forum, err := e.client.Forum.Query().
 		Where(
 			entforum.HasGroupWith(

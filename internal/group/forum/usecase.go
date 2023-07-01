@@ -10,16 +10,17 @@ import (
 )
 
 type UseCase interface {
-	ListPrincipalForums(ctx context.Context, principal string) ([]*entity.Forum, error)
+	// groupShortName is the shortname used by groups, shortName us the shortname used by forums
+	ListForums(ctx context.Context, principal string, groupShortName string) ([]*entity.Forum, error)
 
-	// CreateGroup should be an admin only function
-	CreateForum(ctx context.Context, principal, name, shortName, description string) (*entity.Forum, error)
+	// CreateGroup should be an educator + owner only function
+	CreateForum(ctx context.Context, principal, groupShortName, name, shortName, description string) (*entity.Forum, error)
 
-	// DeleteGroup should be an admin only function
-	DeleteForum(ctx context.Context, principal string, shortName string) error
+	// DeleteGroup should be an educator + owner only function
+	DeleteForum(ctx context.Context, principal string, groupShortName string) error
 
-	// UpdateForum should be an admin only function
-	UpdateForum(ctx context.Context, principal string, name, shortName, description string) (*entity.Forum, error)
+	// UpdateForum should be an educator + owner only function
+	UpdateForum(ctx context.Context, principal string, groupShortName, name, shortName, description string) (*entity.Forum, error)
 }
 
 type useCase struct {
@@ -30,12 +31,12 @@ func NewUseCase(r Repository) UseCase {
 	return useCase{repo: r}
 }
 
-func (u useCase) ListPrincipalForums(ctx context.Context, principal string) ([]*entity.Forum, error) {
-	return u.repo.FindForumsByUser(ctx, principal)
+func (u useCase) ListForums(ctx context.Context, principal string, groupShortName string) ([]*entity.Forum, error) {
+	return u.repo.FindForumsByGroup(ctx, principal)
 }
 
-func (u useCase) CreateForum(ctx context.Context, principal, name, shortName, description string) (*entity.Forum, error) {
-	usr, err := u.repo.FindGroupUser(ctx, principal, shortName)
+func (u useCase) CreateForum(ctx context.Context, principal, groupShortName, name, shortName, description string) (*entity.Forum, error) {
+	usr, err := u.repo.FindGroupUser(ctx, principal, groupShortName)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find user: %w", err)
 	}
@@ -44,7 +45,7 @@ func (u useCase) CreateForum(ctx context.Context, principal, name, shortName, de
 		return nil, fmt.Errorf("user edges not loaded")
 	}
 
-	if usr.Role == group.RoleMember {
+	if usr.Role != group.RoleEducator || usr.Role != group.RoleOwner {
 		return nil, ErrUnauthorized
 	}
 
@@ -61,13 +62,13 @@ func (u useCase) CreateForum(ctx context.Context, principal, name, shortName, de
 	return forum, nil
 }
 
-func (u useCase) DeleteForum(ctx context.Context, principal string, shortName string) error {
-	usr, err := u.repo.FindGroupUser(ctx, principal, shortName)
+func (u useCase) DeleteForum(ctx context.Context, principal string, groupShortName string) error {
+	usr, err := u.repo.FindGroupUser(ctx, principal, groupShortName)
 	if err != nil {
 		return fmt.Errorf("failed to find user: %w", err)
 	}
 
-	if usr.Role == group.RoleMember {
+	if usr.Role != group.RoleEducator || usr.Role != group.RoleOwner {
 		return ErrUnauthorized
 	}
 
@@ -78,8 +79,8 @@ func (u useCase) DeleteForum(ctx context.Context, principal string, shortName st
 	return nil
 }
 
-func (u useCase) UpdateForum(ctx context.Context, principal string, name, shortName, description string) (*entity.Forum, error) {
-	usr, err := u.repo.FindGroupUser(ctx, principal, shortName)
+func (u useCase) UpdateForum(ctx context.Context, principal string, groupShortName, name, shortName, description string) (*entity.Forum, error) {
+	usr, err := u.repo.FindGroupUser(ctx, principal, groupShortName)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find user: %w", err)
 	}
@@ -88,7 +89,7 @@ func (u useCase) UpdateForum(ctx context.Context, principal string, name, shortN
 		return nil, fmt.Errorf("user edges not loaded")
 	}
 
-	if usr.Role == group.RoleMember {
+	if usr.Role != group.RoleEducator || usr.Role != group.RoleOwner {
 		return nil, ErrUnauthorized
 	}
 

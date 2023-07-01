@@ -8,7 +8,7 @@ import (
 )
 
 type Reader interface {
-	FindForumsByUser(ctx context.Context, principal string) ([]*entity.Forum, error)
+	FindForumsByGroup(ctx context.Context, principal string) ([]*entity.Forum, error)
 	FindForumByGroupIDAndShortName(ctx context.Context, groupID int, shortName string) (*entity.Forum, error)
 	FindForum(ctx context.Context, shortName string) (*entity.Forum, error)
 

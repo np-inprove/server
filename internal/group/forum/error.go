@@ -19,7 +19,7 @@ func mapDomainErr(err error) render.Renderer {
 		return &apperror.ErrResponse{
 			Err:            err,
 			HTTPStatusCode: http.StatusNotFound,
-			AppErrCode:     40401,
+			AppErrCode:     40402,
 			AppErrMessage:  "The group specified does not exist",
 		}
 	}
@@ -28,7 +28,7 @@ func mapDomainErr(err error) render.Renderer {
 		return &apperror.ErrResponse{
 			Err:            err,
 			HTTPStatusCode: http.StatusConflict,
-			AppErrCode:     40901,
+			AppErrCode:     40902,
 			AppErrMessage:  "This forum short name is unavailable",
 		}
 	}
