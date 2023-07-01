@@ -7,7 +7,6 @@ import (
 )
 
 type Forum struct {
-	GroupID     int    `json:"groupid,omitempty"`
 	ID          int    `json:"forumid,omitempty"`
 	Name        string `json:"name,omitempty"`
 	ShortName   string `json:"shortName,omitempty"`

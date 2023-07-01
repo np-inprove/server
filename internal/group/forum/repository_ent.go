@@ -53,7 +53,13 @@ func (e entRepository) FindForumByGroupIDAndShortName(ctx context.Context, group
 }
 
 func (e entRepository) FindForum(ctx context.Context, shortName string) (*entity.Forum, error) {
-	inst, err := e.client.Forum.Query().Where(entforum.ShortName(shortName)).Only(ctx)
+	inst, err := e.client.Forum.Query().Where(
+		predicate.Forum(
+			entgroup.HasForumsWith(
+				entforum.ShortName(shortName),
+			),
+		),
+	).Only(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find forum: %w", err)
 	}
