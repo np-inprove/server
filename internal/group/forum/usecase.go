@@ -19,7 +19,7 @@ type UseCase interface {
 	DeleteForum(ctx context.Context, principal string, shortName string) error
 
 	// UpdateForum should be an admin only function
-	UpdateForum(ctx context.Context, principal string, shortName string, opts ...forum.Option) (*entity.Forum, error)
+	UpdateForum(ctx context.Context, principal string, name, shortName, description string) (*entity.Forum, error)
 }
 
 type useCase struct {
@@ -78,7 +78,7 @@ func (u useCase) DeleteForum(ctx context.Context, principal string, shortName st
 	return nil
 }
 
-func (u useCase) UpdateForum(ctx context.Context, principal string, shortName string, opts ...forum.Option) (*entity.Forum, error) {
+func (u useCase) UpdateForum(ctx context.Context, principal string, name, shortName, description string) (*entity.Forum, error) {
 	usr, err := u.repo.FindGroupUser(ctx, principal, shortName)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find user: %w", err)
@@ -97,7 +97,7 @@ func (u useCase) UpdateForum(ctx context.Context, principal string, shortName st
 		return nil, err
 	}
 
-	forum, err = u.repo.UpdateForum(ctx, forum.ID, opts...)
+	forum, err = u.repo.UpdateForum(ctx, forum.ID, name, shortName, description)
 	if err != nil {
 		return nil, fmt.Errorf("failed to update institution: %w", err)
 	}

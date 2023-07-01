@@ -18,7 +18,7 @@ type Reader interface {
 
 type Writer interface {
 	CreateForum(ctx context.Context, groupID int, opts ...forum.Option) (*entity.Forum, error)
-	UpdateForum(ctx context.Context, principal, name, shortName, description string) (*entity.Forum, error)
+	UpdateForum(ctx context.Context, forumID int, name, shortName, description string) (*entity.Forum, error)
 	DeleteForum(ctx context.Context, id int) error
 }
 
