@@ -57,7 +57,7 @@ func (h httpHandler) ListForums(w http.ResponseWriter, r *http.Request) {
 
 	res := make([]render.Renderer, len(forums))
 	for i, item := range forums {
-		res[i] = payload.Group{
+		res[i] = payload.Forum{
 			ID:          item.ID,
 			ShortName:   item.ShortName,
 			Name:        item.Name,
