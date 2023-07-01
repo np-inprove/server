@@ -60,6 +60,19 @@ func (e entRepository) FindForum(ctx context.Context, shortName string) (*entity
 	return inst, nil
 }
 
+func (e entRepository) FindUserWithGroups(ctx context.Context, principal string) (*entity.User, error) {
+	usr, err := e.client.User.Query().
+		Where(
+			user.Email(principal),
+		).WithGroups().
+		Only(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to find user with group: %w", err)
+	}
+
+	return usr, nil
+}
+
 func (e entRepository) FindGroupUser(ctx context.Context, principal string, shortName string) (*entity.GroupUser, error) {
 	grpusr, err := e.client.GroupUser.Query().
 		Where(
@@ -92,16 +105,11 @@ func (e entRepository) CreateForum(ctx context.Context, groupID int, opts ...for
 	return forum, nil
 }
 
-func (e entRepository) UpdateForum(ctx context.Context, id int, opts ...forum.Option) (*entity.Forum, error) {
-	var options forum.Options
-	for _, opt := range opts {
-		opt(&options)
-	}
-
+func (e entRepository) UpdateForum(ctx context.Context, id int, name, shortName, description string) (*entity.Forum, error) {
 	forum, err := e.client.Forum.UpdateOneID(id).
-		SetName(options.Name).
-		SetShortName(options.ShortName).
-		SetDescription(options.Description).
+		SetName(name).
+		SetShortName(shortName).
+		SetDescription(description).
 		Save(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to update forum: %w", err)

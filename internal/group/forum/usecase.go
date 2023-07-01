@@ -13,13 +13,13 @@ type UseCase interface {
 	ListPrincipalForums(ctx context.Context, principal string) ([]*entity.Forum, error)
 
 	// CreateGroup should be an admin only function
-	CreateForum(ctx context.Context, principal, shortName string, opts ...forum.Option) (*entity.Forum, error)
+	CreateForum(ctx context.Context, principal, name, shortName, description string) (*entity.Forum, error)
 
 	// DeleteGroup should be an admin only function
 	DeleteForum(ctx context.Context, principal string, shortName string) error
 
 	// UpdateForum should be an admin only function
-	UpdateForum(ctx context.Context, principal string, opts ...forum.Option) (*entity.Forum, error)
+	UpdateForum(ctx context.Context, principal string, shortName string, opts ...forum.Option) (*entity.Forum, error)
 }
 
 type useCase struct {
@@ -34,7 +34,7 @@ func (u useCase) ListPrincipalForums(ctx context.Context, principal string) ([]*
 	return u.repo.FindForumsByUser(ctx, principal)
 }
 
-func (u useCase) CreateForum(ctx context.Context, principal, shortName string, opts ...forum.Option) (*entity.Forum, error) {
+func (u useCase) CreateForum(ctx context.Context, principal, name, shortName, description string) (*entity.Forum, error) {
 	usr, err := u.repo.FindGroupUser(ctx, principal, shortName)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find user: %w", err)
@@ -44,21 +44,16 @@ func (u useCase) CreateForum(ctx context.Context, principal, shortName string, o
 		return nil, fmt.Errorf("user edges not loaded")
 	}
 
-	if usr.Role != group.RoleOwner && usr.Role != group.RoleEducator {
+	if usr.Role == group.RoleMember {
 		return nil, ErrUnauthorized
 	}
 
-	var options forum.Options
-	for _, opt := range opts {
-		opt(&options)
-	}
-
 	grp := usr.Edges.Group
-	if _, err := u.repo.FindForumByGroupIDAndShortName(ctx, grp.ID, options.ShortName); err == nil {
+	if _, err := u.repo.FindForumByGroupIDAndShortName(ctx, grp.ID, shortName); err == nil {
 		return nil, ErrForumShortNameConflict
 	}
 
-	forum, err := u.repo.CreateForum(ctx, grp.ID, opts...)
+	forum, err := u.repo.CreateForum(ctx, grp.ID, forum.Name(name), forum.ShortName(shortName), forum.Description(description))
 	if err != nil {
 		return nil, fmt.Errorf("failed to create forum: %w", err)
 	}
@@ -72,7 +67,7 @@ func (u useCase) DeleteForum(ctx context.Context, principal string, shortName st
 		return fmt.Errorf("failed to find user: %w", err)
 	}
 
-	if usr.Role != group.RoleOwner && usr.Role != group.RoleEducator {
+	if usr.Role == group.RoleMember {
 		return ErrUnauthorized
 	}
 
@@ -83,7 +78,20 @@ func (u useCase) DeleteForum(ctx context.Context, principal string, shortName st
 	return nil
 }
 
-func (u useCase) UpdateForum(ctx context.Context, principal string, opts ...forum.Option) (*entity.Forum, error) {
+func (u useCase) UpdateForum(ctx context.Context, principal string, shortName string, opts ...forum.Option) (*entity.Forum, error) {
+	usr, err := u.repo.FindGroupUser(ctx, principal, shortName)
+	if err != nil {
+		return nil, fmt.Errorf("failed to find user: %w", err)
+	}
+
+	if usr.Edges.Group == nil {
+		return nil, fmt.Errorf("user edges not loaded")
+	}
+
+	if usr.Role == group.RoleMember {
+		return nil, ErrUnauthorized
+	}
+
 	forum, err := u.repo.FindForum(ctx, principal)
 	if err != nil {
 		return nil, err
