@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/np-inprove/server/internal/entity"
 	"github.com/np-inprove/server/internal/entity/group"
+	"github.com/np-inprove/server/internal/transactor"
 )
 
 type Reader interface {
@@ -15,12 +16,14 @@ type Reader interface {
 }
 
 type Writer interface {
-	CreateGroup(ctx context.Context, institutionID int, usr *entity.User, opts ...group.Option) (*entity.Group, error)
+	CreateGroup(ctx context.Context, institutionID int, opts ...group.Option) (*entity.Group, error)
 	UpdateGroup(ctx context.Context, id int, opts ...group.Option) (*entity.Group, error)
 	DeleteGroup(ctx context.Context, id int) error
+	CreateGroupUser(ctx context.Context, userID int, groupID int, role group.Role) (*entity.GroupUser, error)
 }
 
 type Repository interface {
 	Reader
 	Writer
+	transactor.Transactor
 }

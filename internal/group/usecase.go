@@ -11,7 +11,7 @@ import (
 type UseCase interface {
 	ListPrincipalGroups(ctx context.Context, principal string) ([]*entity.Group, error)
 
-	// CreateGroup should be an admin only function
+	// CreateGroup should be an educator and admin only feature
 	CreateGroup(ctx context.Context, principal string, opts ...group.Option) (*entity.Group, error)
 
 	// UpdateGroup should be an admin only function
@@ -43,7 +43,7 @@ func (u useCase) CreateGroup(ctx context.Context, principal string, opts ...grou
 		return nil, fmt.Errorf("user edges not loaded")
 	}
 
-	if usr.Role != institution.RoleAdmin {
+	if usr.Role != institution.RoleAdmin && usr.Role != institution.RoleEducator {
 		return nil, ErrUnauthorized
 	}
 
@@ -57,12 +57,25 @@ func (u useCase) CreateGroup(ctx context.Context, principal string, opts ...grou
 		return nil, ErrGroupShortNameConflict
 	}
 
-	grp, err := u.repo.CreateGroup(ctx, inst.ID, usr, opts...)
+	grp, err := u.repo.WithTx(ctx, func(ctx context.Context) (interface{}, error) {
+		grp, err := u.repo.CreateGroup(ctx, inst.ID, opts...)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create group: %w", err)
+		}
+
+		_, err = u.repo.CreateGroupUser(ctx, usr.ID, grp.ID, group.RoleOwner)
+		if err != nil {
+			return nil, fmt.Errorf("failed to assign group owner: %w", err)
+		}
+
+		return grp, nil
+	})
+
 	if err != nil {
-		return nil, fmt.Errorf("failed to create group: %w", err)
+		return nil, err
 	}
 
-	return grp, nil
+	return grp.(*entity.Group), nil
 }
 
 func (u useCase) UpdateGroup(ctx context.Context, principal string, shortName string, opts ...group.Option) (*entity.Group, error) {

@@ -163,7 +163,7 @@ func main() {
 		logger.String("area", "group"),
 	)
 
-	groupRepo := group.NewEntRepository(client)
+	groupRepo := group.NewEntRepository(appLogger, client)
 	groupService := group.NewUseCase(groupRepo)
 	groupHandler := group.NewHTTPHandler(groupService, cfg, tokenAuth)
 
