@@ -121,7 +121,7 @@ func (e entRepository) CreateGroupUser(ctx context.Context, userID int, groupID 
 		SetRole(role).
 		Save(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("failed to add owner to group: %w", err)
+		return nil, fmt.Errorf("failed to add user to group: %w", err)
 	}
 
 	return groupUser, nil
