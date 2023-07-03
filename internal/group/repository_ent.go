@@ -197,7 +197,7 @@ func (e entRepository) WithTx(
 			e.log.Error("failed ent transaction rollback",
 				logger.String("err", err.Error()),
 				logger.String("causer", err.Error()),
-				logger.String("area", "god"),
+				logger.String("area", "group"),
 			)
 			return nil, fmt.Errorf("failed to rollback ent transaction: %w", err2)
 		}
