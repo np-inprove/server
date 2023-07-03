@@ -191,7 +191,7 @@ func (e entRepository) WithTx(
 	if err != nil {
 		e.log.Warn("failed database query during ent transaction",
 			logger.String("err", err.Error()),
-			logger.String("area", "god"),
+			logger.String("area", "group"),
 		)
 		if err2 := tx.Rollback(); err2 != nil {
 			e.log.Error("failed ent transaction rollback",
