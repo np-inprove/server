@@ -20,7 +20,7 @@ type UseCase interface {
 	DeleteForum(ctx context.Context, principal string, groupShortName string) error
 
 	// UpdateForum should be an educator + owner only function
-	UpdateForum(ctx context.Context, principal string, groupShortName, name, shortName, description string) (*entity.Forum, error)
+	UpdateForum(ctx context.Context, principal string, originalShortName, name, shortName, description string) (*entity.Forum, error)
 }
 
 type useCase struct {
@@ -37,6 +37,7 @@ func (u useCase) ListForums(ctx context.Context, principal string, groupShortNam
 
 func (u useCase) CreateForum(ctx context.Context, principal, groupShortName, name, shortName, description string) (*entity.Forum, error) {
 	usr, err := u.repo.FindGroupUser(ctx, principal, groupShortName)
+
 	if err != nil {
 		return nil, fmt.Errorf("failed to find user: %w", err)
 	}

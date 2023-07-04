@@ -49,7 +49,9 @@ func (h httpHandler) ListForums(w http.ResponseWriter, r *http.Request) {
 	token := r.Context().Value(jwtauth.TokenCtxKey)
 	email := token.(jwt.Token).Subject()
 
-	forums, err := h.service.ListPrincipalForums(r.Context(), email)
+	shortName := chi.URLParam(r, "shortName")
+
+	forums, err := h.service.ListForums(r.Context(), email, shortName)
 	if err != nil {
 		_ = render.Render(w, r, mapDomainErr(err))
 		return
@@ -82,8 +84,9 @@ func (h httpHandler) CreateForum(w http.ResponseWriter, r *http.Request) {
 
 	token := r.Context().Value(jwtauth.TokenCtxKey)
 	email := token.(jwt.Token).Subject()
+	shortName := chi.URLParam(r, "shortName")
 
-	res, err := h.service.CreateForum(r.Context(), email,
+	res, err := h.service.CreateForum(r.Context(), email, shortName,
 		p.Name,
 		p.ShortName,
 		p.Description,
@@ -117,13 +120,15 @@ func (h httpHandler) DeleteForum(w http.ResponseWriter, r *http.Request) {
 
 func (h httpHandler) UpdateForum(w http.ResponseWriter, r *http.Request) {
 	shortName := chi.URLParam(r, "shortName")
+	token := r.Context().Value(jwtauth.TokenCtxKey)
+	email := token.(jwt.Token).Subject()
 	p := payload.UpdateForumRequest{}
 	if err := render.Decode(r, p); err != nil {
 		_ = render.Render(w, r, apperror.ErrBadRequest(err))
 		return
 	}
 
-	forum, err := h.service.UpdateForum(r.Context(), shortName,
+	forum, err := h.service.UpdateForum(r.Context(), email, shortName,
 		p.Name,
 		p.ShortName,
 		p.Description,
