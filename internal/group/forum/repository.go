@@ -13,7 +13,7 @@ type Reader interface {
 	FindForum(ctx context.Context, shortName string) (*entity.Forum, error)
 
 	FindUserWithGroups(ctx context.Context, principal string) (*entity.User, error)
-	FindGroupUser(ctx context.Context, principal, shortName string) (*entity.GroupUser, error)
+	FindGroupUserWithGroup(ctx context.Context, principal, shortName string) (*entity.GroupUser, error)
 }
 
 type Writer interface {

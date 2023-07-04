@@ -79,7 +79,7 @@ func (e entRepository) FindUserWithGroups(ctx context.Context, principal string)
 	return usr, nil
 }
 
-func (e entRepository) FindGroupUser(ctx context.Context, principal string, shortName string) (*entity.GroupUser, error) {
+func (e entRepository) FindGroupUserWithGroup(ctx context.Context, principal string, shortName string) (*entity.GroupUser, error) {
 	grpusr, err := e.client.GroupUser.Query().
 		Where(
 			groupuser.HasUserWith(user.Email(principal)),
