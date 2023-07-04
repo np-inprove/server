@@ -5370,22 +5370,9 @@ func (m *InstitutionMutation) OldDescription(ctx context.Context) (v string, err
 	return oldValue.Description, nil
 }
 
-// ClearDescription clears the value of the "Description" field.
-func (m *InstitutionMutation) ClearDescription() {
-	m._Description = nil
-	m.clearedFields[entinstitution.FieldDescription] = struct{}{}
-}
-
-// DescriptionCleared returns if the "Description" field was cleared in this mutation.
-func (m *InstitutionMutation) DescriptionCleared() bool {
-	_, ok := m.clearedFields[entinstitution.FieldDescription]
-	return ok
-}
-
 // ResetDescription resets all changes to the "Description" field.
 func (m *InstitutionMutation) ResetDescription() {
 	m._Description = nil
-	delete(m.clearedFields, entinstitution.FieldDescription)
 }
 
 // AddVoucherIDs adds the "vouchers" edge to the Voucher entity by ids.
@@ -5790,11 +5777,7 @@ func (m *InstitutionMutation) AddField(name string, value ent.Value) error {
 // ClearedFields returns all nullable fields that were cleared during this
 // mutation.
 func (m *InstitutionMutation) ClearedFields() []string {
-	var fields []string
-	if m.FieldCleared(entinstitution.FieldDescription) {
-		fields = append(fields, entinstitution.FieldDescription)
-	}
-	return fields
+	return nil
 }
 
 // FieldCleared returns a boolean indicating if a field with the given name was
@@ -5807,11 +5790,6 @@ func (m *InstitutionMutation) FieldCleared(name string) bool {
 // ClearField clears the value of the field with the given name. It returns an
 // error if the field is not defined in the schema.
 func (m *InstitutionMutation) ClearField(name string) error {
-	switch name {
-	case entinstitution.FieldDescription:
-		m.ClearDescription()
-		return nil
-	}
 	return fmt.Errorf("unknown Institution nullable field %s", name)
 }
 

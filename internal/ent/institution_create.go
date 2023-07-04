@@ -134,6 +134,7 @@ func (ic *InstitutionCreate) Mutation() *InstitutionMutation {
 
 // Save creates the Institution in the database.
 func (ic *InstitutionCreate) Save(ctx context.Context) (*Institution, error) {
+	ic.defaults()
 	return withHooks(ctx, ic.sqlSave, ic.mutation, ic.hooks)
 }
 
@@ -159,6 +160,14 @@ func (ic *InstitutionCreate) ExecX(ctx context.Context) {
 	}
 }
 
+// defaults sets the default values of the builder before save.
+func (ic *InstitutionCreate) defaults() {
+	if _, ok := ic.mutation.Description(); !ok {
+		v := entinstitution.DefaultDescription
+		ic.mutation.SetDescription(v)
+	}
+}
+
 // check runs all checks and user-defined validators on the builder.
 func (ic *InstitutionCreate) check() error {
 	if _, ok := ic.mutation.Name(); !ok {
@@ -176,6 +185,9 @@ func (ic *InstitutionCreate) check() error {
 		if err := entinstitution.ShortNameValidator(v); err != nil {
 			return &ValidationError{Name: "short_name", err: fmt.Errorf(`ent: validator failed for field "Institution.short_name": %w`, err)}
 		}
+	}
+	if _, ok := ic.mutation.Description(); !ok {
+		return &ValidationError{Name: "Description", err: errors.New(`ent: missing required field "Institution.Description"`)}
 	}
 	return nil
 }
@@ -384,12 +396,6 @@ func (u *InstitutionUpsert) UpdateDescription() *InstitutionUpsert {
 	return u
 }
 
-// ClearDescription clears the value of the "Description" field.
-func (u *InstitutionUpsert) ClearDescription() *InstitutionUpsert {
-	u.SetNull(entinstitution.FieldDescription)
-	return u
-}
-
 // UpdateNewValues updates the mutable fields using the new values that were set on create.
 // Using this option is equivalent to using:
 //
@@ -472,13 +478,6 @@ func (u *InstitutionUpsertOne) UpdateDescription() *InstitutionUpsertOne {
 	})
 }
 
-// ClearDescription clears the value of the "Description" field.
-func (u *InstitutionUpsertOne) ClearDescription() *InstitutionUpsertOne {
-	return u.Update(func(s *InstitutionUpsert) {
-		s.ClearDescription()
-	})
-}
-
 // Exec executes the query.
 func (u *InstitutionUpsertOne) Exec(ctx context.Context) error {
 	if len(u.create.conflict) == 0 {
@@ -527,6 +526,7 @@ func (icb *InstitutionCreateBulk) Save(ctx context.Context) ([]*Institution, err
 	for i := range icb.builders {
 		func(i int, root context.Context) {
 			builder := icb.builders[i]
+			builder.defaults()
 			var mut Mutator = MutateFunc(func(ctx context.Context, m Mutation) (Value, error) {
 				mutation, ok := m.(*InstitutionMutation)
 				if !ok {
@@ -717,13 +717,6 @@ func (u *InstitutionUpsertBulk) SetDescription(v string) *InstitutionUpsertBulk 
 func (u *InstitutionUpsertBulk) UpdateDescription() *InstitutionUpsertBulk {
 	return u.Update(func(s *InstitutionUpsert) {
 		s.UpdateDescription()
-	})
-}
-
-// ClearDescription clears the value of the "Description" field.
-func (u *InstitutionUpsertBulk) ClearDescription() *InstitutionUpsertBulk {
-	return u.Update(func(s *InstitutionUpsert) {
-		s.ClearDescription()
 	})
 }
 

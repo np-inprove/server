@@ -253,16 +253,6 @@ func DescriptionHasSuffix(v string) predicate.Institution {
 	return predicate.Institution(sql.FieldHasSuffix(FieldDescription, v))
 }
 
-// DescriptionIsNil applies the IsNil predicate on the "Description" field.
-func DescriptionIsNil() predicate.Institution {
-	return predicate.Institution(sql.FieldIsNull(FieldDescription))
-}
-
-// DescriptionNotNil applies the NotNil predicate on the "Description" field.
-func DescriptionNotNil() predicate.Institution {
-	return predicate.Institution(sql.FieldNotNull(FieldDescription))
-}
-
 // DescriptionEqualFold applies the EqualFold predicate on the "Description" field.
 func DescriptionEqualFold(v string) predicate.Institution {
 	return predicate.Institution(sql.FieldEqualFold(FieldDescription, v))

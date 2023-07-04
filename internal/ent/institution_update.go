@@ -58,12 +58,6 @@ func (iu *InstitutionUpdate) SetNillableDescription(s *string) *InstitutionUpdat
 	return iu
 }
 
-// ClearDescription clears the value of the "Description" field.
-func (iu *InstitutionUpdate) ClearDescription() *InstitutionUpdate {
-	iu.mutation.ClearDescription()
-	return iu
-}
-
 // AddVoucherIDs adds the "vouchers" edge to the Voucher entity by IDs.
 func (iu *InstitutionUpdate) AddVoucherIDs(ids ...int) *InstitutionUpdate {
 	iu.mutation.AddVoucherIDs(ids...)
@@ -311,9 +305,6 @@ func (iu *InstitutionUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if value, ok := iu.mutation.Description(); ok {
 		_spec.SetField(entinstitution.FieldDescription, field.TypeString, value)
-	}
-	if iu.mutation.DescriptionCleared() {
-		_spec.ClearField(entinstitution.FieldDescription, field.TypeString)
 	}
 	if iu.mutation.VouchersCleared() {
 		edge := &sqlgraph.EdgeSpec{
@@ -583,12 +574,6 @@ func (iuo *InstitutionUpdateOne) SetNillableDescription(s *string) *InstitutionU
 	if s != nil {
 		iuo.SetDescription(*s)
 	}
-	return iuo
-}
-
-// ClearDescription clears the value of the "Description" field.
-func (iuo *InstitutionUpdateOne) ClearDescription() *InstitutionUpdateOne {
-	iuo.mutation.ClearDescription()
 	return iuo
 }
 
@@ -869,9 +854,6 @@ func (iuo *InstitutionUpdateOne) sqlSave(ctx context.Context) (_node *Institutio
 	}
 	if value, ok := iuo.mutation.Description(); ok {
 		_spec.SetField(entinstitution.FieldDescription, field.TypeString, value)
-	}
-	if iuo.mutation.DescriptionCleared() {
-		_spec.ClearField(entinstitution.FieldDescription, field.TypeString)
 	}
 	if iuo.mutation.VouchersCleared() {
 		edge := &sqlgraph.EdgeSpec{
