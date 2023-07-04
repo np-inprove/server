@@ -3,6 +3,7 @@ package group
 import (
 	"context"
 	"fmt"
+	"github.com/np-inprove/server/internal/apperror"
 	"github.com/np-inprove/server/internal/ent"
 	entgroup "github.com/np-inprove/server/internal/ent/group"
 	"github.com/np-inprove/server/internal/ent/groupuser"
@@ -101,6 +102,9 @@ func (e entRepository) CreateGroup(ctx context.Context, institutionID int, opts 
 		SetInstitutionID(institutionID).
 		Save(ctx)
 	if err != nil {
+		if apperror.IsConflict(err) {
+			return nil, ErrGroupShortNameConflict
+		}
 		return nil, fmt.Errorf("failed to create group: %w", err)
 	}
 
@@ -155,10 +159,30 @@ func (e entRepository) UpdateGroup(ctx context.Context, id int, opts ...group.Op
 
 	grp, err := query.Save(ctx)
 	if err != nil {
+		if apperror.IsConflict(err) {
+			return nil, ErrGroupShortNameConflict
+		}
 		return nil, fmt.Errorf("failed to update group: %w", err)
 	}
 
 	return grp, nil
+}
+
+func (e entRepository) BulkDeleteGroupUsers(ctx context.Context, groupID int) error {
+
+	c := e.client
+	if cc, ok := entutils.ExtractTx(ctx); ok {
+		c = cc
+	}
+
+	_, err := c.GroupUser.
+		Delete().Where(groupuser.GroupID(groupID)).
+		Exec(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to add user to group: %w", err)
+	}
+
+	return nil
 }
 
 func (e entRepository) DeleteGroup(ctx context.Context, id int) error {

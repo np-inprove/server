@@ -37,8 +37,8 @@ func NewHTTPHandler(u UseCase, c *config.Config, j *jwtauth.JWTAuth) chi.Router 
 
 		r.Get("/", a.ListGroups)
 		r.Post("/", a.CreateGroup)
-		r.Put("/{path}", a.UpdateGroup)
-		r.Delete("/{path}", a.DeleteGroup)
+		r.Put("/{shortName}", a.UpdateGroup)
+		r.Delete("/{shortName}", a.DeleteGroup)
 	})
 
 	return r
@@ -112,7 +112,7 @@ func (h httpHandler) UpdateGroup(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	shortName := chi.URLParam(r, "path")
+	shortName := chi.URLParam(r, "shortName")
 	token := r.Context().Value(jwtauth.TokenCtxKey)
 	email := token.(jwt.Token).Subject()
 
@@ -136,7 +136,7 @@ func (h httpHandler) UpdateGroup(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h httpHandler) DeleteGroup(w http.ResponseWriter, r *http.Request) {
-	path := chi.URLParam(r, "path")
+	path := chi.URLParam(r, "shortName")
 	token := r.Context().Value(jwtauth.TokenCtxKey)
 	email := token.(jwt.Token).Subject()
 

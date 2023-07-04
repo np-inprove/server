@@ -84,7 +84,7 @@ func (u useCase) UpdateGroup(ctx context.Context, principal string, shortName st
 		return nil, fmt.Errorf("failed to find group user: %w", err)
 	}
 
-	if grpusr.Role != group.RoleOwner {
+	if grpusr.Role != group.RoleOwner && grpusr.Role != group.RoleEducator {
 		return nil, ErrUnauthorized
 	}
 
@@ -102,8 +102,12 @@ func (u useCase) DeleteGroup(ctx context.Context, principal string, shortName st
 		return fmt.Errorf("failed to find group user: %w", err)
 	}
 
-	if grpusr.Role != group.RoleOwner {
+	if grpusr.Role != group.RoleOwner && grpusr.Role != group.RoleEducator {
 		return ErrUnauthorized
+	}
+
+	if err := u.repo.BulkDeleteGroupUsers(ctx, grpusr.GroupID); err != nil {
+		return fmt.Errorf("failed to delete group users: %w", err)
 	}
 
 	if err := u.repo.DeleteGroup(ctx, grpusr.GroupID); err != nil {

@@ -20,6 +20,7 @@ type Writer interface {
 	UpdateGroup(ctx context.Context, id int, opts ...group.Option) (*entity.Group, error)
 	DeleteGroup(ctx context.Context, id int) error
 	CreateGroupUser(ctx context.Context, userID int, groupID int, role group.Role) (*entity.GroupUser, error)
+	BulkDeleteGroupUsers(ctx context.Context, groupID int) error
 }
 
 type Repository interface {
