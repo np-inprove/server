@@ -6,6 +6,7 @@ import (
 	"github.com/np-inprove/server/internal/apperror"
 	"github.com/np-inprove/server/internal/ent"
 	entgroup "github.com/np-inprove/server/internal/ent/group"
+	"github.com/np-inprove/server/internal/ent/groupinvitelink"
 	"github.com/np-inprove/server/internal/ent/groupuser"
 	entinstitution "github.com/np-inprove/server/internal/ent/institution"
 	"github.com/np-inprove/server/internal/ent/user"
@@ -197,6 +198,58 @@ func (e entRepository) DeleteGroup(ctx context.Context, id int) error {
 		return fmt.Errorf("failed to delete group: %w", err)
 	}
 	return err
+}
+
+func (e entRepository) FindGroup(ctx context.Context, shortName string) (*entity.Group, error) {
+	grp, err := e.client.Group.Query().Where(entgroup.ShortName(shortName)).Only(ctx)
+	if err != nil {
+		if apperror.IsNotFound(err) {
+			return nil, ErrGroupNotFound
+		}
+		return nil, fmt.Errorf("failed to find group: %w", err)
+	}
+	return grp, err
+}
+
+func (e entRepository) FindGroupWithInvites(ctx context.Context, shortName string) (*entity.Group, error) {
+	grp, err := e.client.Group.Query().Where(entgroup.ShortName(shortName)).WithInvites().Only(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to find group: %w", err)
+	}
+	return grp, nil
+}
+
+func (e entRepository) FindInviteWithGroup(ctx context.Context, code string) (*entity.GroupInviteLink, error) {
+	link, err := e.client.GroupInviteLink.Query().
+		Where(
+			groupinvitelink.Code(code),
+		).
+		WithGroup().
+		Only(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to find group invite link: %w", err)
+	}
+	return link, nil
+}
+
+func (e entRepository) CreateInviteLink(ctx context.Context, id int, code string, role group.Role) (*entity.GroupInviteLink, error) {
+	link, err := e.client.GroupInviteLink.Create().
+		SetGroupID(id).
+		SetCode(code).
+		SetRole(role).
+		Save(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create group invite link: %w", err)
+	}
+	return link, nil
+}
+
+func (e entRepository) DeleteInviteLink(ctx context.Context, id int) error {
+	err := e.client.GroupInviteLink.DeleteOneID(id).Exec(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to delete group invite link: %w", err)
+	}
+	return nil
 }
 
 func (e entRepository) WithTx(

@@ -39,6 +39,10 @@ func NewHTTPHandler(u UseCase, c *config.Config, j *jwtauth.JWTAuth) chi.Router 
 		r.Post("/", a.CreateGroup)
 		r.Put("/{shortName}", a.UpdateGroup)
 		r.Delete("/{shortName}", a.DeleteGroup)
+
+		r.Get("/{shortName}/invites", a.ListInviteLinks)
+		r.Post("/{shortName}/invites", a.CreateInviteLink)
+		r.Delete("/{shortName}/invites/{code}", a.DeleteInviteLink)
 	})
 
 	return r
@@ -146,4 +150,74 @@ func (h httpHandler) DeleteGroup(w http.ResponseWriter, r *http.Request) {
 	}
 
 	render.NoContent(w, r)
+}
+
+func (h httpHandler) ListInviteLinks(w http.ResponseWriter, r *http.Request) {
+	shortName := chi.URLParam(r, "shortName")
+
+	token := r.Context().Value(jwtauth.TokenCtxKey)
+	email := token.(jwt.Token).Subject()
+
+	links, err := h.service.ListInviteLinks(r.Context(), email, shortName)
+	if err != nil {
+		_ = render.Render(w, r, mapDomainErr(err))
+		return
+	}
+
+	p := make([]render.Renderer, len(links))
+	for i, v := range links {
+		p[i] = payload.GroupInviteLink{
+			ID:   v.ID,
+			Code: v.Code,
+			Role: v.Role,
+		}
+	}
+
+	_ = render.RenderList(w, r, p)
+}
+
+func (h httpHandler) CreateInviteLink(w http.ResponseWriter, r *http.Request) {
+	p := &payload.CreateGroupInviteLinkRequest{}
+
+	if err := render.Decode(r, p); err != nil {
+		_ = render.Render(w, r, apperror.ErrBadRequest(err))
+		return
+	}
+
+	if v := p.Validate(); !v.Validate() {
+		_ = render.Render(w, r, apperror.ErrValidation(v.Errors))
+		return
+	}
+
+	shortName := chi.URLParam(r, "shortName")
+	token := r.Context().Value(jwtauth.TokenCtxKey)
+	email := token.(jwt.Token).Subject()
+
+	link, err := h.service.CreateInviteLink(r.Context(), email, shortName, p.Role)
+	if err != nil {
+		_ = render.Render(w, r, mapDomainErr(err))
+		return
+	}
+
+	_ = render.Render(w, r, payload.GroupInviteLink{
+		ID:   link.ID,
+		Code: link.Code,
+		Role: link.Role,
+	})
+}
+
+func (h httpHandler) DeleteInviteLink(w http.ResponseWriter, r *http.Request) {
+	shortName := chi.URLParam(r, "shortName")
+	code := chi.URLParam(r, "code")
+
+	token := r.Context().Value(jwtauth.TokenCtxKey)
+	email := token.(jwt.Token).Subject()
+
+	err := h.service.DeleteInviteLink(r.Context(), email, shortName, code)
+	if err != nil {
+		_ = render.Render(w, r, mapDomainErr(err))
+		return
+	}
+
+	render.Status(r, http.StatusNoContent)
 }

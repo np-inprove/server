@@ -3,9 +3,15 @@ package group
 import (
 	"context"
 	"fmt"
+	"math/rand"
+
 	"github.com/np-inprove/server/internal/entity"
 	"github.com/np-inprove/server/internal/entity/group"
 	"github.com/np-inprove/server/internal/entity/institution"
+)
+
+var (
+	letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890")
 )
 
 type UseCase interface {
@@ -14,11 +20,20 @@ type UseCase interface {
 	// CreateGroup should be an educator and admin only feature
 	CreateGroup(ctx context.Context, principal string, opts ...group.Option) (*entity.Group, error)
 
-	// UpdateGroup should be an admin only function
+	// UpdateGroup should be an educator and admin only function
 	UpdateGroup(ctx context.Context, principal string, shortName string, opts ...group.Option) (*entity.Group, error)
 
-	// DeleteGroup should be an admin only function
+	// DeleteGroup should be an educator and admin only function
 	DeleteGroup(ctx context.Context, principal string, shortName string) error
+
+	// ListInviteLinks shows invite links for a group identified by shortName.
+	ListInviteLinks(ctx context.Context, principal, shortName string) ([]*entity.GroupInviteLink, error)
+
+	// CreateInviteLink should be an owner and educator only function
+	CreateInviteLink(ctx context.Context, principal, shortName string, role group.Role) (*entity.GroupInviteLink, error)
+
+	// DeleteInviteLink should be an owner and educator only function
+	DeleteInviteLink(ctx context.Context, principal, shortName, code string) error
 }
 
 type useCase struct {
@@ -112,6 +127,75 @@ func (u useCase) DeleteGroup(ctx context.Context, principal string, shortName st
 
 	if err := u.repo.DeleteGroup(ctx, grpusr.GroupID); err != nil {
 		return fmt.Errorf("failed to delete group: %w", err)
+	}
+
+	return nil
+}
+
+func (u useCase) authorizedForInvite(ctx context.Context, principal, shortName string) error {
+	usr, err := u.repo.FindGroupUser(ctx, principal, shortName)
+	if err != nil {
+		return fmt.Errorf("failed to find group: %w", err)
+	}
+
+	if usr.Role != group.RoleOwner && usr.Role != group.RoleEducator {
+		return ErrUnauthorized
+	}
+
+	return nil
+}
+
+func (u useCase) ListInviteLinks(ctx context.Context, principal, shortName string) ([]*entity.GroupInviteLink, error) {
+	err := u.authorizedForInvite(ctx, principal, shortName)
+	if err != nil {
+		return nil, err
+	}
+
+	grp, err := u.repo.FindGroupWithInvites(ctx, shortName)
+	if err != nil {
+		return nil, err
+	}
+
+	return grp.Edges.Invites, nil
+}
+
+func (u useCase) CreateInviteLink(ctx context.Context, principal, shortName string, role group.Role) (*entity.GroupInviteLink, error) {
+	err := u.authorizedForInvite(ctx, principal, shortName)
+	if err != nil {
+		return nil, err
+	}
+
+	grp, err := u.repo.FindGroup(ctx, shortName)
+	if err != nil {
+		return nil, fmt.Errorf("failed to find group")
+	}
+
+	code := make([]rune, 8)
+	for i := range code {
+		code[i] = letters[rand.Intn(len(letters))]
+	}
+
+	link, err := u.repo.CreateInviteLink(ctx, grp.ID, string(code), role)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create invite link: %w", err)
+	}
+
+	return link, nil
+}
+
+func (u useCase) DeleteInviteLink(ctx context.Context, principal, shortName, code string) error {
+	err := u.authorizedForInvite(ctx, principal, shortName)
+	if err != nil {
+		return err
+	}
+
+	link, err := u.repo.FindInviteWithGroup(ctx, code)
+	if err != nil {
+		return fmt.Errorf("failed to find invite link: %w", err)
+	}
+
+	if err := u.repo.DeleteInviteLink(ctx, link.ID); err != nil {
+		return fmt.Errorf("failed to delete invite link: %w", err)
 	}
 
 	return nil

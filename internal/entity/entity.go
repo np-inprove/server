@@ -20,3 +20,6 @@ type GroupUserEdges = ent.GroupUserEdges
 
 type InstitutionInviteLink = ent.InstitutionInviteLink
 type InstitutionInviteLinkEdges = ent.InstitutionInviteLinkEdges
+
+type GroupInviteLink = ent.GroupInviteLink
+type GroupInviteLinkEdges = ent.GroupInviteLinkEdges
