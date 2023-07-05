@@ -36,7 +36,7 @@ func (u useCase) ListForums(ctx context.Context, principal string, groupShortNam
 }
 
 func (u useCase) CreateForum(ctx context.Context, principal, groupShortName, name, shortName, description string) (*entity.Forum, error) {
-	usr, err := u.repo.FindGroupUser(ctx, principal, groupShortName)
+	usr, err := u.repo.FindGroupUserWithGroup(ctx, principal, groupShortName)
 
 	if err != nil {
 		return nil, fmt.Errorf("failed to find user: %w", err)
@@ -64,7 +64,7 @@ func (u useCase) CreateForum(ctx context.Context, principal, groupShortName, nam
 }
 
 func (u useCase) DeleteForum(ctx context.Context, principal string, groupShortName string) error {
-	usr, err := u.repo.FindGroupUser(ctx, principal, groupShortName)
+	usr, err := u.repo.FindGroupUserWithGroup(ctx, principal, groupShortName)
 	if err != nil {
 		return fmt.Errorf("failed to find user: %w", err)
 	}
@@ -81,7 +81,7 @@ func (u useCase) DeleteForum(ctx context.Context, principal string, groupShortNa
 }
 
 func (u useCase) UpdateForum(ctx context.Context, principal string, groupShortName, name, shortName, description string) (*entity.Forum, error) {
-	usr, err := u.repo.FindGroupUser(ctx, principal, groupShortName)
+	usr, err := u.repo.FindGroupUserWithGroup(ctx, principal, groupShortName)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find user: %w", err)
 	}
