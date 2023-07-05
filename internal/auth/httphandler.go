@@ -41,6 +41,7 @@ func NewHTTPHandler(u UseCase, c *config.Config, j *jwtauth.JWTAuth) chi.Router 
 		r.Use(middleware.Authenticator)
 
 		r.Get("/whoami", a.WhoAmI)
+		r.Get("/myinstitution", a.GetUserInstitution)
 	})
 
 	return r
@@ -182,5 +183,21 @@ func (h httpHandler) setAuthCookies(w http.ResponseWriter, s *entity.Session) {
 		MaxAge:   int(30 * time.Minute.Seconds()),
 		Secure:   true,
 		SameSite: http.SameSiteDefaultMode,
+	})
+}
+
+func (h httpHandler) GetUserInstitution(w http.ResponseWriter, r *http.Request) {
+	token := r.Context().Value(jwtauth.TokenCtxKey)
+
+	inst, err := h.service.GetUserInstitution(r.Context(), token.(jwt.Token))
+	if err != nil {
+		_ = render.Render(w, r, apperror.ErrLoggedOut)
+		return
+	}
+
+	_ = render.Render(w, r, payload.Institution{
+		Name:        inst.Name,
+		ShortName:   inst.ShortName,
+		Description: inst.Description,
 	})
 }

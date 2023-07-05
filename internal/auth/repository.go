@@ -11,6 +11,7 @@ import (
 
 type Reader interface {
 	FindUserByEmail(ctx context.Context, email string) (*entity.User, error)
+	FindUserByEmailWithInstitute(ctx context.Context, email string) (*entity.User, error)
 	FindInstitutionInviteLinkWithInstitution(ctx context.Context, code string) (*entity.InstitutionInviteLink, error)
 	FindJWTRevocation(ctx context.Context, jti string) (*entity.JWTRevocation, error)
 }

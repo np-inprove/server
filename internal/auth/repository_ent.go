@@ -33,6 +33,15 @@ func (e entRepository) FindUserByEmail(ctx context.Context, email string) (*enti
 	return u, nil
 }
 
+func (e entRepository) FindUserByEmailWithInstitute(ctx context.Context, email string) (*entity.User, error) {
+	u, err := e.client.User.Query().Where(entuser.Email(email)).WithInstitution().Only(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to find user with email: %w", err)
+	}
+
+	return u, nil
+}
+
 func (e entRepository) FindInstitutionInviteLinkWithInstitution(ctx context.Context, code string) (*entity.InstitutionInviteLink, error) {
 	link, err := e.client.InstitutionInviteLink.Query().Where(institutioninvitelink.Code(code)).WithInstitution().Only(ctx)
 	if err != nil {

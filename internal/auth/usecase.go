@@ -35,6 +35,9 @@ type UseCase interface {
 
 	// CheckInviteCode retrieves an invite code and the associated institution from the repository
 	CheckInviteCode(ctx context.Context, inviteCode string) (*entity.InstitutionInviteLink, error)
+
+	// GetUserInstitution retrieves the institution associated with the user
+	GetUserInstitution(ctx context.Context, token jwt.Token) (*entity.Institution, error)
 }
 
 func NewUseCase(r Repository, c *config.Config, publicKey jwk.Key, privateKey jwk.Key) UseCase {
@@ -128,6 +131,19 @@ func (u useCase) CheckInviteCode(ctx context.Context, inviteCode string) (*entit
 	}
 
 	return link, nil
+}
+
+func (u useCase) GetUserInstitution(ctx context.Context, token jwt.Token) (*entity.Institution, error) {
+	if err := u.tokenIsValid(ctx, token.JwtID()); err != nil {
+		return nil, fmt.Errorf("failed to find jwt revocation: %w", err)
+	}
+
+	user, err := u.repo.FindUserByEmailWithInstitute(ctx, token.Subject())
+	if err != nil {
+		return nil, fmt.Errorf("failed to find user: %w", err)
+	}
+
+	return user.Edges.Institution, nil
 }
 
 func (u useCase) createJWT(email string, godMode bool) ([]byte, error) {
