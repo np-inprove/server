@@ -38,8 +38,8 @@ func NewHTTPHandler(u UseCase, c *config.Config, j *jwtauth.JWTAuth) chi.Router 
 
 		r.Get("/", a.ListForums)
 		r.Post("/", a.CreateForum)
-		r.Delete("/{shortName}", a.DeleteForum)
-		r.Put("/{shortName}", a.UpdateForum)
+		r.Delete("/{forumShortName}", a.DeleteForum)
+		r.Put("/{forumShortName}", a.UpdateForum)
 	})
 
 	return r
@@ -49,7 +49,7 @@ func (h httpHandler) ListForums(w http.ResponseWriter, r *http.Request) {
 	token := r.Context().Value(jwtauth.TokenCtxKey)
 	email := token.(jwt.Token).Subject()
 
-	shortName := chi.URLParam(r, "shortName")
+	shortName := chi.URLParam(r, "forumShortName")
 
 	forums, err := h.service.ListForums(r.Context(), email, shortName)
 	if err != nil {
@@ -84,7 +84,7 @@ func (h httpHandler) CreateForum(w http.ResponseWriter, r *http.Request) {
 
 	token := r.Context().Value(jwtauth.TokenCtxKey)
 	email := token.(jwt.Token).Subject()
-	shortName := chi.URLParam(r, "shortName")
+	shortName := chi.URLParam(r, "forumShortName")
 
 	res, err := h.service.CreateForum(r.Context(), email, shortName,
 		p.Name,
@@ -106,7 +106,7 @@ func (h httpHandler) CreateForum(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h httpHandler) DeleteForum(w http.ResponseWriter, r *http.Request) {
-	path := chi.URLParam(r, "shortName")
+	path := chi.URLParam(r, "forumShortName")
 	token := r.Context().Value(jwtauth.TokenCtxKey)
 	email := token.(jwt.Token).Subject()
 
@@ -119,7 +119,7 @@ func (h httpHandler) DeleteForum(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h httpHandler) UpdateForum(w http.ResponseWriter, r *http.Request) {
-	shortName := chi.URLParam(r, "shortName")
+	shortName := chi.URLParam(r, "forumShortName")
 	token := r.Context().Value(jwtauth.TokenCtxKey)
 	email := token.(jwt.Token).Subject()
 	p := payload.UpdateForumRequest{}
