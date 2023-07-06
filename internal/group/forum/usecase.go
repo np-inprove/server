@@ -46,7 +46,7 @@ func (u useCase) CreateForum(ctx context.Context, principal, groupShortName, nam
 		return nil, fmt.Errorf("user edges not loaded")
 	}
 
-	if usr.Role != group.RoleEducator || usr.Role != group.RoleOwner {
+	if usr.Role != group.RoleEducator && usr.Role != group.RoleOwner {
 		return nil, ErrUnauthorized
 	}
 
@@ -69,7 +69,7 @@ func (u useCase) DeleteForum(ctx context.Context, principal string, groupShortNa
 		return fmt.Errorf("failed to find user: %w", err)
 	}
 
-	if usr.Role != group.RoleEducator || usr.Role != group.RoleOwner {
+	if usr.Role != group.RoleEducator && usr.Role != group.RoleOwner {
 		return ErrUnauthorized
 	}
 
@@ -90,7 +90,7 @@ func (u useCase) UpdateForum(ctx context.Context, principal string, groupShortNa
 		return nil, fmt.Errorf("user edges not loaded")
 	}
 
-	if usr.Role != group.RoleEducator || usr.Role != group.RoleOwner {
+	if usr.Role != group.RoleEducator && usr.Role != group.RoleOwner {
 		return nil, ErrUnauthorized
 	}
 
