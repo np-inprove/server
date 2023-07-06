@@ -28,7 +28,7 @@ func (e entRepository) FindForumsByGroupAndInstitution(ctx context.Context, prin
 		Where(
 			entforum.HasGroupWith(
 				entgroup.HasInstitutionWith(
-					entinstitution.ShortName(instShortname), //is there such a thing as too much nesting
+					entinstitution.ShortName(instShortname),
 				),
 			),
 		).
