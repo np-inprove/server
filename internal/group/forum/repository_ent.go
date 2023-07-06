@@ -8,6 +8,7 @@ import (
 	entforum "github.com/np-inprove/server/internal/ent/forum"
 	entgroup "github.com/np-inprove/server/internal/ent/group"
 	"github.com/np-inprove/server/internal/ent/groupuser"
+	entinstitution "github.com/np-inprove/server/internal/ent/institution"
 	"github.com/np-inprove/server/internal/ent/predicate"
 	"github.com/np-inprove/server/internal/ent/user"
 	"github.com/np-inprove/server/internal/entity"
@@ -22,15 +23,18 @@ func NewEntRepository(e *ent.Client) Repository {
 	return &entRepository{client: e}
 }
 
-func (e entRepository) FindForumsByGroup(ctx context.Context, principal string) ([]*entity.Forum, error) {
+func (e entRepository) FindForumsByGroupAndInstitution(ctx context.Context, principal string, instShortname string) ([]*entity.Forum, error) {
 	forum, err := e.client.Forum.Query().
 		Where(
 			entforum.HasGroupWith(
-				predicate.Group(user.Email(principal)),
-			)).
+				entgroup.HasInstitutionWith(
+					entinstitution.ShortName(instShortname), //is there such a thing as too much nesting
+				),
+			),
+		).
 		All(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("failed to find forums by user email: %w", err)
+		return nil, fmt.Errorf("failed to find forums by group and institution: %w", err)
 	}
 
 	return forum, nil

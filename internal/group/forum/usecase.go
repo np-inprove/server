@@ -7,6 +7,7 @@ import (
 	"github.com/np-inprove/server/internal/entity"
 	"github.com/np-inprove/server/internal/entity/forum"
 	"github.com/np-inprove/server/internal/entity/group"
+	"github.com/np-inprove/server/internal/security"
 )
 
 type UseCase interface {
@@ -25,14 +26,15 @@ type UseCase interface {
 
 type useCase struct {
 	repo Repository
+	rbac security.RBAC
 }
 
 func NewUseCase(r Repository) UseCase {
 	return useCase{repo: r}
 }
 
-func (u useCase) ListForums(ctx context.Context, principal string, groupShortName string) ([]*entity.Forum, error) {
-	return u.repo.FindForumsByGroup(ctx, principal)
+func (u useCase) ListForums(ctx context.Context, principal string, instShortName string) ([]*entity.Forum, error) {
+	return u.repo.FindForumsByGroupAndInstitution(ctx, principal, instShortName)
 }
 
 func (u useCase) CreateForum(ctx context.Context, principal, groupShortName, name, shortName, description string) (*entity.Forum, error) {
@@ -46,7 +48,7 @@ func (u useCase) CreateForum(ctx context.Context, principal, groupShortName, nam
 		return nil, fmt.Errorf("user edges not loaded")
 	}
 
-	if usr.Role != group.RoleEducator && usr.Role != group.RoleOwner {
+	if ok := u.rbac.UserHasGroupRole(usr.Role, group.RoleEducator, group.RoleOwner); !ok {
 		return nil, ErrUnauthorized
 	}
 
@@ -69,7 +71,7 @@ func (u useCase) DeleteForum(ctx context.Context, principal string, groupShortNa
 		return fmt.Errorf("failed to find user: %w", err)
 	}
 
-	if usr.Role != group.RoleEducator && usr.Role != group.RoleOwner {
+	if ok := u.rbac.UserHasGroupRole(usr.Role, group.RoleEducator, group.RoleOwner); !ok {
 		return ErrUnauthorized
 	}
 
@@ -90,7 +92,7 @@ func (u useCase) UpdateForum(ctx context.Context, principal string, groupShortNa
 		return nil, fmt.Errorf("user edges not loaded")
 	}
 
-	if usr.Role != group.RoleEducator && usr.Role != group.RoleOwner {
+	if ok := u.rbac.UserHasGroupRole(usr.Role, group.RoleEducator, group.RoleOwner); !ok {
 		return nil, ErrUnauthorized
 	}
 
