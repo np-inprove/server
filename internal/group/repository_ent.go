@@ -25,6 +25,21 @@ func NewEntRepository(l logger.AppLogger, c *ent.Client) Repository {
 	return entRepository{l, c}
 }
 
+func (e entRepository) FindGroupInvites(ctx context.Context, id int) ([]*entity.GroupInviteLink, error) {
+	invites, err := e.client.GroupInviteLink.Query().
+		Where(
+			groupinvitelink.HasGroupWith(
+				entgroup.ID(id),
+			),
+		).
+		All(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to find group invites: %w", err)
+	}
+
+	return invites, nil
+}
+
 func (e entRepository) FindGroupsByUser(ctx context.Context, principal string) ([]*entity.Group, error) {
 	grps, err := e.client.Group.Query().
 		Where(

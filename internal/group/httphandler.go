@@ -42,6 +42,8 @@ func NewHTTPHandler(u UseCase, c *config.Config, j *jwtauth.JWTAuth) chi.Router 
 
 		r.Get("/{shortName}/invites", a.ListInviteLinks)
 		r.Post("/{shortName}/invites", a.CreateInviteLink)
+
+		r.Post("/{shortName}/invites/{code}", a.JoinGroup)
 		r.Delete("/{shortName}/invites/{code}", a.DeleteInviteLink)
 	})
 
@@ -174,6 +176,25 @@ func (h httpHandler) ListInviteLinks(w http.ResponseWriter, r *http.Request) {
 	}
 
 	_ = render.RenderList(w, r, p)
+}
+
+func (h httpHandler) JoinGroup(w http.ResponseWriter, r *http.Request) {
+	code := chi.URLParam(r, "code")
+	token := r.Context().Value(jwtauth.TokenCtxKey)
+	email := token.(jwt.Token).Subject()
+
+	grp, err := h.service.JoinGroup(r.Context(), email, code)
+	if err != nil {
+		_ = render.Render(w, r, mapDomainErr(err))
+		return
+	}
+
+	_ = render.Render(w, r, payload.Group{
+		ID:          grp.ID,
+		Name:        grp.Name,
+		ShortName:   grp.ShortName,
+		Description: grp.Description,
+	})
 }
 
 func (h httpHandler) CreateInviteLink(w http.ResponseWriter, r *http.Request) {

@@ -23,7 +23,6 @@ type Writer interface {
 	DeleteGroup(ctx context.Context, id int) error
 	CreateGroupUser(ctx context.Context, userID int, groupID int, role group.Role) (*entity.GroupUser, error)
 	BulkDeleteGroupUsers(ctx context.Context, groupID int) error
-
 	CreateInviteLink(ctx context.Context, id int, code string, role group.Role) (*entity.GroupInviteLink, error)
 	DeleteInviteLink(ctx context.Context, id int) error
 }

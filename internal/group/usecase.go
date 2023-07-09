@@ -17,22 +17,27 @@ var (
 type UseCase interface {
 	ListPrincipalGroups(ctx context.Context, principal string) ([]*entity.Group, error)
 
-	// CreateGroup should be an educator and admin only feature
+	// CreateGroup should be an educator and admin only feature.
 	CreateGroup(ctx context.Context, principal string, opts ...group.Option) (*entity.Group, error)
 
-	// UpdateGroup should be an educator and admin only function
+	// UpdateGroup should be an educator and admin only function.
 	UpdateGroup(ctx context.Context, principal string, shortName string, opts ...group.Option) (*entity.Group, error)
 
-	// DeleteGroup should be an educator and admin only function
+	// DeleteGroup should be an educator and admin only function.
 	DeleteGroup(ctx context.Context, principal string, shortName string) error
 
+	// JoinGroup adds a user identified by principal to a group.
+	// In the case that the group is not in the same institution the user belongs in, the user will still be added to the group.
+	JoinGroup(ctx context.Context, principal string, code string) (*entity.Group, error)
+
 	// ListInviteLinks shows invite links for a group identified by shortName.
+	// This is an owner and educator only function.
 	ListInviteLinks(ctx context.Context, principal, shortName string) ([]*entity.GroupInviteLink, error)
 
-	// CreateInviteLink should be an owner and educator only function
+	// CreateInviteLink should be an owner and educator only function.
 	CreateInviteLink(ctx context.Context, principal, shortName string, role group.Role) (*entity.GroupInviteLink, error)
 
-	// DeleteInviteLink should be an owner and educator only function
+	// DeleteInviteLink should be an owner and educator only function.
 	DeleteInviteLink(ctx context.Context, principal, shortName, code string) error
 }
 
@@ -45,7 +50,34 @@ func NewUseCase(r Repository) UseCase {
 }
 
 func (u useCase) ListPrincipalGroups(ctx context.Context, principal string) ([]*entity.Group, error) {
-	return u.repo.FindGroupsByUser(ctx, principal)
+	grps, err := u.repo.FindGroupsByUser(ctx, principal)
+	if err != nil {
+		return nil, fmt.Errorf("failed to find groups with user: %w", err)
+	}
+	return grps, nil
+}
+
+func (u useCase) JoinGroup(ctx context.Context, principal string, code string) (*entity.Group, error) {
+	usr, err := u.repo.FindUserWithInstitution(ctx, principal)
+	if err != nil {
+		return nil, fmt.Errorf("failed to find user: %w", err)
+	}
+
+	if usr.Edges.Institution == nil {
+		return nil, fmt.Errorf("user edges not loaded")
+	}
+
+	invite, err := u.repo.FindInviteWithGroup(ctx, code)
+	if err != nil {
+		return nil, err
+	}
+
+	_, err = u.repo.CreateGroupUser(ctx, usr.ID, invite.Edges.Group.ID, invite.Role)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create group user: %w", err)
+	}
+
+	return invite.Edges.Group, nil
 }
 
 func (u useCase) CreateGroup(ctx context.Context, principal string, opts ...group.Option) (*entity.Group, error) {
@@ -58,6 +90,7 @@ func (u useCase) CreateGroup(ctx context.Context, principal string, opts ...grou
 		return nil, fmt.Errorf("user edges not loaded")
 	}
 
+	// TODO use security module when implemented
 	if usr.Role != institution.RoleAdmin && usr.Role != institution.RoleEducator {
 		return nil, ErrUnauthorized
 	}
@@ -99,6 +132,7 @@ func (u useCase) UpdateGroup(ctx context.Context, principal string, shortName st
 		return nil, fmt.Errorf("failed to find group user: %w", err)
 	}
 
+	// TODO use security module when implemented
 	if grpusr.Role != group.RoleOwner && grpusr.Role != group.RoleEducator {
 		return nil, ErrUnauthorized
 	}
@@ -117,29 +151,26 @@ func (u useCase) DeleteGroup(ctx context.Context, principal string, shortName st
 		return fmt.Errorf("failed to find group user: %w", err)
 	}
 
+	// TODO use security module when implemented
 	if grpusr.Role != group.RoleOwner && grpusr.Role != group.RoleEducator {
 		return ErrUnauthorized
 	}
 
-	if err := u.repo.BulkDeleteGroupUsers(ctx, grpusr.GroupID); err != nil {
-		return fmt.Errorf("failed to delete group users: %w", err)
-	}
+	_, err = u.repo.WithTx(ctx, func(ctx context.Context) (interface{}, error) {
+		// This is because cascade delete does not work on edge schemas in ent.
+		if err := u.repo.BulkDeleteGroupUsers(ctx, grpusr.GroupID); err != nil {
+			return nil, fmt.Errorf("failed to delete group users: %w", err)
+		}
 
-	if err := u.repo.DeleteGroup(ctx, grpusr.GroupID); err != nil {
-		return fmt.Errorf("failed to delete group: %w", err)
-	}
+		if err := u.repo.DeleteGroup(ctx, grpusr.GroupID); err != nil {
+			return nil, fmt.Errorf("failed to delete group: %w", err)
+		}
 
-	return nil
-}
+		return nil, nil
+	})
 
-func (u useCase) authorizedForInvite(ctx context.Context, principal, shortName string) error {
-	usr, err := u.repo.FindGroupUser(ctx, principal, shortName)
 	if err != nil {
-		return fmt.Errorf("failed to find group: %w", err)
-	}
-
-	if usr.Role != group.RoleOwner && usr.Role != group.RoleEducator {
-		return ErrUnauthorized
+		return fmt.Errorf("failed to execute delete group users txn: %w", err)
 	}
 
 	return nil
@@ -153,7 +184,7 @@ func (u useCase) ListInviteLinks(ctx context.Context, principal, shortName strin
 
 	grp, err := u.repo.FindGroupWithInvites(ctx, shortName)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to find group invites: %w", err)
 	}
 
 	return grp.Edges.Invites, nil
@@ -196,6 +227,20 @@ func (u useCase) DeleteInviteLink(ctx context.Context, principal, shortName, cod
 
 	if err := u.repo.DeleteInviteLink(ctx, link.ID); err != nil {
 		return fmt.Errorf("failed to delete invite link: %w", err)
+	}
+
+	return nil
+}
+
+// TODO use security module when implemented
+func (u useCase) authorizedForInvite(ctx context.Context, principal, shortName string) error {
+	usr, err := u.repo.FindGroupUser(ctx, principal, shortName)
+	if err != nil {
+		return fmt.Errorf("failed to find group: %w", err)
+	}
+
+	if usr.Role != group.RoleOwner && usr.Role != group.RoleEducator {
+		return ErrUnauthorized
 	}
 
 	return nil

@@ -17,6 +17,7 @@ type User struct {
 	PointsAwardedResetTime time.Time        `json:"pointsAwardedResetTime,omitempty"`
 	GodMode                bool             `json:"godMode,omitempty"`
 	Role                   institution.Role `json:"role,omitempty"`
+	Institution            Institution      `json:"institution,omitempty"`
 }
 
 func (u User) Render(_ http.ResponseWriter, _ *http.Request) error {

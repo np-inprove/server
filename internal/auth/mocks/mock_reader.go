@@ -133,7 +133,7 @@ func (_c *MockReader_FindJWTRevocation_Call) RunAndReturn(run func(context.Conte
 }
 
 // FindUserByEmail provides a mock function with given fields: ctx, email
-func (_m *MockReader) FindUserByEmail(ctx context.Context, email string) (*ent.User, error) {
+func (_m *MockReader) FindUserByEmailWithInstitution(ctx context.Context, email string) (*ent.User, error) {
 	ret := _m.Called(ctx, email)
 
 	var r0 *ent.User

@@ -35,9 +35,6 @@ type UseCase interface {
 
 	// CheckInviteCode retrieves an invite code and the associated institution from the repository
 	CheckInviteCode(ctx context.Context, inviteCode string) (*entity.InstitutionInviteLink, error)
-
-	// GetUserInstitution retrieves the institution associated with the user
-	GetUserInstitution(ctx context.Context, token jwt.Token) (*entity.Institution, error)
 }
 
 func NewUseCase(r Repository, c *config.Config, publicKey jwk.Key, privateKey jwk.Key) UseCase {
@@ -49,16 +46,20 @@ func (u useCase) WhoAmI(ctx context.Context, token jwt.Token) (*entity.User, err
 		return nil, fmt.Errorf("failed to find jwt revocation: %w", err)
 	}
 
-	user, err := u.repo.FindUserByEmail(ctx, token.Subject())
+	user, err := u.repo.FindUserByEmailWithInstitution(ctx, token.Subject())
 	if err != nil {
 		return nil, fmt.Errorf("failed to find user: %w", err)
+	}
+
+	if user.Edges.Institution == nil {
+		return nil, fmt.Errorf("invariant")
 	}
 
 	return user, nil
 }
 
 func (u useCase) Login(ctx context.Context, email string, password string) (*entity.Session, error) {
-	user, err := u.repo.FindUserByEmail(ctx, email)
+	user, err := u.repo.FindUserByEmailWithInstitution(ctx, email)
 	if err != nil {
 		if apperror.IsNotFound(err) {
 			return nil, ErrUserNotFound
@@ -131,19 +132,6 @@ func (u useCase) CheckInviteCode(ctx context.Context, inviteCode string) (*entit
 	}
 
 	return link, nil
-}
-
-func (u useCase) GetUserInstitution(ctx context.Context, token jwt.Token) (*entity.Institution, error) {
-	if err := u.tokenIsValid(ctx, token.JwtID()); err != nil {
-		return nil, fmt.Errorf("failed to find jwt revocation: %w", err)
-	}
-
-	user, err := u.repo.FindUserByEmailWithInstitute(ctx, token.Subject())
-	if err != nil {
-		return nil, fmt.Errorf("failed to find user: %w", err)
-	}
-
-	return user.Edges.Institution, nil
 }
 
 func (u useCase) createJWT(email string, godMode bool) ([]byte, error) {
