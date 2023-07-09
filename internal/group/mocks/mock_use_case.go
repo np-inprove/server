@@ -240,6 +240,62 @@ func (_c *MockUseCase_DeleteInviteLink_Call) RunAndReturn(run func(context.Conte
 	return _c
 }
 
+// JoinGroup provides a mock function with given fields: ctx, principal, code
+func (_m *MockUseCase) JoinGroup(ctx context.Context, principal string, code string) (*ent.Group, error) {
+	ret := _m.Called(ctx, principal, code)
+
+	var r0 *ent.Group
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, string, string) (*ent.Group, error)); ok {
+		return rf(ctx, principal, code)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, string, string) *ent.Group); ok {
+		r0 = rf(ctx, principal, code)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*ent.Group)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, string, string) error); ok {
+		r1 = rf(ctx, principal, code)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// MockUseCase_JoinGroup_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'JoinGroup'
+type MockUseCase_JoinGroup_Call struct {
+	*mock.Call
+}
+
+// JoinGroup is a helper method to define mock.On call
+//   - ctx context.Context
+//   - principal string
+//   - code string
+func (_e *MockUseCase_Expecter) JoinGroup(ctx interface{}, principal interface{}, code interface{}) *MockUseCase_JoinGroup_Call {
+	return &MockUseCase_JoinGroup_Call{Call: _e.mock.On("JoinGroup", ctx, principal, code)}
+}
+
+func (_c *MockUseCase_JoinGroup_Call) Run(run func(ctx context.Context, principal string, code string)) *MockUseCase_JoinGroup_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(string), args[2].(string))
+	})
+	return _c
+}
+
+func (_c *MockUseCase_JoinGroup_Call) Return(_a0 *ent.Group, _a1 error) *MockUseCase_JoinGroup_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *MockUseCase_JoinGroup_Call) RunAndReturn(run func(context.Context, string, string) (*ent.Group, error)) *MockUseCase_JoinGroup_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // ListInviteLinks provides a mock function with given fields: ctx, principal, shortName
 func (_m *MockUseCase) ListInviteLinks(ctx context.Context, principal string, shortName string) ([]*ent.GroupInviteLink, error) {
 	ret := _m.Called(ctx, principal, shortName)
