@@ -6,7 +6,7 @@ import (
 	context "context"
 
 	ent "github.com/np-inprove/server/internal/ent"
-	group "github.com/np-inprove/server/internal/entity/group"
+	entitygroup "github.com/np-inprove/server/internal/entity/group"
 
 	mock "github.com/stretchr/testify/mock"
 )
@@ -24,8 +24,51 @@ func (_m *MockWriter) EXPECT() *MockWriter_Expecter {
 	return &MockWriter_Expecter{mock: &_m.Mock}
 }
 
+// BulkDeleteGroupUsers provides a mock function with given fields: ctx, groupID
+func (_m *MockWriter) BulkDeleteGroupUsers(ctx context.Context, groupID int) error {
+	ret := _m.Called(ctx, groupID)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, int) error); ok {
+		r0 = rf(ctx, groupID)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// MockWriter_BulkDeleteGroupUsers_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'BulkDeleteGroupUsers'
+type MockWriter_BulkDeleteGroupUsers_Call struct {
+	*mock.Call
+}
+
+// BulkDeleteGroupUsers is a helper method to define mock.On call
+//   - ctx context.Context
+//   - groupID int
+func (_e *MockWriter_Expecter) BulkDeleteGroupUsers(ctx interface{}, groupID interface{}) *MockWriter_BulkDeleteGroupUsers_Call {
+	return &MockWriter_BulkDeleteGroupUsers_Call{Call: _e.mock.On("BulkDeleteGroupUsers", ctx, groupID)}
+}
+
+func (_c *MockWriter_BulkDeleteGroupUsers_Call) Run(run func(ctx context.Context, groupID int)) *MockWriter_BulkDeleteGroupUsers_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(int))
+	})
+	return _c
+}
+
+func (_c *MockWriter_BulkDeleteGroupUsers_Call) Return(_a0 error) *MockWriter_BulkDeleteGroupUsers_Call {
+	_c.Call.Return(_a0)
+	return _c
+}
+
+func (_c *MockWriter_BulkDeleteGroupUsers_Call) RunAndReturn(run func(context.Context, int) error) *MockWriter_BulkDeleteGroupUsers_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // CreateGroup provides a mock function with given fields: ctx, institutionID, opts
-func (_m *MockWriter) CreateGroup(ctx context.Context, institutionID int, opts ...group.Option) (*ent.Group, error) {
+func (_m *MockWriter) CreateGroup(ctx context.Context, institutionID int, opts ...entitygroup.Option) (*ent.Group, error) {
 	_va := make([]interface{}, len(opts))
 	for _i := range opts {
 		_va[_i] = opts[_i]
@@ -37,10 +80,10 @@ func (_m *MockWriter) CreateGroup(ctx context.Context, institutionID int, opts .
 
 	var r0 *ent.Group
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, int, ...group.Option) (*ent.Group, error)); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, int, ...entitygroup.Option) (*ent.Group, error)); ok {
 		return rf(ctx, institutionID, opts...)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, int, ...group.Option) *ent.Group); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, int, ...entitygroup.Option) *ent.Group); ok {
 		r0 = rf(ctx, institutionID, opts...)
 	} else {
 		if ret.Get(0) != nil {
@@ -48,7 +91,7 @@ func (_m *MockWriter) CreateGroup(ctx context.Context, institutionID int, opts .
 		}
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, int, ...group.Option) error); ok {
+	if rf, ok := ret.Get(1).(func(context.Context, int, ...entitygroup.Option) error); ok {
 		r1 = rf(ctx, institutionID, opts...)
 	} else {
 		r1 = ret.Error(1)
@@ -65,18 +108,18 @@ type MockWriter_CreateGroup_Call struct {
 // CreateGroup is a helper method to define mock.On call
 //   - ctx context.Context
 //   - institutionID int
-//   - opts ...group.Option
+//   - opts ...entitygroup.Option
 func (_e *MockWriter_Expecter) CreateGroup(ctx interface{}, institutionID interface{}, opts ...interface{}) *MockWriter_CreateGroup_Call {
 	return &MockWriter_CreateGroup_Call{Call: _e.mock.On("CreateGroup",
 		append([]interface{}{ctx, institutionID}, opts...)...)}
 }
 
-func (_c *MockWriter_CreateGroup_Call) Run(run func(ctx context.Context, institutionID int, opts ...group.Option)) *MockWriter_CreateGroup_Call {
+func (_c *MockWriter_CreateGroup_Call) Run(run func(ctx context.Context, institutionID int, opts ...entitygroup.Option)) *MockWriter_CreateGroup_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		variadicArgs := make([]group.Option, len(args)-2)
+		variadicArgs := make([]entitygroup.Option, len(args)-2)
 		for i, a := range args[2:] {
 			if a != nil {
-				variadicArgs[i] = a.(group.Option)
+				variadicArgs[i] = a.(entitygroup.Option)
 			}
 		}
 		run(args[0].(context.Context), args[1].(int), variadicArgs...)
@@ -89,7 +132,121 @@ func (_c *MockWriter_CreateGroup_Call) Return(_a0 *ent.Group, _a1 error) *MockWr
 	return _c
 }
 
-func (_c *MockWriter_CreateGroup_Call) RunAndReturn(run func(context.Context, int, ...group.Option) (*ent.Group, error)) *MockWriter_CreateGroup_Call {
+func (_c *MockWriter_CreateGroup_Call) RunAndReturn(run func(context.Context, int, ...entitygroup.Option) (*ent.Group, error)) *MockWriter_CreateGroup_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// CreateGroupUser provides a mock function with given fields: ctx, userID, groupID, role
+func (_m *MockWriter) CreateGroupUser(ctx context.Context, userID int, groupID int, role entitygroup.Role) (*ent.GroupUser, error) {
+	ret := _m.Called(ctx, userID, groupID, role)
+
+	var r0 *ent.GroupUser
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, int, int, entitygroup.Role) (*ent.GroupUser, error)); ok {
+		return rf(ctx, userID, groupID, role)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, int, int, entitygroup.Role) *ent.GroupUser); ok {
+		r0 = rf(ctx, userID, groupID, role)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*ent.GroupUser)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, int, int, entitygroup.Role) error); ok {
+		r1 = rf(ctx, userID, groupID, role)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// MockWriter_CreateGroupUser_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'CreateGroupUser'
+type MockWriter_CreateGroupUser_Call struct {
+	*mock.Call
+}
+
+// CreateGroupUser is a helper method to define mock.On call
+//   - ctx context.Context
+//   - userID int
+//   - groupID int
+//   - role entitygroup.Role
+func (_e *MockWriter_Expecter) CreateGroupUser(ctx interface{}, userID interface{}, groupID interface{}, role interface{}) *MockWriter_CreateGroupUser_Call {
+	return &MockWriter_CreateGroupUser_Call{Call: _e.mock.On("CreateGroupUser", ctx, userID, groupID, role)}
+}
+
+func (_c *MockWriter_CreateGroupUser_Call) Run(run func(ctx context.Context, userID int, groupID int, role entitygroup.Role)) *MockWriter_CreateGroupUser_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(int), args[2].(int), args[3].(entitygroup.Role))
+	})
+	return _c
+}
+
+func (_c *MockWriter_CreateGroupUser_Call) Return(_a0 *ent.GroupUser, _a1 error) *MockWriter_CreateGroupUser_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *MockWriter_CreateGroupUser_Call) RunAndReturn(run func(context.Context, int, int, entitygroup.Role) (*ent.GroupUser, error)) *MockWriter_CreateGroupUser_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// CreateInviteLink provides a mock function with given fields: ctx, id, code, role
+func (_m *MockWriter) CreateInviteLink(ctx context.Context, id int, code string, role entitygroup.Role) (*ent.GroupInviteLink, error) {
+	ret := _m.Called(ctx, id, code, role)
+
+	var r0 *ent.GroupInviteLink
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, int, string, entitygroup.Role) (*ent.GroupInviteLink, error)); ok {
+		return rf(ctx, id, code, role)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, int, string, entitygroup.Role) *ent.GroupInviteLink); ok {
+		r0 = rf(ctx, id, code, role)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*ent.GroupInviteLink)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, int, string, entitygroup.Role) error); ok {
+		r1 = rf(ctx, id, code, role)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// MockWriter_CreateInviteLink_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'CreateInviteLink'
+type MockWriter_CreateInviteLink_Call struct {
+	*mock.Call
+}
+
+// CreateInviteLink is a helper method to define mock.On call
+//   - ctx context.Context
+//   - id int
+//   - code string
+//   - role entitygroup.Role
+func (_e *MockWriter_Expecter) CreateInviteLink(ctx interface{}, id interface{}, code interface{}, role interface{}) *MockWriter_CreateInviteLink_Call {
+	return &MockWriter_CreateInviteLink_Call{Call: _e.mock.On("CreateInviteLink", ctx, id, code, role)}
+}
+
+func (_c *MockWriter_CreateInviteLink_Call) Run(run func(ctx context.Context, id int, code string, role entitygroup.Role)) *MockWriter_CreateInviteLink_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(int), args[2].(string), args[3].(entitygroup.Role))
+	})
+	return _c
+}
+
+func (_c *MockWriter_CreateInviteLink_Call) Return(_a0 *ent.GroupInviteLink, _a1 error) *MockWriter_CreateInviteLink_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *MockWriter_CreateInviteLink_Call) RunAndReturn(run func(context.Context, int, string, entitygroup.Role) (*ent.GroupInviteLink, error)) *MockWriter_CreateInviteLink_Call {
 	_c.Call.Return(run)
 	return _c
 }
@@ -137,8 +294,51 @@ func (_c *MockWriter_DeleteGroup_Call) RunAndReturn(run func(context.Context, in
 	return _c
 }
 
+// DeleteInviteLink provides a mock function with given fields: ctx, id
+func (_m *MockWriter) DeleteInviteLink(ctx context.Context, id int) error {
+	ret := _m.Called(ctx, id)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, int) error); ok {
+		r0 = rf(ctx, id)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// MockWriter_DeleteInviteLink_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'DeleteInviteLink'
+type MockWriter_DeleteInviteLink_Call struct {
+	*mock.Call
+}
+
+// DeleteInviteLink is a helper method to define mock.On call
+//   - ctx context.Context
+//   - id int
+func (_e *MockWriter_Expecter) DeleteInviteLink(ctx interface{}, id interface{}) *MockWriter_DeleteInviteLink_Call {
+	return &MockWriter_DeleteInviteLink_Call{Call: _e.mock.On("DeleteInviteLink", ctx, id)}
+}
+
+func (_c *MockWriter_DeleteInviteLink_Call) Run(run func(ctx context.Context, id int)) *MockWriter_DeleteInviteLink_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(int))
+	})
+	return _c
+}
+
+func (_c *MockWriter_DeleteInviteLink_Call) Return(_a0 error) *MockWriter_DeleteInviteLink_Call {
+	_c.Call.Return(_a0)
+	return _c
+}
+
+func (_c *MockWriter_DeleteInviteLink_Call) RunAndReturn(run func(context.Context, int) error) *MockWriter_DeleteInviteLink_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // UpdateGroup provides a mock function with given fields: ctx, id, opts
-func (_m *MockWriter) UpdateGroup(ctx context.Context, id int, opts ...group.Option) (*ent.Group, error) {
+func (_m *MockWriter) UpdateGroup(ctx context.Context, id int, opts ...entitygroup.Option) (*ent.Group, error) {
 	_va := make([]interface{}, len(opts))
 	for _i := range opts {
 		_va[_i] = opts[_i]
@@ -150,10 +350,10 @@ func (_m *MockWriter) UpdateGroup(ctx context.Context, id int, opts ...group.Opt
 
 	var r0 *ent.Group
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, int, ...group.Option) (*ent.Group, error)); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, int, ...entitygroup.Option) (*ent.Group, error)); ok {
 		return rf(ctx, id, opts...)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, int, ...group.Option) *ent.Group); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, int, ...entitygroup.Option) *ent.Group); ok {
 		r0 = rf(ctx, id, opts...)
 	} else {
 		if ret.Get(0) != nil {
@@ -161,7 +361,7 @@ func (_m *MockWriter) UpdateGroup(ctx context.Context, id int, opts ...group.Opt
 		}
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, int, ...group.Option) error); ok {
+	if rf, ok := ret.Get(1).(func(context.Context, int, ...entitygroup.Option) error); ok {
 		r1 = rf(ctx, id, opts...)
 	} else {
 		r1 = ret.Error(1)
@@ -178,18 +378,18 @@ type MockWriter_UpdateGroup_Call struct {
 // UpdateGroup is a helper method to define mock.On call
 //   - ctx context.Context
 //   - id int
-//   - opts ...group.Option
+//   - opts ...entitygroup.Option
 func (_e *MockWriter_Expecter) UpdateGroup(ctx interface{}, id interface{}, opts ...interface{}) *MockWriter_UpdateGroup_Call {
 	return &MockWriter_UpdateGroup_Call{Call: _e.mock.On("UpdateGroup",
 		append([]interface{}{ctx, id}, opts...)...)}
 }
 
-func (_c *MockWriter_UpdateGroup_Call) Run(run func(ctx context.Context, id int, opts ...group.Option)) *MockWriter_UpdateGroup_Call {
+func (_c *MockWriter_UpdateGroup_Call) Run(run func(ctx context.Context, id int, opts ...entitygroup.Option)) *MockWriter_UpdateGroup_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		variadicArgs := make([]group.Option, len(args)-2)
+		variadicArgs := make([]entitygroup.Option, len(args)-2)
 		for i, a := range args[2:] {
 			if a != nil {
-				variadicArgs[i] = a.(group.Option)
+				variadicArgs[i] = a.(entitygroup.Option)
 			}
 		}
 		run(args[0].(context.Context), args[1].(int), variadicArgs...)
@@ -202,7 +402,7 @@ func (_c *MockWriter_UpdateGroup_Call) Return(_a0 *ent.Group, _a1 error) *MockWr
 	return _c
 }
 
-func (_c *MockWriter_UpdateGroup_Call) RunAndReturn(run func(context.Context, int, ...group.Option) (*ent.Group, error)) *MockWriter_UpdateGroup_Call {
+func (_c *MockWriter_UpdateGroup_Call) RunAndReturn(run func(context.Context, int, ...entitygroup.Option) (*ent.Group, error)) *MockWriter_UpdateGroup_Call {
 	_c.Call.Return(run)
 	return _c
 }
