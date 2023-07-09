@@ -121,7 +121,7 @@ func (suite *UseCaseTestSuite) TestWhoAmI() {
 			configure: func(repository *mocks.MockRepository) {
 				repository.On("FindJWTRevocation", mock.Anything, mock.Anything).
 					Return(&entity.JWTRevocation{}, fixture.RepoNotFoundErr)
-				repository.On("FindUserByEmail", mock.Anything, mock.Anything).
+				repository.On("FindUserByEmailWithInstitution", mock.Anything, mock.Anything).
 					Return(nil, fixture.RepoNotFoundErr)
 			},
 			want: nil,
@@ -136,10 +136,10 @@ func (suite *UseCaseTestSuite) TestWhoAmI() {
 			configure: func(repository *mocks.MockRepository) {
 				repository.On("FindJWTRevocation", mock.Anything, mock.Anything).
 					Return(&entity.JWTRevocation{}, fixture.RepoNotFoundErr)
-				repository.On("FindUserByEmail", mock.Anything, mock.Anything).
-					Return(&entity.User{}, nil)
+				repository.On("FindUserByEmailWithInstitution", mock.Anything, mock.Anything).
+					Return(fixture.UserJohn, nil)
 			},
-			want: &entity.User{},
+			want: fixture.UserJohn,
 			err:  nil,
 		},
 	}
@@ -178,7 +178,7 @@ func (suite *UseCaseTestSuite) TestLogin() {
 				password: "example",
 			},
 			configure: func(repository *mocks.MockRepository) {
-				repository.On("FindUserByEmail", mock.Anything, mock.Anything).
+				repository.On("FindUserByEmailWithInstitution", mock.Anything, mock.Anything).
 					Return(nil, fixture.RepoNotFoundErr)
 			},
 			assert: func(ret *entity.Session) {
@@ -194,7 +194,7 @@ func (suite *UseCaseTestSuite) TestLogin() {
 				password: fixture.UserJohnPassword,
 			},
 			configure: func(repository *mocks.MockRepository) {
-				repository.On("FindUserByEmail", mock.Anything, mock.Anything).
+				repository.On("FindUserByEmailWithInstitution", mock.Anything, mock.Anything).
 					Return(nil, fixture.RepoInternalErr)
 			},
 			assert: func(ret *entity.Session) {
@@ -210,7 +210,7 @@ func (suite *UseCaseTestSuite) TestLogin() {
 				password: "wrong password",
 			},
 			configure: func(repository *mocks.MockRepository) {
-				repository.On("FindUserByEmail", mock.Anything, mock.Anything).
+				repository.On("FindUserByEmailWithInstitution", mock.Anything, mock.Anything).
 					Return(fixture.UserJohn, nil)
 			},
 			assert: func(ret *entity.Session) {
@@ -226,7 +226,7 @@ func (suite *UseCaseTestSuite) TestLogin() {
 				password: fixture.UserJohnPassword,
 			},
 			configure: func(repository *mocks.MockRepository) {
-				repository.On("FindUserByEmail", mock.Anything, mock.Anything).
+				repository.On("FindUserByEmailWithInstitution", mock.Anything, mock.Anything).
 					Return(fixture.UserJohn, nil)
 			},
 			assert: func(ret *entity.Session) {

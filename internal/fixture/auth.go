@@ -54,5 +54,8 @@ var (
 		PointsAwardedResetTime: time.Now(),
 		GodMode:                false,
 		Role:                   institution.RoleMember,
+		Edges: entity.UserEdges{
+			Institution: InstitutionNP,
+		},
 	}
 )
