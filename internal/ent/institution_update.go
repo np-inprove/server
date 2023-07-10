@@ -50,6 +50,14 @@ func (iu *InstitutionUpdate) SetDescription(s string) *InstitutionUpdate {
 	return iu
 }
 
+// SetNillableDescription sets the "Description" field if the given value is not nil.
+func (iu *InstitutionUpdate) SetNillableDescription(s *string) *InstitutionUpdate {
+	if s != nil {
+		iu.SetDescription(*s)
+	}
+	return iu
+}
+
 // AddVoucherIDs adds the "vouchers" edge to the Voucher entity by IDs.
 func (iu *InstitutionUpdate) AddVoucherIDs(ids ...int) *InstitutionUpdate {
 	iu.mutation.AddVoucherIDs(ids...)
@@ -558,6 +566,14 @@ func (iuo *InstitutionUpdateOne) SetShortName(s string) *InstitutionUpdateOne {
 // SetDescription sets the "Description" field.
 func (iuo *InstitutionUpdateOne) SetDescription(s string) *InstitutionUpdateOne {
 	iuo.mutation.SetDescription(s)
+	return iuo
+}
+
+// SetNillableDescription sets the "Description" field if the given value is not nil.
+func (iuo *InstitutionUpdateOne) SetNillableDescription(s *string) *InstitutionUpdateOne {
+	if s != nil {
+		iuo.SetDescription(*s)
+	}
 	return iuo
 }
 

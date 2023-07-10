@@ -24,8 +24,8 @@ func NewEntRepository(ent *ent.Client) Repository {
 	return entRepository{ent}
 }
 
-func (e entRepository) FindUserByEmail(ctx context.Context, email string) (*entity.User, error) {
-	u, err := e.client.User.Query().Where(entuser.Email(email)).Only(ctx)
+func (e entRepository) FindUserByEmailWithInstitution(ctx context.Context, email string) (*entity.User, error) {
+	u, err := e.client.User.Query().Where(entuser.Email(email)).WithInstitution().Only(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find user with email: %w", err)
 	}

@@ -100,6 +100,10 @@ func init() {
 	entinstitutionDescShortName := entinstitutionFields[1].Descriptor()
 	// entinstitution.ShortNameValidator is a validator for the "short_name" field. It is called by the builders before save.
 	entinstitution.ShortNameValidator = entinstitutionDescShortName.Validators[0].(func(string) error)
+	// entinstitutionDescDescription is the schema descriptor for Description field.
+	entinstitutionDescDescription := entinstitutionFields[2].Descriptor()
+	// entinstitution.DefaultDescription holds the default value on creation for the Description field.
+	entinstitution.DefaultDescription = entinstitutionDescDescription.Default.(string)
 	institutioninvitelinkMixin := schema.InstitutionInviteLink{}.Mixin()
 	institutioninvitelinkMixinFields0 := institutioninvitelinkMixin[0].Fields()
 	_ = institutioninvitelinkMixinFields0

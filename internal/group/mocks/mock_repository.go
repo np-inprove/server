@@ -6,7 +6,7 @@ import (
 	context "context"
 
 	ent "github.com/np-inprove/server/internal/ent"
-	group "github.com/np-inprove/server/internal/entity/group"
+	entitygroup "github.com/np-inprove/server/internal/entity/group"
 
 	mock "github.com/stretchr/testify/mock"
 )
@@ -24,8 +24,51 @@ func (_m *MockRepository) EXPECT() *MockRepository_Expecter {
 	return &MockRepository_Expecter{mock: &_m.Mock}
 }
 
+// BulkDeleteGroupUsers provides a mock function with given fields: ctx, groupID
+func (_m *MockRepository) BulkDeleteGroupUsers(ctx context.Context, groupID int) error {
+	ret := _m.Called(ctx, groupID)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, int) error); ok {
+		r0 = rf(ctx, groupID)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// MockRepository_BulkDeleteGroupUsers_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'BulkDeleteGroupUsers'
+type MockRepository_BulkDeleteGroupUsers_Call struct {
+	*mock.Call
+}
+
+// BulkDeleteGroupUsers is a helper method to define mock.On call
+//   - ctx context.Context
+//   - groupID int
+func (_e *MockRepository_Expecter) BulkDeleteGroupUsers(ctx interface{}, groupID interface{}) *MockRepository_BulkDeleteGroupUsers_Call {
+	return &MockRepository_BulkDeleteGroupUsers_Call{Call: _e.mock.On("BulkDeleteGroupUsers", ctx, groupID)}
+}
+
+func (_c *MockRepository_BulkDeleteGroupUsers_Call) Run(run func(ctx context.Context, groupID int)) *MockRepository_BulkDeleteGroupUsers_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(int))
+	})
+	return _c
+}
+
+func (_c *MockRepository_BulkDeleteGroupUsers_Call) Return(_a0 error) *MockRepository_BulkDeleteGroupUsers_Call {
+	_c.Call.Return(_a0)
+	return _c
+}
+
+func (_c *MockRepository_BulkDeleteGroupUsers_Call) RunAndReturn(run func(context.Context, int) error) *MockRepository_BulkDeleteGroupUsers_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // CreateGroup provides a mock function with given fields: ctx, institutionID, opts
-func (_m *MockRepository) CreateGroup(ctx context.Context, institutionID int, opts ...group.Option) (*ent.Group, error) {
+func (_m *MockRepository) CreateGroup(ctx context.Context, institutionID int, opts ...entitygroup.Option) (*ent.Group, error) {
 	_va := make([]interface{}, len(opts))
 	for _i := range opts {
 		_va[_i] = opts[_i]
@@ -37,10 +80,10 @@ func (_m *MockRepository) CreateGroup(ctx context.Context, institutionID int, op
 
 	var r0 *ent.Group
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, int, ...group.Option) (*ent.Group, error)); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, int, ...entitygroup.Option) (*ent.Group, error)); ok {
 		return rf(ctx, institutionID, opts...)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, int, ...group.Option) *ent.Group); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, int, ...entitygroup.Option) *ent.Group); ok {
 		r0 = rf(ctx, institutionID, opts...)
 	} else {
 		if ret.Get(0) != nil {
@@ -48,7 +91,7 @@ func (_m *MockRepository) CreateGroup(ctx context.Context, institutionID int, op
 		}
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, int, ...group.Option) error); ok {
+	if rf, ok := ret.Get(1).(func(context.Context, int, ...entitygroup.Option) error); ok {
 		r1 = rf(ctx, institutionID, opts...)
 	} else {
 		r1 = ret.Error(1)
@@ -65,18 +108,18 @@ type MockRepository_CreateGroup_Call struct {
 // CreateGroup is a helper method to define mock.On call
 //   - ctx context.Context
 //   - institutionID int
-//   - opts ...group.Option
+//   - opts ...entitygroup.Option
 func (_e *MockRepository_Expecter) CreateGroup(ctx interface{}, institutionID interface{}, opts ...interface{}) *MockRepository_CreateGroup_Call {
 	return &MockRepository_CreateGroup_Call{Call: _e.mock.On("CreateGroup",
 		append([]interface{}{ctx, institutionID}, opts...)...)}
 }
 
-func (_c *MockRepository_CreateGroup_Call) Run(run func(ctx context.Context, institutionID int, opts ...group.Option)) *MockRepository_CreateGroup_Call {
+func (_c *MockRepository_CreateGroup_Call) Run(run func(ctx context.Context, institutionID int, opts ...entitygroup.Option)) *MockRepository_CreateGroup_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		variadicArgs := make([]group.Option, len(args)-2)
+		variadicArgs := make([]entitygroup.Option, len(args)-2)
 		for i, a := range args[2:] {
 			if a != nil {
-				variadicArgs[i] = a.(group.Option)
+				variadicArgs[i] = a.(entitygroup.Option)
 			}
 		}
 		run(args[0].(context.Context), args[1].(int), variadicArgs...)
@@ -89,7 +132,121 @@ func (_c *MockRepository_CreateGroup_Call) Return(_a0 *ent.Group, _a1 error) *Mo
 	return _c
 }
 
-func (_c *MockRepository_CreateGroup_Call) RunAndReturn(run func(context.Context, int, ...group.Option) (*ent.Group, error)) *MockRepository_CreateGroup_Call {
+func (_c *MockRepository_CreateGroup_Call) RunAndReturn(run func(context.Context, int, ...entitygroup.Option) (*ent.Group, error)) *MockRepository_CreateGroup_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// CreateGroupUser provides a mock function with given fields: ctx, userID, groupID, role
+func (_m *MockRepository) CreateGroupUser(ctx context.Context, userID int, groupID int, role entitygroup.Role) (*ent.GroupUser, error) {
+	ret := _m.Called(ctx, userID, groupID, role)
+
+	var r0 *ent.GroupUser
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, int, int, entitygroup.Role) (*ent.GroupUser, error)); ok {
+		return rf(ctx, userID, groupID, role)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, int, int, entitygroup.Role) *ent.GroupUser); ok {
+		r0 = rf(ctx, userID, groupID, role)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*ent.GroupUser)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, int, int, entitygroup.Role) error); ok {
+		r1 = rf(ctx, userID, groupID, role)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// MockRepository_CreateGroupUser_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'CreateGroupUser'
+type MockRepository_CreateGroupUser_Call struct {
+	*mock.Call
+}
+
+// CreateGroupUser is a helper method to define mock.On call
+//   - ctx context.Context
+//   - userID int
+//   - groupID int
+//   - role entitygroup.Role
+func (_e *MockRepository_Expecter) CreateGroupUser(ctx interface{}, userID interface{}, groupID interface{}, role interface{}) *MockRepository_CreateGroupUser_Call {
+	return &MockRepository_CreateGroupUser_Call{Call: _e.mock.On("CreateGroupUser", ctx, userID, groupID, role)}
+}
+
+func (_c *MockRepository_CreateGroupUser_Call) Run(run func(ctx context.Context, userID int, groupID int, role entitygroup.Role)) *MockRepository_CreateGroupUser_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(int), args[2].(int), args[3].(entitygroup.Role))
+	})
+	return _c
+}
+
+func (_c *MockRepository_CreateGroupUser_Call) Return(_a0 *ent.GroupUser, _a1 error) *MockRepository_CreateGroupUser_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *MockRepository_CreateGroupUser_Call) RunAndReturn(run func(context.Context, int, int, entitygroup.Role) (*ent.GroupUser, error)) *MockRepository_CreateGroupUser_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// CreateInviteLink provides a mock function with given fields: ctx, id, code, role
+func (_m *MockRepository) CreateInviteLink(ctx context.Context, id int, code string, role entitygroup.Role) (*ent.GroupInviteLink, error) {
+	ret := _m.Called(ctx, id, code, role)
+
+	var r0 *ent.GroupInviteLink
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, int, string, entitygroup.Role) (*ent.GroupInviteLink, error)); ok {
+		return rf(ctx, id, code, role)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, int, string, entitygroup.Role) *ent.GroupInviteLink); ok {
+		r0 = rf(ctx, id, code, role)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*ent.GroupInviteLink)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, int, string, entitygroup.Role) error); ok {
+		r1 = rf(ctx, id, code, role)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// MockRepository_CreateInviteLink_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'CreateInviteLink'
+type MockRepository_CreateInviteLink_Call struct {
+	*mock.Call
+}
+
+// CreateInviteLink is a helper method to define mock.On call
+//   - ctx context.Context
+//   - id int
+//   - code string
+//   - role entitygroup.Role
+func (_e *MockRepository_Expecter) CreateInviteLink(ctx interface{}, id interface{}, code interface{}, role interface{}) *MockRepository_CreateInviteLink_Call {
+	return &MockRepository_CreateInviteLink_Call{Call: _e.mock.On("CreateInviteLink", ctx, id, code, role)}
+}
+
+func (_c *MockRepository_CreateInviteLink_Call) Run(run func(ctx context.Context, id int, code string, role entitygroup.Role)) *MockRepository_CreateInviteLink_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(int), args[2].(string), args[3].(entitygroup.Role))
+	})
+	return _c
+}
+
+func (_c *MockRepository_CreateInviteLink_Call) Return(_a0 *ent.GroupInviteLink, _a1 error) *MockRepository_CreateInviteLink_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *MockRepository_CreateInviteLink_Call) RunAndReturn(run func(context.Context, int, string, entitygroup.Role) (*ent.GroupInviteLink, error)) *MockRepository_CreateInviteLink_Call {
 	_c.Call.Return(run)
 	return _c
 }
@@ -133,6 +290,104 @@ func (_c *MockRepository_DeleteGroup_Call) Return(_a0 error) *MockRepository_Del
 }
 
 func (_c *MockRepository_DeleteGroup_Call) RunAndReturn(run func(context.Context, int) error) *MockRepository_DeleteGroup_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// DeleteInviteLink provides a mock function with given fields: ctx, id
+func (_m *MockRepository) DeleteInviteLink(ctx context.Context, id int) error {
+	ret := _m.Called(ctx, id)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, int) error); ok {
+		r0 = rf(ctx, id)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// MockRepository_DeleteInviteLink_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'DeleteInviteLink'
+type MockRepository_DeleteInviteLink_Call struct {
+	*mock.Call
+}
+
+// DeleteInviteLink is a helper method to define mock.On call
+//   - ctx context.Context
+//   - id int
+func (_e *MockRepository_Expecter) DeleteInviteLink(ctx interface{}, id interface{}) *MockRepository_DeleteInviteLink_Call {
+	return &MockRepository_DeleteInviteLink_Call{Call: _e.mock.On("DeleteInviteLink", ctx, id)}
+}
+
+func (_c *MockRepository_DeleteInviteLink_Call) Run(run func(ctx context.Context, id int)) *MockRepository_DeleteInviteLink_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(int))
+	})
+	return _c
+}
+
+func (_c *MockRepository_DeleteInviteLink_Call) Return(_a0 error) *MockRepository_DeleteInviteLink_Call {
+	_c.Call.Return(_a0)
+	return _c
+}
+
+func (_c *MockRepository_DeleteInviteLink_Call) RunAndReturn(run func(context.Context, int) error) *MockRepository_DeleteInviteLink_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// FindGroup provides a mock function with given fields: ctx, shortName
+func (_m *MockRepository) FindGroup(ctx context.Context, shortName string) (*ent.Group, error) {
+	ret := _m.Called(ctx, shortName)
+
+	var r0 *ent.Group
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, string) (*ent.Group, error)); ok {
+		return rf(ctx, shortName)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, string) *ent.Group); ok {
+		r0 = rf(ctx, shortName)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*ent.Group)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, string) error); ok {
+		r1 = rf(ctx, shortName)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// MockRepository_FindGroup_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'FindGroup'
+type MockRepository_FindGroup_Call struct {
+	*mock.Call
+}
+
+// FindGroup is a helper method to define mock.On call
+//   - ctx context.Context
+//   - shortName string
+func (_e *MockRepository_Expecter) FindGroup(ctx interface{}, shortName interface{}) *MockRepository_FindGroup_Call {
+	return &MockRepository_FindGroup_Call{Call: _e.mock.On("FindGroup", ctx, shortName)}
+}
+
+func (_c *MockRepository_FindGroup_Call) Run(run func(ctx context.Context, shortName string)) *MockRepository_FindGroup_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(string))
+	})
+	return _c
+}
+
+func (_c *MockRepository_FindGroup_Call) Return(_a0 *ent.Group, _a1 error) *MockRepository_FindGroup_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *MockRepository_FindGroup_Call) RunAndReturn(run func(context.Context, string) (*ent.Group, error)) *MockRepository_FindGroup_Call {
 	_c.Call.Return(run)
 	return _c
 }
@@ -249,6 +504,61 @@ func (_c *MockRepository_FindGroupUser_Call) RunAndReturn(run func(context.Conte
 	return _c
 }
 
+// FindGroupWithInvites provides a mock function with given fields: ctx, shortName
+func (_m *MockRepository) FindGroupWithInvites(ctx context.Context, shortName string) (*ent.Group, error) {
+	ret := _m.Called(ctx, shortName)
+
+	var r0 *ent.Group
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, string) (*ent.Group, error)); ok {
+		return rf(ctx, shortName)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, string) *ent.Group); ok {
+		r0 = rf(ctx, shortName)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*ent.Group)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, string) error); ok {
+		r1 = rf(ctx, shortName)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// MockRepository_FindGroupWithInvites_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'FindGroupWithInvites'
+type MockRepository_FindGroupWithInvites_Call struct {
+	*mock.Call
+}
+
+// FindGroupWithInvites is a helper method to define mock.On call
+//   - ctx context.Context
+//   - shortName string
+func (_e *MockRepository_Expecter) FindGroupWithInvites(ctx interface{}, shortName interface{}) *MockRepository_FindGroupWithInvites_Call {
+	return &MockRepository_FindGroupWithInvites_Call{Call: _e.mock.On("FindGroupWithInvites", ctx, shortName)}
+}
+
+func (_c *MockRepository_FindGroupWithInvites_Call) Run(run func(ctx context.Context, shortName string)) *MockRepository_FindGroupWithInvites_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(string))
+	})
+	return _c
+}
+
+func (_c *MockRepository_FindGroupWithInvites_Call) Return(_a0 *ent.Group, _a1 error) *MockRepository_FindGroupWithInvites_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *MockRepository_FindGroupWithInvites_Call) RunAndReturn(run func(context.Context, string) (*ent.Group, error)) *MockRepository_FindGroupWithInvites_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // FindGroupsByUser provides a mock function with given fields: ctx, principal
 func (_m *MockRepository) FindGroupsByUser(ctx context.Context, principal string) ([]*ent.Group, error) {
 	ret := _m.Called(ctx, principal)
@@ -300,6 +610,61 @@ func (_c *MockRepository_FindGroupsByUser_Call) Return(_a0 []*ent.Group, _a1 err
 }
 
 func (_c *MockRepository_FindGroupsByUser_Call) RunAndReturn(run func(context.Context, string) ([]*ent.Group, error)) *MockRepository_FindGroupsByUser_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// FindInviteWithGroup provides a mock function with given fields: ctx, code
+func (_m *MockRepository) FindInviteWithGroup(ctx context.Context, code string) (*ent.GroupInviteLink, error) {
+	ret := _m.Called(ctx, code)
+
+	var r0 *ent.GroupInviteLink
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, string) (*ent.GroupInviteLink, error)); ok {
+		return rf(ctx, code)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, string) *ent.GroupInviteLink); ok {
+		r0 = rf(ctx, code)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*ent.GroupInviteLink)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, string) error); ok {
+		r1 = rf(ctx, code)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// MockRepository_FindInviteWithGroup_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'FindInviteWithGroup'
+type MockRepository_FindInviteWithGroup_Call struct {
+	*mock.Call
+}
+
+// FindInviteWithGroup is a helper method to define mock.On call
+//   - ctx context.Context
+//   - code string
+func (_e *MockRepository_Expecter) FindInviteWithGroup(ctx interface{}, code interface{}) *MockRepository_FindInviteWithGroup_Call {
+	return &MockRepository_FindInviteWithGroup_Call{Call: _e.mock.On("FindInviteWithGroup", ctx, code)}
+}
+
+func (_c *MockRepository_FindInviteWithGroup_Call) Run(run func(ctx context.Context, code string)) *MockRepository_FindInviteWithGroup_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(string))
+	})
+	return _c
+}
+
+func (_c *MockRepository_FindInviteWithGroup_Call) Return(_a0 *ent.GroupInviteLink, _a1 error) *MockRepository_FindInviteWithGroup_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *MockRepository_FindInviteWithGroup_Call) RunAndReturn(run func(context.Context, string) (*ent.GroupInviteLink, error)) *MockRepository_FindInviteWithGroup_Call {
 	_c.Call.Return(run)
 	return _c
 }
@@ -360,7 +725,7 @@ func (_c *MockRepository_FindUserWithInstitution_Call) RunAndReturn(run func(con
 }
 
 // UpdateGroup provides a mock function with given fields: ctx, id, opts
-func (_m *MockRepository) UpdateGroup(ctx context.Context, id int, opts ...group.Option) (*ent.Group, error) {
+func (_m *MockRepository) UpdateGroup(ctx context.Context, id int, opts ...entitygroup.Option) (*ent.Group, error) {
 	_va := make([]interface{}, len(opts))
 	for _i := range opts {
 		_va[_i] = opts[_i]
@@ -372,10 +737,10 @@ func (_m *MockRepository) UpdateGroup(ctx context.Context, id int, opts ...group
 
 	var r0 *ent.Group
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, int, ...group.Option) (*ent.Group, error)); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, int, ...entitygroup.Option) (*ent.Group, error)); ok {
 		return rf(ctx, id, opts...)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, int, ...group.Option) *ent.Group); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, int, ...entitygroup.Option) *ent.Group); ok {
 		r0 = rf(ctx, id, opts...)
 	} else {
 		if ret.Get(0) != nil {
@@ -383,7 +748,7 @@ func (_m *MockRepository) UpdateGroup(ctx context.Context, id int, opts ...group
 		}
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, int, ...group.Option) error); ok {
+	if rf, ok := ret.Get(1).(func(context.Context, int, ...entitygroup.Option) error); ok {
 		r1 = rf(ctx, id, opts...)
 	} else {
 		r1 = ret.Error(1)
@@ -400,18 +765,18 @@ type MockRepository_UpdateGroup_Call struct {
 // UpdateGroup is a helper method to define mock.On call
 //   - ctx context.Context
 //   - id int
-//   - opts ...group.Option
+//   - opts ...entitygroup.Option
 func (_e *MockRepository_Expecter) UpdateGroup(ctx interface{}, id interface{}, opts ...interface{}) *MockRepository_UpdateGroup_Call {
 	return &MockRepository_UpdateGroup_Call{Call: _e.mock.On("UpdateGroup",
 		append([]interface{}{ctx, id}, opts...)...)}
 }
 
-func (_c *MockRepository_UpdateGroup_Call) Run(run func(ctx context.Context, id int, opts ...group.Option)) *MockRepository_UpdateGroup_Call {
+func (_c *MockRepository_UpdateGroup_Call) Run(run func(ctx context.Context, id int, opts ...entitygroup.Option)) *MockRepository_UpdateGroup_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		variadicArgs := make([]group.Option, len(args)-2)
+		variadicArgs := make([]entitygroup.Option, len(args)-2)
 		for i, a := range args[2:] {
 			if a != nil {
-				variadicArgs[i] = a.(group.Option)
+				variadicArgs[i] = a.(entitygroup.Option)
 			}
 		}
 		run(args[0].(context.Context), args[1].(int), variadicArgs...)
@@ -424,7 +789,62 @@ func (_c *MockRepository_UpdateGroup_Call) Return(_a0 *ent.Group, _a1 error) *Mo
 	return _c
 }
 
-func (_c *MockRepository_UpdateGroup_Call) RunAndReturn(run func(context.Context, int, ...group.Option) (*ent.Group, error)) *MockRepository_UpdateGroup_Call {
+func (_c *MockRepository_UpdateGroup_Call) RunAndReturn(run func(context.Context, int, ...entitygroup.Option) (*ent.Group, error)) *MockRepository_UpdateGroup_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// WithTx provides a mock function with given fields: _a0, _a1
+func (_m *MockRepository) WithTx(_a0 context.Context, _a1 func(context.Context) (interface{}, error)) (interface{}, error) {
+	ret := _m.Called(_a0, _a1)
+
+	var r0 interface{}
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, func(context.Context) (interface{}, error)) (interface{}, error)); ok {
+		return rf(_a0, _a1)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, func(context.Context) (interface{}, error)) interface{}); ok {
+		r0 = rf(_a0, _a1)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(interface{})
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, func(context.Context) (interface{}, error)) error); ok {
+		r1 = rf(_a0, _a1)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// MockRepository_WithTx_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'WithTx'
+type MockRepository_WithTx_Call struct {
+	*mock.Call
+}
+
+// WithTx is a helper method to define mock.On call
+//   - _a0 context.Context
+//   - _a1 func(context.Context)(interface{} , error)
+func (_e *MockRepository_Expecter) WithTx(_a0 interface{}, _a1 interface{}) *MockRepository_WithTx_Call {
+	return &MockRepository_WithTx_Call{Call: _e.mock.On("WithTx", _a0, _a1)}
+}
+
+func (_c *MockRepository_WithTx_Call) Run(run func(_a0 context.Context, _a1 func(context.Context) (interface{}, error))) *MockRepository_WithTx_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(func(context.Context) (interface{}, error)))
+	})
+	return _c
+}
+
+func (_c *MockRepository_WithTx_Call) Return(_a0 interface{}, _a1 error) *MockRepository_WithTx_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *MockRepository_WithTx_Call) RunAndReturn(run func(context.Context, func(context.Context) (interface{}, error)) (interface{}, error)) *MockRepository_WithTx_Call {
 	_c.Call.Return(run)
 	return _c
 }

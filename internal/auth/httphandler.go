@@ -150,6 +150,12 @@ func (h httpHandler) WhoAmI(w http.ResponseWriter, r *http.Request) {
 		PointsAwardedResetTime: user.PointsAwardedResetTime,
 		GodMode:                user.GodMode,
 		Role:                   user.Role,
+		Institution: payload.Institution{
+			ID:          user.Edges.Institution.ID,
+			Name:        user.Edges.Institution.Name,
+			ShortName:   user.Edges.Institution.ShortName,
+			Description: user.Edges.Institution.Description,
+		},
 	})
 }
 

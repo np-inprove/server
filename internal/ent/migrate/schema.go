@@ -54,7 +54,7 @@ var (
 				Symbol:     "deadlines_groups_deadlines",
 				Columns:    []*schema.Column{DeadlinesColumns[4]},
 				RefColumns: []*schema.Column{GroupsColumns[0]},
-				OnDelete:   schema.NoAction,
+				OnDelete:   schema.Cascade,
 			},
 		},
 	}
@@ -78,7 +78,7 @@ var (
 				Symbol:     "events_groups_events",
 				Columns:    []*schema.Column{EventsColumns[6]},
 				RefColumns: []*schema.Column{GroupsColumns[0]},
-				OnDelete:   schema.NoAction,
+				OnDelete:   schema.Cascade,
 			},
 		},
 	}
@@ -100,7 +100,7 @@ var (
 				Symbol:     "forums_groups_forums",
 				Columns:    []*schema.Column{ForumsColumns[4]},
 				RefColumns: []*schema.Column{GroupsColumns[0]},
-				OnDelete:   schema.NoAction,
+				OnDelete:   schema.Cascade,
 			},
 		},
 	}
@@ -179,7 +179,7 @@ var (
 				Symbol:     "group_invite_links_groups_invites",
 				Columns:    []*schema.Column{GroupInviteLinksColumns[3]},
 				RefColumns: []*schema.Column{GroupsColumns[0]},
-				OnDelete:   schema.NoAction,
+				OnDelete:   schema.Cascade,
 			},
 		},
 	}
@@ -214,7 +214,7 @@ var (
 		{Name: "id", Type: field.TypeInt, Increment: true},
 		{Name: "name", Type: field.TypeString},
 		{Name: "short_name", Type: field.TypeString, Unique: true},
-		{Name: "description", Type: field.TypeString},
+		{Name: "description", Type: field.TypeString, Default: ""},
 	}
 	// InstitutionsTable holds the schema information for the "institutions" table.
 	InstitutionsTable = &schema.Table{

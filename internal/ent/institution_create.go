@@ -44,6 +44,14 @@ func (ic *InstitutionCreate) SetDescription(s string) *InstitutionCreate {
 	return ic
 }
 
+// SetNillableDescription sets the "Description" field if the given value is not nil.
+func (ic *InstitutionCreate) SetNillableDescription(s *string) *InstitutionCreate {
+	if s != nil {
+		ic.SetDescription(*s)
+	}
+	return ic
+}
+
 // AddVoucherIDs adds the "vouchers" edge to the Voucher entity by IDs.
 func (ic *InstitutionCreate) AddVoucherIDs(ids ...int) *InstitutionCreate {
 	ic.mutation.AddVoucherIDs(ids...)
@@ -126,6 +134,7 @@ func (ic *InstitutionCreate) Mutation() *InstitutionMutation {
 
 // Save creates the Institution in the database.
 func (ic *InstitutionCreate) Save(ctx context.Context) (*Institution, error) {
+	ic.defaults()
 	return withHooks(ctx, ic.sqlSave, ic.mutation, ic.hooks)
 }
 
@@ -148,6 +157,14 @@ func (ic *InstitutionCreate) Exec(ctx context.Context) error {
 func (ic *InstitutionCreate) ExecX(ctx context.Context) {
 	if err := ic.Exec(ctx); err != nil {
 		panic(err)
+	}
+}
+
+// defaults sets the default values of the builder before save.
+func (ic *InstitutionCreate) defaults() {
+	if _, ok := ic.mutation.Description(); !ok {
+		v := entinstitution.DefaultDescription
+		ic.mutation.SetDescription(v)
 	}
 }
 
@@ -509,6 +526,7 @@ func (icb *InstitutionCreateBulk) Save(ctx context.Context) ([]*Institution, err
 	for i := range icb.builders {
 		func(i int, root context.Context) {
 			builder := icb.builders[i]
+			builder.defaults()
 			var mut Mutator = MutateFunc(func(ctx context.Context, m Mutation) (Value, error) {
 				mutation, ok := m.(*InstitutionMutation)
 				if !ok {

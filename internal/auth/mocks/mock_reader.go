@@ -132,8 +132,8 @@ func (_c *MockReader_FindJWTRevocation_Call) RunAndReturn(run func(context.Conte
 	return _c
 }
 
-// FindUserByEmail provides a mock function with given fields: ctx, email
-func (_m *MockReader) FindUserByEmail(ctx context.Context, email string) (*ent.User, error) {
+// FindUserByEmailWithInstitution provides a mock function with given fields: ctx, email
+func (_m *MockReader) FindUserByEmailWithInstitution(ctx context.Context, email string) (*ent.User, error) {
 	ret := _m.Called(ctx, email)
 
 	var r0 *ent.User
@@ -158,31 +158,31 @@ func (_m *MockReader) FindUserByEmail(ctx context.Context, email string) (*ent.U
 	return r0, r1
 }
 
-// MockReader_FindUserByEmail_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'FindUserByEmail'
-type MockReader_FindUserByEmail_Call struct {
+// MockReader_FindUserByEmailWithInstitution_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'FindUserByEmailWithInstitution'
+type MockReader_FindUserByEmailWithInstitution_Call struct {
 	*mock.Call
 }
 
-// FindUserByEmail is a helper method to define mock.On call
+// FindUserByEmailWithInstitution is a helper method to define mock.On call
 //   - ctx context.Context
 //   - email string
-func (_e *MockReader_Expecter) FindUserByEmail(ctx interface{}, email interface{}) *MockReader_FindUserByEmail_Call {
-	return &MockReader_FindUserByEmail_Call{Call: _e.mock.On("FindUserByEmail", ctx, email)}
+func (_e *MockReader_Expecter) FindUserByEmailWithInstitution(ctx interface{}, email interface{}) *MockReader_FindUserByEmailWithInstitution_Call {
+	return &MockReader_FindUserByEmailWithInstitution_Call{Call: _e.mock.On("FindUserByEmailWithInstitution", ctx, email)}
 }
 
-func (_c *MockReader_FindUserByEmail_Call) Run(run func(ctx context.Context, email string)) *MockReader_FindUserByEmail_Call {
+func (_c *MockReader_FindUserByEmailWithInstitution_Call) Run(run func(ctx context.Context, email string)) *MockReader_FindUserByEmailWithInstitution_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		run(args[0].(context.Context), args[1].(string))
 	})
 	return _c
 }
 
-func (_c *MockReader_FindUserByEmail_Call) Return(_a0 *ent.User, _a1 error) *MockReader_FindUserByEmail_Call {
+func (_c *MockReader_FindUserByEmailWithInstitution_Call) Return(_a0 *ent.User, _a1 error) *MockReader_FindUserByEmailWithInstitution_Call {
 	_c.Call.Return(_a0, _a1)
 	return _c
 }
 
-func (_c *MockReader_FindUserByEmail_Call) RunAndReturn(run func(context.Context, string) (*ent.User, error)) *MockReader_FindUserByEmail_Call {
+func (_c *MockReader_FindUserByEmailWithInstitution_Call) RunAndReturn(run func(context.Context, string) (*ent.User, error)) *MockReader_FindUserByEmailWithInstitution_Call {
 	_c.Call.Return(run)
 	return _c
 }

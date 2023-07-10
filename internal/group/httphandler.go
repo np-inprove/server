@@ -37,7 +37,14 @@ func NewHTTPHandler(u UseCase, c *config.Config, j *jwtauth.JWTAuth) chi.Router 
 
 		r.Get("/", a.ListGroups)
 		r.Post("/", a.CreateGroup)
-		r.Delete("/{path}", a.DeleteGroup)
+		r.Put("/{shortName}", a.UpdateGroup)
+		r.Delete("/{shortName}", a.DeleteGroup)
+
+		r.Get("/{shortName}/invites", a.ListInviteLinks)
+		r.Post("/{shortName}/invites", a.CreateInviteLink)
+
+		r.Post("/{shortName}/invites/{code}", a.JoinGroup)
+		r.Delete("/{shortName}/invites/{code}", a.DeleteInviteLink)
 	})
 
 	return r
@@ -99,8 +106,43 @@ func (h httpHandler) CreateGroup(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+func (h httpHandler) UpdateGroup(w http.ResponseWriter, r *http.Request) {
+	p := &payload.UpdateGroupRequest{}
+	if err := render.Decode(r, p); err != nil {
+		_ = render.Render(w, r, apperror.ErrBadRequest(err))
+		return
+	}
+
+	if v := p.Validate(); !v.Validate() {
+		_ = render.Render(w, r, apperror.ErrValidation(v.Errors))
+		return
+	}
+
+	shortName := chi.URLParam(r, "shortName")
+	token := r.Context().Value(jwtauth.TokenCtxKey)
+	email := token.(jwt.Token).Subject()
+
+	res, err := h.service.UpdateGroup(r.Context(), email, shortName,
+		group.Name(p.Name),
+		group.ShortName(p.ShortName),
+		group.Description(p.Description),
+	)
+
+	if err != nil {
+		_ = render.Render(w, r, mapDomainErr(err))
+		return
+	}
+
+	_ = render.Render(w, r, payload.Group{
+		ID:          res.ID,
+		ShortName:   res.ShortName,
+		Name:        res.Name,
+		Description: res.Description,
+	})
+}
+
 func (h httpHandler) DeleteGroup(w http.ResponseWriter, r *http.Request) {
-	path := chi.URLParam(r, "path")
+	path := chi.URLParam(r, "shortName")
 	token := r.Context().Value(jwtauth.TokenCtxKey)
 	email := token.(jwt.Token).Subject()
 
@@ -110,4 +152,93 @@ func (h httpHandler) DeleteGroup(w http.ResponseWriter, r *http.Request) {
 	}
 
 	render.NoContent(w, r)
+}
+
+func (h httpHandler) ListInviteLinks(w http.ResponseWriter, r *http.Request) {
+	shortName := chi.URLParam(r, "shortName")
+
+	token := r.Context().Value(jwtauth.TokenCtxKey)
+	email := token.(jwt.Token).Subject()
+
+	links, err := h.service.ListInviteLinks(r.Context(), email, shortName)
+	if err != nil {
+		_ = render.Render(w, r, mapDomainErr(err))
+		return
+	}
+
+	p := make([]render.Renderer, len(links))
+	for i, v := range links {
+		p[i] = payload.GroupInviteLink{
+			ID:   v.ID,
+			Code: v.Code,
+			Role: v.Role,
+		}
+	}
+
+	_ = render.RenderList(w, r, p)
+}
+
+func (h httpHandler) JoinGroup(w http.ResponseWriter, r *http.Request) {
+	code := chi.URLParam(r, "code")
+	token := r.Context().Value(jwtauth.TokenCtxKey)
+	email := token.(jwt.Token).Subject()
+
+	grp, err := h.service.JoinGroup(r.Context(), email, code)
+	if err != nil {
+		_ = render.Render(w, r, mapDomainErr(err))
+		return
+	}
+
+	_ = render.Render(w, r, payload.Group{
+		ID:          grp.ID,
+		Name:        grp.Name,
+		ShortName:   grp.ShortName,
+		Description: grp.Description,
+	})
+}
+
+func (h httpHandler) CreateInviteLink(w http.ResponseWriter, r *http.Request) {
+	p := &payload.CreateGroupInviteLinkRequest{}
+
+	if err := render.Decode(r, p); err != nil {
+		_ = render.Render(w, r, apperror.ErrBadRequest(err))
+		return
+	}
+
+	if v := p.Validate(); !v.Validate() {
+		_ = render.Render(w, r, apperror.ErrValidation(v.Errors))
+		return
+	}
+
+	shortName := chi.URLParam(r, "shortName")
+	token := r.Context().Value(jwtauth.TokenCtxKey)
+	email := token.(jwt.Token).Subject()
+
+	link, err := h.service.CreateInviteLink(r.Context(), email, shortName, p.Role)
+	if err != nil {
+		_ = render.Render(w, r, mapDomainErr(err))
+		return
+	}
+
+	_ = render.Render(w, r, payload.GroupInviteLink{
+		ID:   link.ID,
+		Code: link.Code,
+		Role: link.Role,
+	})
+}
+
+func (h httpHandler) DeleteInviteLink(w http.ResponseWriter, r *http.Request) {
+	shortName := chi.URLParam(r, "shortName")
+	code := chi.URLParam(r, "code")
+
+	token := r.Context().Value(jwtauth.TokenCtxKey)
+	email := token.(jwt.Token).Subject()
+
+	err := h.service.DeleteInviteLink(r.Context(), email, shortName, code)
+	if err != nil {
+		_ = render.Render(w, r, mapDomainErr(err))
+		return
+	}
+
+	render.Status(r, http.StatusNoContent)
 }

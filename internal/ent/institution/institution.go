@@ -90,6 +90,8 @@ var (
 	NameValidator func(string) error
 	// ShortNameValidator is a validator for the "short_name" field. It is called by the builders before save.
 	ShortNameValidator func(string) error
+	// DefaultDescription holds the default value on creation for the "Description" field.
+	DefaultDescription string
 )
 
 // OrderOption defines the ordering options for the Institution queries.
