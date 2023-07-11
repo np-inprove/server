@@ -2,6 +2,7 @@ package group
 
 import (
 	"context"
+
 	"github.com/np-inprove/server/internal/entity"
 	"github.com/np-inprove/server/internal/entity/group"
 	"github.com/np-inprove/server/internal/transactor"

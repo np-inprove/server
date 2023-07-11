@@ -18,6 +18,9 @@ type GroupEdges = ent.GroupEdges
 type GroupUser = ent.GroupUser
 type GroupUserEdges = ent.GroupUserEdges
 
+type Forum = ent.Forum
+type ForumPost = ent.ForumPost
+
 type InstitutionInviteLink = ent.InstitutionInviteLink
 type InstitutionInviteLinkEdges = ent.InstitutionInviteLinkEdges
 
