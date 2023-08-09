@@ -1,4 +1,4 @@
-FROM docker.io/library/golang:1.20 AS base
+FROM docker.io/library/golang:1.21 AS base
 
 # Prepare work directory
 WORKDIR /np-inprove
